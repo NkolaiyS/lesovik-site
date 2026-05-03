@@ -3,32 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лесовик | Цифровой инструмент таксатора</title>
     
-    <!-- SEO Настройки -->
-    <title>Лесовик | Цифровой инструмент таксатора и лесозаготовителя</title>
-    <meta name="description" content="Профессиональный инструмент для специалистов лесного хозяйства. Онлайн кубатурник, расчет полноты насаждений, переводные коэффициенты, статьи по лесопатологии и шаблоны актов.">
-    <meta name="keywords" content="таксация лесов, кубатурник леса, расчет объема бревна, лесопатология, справочник лесника, лесной кодекс, лесозаготовка, полнота насаждений">
-    <meta name="author" content="Лесовик">
-    
-    <!-- Open Graph для красивых ссылок в соцсетях и Telegram -->
-    <meta property="og:title" content="Лесовик | Инструментарий профессионала">
-    <meta property="og:description" content="База знаний и калькуляторы для лесовиков. Быстрые расчеты кубатуры и справочник прямо в вашем кармане.">
-    <meta property="og:type" content="website">
-    
-    <!-- Иконка -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌲</text></svg>">
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600&display=swap');
 
-        /* Цветовая палитра: Хвоя, Бумага, Графит */
+        /* ПЕРЕМЕННЫЕ (Светлая тема по умолчанию) */
         :root {
-            --bg-paper: #F4F1EA;
-            --text-graphite: #2C3531;
+            --bg-paper: #F9FBF9;
+            --text-graphite: #333333;
             --forest-green: #2D5A27;
-            --forest-light: #4A7C43;
-            --border-color: #D1CFC7;
+            --forest-light: #8FBC8F;
+            --border-color: #E0E0E0;
             --card-bg: #FFFFFF;
+            --glass-bg: rgba(249, 251, 249, 0.85);
+            --modal-bg: rgba(0, 0, 0, 0.6);
+        }
+
+        /* ТЕМНАЯ ТЕМА */
+        [data-theme="dark"] {
+            --bg-paper: #1A2421;
+            --text-graphite: #F9FBF9;
+            --forest-green: #8FBC8F;
+            --forest-light: #2D5A27;
+            --border-color: #3A4F46;
+            --card-bg: #22302B;
+            --glass-bg: rgba(26, 36, 33, 0.85);
         }
 
         body {
@@ -38,9 +40,10 @@
             margin: 0;
             padding: 0;
             line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
         }
 
-        /* Индикатор прогресса чтения ("Растущая веточка") */
+        /* Индикатор прогресса чтения */
         #reading-progress {
             position: fixed;
             top: 0;
@@ -48,63 +51,68 @@
             height: 4px;
             background-color: var(--forest-green);
             width: 0%;
-            z-index: 9999;
+            z-index: 10001;
             transition: width 0.1s ease-out;
-            border-radius: 0 2px 2px 0;
         }
 
-        header {
-            background-color: var(--card-bg);
-            border-bottom: 1px solid var(--border-color);
-            padding: 20px 0;
+        /* СТЕКЛЯННАЯ ШАПКА */
+        .glass-header {
             position: sticky;
             top: 0;
             z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 40px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo-svg {
+            width: 28px;
+            height: 28px;
+            fill: var(--forest-green);
+        }
+
+        .glass-header h1 {
+            font-family: 'Merriweather', serif;
+            color: var(--forest-green);
+            margin: 0;
+            font-size: 22px;
+        }
+
+        /* Кнопка смены темы */
+        .theme-toggle {
+            background: transparent;
+            border: 1px solid var(--forest-green);
+            color: var(--forest-green);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--forest-green);
+            color: var(--bg-paper);
         }
 
         .container {
             max-width: 1000px;
-            margin: 0 auto;
+            margin: 40px auto;
             padding: 0 20px;
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            color: var(--forest-green);
-        }
-
-        .logo h1 {
-            font-family: 'Merriweather', serif;
-            margin: 0;
-            font-size: 26px;
-            letter-spacing: 0.5px;
-        }
-
-        nav a {
-            color: var(--text-graphite);
-            text-decoration: none;
-            margin-left: 20px;
-            font-weight: 500;
-            font-size: 15px;
-            transition: color 0.2s;
-        }
-
-        nav a:hover {
-            color: var(--forest-green);
-        }
-
-        /* Секции */
-        section {
-            margin: 60px 0;
         }
 
         h2.section-title {
@@ -117,47 +125,56 @@
             display: inline-block;
         }
 
-        /* Калькуляторы */
-        .calc-grid {
+        /* БЕНТО СЕТКА */
+        .bento-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
+            margin-bottom: 60px;
         }
 
-        .calc-card {
-            background: var(--card-bg);
+        .bento-card {
+            background-color: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 24px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        .calc-card h3 {
+        .bento-card:hover {
+            box-shadow: 4px 4px 15px rgba(0,0,0,0.05);
+            border-color: var(--forest-green);
+        }
+
+        .bento-card h3 {
             margin-top: 0;
             font-family: 'Merriweather', serif;
             color: var(--forest-green);
             font-size: 18px;
         }
 
+        /* Формы калькуляторов */
         .form-group {
             margin-bottom: 15px;
         }
 
         .form-group label {
             display: block;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             margin-bottom: 5px;
             text-transform: uppercase;
-            color: var(--text-graphite);
+            color: var(--forest-green);
         }
 
         .form-group input, .form-group select {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: 1px solid var(--border-color);
-            border-radius: 4px;
+            border-radius: 8px;
             box-sizing: border-box;
+            background-color: var(--bg-paper);
+            color: var(--text-graphite);
             font-family: 'Inter', sans-serif;
         }
 
@@ -165,16 +182,17 @@
             background-color: var(--forest-green);
             color: #fff;
             border: none;
-            padding: 12px;
+            padding: 14px;
             width: 100%;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
+            text-transform: uppercase;
             transition: background 0.2s;
         }
 
         .btn-calc:hover {
-            background-color: var(--forest-light);
+            background-color: var(--text-graphite);
         }
 
         .calc-result {
@@ -182,94 +200,77 @@
             padding: 15px;
             background-color: var(--bg-paper);
             border: 1px dashed var(--forest-green);
-            border-radius: 4px;
+            border-radius: 8px;
             font-weight: 600;
             text-align: center;
             display: none;
+            color: var(--text-graphite);
         }
 
-        .disclaimer {
-            font-size: 11px;
-            color: #666;
-            margin-top: 10px;
-            line-height: 1.4;
-        }
-
-        /* Статьи */
-        .articles-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
-
+        /* КАРТОЧКИ СТАТЕЙ (С ФОТО) */
         .article-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 24px;
-            text-decoration: none;
-            color: inherit;
-            display: block;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .article-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 15px rgba(45, 90, 39, 0.08);
-            border-color: var(--forest-green);
-        }
-
-        .article-title {
-            font-family: 'Merriweather', serif;
-            font-size: 20px;
-            margin: 0 0 10px 0;
-            color: var(--forest-green);
-        }
-
-        .article-meta {
-            font-size: 13px;
-            color: #666;
-        }
-
-        /* Юр. Шаблоны */
-        .legal-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .legal-item {
-            padding: 15px;
-            background: var(--card-bg);
-            border-left: 4px solid var(--text-graphite);
-            margin-bottom: 10px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .btn-download {
-            background: transparent;
-            color: var(--forest-green);
-            border: 1px solid var(--forest-green);
-            padding: 6px 12px;
-            border-radius: 4px;
+            flex-direction: column;
             cursor: pointer;
-            font-weight: 600;
+            overflow: hidden;
             text-decoration: none;
         }
+        
+        .article-img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 8px;
+            background-color: var(--border-color);
+            margin-bottom: 15px;
+        }
 
-        footer {
-            background-color: var(--text-graphite);
-            color: #fff;
-            text-align: center;
-            padding: 30px 0;
-            margin-top: 60px;
-            font-size: 14px;
+        /* МОДАЛЬНОЕ ОКНО ДЛЯ ЧТЕНИЯ СТАТЬИ */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--modal-bg);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 12px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--forest-green);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px; height: 32px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .modal-body img {
+            max-width: 100%;
+            border-radius: 8px;
         }
 
         @media (max-width: 768px) {
-            .header-content { flex-direction: column; gap: 15px; }
-            nav a { margin: 0 10px; }
+            .glass-header { padding: 15px 20px; }
+            .modal-content { padding: 20px; }
         }
     </style>
 </head>
@@ -278,120 +279,124 @@
     <!-- Веточка (Индикатор прогресса) -->
     <div id="reading-progress"></div>
 
-    <header>
-        <div class="container header-content">
-            <a href="#" class="logo">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/>
-                    <rect x="10.5" y="20" width="3" height="4"/>
-                </svg>
-                <h1>Лесовик</h1>
-            </a>
-            <nav>
-                <a href="#calculators">Инструментарий</a>
-                <a href="#articles">База знаний</a>
-                <a href="#legal">Шаблоны актов</a>
-            </nav>
-        </div>
+    <!-- Стеклянная шапка -->
+    <header class="glass-header">
+        <a href="#" class="logo-container">
+            <svg class="logo-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/>
+                <rect x="10.5" y="20" width="3" height="4"/>
+            </svg>
+            <h1>Лесовик</h1>
+        </a>
+        <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тень 🌙</button>
     </header>
 
     <main class="container">
         
-        <!-- СЕКЦИЯ: КАЛЬКУЛЯТОРЫ -->
-        <section id="calculators">
-            <h2 class="section-title">Цифровой Таксатор</h2>
-            <div class="calc-grid">
-                
-                <!-- Калькулятор Кубатуры -->
-                <div class="calc-card">
-                    <h3>📏 Кубатурник (ГОСТ)</h3>
-                    <div class="form-group">
-                        <label>Диаметр бревна (см)</label>
-                        <input type="number" id="cub-d" placeholder="Например: 24">
-                    </div>
-                    <div class="form-group">
-                        <label>Длина бревна (м)</label>
-                        <input type="number" id="cub-l" placeholder="Например: 6">
-                    </div>
-                    <button class="btn-calc" onclick="calcCubature()">Рассчитать объем</button>
-                    <div id="cub-result" class="calc-result"></div>
-                    <div class="disclaimer">Расчет производится по математической формуле объема цилиндра. Для точного коммерческого учета сверяйтесь с таблицами ГОСТ 2708-75.</div>
+        <!-- СЕКЦИЯ: КАЛЬКУЛЯТОРЫ (Бенто-сетка) -->
+        <h2 class="section-title">Цифровой Инструментарий</h2>
+        <div class="bento-grid">
+            
+            <!-- Калькулятор Кубатуры -->
+            <div class="bento-card">
+                <h3>📏 Объем круглого леса</h3>
+                <div class="form-group">
+                    <label>Диаметр в верхнем отрубе без коры (см)</label>
+                    <input type="number" id="cub-d" placeholder="Например: 24">
                 </div>
-
-                <!-- Калькулятор Полноты -->
-                <div class="calc-card">
-                    <h3>🌳 Сумма площадей сечений</h3>
-                    <div class="form-group">
-                        <label>Количество деревьев (шт)</label>
-                        <input type="number" id="pol-n" placeholder="Показания полнотомера/перечета">
-                    </div>
-                    <div class="form-group">
-                        <label>Средний диаметр (см)</label>
-                        <input type="number" id="pol-d" placeholder="Например: 32">
-                    </div>
-                    <button class="btn-calc" onclick="calcPolnota()">Рассчитать (м²/га)</button>
-                    <div id="pol-result" class="calc-result"></div>
-                    <div class="disclaimer">Используется стандартная формула вычисления площади поперечного сечения древостоя.</div>
+                <div class="form-group">
+                    <label>Длина бревна/хлыста (м)</label>
+                    <input type="number" id="cub-l" placeholder="Например: 6">
                 </div>
-
-                <!-- Калькулятор Веса -->
-                <div class="calc-card">
-                    <h3>⚖️ Вес древесины</h3>
-                    <div class="form-group">
-                        <label>Порода</label>
-                        <select id="weight-species">
-                            <option value="500">Сосна (Свежесрубленная ~800 кг/м³)</option>
-                            <option value="450">Ель (Свежесрубленная ~750 кг/м³)</option>
-                            <option value="650">Береза (Свежесрубленная ~850 кг/м³)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Объем (м³)</label>
-                        <input type="number" id="weight-v" placeholder="Например: 20">
-                    </div>
-                    <button class="btn-calc" onclick="calcWeight()">Оценить вес</button>
-                    <div id="weight-result" class="calc-result"></div>
-                    <div class="disclaimer">Вес указан ориентировочно. Реальная масса сильно зависит от влажности и зоны произрастания.</div>
+                <div class="form-group">
+                    <label>Количество (шт)</label>
+                    <input type="number" id="cub-q" value="1" placeholder="Сколько таких бревен?">
                 </div>
-
+                <button class="btn-calc" onclick="calcCubature()">Рассчитать объем</button>
+                <div id="cub-result" class="calc-result"></div>
             </div>
-        </section>
 
-        <!-- СЕКЦИЯ: ЖИВОЙ ОПЫТ (СТАТЬИ) -->
-        <section id="articles">
-            <h2 class="section-title">Опыт и Подкасты</h2>
-            <div id="articles-container" class="articles-grid">
-                <p style="color: #666;">⏳ Связь с базой данных Лесовика...</p>
+            <!-- Калькулятор Веса (Все породы) -->
+            <div class="bento-card">
+                <h3>⚖️ Оценка веса древесины</h3>
+                <div class="form-group">
+                    <label>Порода (свежесрубленная)</label>
+                    <select id="weight-species">
+                        <optgroup label="Хвойные">
+                            <option value="800">Сосна (~800 кг/м³)</option>
+                            <option value="750">Ель (~750 кг/м³)</option>
+                            <option value="850">Лиственница (~850 кг/м³)</option>
+                            <option value="800">Кедр (~800 кг/м³)</option>
+                            <option value="750">Пихта (~750 кг/м³)</option>
+                        </optgroup>
+                        <optgroup label="Лиственные">
+                            <option value="850">Береза (~850 кг/м³)</option>
+                            <option value="800">Осина (~800 кг/м³)</option>
+                            <option value="1000">Дуб (~1000 кг/м³)</option>
+                            <option value="950">Бук (~950 кг/м³)</option>
+                            <option value="900">Ясень (~900 кг/м³)</option>
+                            <option value="750">Липа (~750 кг/м³)</option>
+                            <option value="800">Ольха (~800 кг/м³)</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Общий объем (м³)</label>
+                    <input type="number" id="weight-v" placeholder="Например: 20">
+                </div>
+                <button class="btn-calc" onclick="calcWeight()">Узнать вес груза</button>
+                <div id="weight-result" class="calc-result"></div>
             </div>
-        </section>
 
-        <!-- СЕКЦИЯ: ЮРИДИЧЕСКИЕ ШАБЛОНЫ -->
-        <section id="legal">
-            <h2 class="section-title">Шаблоны документов</h2>
-            <ul class="legal-list">
-                <li class="legal-item">
-                    <span><strong>Акт о лесонарушении (Незаконная рубка)</strong><br><small style="color: #666;">Структурированный черновик с нужными ссылками на КоАП.</small></span>
-                    <a href="#" class="btn-download" onclick="alert('Файл будет доступен после загрузки шаблонов')">Скопировать</a>
-                </li>
-                <li class="legal-item">
-                    <span><strong>Акт лесопатологического обследования (ЛПО)</strong><br><small style="color: #666;">Бланк с правильными формулировками по болезням хвои и ствола.</small></span>
-                    <a href="#" class="btn-download" onclick="alert('Файл будет доступен после загрузки шаблонов')">Скопировать</a>
-                </li>
-            </ul>
-        </section>
+            <!-- Калькулятор Полноты -->
+            <div class="bento-card">
+                <h3>🌳 Полнота насаждений</h3>
+                <div class="form-group">
+                    <label>Количество стволов (шт)</label>
+                    <input type="number" id="pol-n" placeholder="По перечету">
+                </div>
+                <div class="form-group">
+                    <label>Средний диаметр (см)</label>
+                    <input type="number" id="pol-d" placeholder="Например: 32">
+                </div>
+                <button class="btn-calc" onclick="calcPolnota()">Площадь сечений (м²/га)</button>
+                <div id="pol-result" class="calc-result"></div>
+            </div>
+
+        </div>
+
+        <!-- СЕКЦИЯ: БАЗА ЗНАНИЙ (Статьи) -->
+        <h2 class="section-title">Опыт и Практика</h2>
+        <div id="articles-container" class="bento-grid">
+            <p style="color: var(--forest-green);">⏳ Подключаемся к базе Лесовика...</p>
+        </div>
 
     </main>
 
-    <footer>
-        <div class="container">
-            <p>&copy; <script>document.write(new Date().getFullYear())</script> Лесовик. Создано для профессионалов леса.</p>
-            <p style="font-size: 11px; opacity: 0.7;">Информация носит справочный характер.</p>
+    <!-- ВСПЛЫВАЮЩЕЕ ОКНО (МОДАЛКА) ДЛЯ ЧТЕНИЯ -->
+    <div id="article-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">X</button>
+            <h2 id="modal-title" style="color: var(--forest-green); font-family: 'Merriweather', serif;"></h2>
+            <div id="modal-body" class="modal-body" style="color: var(--text-graphite); line-height: 1.8;"></div>
         </div>
-    </footer>
+    </div>
 
-    <!-- Скрипты сайта -->
     <script>
-        // --- 1. РАСТУЩАЯ ВЕТОЧКА (Прогресс скролла) ---
+        // --- ПЕРЕКЛЮЧЕНИЕ ТЕМЫ (СВЕТ/ТЕНЬ) ---
+        function toggleTheme() {
+            const body = document.documentElement;
+            const btn = document.getElementById('themeBtn');
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                btn.innerHTML = 'Тень 🌙';
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                btn.innerHTML = 'Свет ☀️';
+            }
+        }
+
+        // --- ИНДИКАТОР ПРОГРЕССА ---
         window.addEventListener('scroll', () => {
             const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
             const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
@@ -399,32 +404,21 @@
             document.getElementById("reading-progress").style.width = scrolled + "%";
         });
 
-        // --- 2. ЛОГИКА КАЛЬКУЛЯТОРОВ ---
+        // --- КАЛЬКУЛЯТОРЫ ---
         function calcCubature() {
             const d = parseFloat(document.getElementById('cub-d').value);
             const l = parseFloat(document.getElementById('cub-l').value);
+            const q = parseFloat(document.getElementById('cub-q').value) || 1; // По умолчанию 1 шт
             const resBox = document.getElementById('cub-result');
-            if(d > 0 && l > 0) {
-                // Формула цилиндра V = (pi * d^2 / 40000) * L 
-                const v = ((Math.PI * Math.pow(d, 2)) / 40000) * l;
+            
+            if(d > 0 && l > 0 && q > 0) {
+                // Базовая математическая формула объема. 
+                const v_single = ((Math.PI * Math.pow(d, 2)) / 40000) * l;
+                const v_total = v_single * q;
                 resBox.style.display = 'block';
-                resBox.innerHTML = `Объем: <b>${v.toFixed(3)} м³</b>`;
+                resBox.innerHTML = `Объем ${q} шт: <b>${v_total.toFixed(3)} м³</b><br><small style="font-size:10px; color:gray;">*Геометрический расчет. Сверяйте с ГОСТ 2708-75</small>`;
             } else {
-                alert("Введите корректные данные");
-            }
-        }
-
-        function calcPolnota() {
-            const n = parseFloat(document.getElementById('pol-n').value);
-            const d = parseFloat(document.getElementById('pol-d').value);
-            const resBox = document.getElementById('pol-result');
-            if(n > 0 && d > 0) {
-                // G = N * (pi * d^2 / 40000)
-                const g = n * ((Math.PI * Math.pow(d, 2)) / 40000);
-                resBox.style.display = 'block';
-                resBox.innerHTML = `Сумма площадей: <b>${g.toFixed(2)} м²/га</b>`;
-            } else {
-                alert("Введите корректные данные");
+                alert("Введите корректный диаметр, длину и количество.");
             }
         }
 
@@ -433,17 +427,30 @@
             const v = parseFloat(document.getElementById('weight-v').value);
             const resBox = document.getElementById('weight-result');
             if(v > 0) {
-                // Оценочный вес свежесрубленной берем условно +300кг к сухой массе (значения в селекте)
-                const weightKg = (density + 300) * v; 
+                const weightKg = density * v; 
                 resBox.style.display = 'block';
-                resBox.innerHTML = `Ориентировочный вес: <b>${(weightKg / 1000).toFixed(1)} тонн</b>`;
+                resBox.innerHTML = `Масса груза: <b>${(weightKg / 1000).toFixed(2)} тонн</b>`;
             } else {
-                alert("Введите корректный объем");
+                alert("Введите корректный объем.");
             }
         }
 
-        // --- 3. ПОДКЛЮЧЕНИЕ К БАЗЕ ДАННЫХ YDB ---
+        function calcPolnota() {
+            const n = parseFloat(document.getElementById('pol-n').value);
+            const d = parseFloat(document.getElementById('pol-d').value);
+            const resBox = document.getElementById('pol-result');
+            if(n > 0 && d > 0) {
+                const g = n * ((Math.PI * Math.pow(d, 2)) / 40000);
+                resBox.style.display = 'block';
+                resBox.innerHTML = `Сумма сечений: <b>${g.toFixed(2)} м²/га</b>`;
+            } else {
+                alert("Введите корректные данные.");
+            }
+        }
+
+        // --- РАБОТА СО СТАТЬЯМИ И МОДАЛКОЙ ---
         const API_URL = 'https://functions.yandexcloud.net/d4ecn5ag33dcdd2deivd';
+        let articlesData = []; // Хранилище загруженных статей
 
         async function loadArticles() {
             const container = document.getElementById('articles-container');
@@ -453,31 +460,51 @@
                 
                 if (data.articles && data.articles.length > 0) {
                     container.innerHTML = '';
-                    // Выводим статьи от новых к старым (реверс)
-                    data.articles.reverse().forEach(article => {
+                    articlesData = data.articles.reverse(); // Новые сверху
+                    
+                    articlesData.forEach(article => {
+                        // Если база еще не отдает фото, ставим заглушку
+                        const imgUrl = article.cover_image_url ? article.cover_image_url : 'https://placehold.co/600x400/2D5A27/FFF?text=Фото+в+пути';
+                        
                         container.innerHTML += `
-                            <a href="#" class="article-card">
-                                <h3 class="article-title">${article.title}</h3>
-                                <span class="article-meta">📚 Материал из базы Лесовика</span>
-                            </a>
+                            <div class="bento-card article-card" onclick="openArticle('${article.id}')">
+                                <img src="${imgUrl}" alt="Обложка" class="article-img">
+                                <h3>${article.title}</h3>
+                            </div>
                         `;
                     });
                 } else {
-                    container.innerHTML = '<p>Статей пока нет. Загляните позже!</p>';
+                    container.innerHTML = '<p>Архив пока пуст.</p>';
                 }
             } catch (error) {
-                container.innerHTML = '<p style="color: red;">Временная ошибка подключения к базе данных.</p>';
-                console.error("Ошибка загрузки:", error);
+                container.innerHTML = '<p style="color: red;">Ошибка подключения к YDB.</p>';
             }
         }
 
-        // Запускаем загрузку статей при открытии сайта
+        function openArticle(id) {
+            const article = articlesData.find(a => a.id === id);
+            if(article) {
+                document.getElementById('modal-title').innerText = article.title;
+                // Проверяем, отдает ли база контент. Если нет - пишем пояснение.
+                if (article.content) {
+                    document.getElementById('modal-body').innerHTML = article.content;
+                } else {
+                    document.getElementById('modal-body').innerHTML = `
+                        <p><i>Статья находится в базе, но функция YDB пока передает только заголовок.</i></p>
+                        <p>Чтобы здесь появился текст и фотографии, нам нужно слегка обновить запрос к базе в Яндекс Функции.</p>
+                    `;
+                }
+                document.getElementById('article-modal').style.display = 'flex';
+                document.body.style.overflow = 'hidden'; // Блокируем скролл сайта
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('article-modal').style.display = 'none';
+            document.body.style.overflow = 'auto'; // Возвращаем скролл
+        }
+
         document.addEventListener('DOMContentLoaded', loadArticles);
     </script>
-
-    <!-- МЕСТО ДЛЯ ЯНДЕКС МЕТРИКИ И GOOGLE ANALYTICS -->
-    <!-- Вставьте код метрики прямо под этой строкой, когда купите домен -->
-    
-    <!-- /МЕСТО ДЛЯ ЯНДЕКС МЕТРИКИ -->
 </body>
 </html>
