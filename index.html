@@ -10,7 +10,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600&display=swap');
 
-        /* ПЕРЕМЕННЫЕ (Светлая тема по умолчанию) */
+        /* ПЕРЕМЕННЫЕ */
         :root {
             --bg-paper: #F9FBF9;
             --text-graphite: #333333;
@@ -19,7 +19,7 @@
             --border-color: #E0E0E0;
             --card-bg: #FFFFFF;
             --glass-bg: rgba(249, 251, 249, 0.85);
-            --modal-bg: rgba(0, 0, 0, 0.6);
+            --footer-bg: #2C3531;
         }
 
         /* ТЕМНАЯ ТЕМА */
@@ -31,6 +31,7 @@
             --border-color: #3A4F46;
             --card-bg: #22302B;
             --glass-bg: rgba(26, 36, 33, 0.85);
+            --footer-bg: #111815;
         }
 
         body {
@@ -41,6 +42,9 @@
             padding: 0;
             line-height: 1.6;
             transition: background-color 0.3s, color 0.3s;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
         /* Индикатор прогресса чтения */
@@ -91,7 +95,6 @@
             font-size: 22px;
         }
 
-        /* Кнопка смены темы */
         .theme-toggle {
             background: transparent;
             border: 1px solid var(--forest-green);
@@ -107,6 +110,10 @@
         .theme-toggle:hover {
             background-color: var(--forest-green);
             color: var(--bg-paper);
+        }
+
+        main {
+            flex: 1; /* Растягивает main, чтобы footer всегда был внизу */
         }
 
         .container {
@@ -154,123 +161,114 @@
         }
 
         /* Формы калькуляторов */
-        .form-group {
-            margin-bottom: 15px;
-        }
-
+        .form-group { margin-bottom: 15px; }
         .form-group label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            color: var(--forest-green);
+            display: block; font-size: 12px; font-weight: 600;
+            margin-bottom: 5px; text-transform: uppercase; color: var(--forest-green);
         }
-
         .form-group input, .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            box-sizing: border-box;
-            background-color: var(--bg-paper);
-            color: var(--text-graphite);
+            width: 100%; padding: 12px; border: 1px solid var(--border-color);
+            border-radius: 8px; box-sizing: border-box;
+            background-color: var(--bg-paper); color: var(--text-graphite);
             font-family: 'Inter', sans-serif;
         }
 
         .btn-calc {
-            background-color: var(--forest-green);
-            color: #fff;
-            border: none;
-            padding: 14px;
-            width: 100%;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            text-transform: uppercase;
-            transition: background 0.2s;
+            background-color: var(--forest-green); color: #fff;
+            border: none; padding: 14px; width: 100%; border-radius: 8px;
+            cursor: pointer; font-weight: 600; text-transform: uppercase; transition: 0.2s;
         }
-
-        .btn-calc:hover {
-            background-color: var(--text-graphite);
-        }
+        .btn-calc:hover { background-color: var(--text-graphite); }
 
         .calc-result {
-            margin-top: 15px;
-            padding: 15px;
-            background-color: var(--bg-paper);
-            border: 1px dashed var(--forest-green);
-            border-radius: 8px;
-            font-weight: 600;
-            text-align: center;
-            display: none;
-            color: var(--text-graphite);
+            margin-top: 15px; padding: 15px; background-color: var(--bg-paper);
+            border: 1px dashed var(--forest-green); border-radius: 8px;
+            font-weight: 600; text-align: center; display: none; color: var(--text-graphite);
         }
 
         /* КАРТОЧКИ СТАТЕЙ (С ФОТО) */
         .article-card {
-            display: flex;
-            flex-direction: column;
-            cursor: pointer;
-            overflow: hidden;
-            text-decoration: none;
+            display: flex; flex-direction: column; cursor: pointer;
+            overflow: hidden; text-decoration: none;
         }
         
         .article-img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            border-radius: 8px;
-            background-color: var(--border-color);
-            margin-bottom: 15px;
+            width: 100%; height: 180px; object-fit: cover;
+            border-radius: 8px; background-color: var(--border-color); margin-bottom: 15px;
         }
 
-        /* МОДАЛЬНОЕ ОКНО ДЛЯ ЧТЕНИЯ СТАТЬИ */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: var(--modal-bg);
-            backdrop-filter: blur(5px);
-            z-index: 2000;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .modal-content {
-            background: var(--card-bg);
+        /* --- СТРАНИЦА ОДНОЙ СТАТЬИ --- */
+        #article-view {
+            display: none; /* Скрыто по умолчанию */
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
             border-radius: 12px;
-            max-width: 800px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
             padding: 40px;
-            box-sizing: border-box;
+            margin-bottom: 40px;
         }
 
-        .modal-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: var(--forest-green);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 32px; height: 32px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .modal-body img {
-            max-width: 100%;
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: transparent;
+            color: var(--forest-green);
+            border: 1px solid var(--forest-green);
+            padding: 8px 16px;
             border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        .btn-back:hover {
+            background: var(--forest-green);
+            color: var(--bg-paper);
+        }
+
+        .full-article-title {
+            font-family: 'Merriweather', serif;
+            font-size: 32px;
+            color: var(--forest-green);
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .full-article-cover {
+            width: 100%;
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .full-article-content {
+            font-size: 16px;
+            line-height: 1.8;
+        }
+
+        /* ПОДВАЛ (Footer) */
+        footer {
+            background-color: var(--footer-bg);
+            color: #E0E0E0;
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: auto;
+        }
+
+        .footer-logo {
+            fill: #E0E0E0;
+            width: 24px;
+            height: 24px;
+            margin-bottom: 10px;
         }
 
         @media (max-width: 768px) {
             .glass-header { padding: 15px 20px; }
-            .modal-content { padding: 20px; }
+            #article-view { padding: 20px; }
+            .full-article-title { font-size: 24px; }
         }
     </style>
 </head>
@@ -281,7 +279,7 @@
 
     <!-- Стеклянная шапка -->
     <header class="glass-header">
-        <a href="#" class="logo-container">
+        <a href="index.html" class="logo-container" id="logo-link">
             <svg class="logo-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/>
                 <rect x="10.5" y="20" width="3" height="4"/>
@@ -293,94 +291,109 @@
 
     <main class="container">
         
-        <!-- СЕКЦИЯ: КАЛЬКУЛЯТОРЫ (Бенто-сетка) -->
-        <h2 class="section-title">Цифровой Инструментарий</h2>
-        <div class="bento-grid">
-            
-            <!-- Калькулятор Кубатуры -->
-            <div class="bento-card">
-                <h3>📏 Объем круглого леса</h3>
-                <div class="form-group">
-                    <label>Диаметр в верхнем отрубе без коры (см)</label>
-                    <input type="number" id="cub-d" placeholder="Например: 24">
+        <!-- ================= ГЛАВНАЯ СТРАНИЦА ================= -->
+        <div id="home-view">
+            <!-- СЕКЦИЯ: КАЛЬКУЛЯТОРЫ -->
+            <h2 class="section-title">Цифровой Инструментарий</h2>
+            <div class="bento-grid">
+                
+                <!-- Калькулятор Кубатуры -->
+                <div class="bento-card">
+                    <h3>📏 Объем круглого леса</h3>
+                    <div class="form-group">
+                        <label>Диаметр в верхнем отрубе без коры (см)</label>
+                        <input type="number" id="cub-d" placeholder="Например: 24">
+                    </div>
+                    <div class="form-group">
+                        <label>Длина бревна/хлыста (м)</label>
+                        <input type="number" id="cub-l" placeholder="Например: 6">
+                    </div>
+                    <div class="form-group">
+                        <label>Количество (шт)</label>
+                        <input type="number" id="cub-q" value="1" placeholder="Сколько таких бревен?">
+                    </div>
+                    <button class="btn-calc" onclick="calcCubature()">Рассчитать объем</button>
+                    <div id="cub-result" class="calc-result"></div>
                 </div>
-                <div class="form-group">
-                    <label>Длина бревна/хлыста (м)</label>
-                    <input type="number" id="cub-l" placeholder="Например: 6">
+
+                <!-- Калькулятор Веса -->
+                <div class="bento-card">
+                    <h3>⚖️ Оценка веса древесины</h3>
+                    <div class="form-group">
+                        <label>Порода (свежесрубленная)</label>
+                        <select id="weight-species">
+                            <optgroup label="Хвойные">
+                                <option value="800">Сосна (~800 кг/м³)</option>
+                                <option value="750">Ель (~750 кг/м³)</option>
+                                <option value="850">Лиственница (~850 кг/м³)</option>
+                                <option value="800">Кедр (~800 кг/м³)</option>
+                                <option value="750">Пихта (~750 кг/м³)</option>
+                            </optgroup>
+                            <optgroup label="Лиственные">
+                                <option value="850">Береза (~850 кг/м³)</option>
+                                <option value="800">Осина (~800 кг/м³)</option>
+                                <option value="1000">Дуб (~1000 кг/м³)</option>
+                                <option value="950">Бук (~950 кг/м³)</option>
+                                <option value="900">Ясень (~900 кг/м³)</option>
+                                <option value="750">Липа (~750 кг/м³)</option>
+                                <option value="800">Ольха (~800 кг/м³)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Общий объем (м³)</label>
+                        <input type="number" id="weight-v" placeholder="Например: 20">
+                    </div>
+                    <button class="btn-calc" onclick="calcWeight()">Узнать вес груза</button>
+                    <div id="weight-result" class="calc-result"></div>
                 </div>
-                <div class="form-group">
-                    <label>Количество (шт)</label>
-                    <input type="number" id="cub-q" value="1" placeholder="Сколько таких бревен?">
+
+                <!-- Калькулятор Полноты -->
+                <div class="bento-card">
+                    <h3>🌳 Полнота насаждений</h3>
+                    <div class="form-group">
+                        <label>Количество стволов (шт)</label>
+                        <input type="number" id="pol-n" placeholder="По перечету">
+                    </div>
+                    <div class="form-group">
+                        <label>Средний диаметр (см)</label>
+                        <input type="number" id="pol-d" placeholder="Например: 32">
+                    </div>
+                    <button class="btn-calc" onclick="calcPolnota()">Площадь сечений (м²/га)</button>
+                    <div id="pol-result" class="calc-result"></div>
                 </div>
-                <button class="btn-calc" onclick="calcCubature()">Рассчитать объем</button>
-                <div id="cub-result" class="calc-result"></div>
+
             </div>
 
-            <!-- Калькулятор Веса (Все породы) -->
-            <div class="bento-card">
-                <h3>⚖️ Оценка веса древесины</h3>
-                <div class="form-group">
-                    <label>Порода (свежесрубленная)</label>
-                    <select id="weight-species">
-                        <optgroup label="Хвойные">
-                            <option value="800">Сосна (~800 кг/м³)</option>
-                            <option value="750">Ель (~750 кг/м³)</option>
-                            <option value="850">Лиственница (~850 кг/м³)</option>
-                            <option value="800">Кедр (~800 кг/м³)</option>
-                            <option value="750">Пихта (~750 кг/м³)</option>
-                        </optgroup>
-                        <optgroup label="Лиственные">
-                            <option value="850">Береза (~850 кг/м³)</option>
-                            <option value="800">Осина (~800 кг/м³)</option>
-                            <option value="1000">Дуб (~1000 кг/м³)</option>
-                            <option value="950">Бук (~950 кг/м³)</option>
-                            <option value="900">Ясень (~900 кг/м³)</option>
-                            <option value="750">Липа (~750 кг/м³)</option>
-                            <option value="800">Ольха (~800 кг/м³)</option>
-                        </optgroup>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Общий объем (м³)</label>
-                    <input type="number" id="weight-v" placeholder="Например: 20">
-                </div>
-                <button class="btn-calc" onclick="calcWeight()">Узнать вес груза</button>
-                <div id="weight-result" class="calc-result"></div>
+            <!-- СЕКЦИЯ: БАЗА ЗНАНИЙ (Статьи) -->
+            <h2 class="section-title">Опыт и Практика</h2>
+            <div id="articles-container" class="bento-grid">
+                <p style="color: var(--forest-green);">⏳ Подключаемся к базе Лесовика...</p>
             </div>
-
-            <!-- Калькулятор Полноты -->
-            <div class="bento-card">
-                <h3>🌳 Полнота насаждений</h3>
-                <div class="form-group">
-                    <label>Количество стволов (шт)</label>
-                    <input type="number" id="pol-n" placeholder="По перечету">
-                </div>
-                <div class="form-group">
-                    <label>Средний диаметр (см)</label>
-                    <input type="number" id="pol-d" placeholder="Например: 32">
-                </div>
-                <button class="btn-calc" onclick="calcPolnota()">Площадь сечений (м²/га)</button>
-                <div id="pol-result" class="calc-result"></div>
-            </div>
-
         </div>
 
-        <!-- СЕКЦИЯ: БАЗА ЗНАНИЙ (Статьи) -->
-        <h2 class="section-title">Опыт и Практика</h2>
-        <div id="articles-container" class="bento-grid">
-            <p style="color: var(--forest-green);">⏳ Подключаемся к базе Лесовика...</p>
+        <!-- ================= СТРАНИЦА ОДНОЙ СТАТЬИ ================= -->
+        <div id="article-view">
+            <button class="btn-back" onclick="goHome()">← Назад к материалам</button>
+            <h1 id="full-title" class="full-article-title">Загрузка...</h1>
+            <img id="full-cover" class="full-article-cover" src="" alt="Обложка" style="display: none;">
+            <div id="full-content" class="full-article-content">
+                ⏳ Пожалуйста, подождите...
+            </div>
         </div>
 
     </main>
 
-    <!-- ВСПЛЫВАЮЩЕЕ ОКНО (МОДАЛКА) ДЛЯ ЧТЕНИЯ -->
-    <div id="article-modal" class="modal-overlay">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeModal()">X</button>
-            <h2 id="modal-title" style="color: var(--forest-green); font-family: 'Merriweather', serif;"></h2>
-            <div id="modal-body" class="modal-body" style="color: var(--text-graphite); line-height: 1.8;"></div>
-        </div>
-    </div>
+    <!-- ПОДВАЛ -->
+    <footer>
+        <svg class="footer-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/>
+            <rect x="10.5" y="20" width="3" height="4"/>
+        </svg>
+        <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 18px; margin-bottom: 10px;">Лесовик</div>
+        <div>&copy; <script>document.write(new Date().getFullYear())</script> Создано для профессионалов леса.</div>
+        <div style="font-size: 11px; margin-top: 10px; opacity: 0.6;">Все расчеты калькуляторов носят справочный характер.</div>
+    </footer>
 
     <script>
         // --- ПЕРЕКЛЮЧЕНИЕ ТЕМЫ (СВЕТ/ТЕНЬ) ---
@@ -408,11 +421,10 @@
         function calcCubature() {
             const d = parseFloat(document.getElementById('cub-d').value);
             const l = parseFloat(document.getElementById('cub-l').value);
-            const q = parseFloat(document.getElementById('cub-q').value) || 1; // По умолчанию 1 шт
+            const q = parseFloat(document.getElementById('cub-q').value) || 1; 
             const resBox = document.getElementById('cub-result');
             
             if(d > 0 && l > 0 && q > 0) {
-                // Базовая математическая формула объема. 
                 const v_single = ((Math.PI * Math.pow(d, 2)) / 40000) * l;
                 const v_total = v_single * q;
                 resBox.style.display = 'block';
@@ -448,63 +460,106 @@
             }
         }
 
-        // --- РАБОТА СО СТАТЬЯМИ И МОДАЛКОЙ ---
+        // --- РОУТИНГ И РАБОТА С БАЗОЙ (SPA) ---
         const API_URL = 'https://functions.yandexcloud.net/d4ecn5ag33dcdd2deivd';
-        let articlesData = []; // Хранилище загруженных статей
+        let articlesData = [];
 
-        async function loadArticles() {
-            const container = document.getElementById('articles-container');
+        // Проверяем адресную строку. Если есть ?id=..., показываем статью. Иначе - главную.
+        async function initApp() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const articleId = urlParams.get('id');
+
+            await fetchArticlesData(); // Сначала загружаем данные из базы
+
+            if (articleId) {
+                renderArticleView(articleId);
+            } else {
+                renderHomeView();
+            }
+        }
+
+        async function fetchArticlesData() {
             try {
                 const response = await fetch(API_URL + '?action=list');
                 const data = await response.json();
-                
-                if (data.articles && data.articles.length > 0) {
-                    container.innerHTML = '';
+                if (data.articles) {
                     articlesData = data.articles.reverse(); // Новые сверху
-                    
-                    articlesData.forEach(article => {
-                        // Если база еще не отдает фото, ставим заглушку
-                        const imgUrl = article.cover_image_url ? article.cover_image_url : 'https://placehold.co/600x400/2D5A27/FFF?text=Фото+в+пути';
-                        
-                        container.innerHTML += `
-                            <div class="bento-card article-card" onclick="openArticle('${article.id}')">
-                                <img src="${imgUrl}" alt="Обложка" class="article-img">
-                                <h3>${article.title}</h3>
-                            </div>
-                        `;
-                    });
-                } else {
-                    container.innerHTML = '<p>Архив пока пуст.</p>';
                 }
             } catch (error) {
-                container.innerHTML = '<p style="color: red;">Ошибка подключения к YDB.</p>';
+                console.error('Ошибка загрузки данных', error);
             }
         }
 
-        function openArticle(id) {
-            const article = articlesData.find(a => a.id === id);
-            if(article) {
-                document.getElementById('modal-title').innerText = article.title;
-                // Проверяем, отдает ли база контент. Если нет - пишем пояснение.
-                if (article.content) {
-                    document.getElementById('modal-body').innerHTML = article.content;
-                } else {
-                    document.getElementById('modal-body').innerHTML = `
-                        <p><i>Статья находится в базе, но функция YDB пока передает только заголовок.</i></p>
-                        <p>Чтобы здесь появился текст и фотографии, нам нужно слегка обновить запрос к базе в Яндекс Функции.</p>
+        function renderHomeView() {
+            document.getElementById('article-view').style.display = 'none';
+            document.getElementById('home-view').style.display = 'block';
+            
+            const container = document.getElementById('articles-container');
+            
+            if (articlesData.length > 0) {
+                container.innerHTML = '';
+                articlesData.forEach(article => {
+                    const imgUrl = article.cover_image_url ? article.cover_image_url : 'https://placehold.co/600x400/2D5A27/FFF?text=Фото+в+пути';
+                    // Формируем правильную ссылку для SEO и шеринга: ?id=...
+                    container.innerHTML += `
+                        <a href="?id=${article.id}" class="bento-card article-card">
+                            <img src="${imgUrl}" alt="Обложка" class="article-img">
+                            <h3>${article.title}</h3>
+                        </a>
                     `;
-                }
-                document.getElementById('article-modal').style.display = 'flex';
-                document.body.style.overflow = 'hidden'; // Блокируем скролл сайта
+                });
+            } else {
+                container.innerHTML = '<p>Архив пока пуст. Ожидайте новых публикаций!</p>';
             }
         }
 
-        function closeModal() {
-            document.getElementById('article-modal').style.display = 'none';
-            document.body.style.overflow = 'auto'; // Возвращаем скролл
+        function renderArticleView(id) {
+            document.getElementById('home-view').style.display = 'none';
+            document.getElementById('article-view').style.display = 'block';
+            window.scrollTo(0, 0); // Прокручиваем наверх
+
+            const article = articlesData.find(a => a.id === id);
+            
+            if(article) {
+                document.getElementById('full-title').innerText = article.title;
+                
+                // Настраиваем обложку
+                const coverImg = document.getElementById('full-cover');
+                if (article.cover_image_url) {
+                    coverImg.src = article.cover_image_url;
+                    coverImg.style.display = 'block';
+                } else {
+                    coverImg.style.display = 'none';
+                }
+
+                // Вставляем текст и видео (если есть)
+                let finalContent = "";
+                if (article.rutube_iframe) {
+                    finalContent += `<div style="margin-bottom: 20px;">${article.rutube_iframe}</div>`;
+                }
+                
+                if (article.content) {
+                    finalContent += article.content;
+                } else {
+                    finalContent += `<p><i>Текст статьи скоро появится. Обновите бэкенд для загрузки полного контента.</i></p>`;
+                }
+                
+                document.getElementById('full-content').innerHTML = finalContent;
+            } else {
+                document.getElementById('full-title').innerText = "Статья не найдена";
+                document.getElementById('full-content').innerHTML = "<p>Возможно, материал был удален или ссылка устарела.</p>";
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', loadArticles);
+        // Кнопка "Назад"
+        function goHome() {
+            // Меняем URL обратно на чистый, без перезагрузки страницы
+            window.history.pushState({}, document.title, window.location.pathname);
+            renderHomeView();
+        }
+
+        // Запуск приложения
+        document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
