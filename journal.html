@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <!-- Yandex.Metrika counter -->
+    <script type="text/javascript">
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109130409', 'ym');
+        ym(109130409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+    <!-- /Yandex.Metrika counter -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>Полевой журнал таксатора | Электронный перечет | Лесовик</title>
+    <meta name="description" content="Электронная перечетная ведомость. Сплошной, ленточный и круговой перечет леса. Расчет запаса на гектар онлайн.">
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📓</text></svg>">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --bg-paper: #F9FBF9;
+            --text-graphite: #333333;
+            --forest-green: #2D5A27;
+            --forest-light: #8FBC8F;
+            --border-color: #E0E0E0;
+            --card-bg: #FFFFFF;
+            --danger: #e74c3c;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-paper);
+            color: var(--text-graphite);
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .header {
+            background-color: var(--forest-green);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 20px;}
+
+        /* Формы и настройки */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        @media (max-width: 500px) {
+            .settings-grid { grid-template-columns: 1fr; }
+        }
+
+        label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 5px; text-transform: uppercase; }
+        select, input {
+            width: 100%; padding: 12px; border: 1px solid var(--border-color);
+            border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 16px;
+            background-color: var(--bg-paper); box-sizing: border-box;
+        }
+        select:focus, input:focus { outline: 2px solid var(--forest-green); border-color: transparent; }
+
+        .conditional-block { display: none; background: #f0f5f0; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px dashed var(--forest-light); }
+        .conditional-block.active { display: block; }
+
+        .area-result { font-size: 14px; font-weight: 600; color: var(--forest-green); margin-top: 10px; text-align: right;}
+
+        /* СЕТКА ТОЧКОВКИ */
+        .tally-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        
+        .tally-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 12px;
+        }
+
+        .tally-btn {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            user-select: none;
+        }
+        
+        .tally-btn.active { border-color: var(--forest-green); box-shadow: 0 0 0 2px rgba(45, 90, 39, 0.2); }
+
+        .tally-dim {
+            background: #f8faf8; padding: 8px; text-align: center;
+            font-weight: 700; color: var(--text-graphite); font-size: 18px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tally-actions { display: flex; height: 60px; }
+        
+        .btn-minus {
+            flex: 1; background: transparent; border: none; border-right: 1px solid var(--border-color);
+            color: var(--danger); font-size: 24px; cursor: pointer;
+        }
+        .btn-minus:active { background: #fdf0ef; }
+
+        .btn-plus {
+            flex: 2; background: var(--forest-green); border: none;
+            color: white; font-size: 24px; font-weight: bold; cursor: pointer;
+        }
+        .btn-plus:active { background: #1f401c; }
+
+        .tally-count { text-align: center; font-size: 28px; font-weight: 700; padding: 10px 0; color: var(--forest-green); }
+
+        /* Итоги */
+        .summary-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .summary-table th, .summary-table td { padding: 12px 8px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .summary-table th { font-weight: 600; color: #666; font-size: 13px; text-transform: uppercase; }
+        .summary-table tr:last-child td { border-bottom: none; font-weight: 700; font-size: 18px; color: var(--forest-green); }
+
+        .btn-clear { width: 100%; padding: 15px; background: white; border: 2px solid var(--danger); color: var(--danger); font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 20px; font-size: 16px;}
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <a href="index.html">← На главную</a>
+        <div style="font-weight: 700; font-family: 'Merriweather', serif;">📓 Полевой журнал</div>
+    </header>
+
+    <main class="container">
+        
+        <!-- НАСТРОЙКИ ПРОБЫ -->
+        <div class="card">
+            <h2>Параметры пробы</h2>
+            
+            <div class="settings-grid">
+                <div>
+                    <label>Вид перечета</label>
+                    <select id="tally-type" onchange="toggleAreaInputs()">
+                        <option value="continuous">Сплошной (известна площадь)</option>
+                        <option value="strip">Ленточный перечет</option>
+                        <option value="circular">Круговые площадки</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Скидка на кору</label>
+                    <select id="tally-bark" onchange="calculateResults()">
+                        <option value="no">Без коры (точные диаметры)</option>
+                        <option value="yes">В коре (скидка ~12% объема)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Скрытые блоки для разных видов перечета -->
+            <div id="block-continuous" class="conditional-block active">
+                <label>Площадь выдела / пробы (га)</label>
+                <input type="number" id="area-ha" value="1.0" step="0.1" oninput="calculateResults()">
+            </div>
+
+            <div id="block-strip" class="conditional-block">
+                <div class="settings-grid">
+                    <div>
+                        <label>Ширина ленты (м)</label>
+                        <input type="number" id="strip-w" value="10" oninput="calculateResults()">
+                    </div>
+                    <div>
+                        <label>Общая длина лент (м)</label>
+                        <input type="number" id="strip-l" value="100" oninput="calculateResults()">
+                    </div>
+                </div>
+            </div>
+
+            <div id="block-circular" class="conditional-block">
+                <div class="settings-grid">
+                    <div>
+                        <label>Радиус площадки (м)</label>
+                        <input type="number" id="circ-r" value="11.3" step="0.1" oninput="calculateResults()">
+                    </div>
+                    <div>
+                        <label>Количество площадок (шт)</label>
+                        <input type="number" id="circ-n" value="4" oninput="calculateResults()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="area-result" id="computed-area">Площадь пробы: 1.00 га</div>
+        </div>
+
+        <!-- ТОЧКОВКА -->
+        <div class="card">
+            <div class="tally-header">
+                <h2 style="margin:0;">Точковка деревьев</h2>
+            </div>
+            
+            <div class="settings-grid" style="margin-bottom: 20px;">
+                <div>
+                    <label>Рабочая порода</label>
+                    <select id="current-species" onchange="renderGrid()">
+                        <option value="Сосна">Сосна</option>
+                        <option value="Ель">Ель</option>
+                        <option value="Береза">Береза</option>
+                        <option value="Осина">Осина</option>
+                        <option value="Лиственница">Лиственница</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Ср. высота породы (м)</label>
+                    <input type="number" id="current-height" value="24" onchange="updateHeight()">
+                </div>
+            </div>
+
+            <div class="tally-grid" id="grid">
+                <!-- Кнопки генерируются JS -->
+            </div>
+        </div>
+
+        <!-- ИТОГИ -->
+        <div class="card">
+            <h2>Предварительные итоги (на 1 га)</h2>
+            <div id="summary-container">
+                <!-- Таблица генерируется JS -->
+            </div>
+            <p style="font-size: 11px; color: gray; margin-top: 15px; line-height: 1.4;">
+                * Запас вычисляется по формуле цилиндра с видовым числом ствола (f=0.42). Данные масштабируются на 1 гектар исходя из расчетной площади пробы.
+            </p>
+        </div>
+
+        <button class="btn-clear" onclick="clearData()">Очистить весь журнал</button>
+        
+        <!-- Отступ для скролла на мобильных -->
+        <div style="height: 50px;"></div>
+
+    </main>
+
+    <script>
+        // --- БАЗА ДАННЫХ И СОСТОЯНИЕ ---
+        let journalData = JSON.parse(localStorage.getItem('lesovik_tally')) || {
+            heights: { 'Сосна': 24, 'Ель': 22, 'Береза': 21, 'Осина': 23, 'Лиственница': 25 },
+            trees: {} // {'Сосна': { 12: 5, 16: 2 }}
+        };
+
+        const diameters = [8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64];
+
+        // --- УПРАВЛЕНИЕ ИНТЕРФЕЙСОМ ---
+        function toggleAreaInputs() {
+            const type = document.getElementById('tally-type').value;
+            document.querySelectorAll('.conditional-block').forEach(el => el.classList.remove('active'));
+            document.getElementById(`block-${type}`).classList.add('active');
+            calculateResults();
+        }
+
+        function getProbeArea() {
+            const type = document.getElementById('tally-type').value;
+            let area = 1.0;
+
+            if (type === 'continuous') {
+                area = parseFloat(document.getElementById('area-ha').value) || 1.0;
+            } else if (type === 'strip') {
+                const w = parseFloat(document.getElementById('strip-w').value) || 0;
+                const l = parseFloat(document.getElementById('strip-l').value) || 0;
+                area = (w * l) / 10000;
+            } else if (type === 'circular') {
+                const r = parseFloat(document.getElementById('circ-r').value) || 0;
+                const n = parseFloat(document.getElementById('circ-n').value) || 0;
+                area = (Math.PI * Math.pow(r, 2) * n) / 10000;
+            }
+            
+            document.getElementById('computed-area').innerText = `Площадь пробы: ${area.toFixed(3)} га`;
+            return area > 0 ? area : 1.0;
+        }
+
+        function updateHeight() {
+            const sp = document.getElementById('current-species').value;
+            const h = parseFloat(document.getElementById('current-height').value) || 20;
+            journalData.heights[sp] = h;
+            saveData();
+            calculateResults();
+        }
+
+        // --- ТОЧКОВКА ---
+        function renderGrid() {
+            const sp = document.getElementById('current-species').value;
+            const grid = document.getElementById('grid');
+            
+            // Восстанавливаем высоту для выбранной породы
+            document.getElementById('current-height').value = journalData.heights[sp] || 20;
+
+            grid.innerHTML = '';
+            if(!journalData.trees[sp]) journalData.trees[sp] = {};
+
+            diameters.forEach(d => {
+                const count = journalData.trees[sp][d] || 0;
+                const activeClass = count > 0 ? 'active' : '';
+                
+                grid.innerHTML += `
+                    <div class="tally-btn ${activeClass}">
+                        <div class="tally-dim">${d} см</div>
+                        <div class="tally-count" id="count-${d}">${count}</div>
+                        <div class="tally-actions">
+                            <button class="btn-minus" onclick="changeCount(${d}, -1)">-</button>
+                            <button class="btn-plus" onclick="changeCount(${d}, 1)">+</button>
+                        </div>
+                    </div>
+                `;
+            });
+            calculateResults();
+        }
+
+        function changeCount(d, delta) {
+            const sp = document.getElementById('current-species').value;
+            if(!journalData.trees[sp]) journalData.trees[sp] = {};
+            
+            let current = journalData.trees[sp][d] || 0;
+            current += delta;
+            if (current < 0) current = 0;
+            
+            journalData.trees[sp][d] = current;
+            
+            // Быстрое обновление UI без перерисовки всей сетки
+            document.getElementById(`count-${d}`).innerText = current;
+            const card = document.getElementById(`count-${d}`).parentElement;
+            if (current > 0) card.classList.add('active');
+            else card.classList.remove('active');
+
+            saveData();
+            calculateResults();
+        }
+
+        function saveData() {
+            localStorage.setItem('lesovik_tally', JSON.stringify(journalData));
+        }
+
+        // --- МАТЕМАТИКА ---
+        function calculateResults() {
+            const area = getProbeArea();
+            const inBark = document.getElementById('tally-bark').value === 'yes';
+            const kScale = 1 / area; // Коэффициент перевода на 1 гектар
+            
+            const tbody = document.createElement('tbody');
+            let grandTotalStems = 0;
+            let grandTotalVol = 0;
+
+            for (const sp in journalData.trees) {
+                let spStems = 0;
+                let spVol = 0;
+                const h = journalData.heights[sp] || 20;
+
+                for (const d in journalData.trees[sp]) {
+                    const qty = journalData.trees[sp][d];
+                    if (qty > 0) {
+                        spStems += qty;
+                        // Формула: Объем цилиндра * видовое число (0.42)
+                        // V = (PI * d^2 / 40000) * H * F
+                        let v = ((Math.PI * Math.pow(d, 2)) / 40000) * h * 0.42 * qty;
+                        if (inBark) v *= 0.88; // Скидка на кору
+                        spVol += v;
+                    }
+                }
+
+                if (spStems > 0) {
+                    const stemsPerHa = spStems * kScale;
+                    const volPerHa = spVol * kScale;
+                    
+                    grandTotalStems += stemsPerHa;
+                    grandTotalVol += volPerHa;
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${sp}</td>
+                            <td>${Math.round(stemsPerHa)}</td>
+                            <td>${volPerHa.toFixed(1)} м³</td>
+                        </tr>
+                    `;
+                }
+            }
+
+            const table = document.createElement('table');
+            table.className = 'summary-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Порода</th>
+                        <th>Шт/га</th>
+                        <th>Запас м³/га</th>
+                    </tr>
+                </thead>
+            `;
+            
+            if (grandTotalStems > 0) {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>ИТОГО</td>
+                        <td>${Math.round(grandTotalStems)}</td>
+                        <td>${grandTotalVol.toFixed(1)} м³</td>
+                    </tr>
+                `;
+                table.appendChild(tbody);
+                document.getElementById('summary-container').innerHTML = '';
+                document.getElementById('summary-container').appendChild(table);
+            } else {
+                document.getElementById('summary-container').innerHTML = '<p style="color: gray;">Нет данных для расчета. Начните точковку.</p>';
+            }
+        }
+
+        function clearData() {
+            if(confirm("Вы уверены? Все записи текущего перечета будут удалены!")) {
+                journalData.trees = {};
+                saveData();
+                renderGrid();
+            }
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', () => {
+            toggleAreaInputs();
+            renderGrid();
+        });
+    </script>
+</body>
+</html>
