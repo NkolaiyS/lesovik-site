@@ -161,7 +161,7 @@
             font-family: 'Merriweather', serif;
             color: var(--forest-green);
             font-size: 18px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
         /* Формы калькуляторов */
@@ -203,6 +203,11 @@
             width: 100%; height: 200px; object-fit: cover;
             border-radius: 8px; background-color: var(--border-color); margin-bottom: 15px;
         }
+        
+        .article-card-meta {
+            font-size: 12px; color: #6b7280; font-family: 'Inter', sans-serif;
+            margin-top: auto;
+        }
 
         /* --- СТРАНИЦА ОДНОЙ СТАТЬИ --- */
         #article-view {
@@ -233,8 +238,13 @@
             font-family: 'Merriweather', serif;
             font-size: 36px;
             color: var(--forest-green);
-            margin-top: 0; margin-bottom: 25px;
+            margin-top: 0; margin-bottom: 10px;
             line-height: 1.3;
+        }
+        
+        .full-article-meta {
+            font-size: 14px; color: #6b7280; margin-bottom: 25px;
+            display: flex; gap: 15px; align-items: center;
         }
 
         .full-article-cover {
@@ -388,6 +398,7 @@
         <div id="article-view">
             <button class="btn-back" onclick="goHome()">← Назад к материалам</button>
             <h1 id="full-title" class="full-article-title">Загрузка...</h1>
+            <div id="full-meta" class="full-article-meta"></div>
             <img id="full-cover" class="full-article-cover" src="" alt="Обложка" style="display: none;">
             <div id="full-content" class="full-article-content">
                 ⏳ Пожалуйста, подождите...
@@ -476,15 +487,20 @@
         const API_URL = 'https://functions.yandexcloud.net/d4ecn5ag33dcdd2deivd';
         let articlesData = [];
 
-        // Проверяем адресную строку. Если есть ?id=..., показываем статью. Иначе - главную.
+        // Проверяем адресную строку. Если есть красивый адрес ?post=... или старый ?id=...
         async function initApp() {
             const urlParams = new URLSearchParams(window.location.search);
-            const articleId = urlParams.get('id');
+            const postSlug = urlParams.get('post');
+            const postId = urlParams.get('id');
 
             await fetchArticlesData(); 
 
-            if (articleId) {
-                renderArticleView(articleId);
+            if (postSlug) {
+                const targetArticle = articlesData.find(a => a.slug === postSlug);
+                if (targetArticle) renderArticleView(targetArticle.id);
+                else renderArticleView('not-found');
+            } else if (postId) {
+                renderArticleView(postId);
             } else {
                 renderHomeView();
             }
@@ -512,15 +528,23 @@
             if (articlesData.length > 0) {
                 container.innerHTML = '';
                 articlesData.forEach(article => {
-                    // Проверка: если URL пустой, ставим заглушку
                     const imgUrl = article.cover_image_url && article.cover_image_url.trim() !== "" 
                         ? article.cover_image_url 
                         : 'https://placehold.co/600x400/2D5A27/FFF?text=Фото+в+пути';
                     
+                    // Вычисляем время чтения и берем дату
+                    const textLength = article.content ? article.content.replace(/<[^>]+>/g, '').split(/\s+/).length : 0;
+                    const readTime = Math.max(1, Math.ceil(textLength / 150));
+                    const dateStr = article.published_at || '';
+                    
+                    // Формируем красивую ссылку. Если есть slug, используем его
+                    const linkUrl = article.slug ? `?post=${article.slug}` : `?id=${article.id}`;
+                    
                     container.innerHTML += `
-                        <a href="?id=${article.id}" class="bento-card article-card" onclick="routeToArticle(event, '${article.id}')">
+                        <a href="${linkUrl}" class="bento-card article-card" onclick="routeToArticle(event, '${article.id}', '${article.slug}')">
                             <img src="${imgUrl}" alt="Обложка" class="article-img">
-                            <h3 style="margin-bottom: 0;">${article.title}</h3>
+                            <h3 style="margin-bottom: 5px;">${article.title}</h3>
+                            <div class="article-card-meta">${dateStr} &nbsp;•&nbsp; ⏱ ~${readTime} мин</div>
                         </a>
                     `;
                 });
@@ -529,11 +553,12 @@
             }
         }
 
-        // Функция перехвата клика (чтобы страница не перезагружалась целиком)
-        function routeToArticle(event, id) {
-            event.preventDefault(); // Останавливаем стандартный переход
-            window.history.pushState({}, "", `?id=${id}`); // Меняем URL
-            renderArticleView(id); // Отрисовываем статью
+        function routeToArticle(event, id, slug) {
+            event.preventDefault();
+            // Обновляем URL на красивый
+            const newUrl = slug ? `?post=${slug}` : `?id=${id}`;
+            window.history.pushState({}, "", newUrl); 
+            renderArticleView(id); 
         }
 
         function renderArticleView(id) {
@@ -545,6 +570,17 @@
             
             if(article) {
                 document.getElementById('full-title').innerText = article.title;
+                
+                // --- Аналитика статьи (Дата, Просмотры, Время) ---
+                const textLength = article.content ? article.content.replace(/<[^>]+>/g, '').split(/\s+/).length : 0;
+                const readTime = Math.max(1, Math.ceil(textLength / 150));
+                const views = article.view_count || 0;
+                
+                let metaHtml = '';
+                if(article.published_at) metaHtml += `<span>📅 ${article.published_at}</span>`;
+                metaHtml += `<span>👁 ${views} просмотров</span>`;
+                metaHtml += `<span>⏱ ~${readTime} мин чтения</span>`;
+                document.getElementById('full-meta').innerHTML = metaHtml;
                 
                 // Настраиваем обложку
                 const coverImg = document.getElementById('full-cover');
@@ -568,8 +604,19 @@
                 }
                 
                 document.getElementById('full-content').innerHTML = finalContent;
+                
+                // ТИХИЙ ШПИОН: Отправляем запрос на увеличение просмотров
+                // Делаем это с задержкой 2 секунды, чтобы не считать случайные клики
+                setTimeout(() => {
+                    fetch(API_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'increment_view', id: article.id })
+                    }).catch(e => console.log('Счетчик не сработал', e));
+                }, 2000);
+
             } else {
                 document.getElementById('full-title').innerText = "Статья не найдена";
+                document.getElementById('full-meta').innerHTML = "";
                 document.getElementById('full-content').innerHTML = "<p>Возможно, материал был удален или ссылка устарела.</p>";
                 document.getElementById('full-cover').style.display = 'none';
             }
@@ -584,9 +631,14 @@
         // Обработка кнопок браузера (назад/вперед)
         window.onpopstate = function() {
             const urlParams = new URLSearchParams(window.location.search);
-            const articleId = urlParams.get('id');
-            if (articleId) {
-                renderArticleView(articleId);
+            const postSlug = urlParams.get('post');
+            const postId = urlParams.get('id');
+            
+            if (postSlug) {
+                const targetArticle = articlesData.find(a => a.slug === postSlug);
+                if (targetArticle) renderArticleView(targetArticle.id);
+            } else if (postId) {
+                renderArticleView(postId);
             } else {
                 renderHomeView();
             }
