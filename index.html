@@ -18,7 +18,7 @@
             --forest-light: #8FBC8F;
             --border-color: #E0E0E0;
             --card-bg: #FFFFFF;
-            --glass-bg: rgba(249, 251, 249, 0.85);
+            --glass-bg: rgba(249, 251, 249, 0.7); /* Сделано прозрачнее для эффекта стекла */
             --footer-bg: #2C3531;
         }
 
@@ -30,7 +30,7 @@
             --forest-light: #2D5A27;
             --border-color: #3A4F46;
             --card-bg: #22302B;
-            --glass-bg: rgba(26, 36, 33, 0.85);
+            --glass-bg: rgba(26, 36, 33, 0.7); /* Сделано прозрачнее для эффекта стекла */
             --footer-bg: #111815;
         }
 
@@ -209,8 +209,8 @@
             margin-top: auto;
         }
 
-        /* --- СТРАНИЦА ОДНОЙ СТАТЬИ --- */
-        #article-view {
+        /* --- СТРАНИЦА ОДНОЙ СТАТЬИ И ДОКУМЕНТОВ --- */
+        #article-view, #static-page-view {
             display: none; 
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -255,7 +255,6 @@
             margin-bottom: 40px;
         }
 
-        /* ВОТ ЗДЕСЬ РЕШЕНИЕ ПРОБЛЕМЫ С АБЗАЦАМИ: white-space: pre-wrap */
         .full-article-content {
             font-size: 17px;
             line-height: 1.8;
@@ -269,28 +268,82 @@
             margin-top: 30px;
         }
 
+        /* ИСПРАВЛЕНИЕ ВЫХОДА КАРТИНОК ИЗ РАМОК ВНУТРИ ТЕКСТА */
+        .full-article-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            display: block;
+            margin: 20px 0;
+        }
+        
+        .full-article-content iframe {
+            max-width: 100%;
+        }
+
         /* ПОДВАЛ (Footer) */
         footer {
             background-color: var(--footer-bg);
             color: #E0E0E0;
-            text-align: center;
-            padding: 30px 20px;
+            padding: 50px 20px 20px;
             margin-top: auto;
+            font-size: 14px;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
         }
 
         .footer-logo {
-            fill: #E0E0E0; width: 24px; height: 24px; margin-bottom: 10px;
+            fill: #E0E0E0; width: 28px; height: 28px; margin-bottom: 10px;
         }
 
-        /* МОБИЛЬНАЯ АДАПТАЦИЯ (Перестроение в 1 колонку) */
+        .footer-column h4 {
+            font-family: 'Merriweather', serif;
+            color: #E0E0E0;
+            font-size: 16px;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .footer-column a {
+            color: #8FBC8F;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 10px;
+            transition: color 0.2s;
+        }
+
+        .footer-column a:hover {
+            color: #FFFFFF;
+            text-decoration: underline;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 12px;
+            opacity: 0.6;
+        }
+
+        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
         @media (max-width: 900px) {
             .bento-grid { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 600px) {
             .bento-grid { grid-template-columns: 1fr; }
             .glass-header { padding: 15px 20px; }
-            #article-view { padding: 20px; }
+            #article-view, #static-page-view { padding: 20px; }
             .full-article-title { font-size: 26px; }
+            .footer-content { grid-template-columns: 1fr; gap: 30px; }
         }
     </style>
 </head>
@@ -405,17 +458,48 @@
             </div>
         </div>
 
+        <!-- ================= СТРАНИЦА СТАТИЧНЫХ ДОКУМЕНТОВ ================= -->
+        <div id="static-page-view">
+            <button class="btn-back" onclick="goHome()">← На главную</button>
+            <h1 id="static-title" class="full-article-title">Документ</h1>
+            <div id="static-content" class="full-article-content">
+                <!-- Текст подставится через JS -->
+            </div>
+        </div>
+
     </main>
 
     <!-- ПОДВАЛ -->
     <footer>
-        <svg class="footer-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/>
-            <rect x="10.5" y="20" width="3" height="4"/>
-        </svg>
-        <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 18px; margin-bottom: 10px;">Лесовик</div>
-        <div>&copy; <script>document.write(new Date().getFullYear())</script> Создано для профессионалов леса.</div>
-        <div style="font-size: 11px; margin-top: 10px; opacity: 0.6;">Все расчеты калькуляторов носят справочный характер.</div>
+        <div class="footer-content">
+            <div class="footer-column">
+                <svg class="footer-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/>
+                    <rect x="10.5" y="20" width="3" height="4"/>
+                </svg>
+                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 18px;">Лесовик</div>
+                <div style="font-size: 13px; margin-top: 5px; opacity: 0.8;">Цифровой инструмент таксатора. База знаний, калькуляторы и профильные статьи для специалистов леса.</div>
+            </div>
+            
+            <div class="footer-column">
+                <h4>Правовая информация</h4>
+                <!-- Ссылки на документы -->
+                <a href="javascript:void(0)" onclick="routeToStaticPage(event, 'policy')">Политика конфиденциальности</a>
+                <a href="javascript:void(0)" onclick="routeToStaticPage(event, 'offer')">Договор-оферта</a>
+            </div>
+
+            <div class="footer-column">
+                <h4>Контакты</h4>
+                <a href="mailto:folgoal@gmail.com">✉️ folgoal@gmail.com</a>
+                <div style="font-size: 12px; margin-top: 15px; opacity: 0.6;">
+                    * Все расчеты калькуляторов носят ознакомительный и справочный характер. Перед принятием решений сверяйтесь с ГОСТ.
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            &copy; <script>document.write(new Date().getFullYear())</script> Создано для профессионалов леса. Все права защищены.
+        </div>
     </footer>
 
     <script>
@@ -487,11 +571,18 @@
         const API_URL = 'https://functions.yandexcloud.net/d4ecn5ag33dcdd2deivd';
         let articlesData = [];
 
-        // Проверяем адресную строку. Если есть красивый адрес ?post=... или старый ?id=...
+        // Инициализация при загрузке
         async function initApp() {
             const urlParams = new URLSearchParams(window.location.search);
             const postSlug = urlParams.get('post');
             const postId = urlParams.get('id');
+            const staticPage = urlParams.get('page'); // Проверка статических страниц
+
+            if (staticPage) {
+                renderStaticPage(staticPage);
+                fetchArticlesData(); // Загрузим статьи в фоне для скорости
+                return;
+            }
 
             await fetchArticlesData(); 
 
@@ -519,8 +610,10 @@
             }
         }
 
+        // --- Отрисовка главной страницы ---
         function renderHomeView() {
             document.getElementById('article-view').style.display = 'none';
+            document.getElementById('static-page-view').style.display = 'none';
             document.getElementById('home-view').style.display = 'block';
             
             const container = document.getElementById('articles-container');
@@ -532,12 +625,10 @@
                         ? article.cover_image_url 
                         : 'https://placehold.co/600x400/2D5A27/FFF?text=Фото+в+пути';
                     
-                    // Вычисляем время чтения и берем дату
                     const textLength = article.content ? article.content.replace(/<[^>]+>/g, '').split(/\s+/).length : 0;
                     const readTime = Math.max(1, Math.ceil(textLength / 150));
                     const dateStr = article.published_at || '';
                     
-                    // Формируем красивую ссылку. Если есть slug, используем его
                     const linkUrl = article.slug ? `?post=${article.slug}` : `?id=${article.id}`;
                     
                     container.innerHTML += `
@@ -553,16 +644,56 @@
             }
         }
 
+        // --- Отрисовка документов (Политика, Оферта) ---
+        function routeToStaticPage(event, pageType) {
+            event.preventDefault();
+            window.history.pushState({}, "", `?page=${pageType}`); 
+            renderStaticPage(pageType);
+        }
+
+        function renderStaticPage(pageType) {
+            document.getElementById('home-view').style.display = 'none';
+            document.getElementById('article-view').style.display = 'none';
+            document.getElementById('static-page-view').style.display = 'block';
+            window.scrollTo(0, 0);
+
+            const titleEl = document.getElementById('static-title');
+            const contentEl = document.getElementById('static-content');
+
+            // ТЕКСТЫ ДОКУМЕНТОВ (Потом вы замените эти тексты на настоящие)
+            if (pageType === 'policy') {
+                titleEl.innerText = 'Политика конфиденциальности';
+                contentEl.innerHTML = `
+                    <p>Настоящая Политика конфиденциальности описывает, как мы собираем, используем и обрабатываем данные на сайте "Лесовик".</p>
+                    <h3>Сбор данных</h3>
+                    <p>Мы не собираем персональные данные (ФИО, паспортные данные, телефоны) для идентификации пользователей. На сайте могут использоваться файлы cookies и аналитические сервисы (например, Яндекс Метрика) для улучшения работы ресурса и оценки рекламных кампаний.</p>
+                    <p><i>(Полный юридический текст будет опубликован здесь позже)</i></p>
+                `;
+            } else if (pageType === 'offer') {
+                titleEl.innerText = 'Договор-оферта';
+                contentEl.innerHTML = `
+                    <p>Настоящий документ является публичной офертой...</p>
+                    <p>Здесь будут прописаны условия взаимодействия, правила использования материалов сайта, а также информация о рекламных интеграциях.</p>
+                    <p><i>(Полный юридический текст будет опубликован здесь позже)</i></p>
+                `;
+            } else {
+                titleEl.innerText = 'Страница не найдена';
+                contentEl.innerHTML = '<p>Запрошенный документ не существует.</p>';
+            }
+        }
+
+        // --- Переход к статье ---
         function routeToArticle(event, id, slug) {
             event.preventDefault();
-            // Обновляем URL на красивый
             const newUrl = slug ? `?post=${slug}` : `?id=${id}`;
             window.history.pushState({}, "", newUrl); 
             renderArticleView(id); 
         }
 
+        // --- Отрисовка отдельной статьи ---
         function renderArticleView(id) {
             document.getElementById('home-view').style.display = 'none';
+            document.getElementById('static-page-view').style.display = 'none';
             document.getElementById('article-view').style.display = 'block';
             window.scrollTo(0, 0); 
 
@@ -571,7 +702,6 @@
             if(article) {
                 document.getElementById('full-title').innerText = article.title;
                 
-                // --- Аналитика статьи (Дата, Просмотры, Время) ---
                 const textLength = article.content ? article.content.replace(/<[^>]+>/g, '').split(/\s+/).length : 0;
                 const readTime = Math.max(1, Math.ceil(textLength / 150));
                 const views = article.view_count || 0;
@@ -582,7 +712,6 @@
                 metaHtml += `<span>⏱ ~${readTime} мин чтения</span>`;
                 document.getElementById('full-meta').innerHTML = metaHtml;
                 
-                // Настраиваем обложку
                 const coverImg = document.getElementById('full-cover');
                 if (article.cover_image_url && article.cover_image_url.trim() !== "") {
                     coverImg.src = article.cover_image_url;
@@ -591,7 +720,6 @@
                     coverImg.style.display = 'none';
                 }
 
-                // Вставляем текст и видео
                 let finalContent = "";
                 if (article.rutube_iframe && article.rutube_iframe.trim() !== "") {
                     finalContent += `<div style="margin-bottom: 30px;">${article.rutube_iframe}</div>`;
@@ -605,8 +733,6 @@
                 
                 document.getElementById('full-content').innerHTML = finalContent;
                 
-                // ТИХИЙ ШПИОН: Отправляем запрос на увеличение просмотров
-                // Делаем это с задержкой 2 секунды, чтобы не считать случайные клики
                 setTimeout(() => {
                     fetch(API_URL, {
                         method: 'POST',
@@ -633,8 +759,11 @@
             const urlParams = new URLSearchParams(window.location.search);
             const postSlug = urlParams.get('post');
             const postId = urlParams.get('id');
+            const staticPage = urlParams.get('page');
             
-            if (postSlug) {
+            if (staticPage) {
+                renderStaticPage(staticPage);
+            } else if (postSlug) {
                 const targetArticle = articlesData.find(a => a.slug === postSlug);
                 if (targetArticle) renderArticleView(targetArticle.id);
             } else if (postId) {
@@ -644,7 +773,7 @@
             }
         };
 
-        // Запуск приложения
+        // Запуск
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
