@@ -38,7 +38,8 @@
     <meta property="og:url" content="https://lesovik-pro.ru/">
     <!-- ======================= -->
     
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌲</text></svg>">
+    <!-- Подтягиваем фавикон из файла logo.jpeg -->
+    <link rel="icon" type="image/jpeg" href="logo.jpeg">
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600&display=swap');
@@ -115,10 +116,13 @@
             text-decoration: none;
         }
 
-        .logo-svg {
-            width: 28px;
-            height: 28px;
-            fill: var(--forest-green);
+        /* Круглое лого в шапке (вместо SVG) */
+        .header-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%; /* Делаем круглым */
+            object-fit: cover;
+            border: 2px solid var(--forest-green);
         }
 
         .glass-header h1 {
@@ -144,17 +148,27 @@
                 display: block;
             }
         }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
         .theme-toggle {
             background: transparent;
             border: 1px solid var(--forest-green);
             color: var(--forest-green);
-            padding: 8px 16px;
+            padding: 8px; /* Уменьшили padding, т.к. только иконка */
             border-radius: 8px;
             cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            font-weight: 500;
+            font-size: 18px; /* Сделали иконку чуть крупнее */
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: all 0.2s;
+            width: 40px; /* Фиксированная ширина для ровной кнопки */
+            height: 40px; /* Фиксированная высота */
         }
 
         .theme-toggle:hover {
@@ -384,6 +398,13 @@
             opacity: 0.6;
         }
 
+        /* Контейнер для рекламы ВК */
+        .vk-ad-container {
+            margin-bottom: 60px; /* Отступ до блока статей */
+            text-align: center;
+            min-height: 250px; /* Резервируем место, чтобы страница не прыгала при загрузке рекламы */
+        }
+
         /* МОБИЛЬНАЯ АДАПТАЦИЯ */
         @media (max-width: 900px) {
             .bento-grid { grid-template-columns: repeat(2, 1fr); }
@@ -405,17 +426,17 @@
     <!-- Стеклянная шапка -->
     <header class="glass-header">
         <a href="javascript:void(0)" onclick="goHome()" class="logo-container" id="logo-link">
-            <svg class="logo-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/>
-                <rect x="10.5" y="20" width="3" height="4"/>
-            </svg>
+            <!-- Вывод круглого логотипа -->
+            <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
             <h1>Лесовик</h1>
         </a>
         
         <!-- === ТЕКСТ ПО ЦЕНТРУ ДЛЯ SEO === -->
         <div class="header-seo-text">Кубатурник онлайн • Расчет древесины • Справочник таксатора</div>
         
-        <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тень 🌙</button>
+        <div class="header-right">
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+        </div>
     </header>
 
     <main class="container">
@@ -477,21 +498,30 @@
                     <div id="weight-result" class="calc-result"></div>
                 </div>
 
-                <!-- Калькулятор Полноты -->
+                <!-- Полевой журнал -->
                 <div class="bento-card">
-                    <h3>🌳 Полнота насаждений</h3>
-                    <div class="form-group">
-                        <label>Количество стволов (шт)</label>
-                        <input type="number" id="pol-n" placeholder="По перечету">
-                    </div>
-                    <div class="form-group">
-                        <label>Средний диаметр (см)</label>
-                        <input type="number" id="pol-d" placeholder="Например: 32">
-                    </div>
-                    <button class="btn-calc" onclick="calcPolnota()">Площадь сечений (м²/га)</button>
-                    <div id="pol-result" class="calc-result"></div>
+                    <h3>🌳 Полевой журнал</h3>
+                    <p style="font-size: 14px; margin-top: 0; margin-bottom: 20px; color: var(--text-graphite); opacity: 0.8;">
+                        Электронная перечетная ведомость. Сплошной, ленточный и круговой перечет леса с автоматическим расчетом запаса.
+                    </p>
+                    <a href="journal.html" style="text-decoration: none; margin-top: auto;">
+                        <button class="btn-calc" style="background-color: #ffffff; color: var(--forest-green); border: 1px solid var(--forest-green);">Открыть журнал</button>
+                    </a>
                 </div>
 
+            </div>
+
+            <!-- БЛОК РЕКЛАМЫ VK -->
+            <div class="vk-ad-container">
+                <script async src="https://ad.mail.ru/static/ads-async.js"></script>
+                <ins class="mrg-tag" 
+                    style="display:block;text-decoration: none;"
+                    data-ad-client="ad-2008430" 
+                    data-ad-slot="2008430">
+                </ins>
+                <script>
+                    (MRGtag = window.MRGtag || []).push({})
+                </script>
             </div>
 
             <!-- СЕКЦИЯ: БАЗА ЗНАНИЙ (Статьи) -->
@@ -563,10 +593,10 @@
             const btn = document.getElementById('themeBtn');
             if (body.getAttribute('data-theme') === 'dark') {
                 body.removeAttribute('data-theme');
-                btn.innerHTML = 'Тень 🌙';
+                btn.innerHTML = '🌙';
             } else {
                 body.setAttribute('data-theme', 'dark');
-                btn.innerHTML = 'Свет ☀️';
+                btn.innerHTML = '☀️';
             }
         }
 
@@ -605,19 +635,6 @@
                 resBox.innerHTML = `Масса груза: <b>${(weightKg / 1000).toFixed(2)} тонн</b>`;
             } else {
                 alert("Введите корректный объем.");
-            }
-        }
-
-        function calcPolnota() {
-            const n = parseFloat(document.getElementById('pol-n').value);
-            const d = parseFloat(document.getElementById('pol-d').value);
-            const resBox = document.getElementById('pol-result');
-            if(n > 0 && d > 0) {
-                const g = n * ((Math.PI * Math.pow(d, 2)) / 40000);
-                resBox.style.display = 'block';
-                resBox.innerHTML = `Сумма сечений: <b>${g.toFixed(2)} м²/га</b>`;
-            } else {
-                alert("Введите корректные данные.");
             }
         }
 
