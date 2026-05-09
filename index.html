@@ -224,7 +224,7 @@
         }
 
         /* --- СТРАНИЦА ОДНОЙ СТАТЬИ И ДОКУМЕНТОВ --- */
-        #article-view, #static-page-view {
+        #article-view, #static-page-view, #journal-view {
             display: none; 
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -282,7 +282,6 @@
             margin-top: 30px;
         }
 
-        /* ИСПРАВЛЕНИЕ ВЫХОДА КАРТИНОК ИЗ РАМОК ВНУТРИ ТЕКСТА */
         .full-article-content img {
             max-width: 100%;
             height: auto;
@@ -293,6 +292,37 @@
         
         .full-article-content iframe {
             max-width: 100%;
+        }
+
+        /* СТИЛИ ДЛЯ ЖУРНАЛА ПЕРЕЧЕТА */
+        .journal-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); 
+            gap: 10px; 
+            margin-top: 20px; 
+        }
+        .tally-btn { 
+            background: var(--bg-paper); 
+            border: 1px solid var(--forest-green); 
+            color: var(--forest-green); 
+            padding: 15px 5px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            text-align: center; 
+            transition: 0.1s;
+        }
+        .tally-btn:active { 
+            background: var(--forest-green); 
+            color: white; 
+        }
+        .tally-count { 
+            font-size: 20px; 
+            font-weight: bold; 
+            display: block; 
+        }
+        .tally-dim { 
+            font-size: 12px; 
+            opacity: 0.7; 
         }
 
         /* ПОДВАЛ (Footer) */
@@ -355,7 +385,7 @@
         @media (max-width: 600px) {
             .bento-grid { grid-template-columns: 1fr; }
             .glass-header { padding: 15px 20px; }
-            #article-view, #static-page-view { padding: 20px; }
+            #article-view, #static-page-view, #journal-view { padding: 20px; }
             .full-article-title { font-size: 26px; }
             .footer-content { grid-template-columns: 1fr; gap: 30px; }
         }
@@ -386,6 +416,13 @@
             <h2 class="section-title">Цифровой Инструментарий</h2>
             <div class="bento-grid">
                 
+                <!-- НОВЫЙ БЛОК: Полевой журнал -->
+                <div class="bento-card" style="background-color: var(--forest-green); border-color: var(--forest-green);">
+                    <h3 style="color: #ffffff;">📓 Полевой журнал</h3>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 14px; margin-bottom: 20px;">Электронная точковка: перечет по породам и ступеням толщины. Данные сохраняются на вашем устройстве.</p>
+                    <button class="btn-calc" style="background-color: #ffffff; color: var(--forest-green);" onclick="showJournal()">Открыть журнал</button>
+                </div>
+
                 <!-- Калькулятор Кубатуры -->
                 <div class="bento-card">
                     <h3>📏 Объем круглого леса</h3>
@@ -458,6 +495,47 @@
             <h2 class="section-title">Опыт и Практика</h2>
             <div id="articles-container" class="bento-grid">
                 <p style="color: var(--forest-green); grid-column: 1 / -1;">⏳ Подключаемся к базе Лесовика...</p>
+            </div>
+        </div>
+
+        <!-- ================= ЖУРНАЛ ПЕРЕЧЕТА ================= -->
+        <div id="journal-view">
+            <button class="btn-back" onclick="goHome()">← На главную</button>
+            <h1 class="full-article-title">Полевой журнал перечета</h1>
+            
+            <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:20px; padding:15px; background:var(--bg-paper); border-radius:10px; border:1px solid var(--border-color);">
+                <div class="form-group" style="margin-bottom:0; flex:1; min-width:150px;">
+                    <label>ПОРОДА:</label>
+                    <select id="j-species" onchange="updateJournalUI()">
+                        <option value="Сосна">Сосна</option>
+                        <option value="Ель">Ель</option>
+                        <option value="Береза">Береза</option>
+                        <option value="Осина">Осина</option>
+                        <option value="Лиственница">Лиственница</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom:0; flex:1; min-width:150px;">
+                    <label>ЗАМЕР:</label>
+                    <select id="j-bark" onchange="updateJournalUI()">
+                        <option value="no">Без коры</option>
+                        <option value="yes">В коре (скидка на кору)</option>
+                    </select>
+                </div>
+                <div style="display:flex; align-items:flex-end;">
+                    <button onclick="clearJournal()" style="background:#ff4d4d; color:white; border:none; padding:12px 15px; border-radius:8px; cursor:pointer; font-weight:600;">Очистить журнал</button>
+                </div>
+            </div>
+
+            <div class="journal-grid" id="tally-grid">
+                <!-- Кнопки точковки сгенерируются через JS -->
+            </div>
+
+            <div style="margin-top:30px; padding:20px; background:var(--bg-paper); border-radius:12px; border:1px solid var(--forest-green);">
+                <h3 style="margin-top:0; font-family:'Merriweather', serif; color:var(--forest-green);">Предварительные результаты:</h3>
+                <div id="summary-content">
+                    <!-- Таблица итогов сгенерируется через JS -->
+                </div>
+                <p style="font-size: 11px; color: gray; margin-top: 15px;">* Расчет объема носит предварительный характер (базовый разряд высот). Для точного отчета сверяйтесь с таблицами объемов стволов.</p>
             </div>
         </div>
 
@@ -581,6 +659,77 @@
             }
         }
 
+        // --- ЛОГИКА ЖУРНАЛА ПЕРЕЧЕТА ---
+        let journalData = JSON.parse(localStorage.getItem('lesovik_journal')) || {};
+
+        function showJournal() {
+            document.getElementById('home-view').style.display = 'none';
+            document.getElementById('article-view').style.display = 'none';
+            document.getElementById('static-page-view').style.display = 'none';
+            document.getElementById('journal-view').style.display = 'block';
+            window.scrollTo(0, 0);
+            updateJournalUI();
+        }
+
+        function updateJournalUI() {
+            const grid = document.getElementById('tally-grid');
+            const species = document.getElementById('j-species').value;
+            grid.innerHTML = '';
+            
+            // Ступени толщины от 8 до 60 см (шаг 4)
+            for (let d = 8; d <= 60; d += 4) {
+                const count = (journalData[species] && journalData[species][d]) || 0;
+                grid.innerHTML += `
+                    <div class="tally-btn" onclick="tally('${species}', ${d})">
+                        <span class="tally-count">${count}</span>
+                        <span class="tally-dim">${d} см</span>
+                    </div>
+                `;
+            }
+            calculateJournal();
+        }
+
+        function tally(species, dim) {
+            if (!journalData[species]) journalData[species] = {};
+            journalData[species][dim] = (journalData[species][dim] || 0) + 1;
+            localStorage.setItem('lesovik_journal', JSON.stringify(journalData));
+            updateJournalUI();
+        }
+
+        function calculateJournal() {
+            const summary = document.getElementById('summary-content');
+            const inBark = document.getElementById('j-bark').value === 'yes';
+            let totalV = 0;
+            let html = '<table style="width:100%; text-align:left; border-collapse: collapse;"><tr><th style="border-bottom:2px solid var(--forest-green); padding:8px 0;">Порода</th><th style="border-bottom:2px solid var(--forest-green); padding:8px 0;">Шт.</th><th style="border-bottom:2px solid var(--forest-green); padding:8px 0;">Объем</th></tr>';
+
+            for (const sp in journalData) {
+                let spV = 0;
+                let spQty = 0;
+                for (const dim in journalData[sp]) {
+                    const qty = journalData[sp][dim];
+                    spQty += qty;
+                    // Базовая ориентировочная формула объема: v = (d^2) * 0.0000785 * средняя_высота (взята ~25м для примера)
+                    let v = (Math.pow(dim, 2) * 0.0000785 * 25) * qty; 
+                    if (inBark) v *= 0.88; // Усредненная скидка на кору 12%
+                    spV += v;
+                }
+                if (spQty > 0) {
+                    totalV += spV;
+                    html += `<tr><td style="padding:8px 0; border-bottom:1px solid var(--border-color);">${sp}</td><td style="padding:8px 0; border-bottom:1px solid var(--border-color);">${spQty}</td><td style="padding:8px 0; border-bottom:1px solid var(--border-color);">${spV.toFixed(2)} м³</td></tr>`;
+                }
+            }
+            html += `<tr><td colspan="2" style="padding:12px 0; font-size:18px;"><b>ИТОГО:</b></td><td style="padding:12px 0; font-size:18px; color:var(--forest-green);"><b>${totalV.toFixed(2)} м³</b></td></tr></table>`;
+            summary.innerHTML = html;
+        }
+
+        function clearJournal() {
+            if (confirm('Вы уверены, что хотите очистить журнал перечета? Это действие нельзя отменить, данные будут удалены.')) {
+                journalData = {};
+                localStorage.removeItem('lesovik_journal');
+                updateJournalUI();
+            }
+        }
+
         // --- РОУТИНГ И РАБОТА С БАЗОЙ (SPA) ---
         const API_URL = 'https://functions.yandexcloud.net/d4ecn5ag33dcdd2deivd';
         let articlesData = [];
@@ -628,6 +777,7 @@
         function renderHomeView() {
             document.getElementById('article-view').style.display = 'none';
             document.getElementById('static-page-view').style.display = 'none';
+            document.getElementById('journal-view').style.display = 'none';
             document.getElementById('home-view').style.display = 'block';
             
             const container = document.getElementById('articles-container');
@@ -668,6 +818,7 @@
         function renderStaticPage(pageType) {
             document.getElementById('home-view').style.display = 'none';
             document.getElementById('article-view').style.display = 'none';
+            document.getElementById('journal-view').style.display = 'none';
             document.getElementById('static-page-view').style.display = 'block';
             window.scrollTo(0, 0);
 
@@ -694,7 +845,7 @@
                 titleEl.innerText = 'Договор-оферта';
                 contentEl.innerHTML = `
                     <h3>1. Предмет соглашения</h3>
-                    <p>Сайт «Лесовик» (lesovik-pro.ru) предоставляет пользователю доступ к информационным материалам и программным инструментам (калькуляторам) для лесного хозяйства.</p>
+                    <p>Сайт «Лесовик» (lesovik-pro.ru) предоставляет пользователю доступ к информационным материалам и программным инструментам (калькуляторам, полевому журналу) для лесного хозяйства.</p>
                     <h3>2. Отказ от ответственности</h3>
                     <p><strong>Все результаты расчетов, полученные с помощью инструментов на сайте lesovik-pro.ru, носят исключительно справочный и ознакомительный характер.</strong> Оператор не несет ответственности за любые убытки или ошибки, возникшие в результате использования данных расчетов в профессиональной деятельности, отчетности или при заключении сделок. Пользователь обязан перепроверять результаты расчетов в соответствии с действующими государственными стандартами (ГОСТ) и нормативными актами.</p>
                     <h3>3. Интеллектуальная собственность</h3>
@@ -723,6 +874,7 @@
         function renderArticleView(id) {
             document.getElementById('home-view').style.display = 'none';
             document.getElementById('static-page-view').style.display = 'none';
+            document.getElementById('journal-view').style.display = 'none';
             document.getElementById('article-view').style.display = 'block';
             window.scrollTo(0, 0); 
 
