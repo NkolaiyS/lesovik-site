@@ -733,22 +733,43 @@
 
         async function fetchArticlesData() {
             try {
-                const response = await fetch(API_URL + '?action=list');
+                // Добавляем параметр t для обхода кэширования сервера/браузера
+                const response = await fetch(API_URL + '?action=list&t=' + new Date().getTime());
                 const data = await response.json();
+                
                 if (data.articles) {
-                    // УМНАЯ СОРТИРОВКА ПО ДАТЕ С ОЧИСТКОЙ
                     articlesData = data.articles.sort((a, b) => {
                         const parseDate = (dateStr) => {
-                            if (!dateStr) return new Date(0);
-                            // Очищаем от возможных пробелов и времени (если дата записана как "15.05.2026 14:00")
-                            const cleanStr = dateStr.trim().split(' ')[0];
-                            const parts = cleanStr.split('.');
-                            if (parts.length === 3) {
-                                return new Date(parts[2], parts[1] - 1, parts[0]);
+                            if (!dateStr) return 0;
+                            const str = String(dateStr).trim();
+                            
+                            // 1. Ищем российский формат ДД.ММ.ГГГГ или ДД.ММ.ГГ в любой части строки
+                            const ruDateMatch = str.match(/(\d{1,2})\.(\d{1,2})\.(\d{2,4})/);
+                            if (ruDateMatch) {
+                                let year = parseInt(ruDateMatch[3], 10);
+                                if (year < 100) year += 2000;
+                                const month = parseInt(ruDateMatch[2], 10) - 1;
+                                const day = parseInt(ruDateMatch[1], 10);
+                                return new Date(year, month, day).getTime();
                             }
-                            return new Date(0);
+                            
+                            // 2. Если формат другой (например ISO из базы Яндекса)
+                            const parsed = Date.parse(str);
+                            if (!isNaN(parsed)) return parsed;
+                            
+                            return 0; // Если дата совсем не определилась
                         };
-                        return parseDate(b.published_at) - parseDate(a.published_at);
+                        
+                        const timeB = parseDate(b.published_at);
+                        const timeA = parseDate(a.published_at);
+                        
+                        // Если даты разные, сортируем по ним (новые сверху)
+                        if (timeB !== timeA) {
+                            return timeB - timeA;
+                        }
+                        
+                        // Запасной вариант сортировки: по ID (если даты одинаковые или не указаны)
+                        return (b.id || 0) - (a.id || 0);
                     }); 
                 }
             } catch (error) {
