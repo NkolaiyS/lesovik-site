@@ -576,6 +576,11 @@
             <div id="articles-container" class="bento-grid">
                 <p style="color: var(--forest-green); grid-column: 1 / -1;">⏳ Подключаемся к базе Лесовика...</p>
             </div>
+            
+            <div id="load-more-container" style="text-align: center; display: none; margin-bottom: 40px;">
+                <button id="load-more-btn" class="btn-back" style="margin-bottom: 0; padding: 12px 30px;" onclick="loadMoreArticles()">Показать еще материалы ↓</button>
+            </div>
+
         </div>
 
         <div id="article-view">
@@ -680,7 +685,6 @@
             }
         }
 
-        // НОВЫЙ КАЛЬКУЛЯТОР ШТАБЕЛЯ
         function calcStack() {
             const l = parseFloat(document.getElementById('st-l').value);
             const w = parseFloat(document.getElementById('st-w').value);
@@ -704,13 +708,17 @@
         // --- РОУТИНГ И РАБОТА С БАЗОЙ (SPA) ---
         const API_URL = 'https://functions.yandexcloud.net/d4ecn5ag33dcdd2deivd';
         let articlesData = [];
+        
+        // --- ПЕРЕМЕННЫЕ ДЛЯ ПАГИНАЦИИ ---
+        let currentOffset = 0;
+        const ARTICLES_LIMIT = 9; // Идеально для сетки в 3 колонки
 
         // Инициализация при загрузке
         async function initApp() {
             const urlParams = new URLSearchParams(window.location.search);
             const postSlug = urlParams.get('post');
             const postId = urlParams.get('id');
-            const staticPage = urlParams.get('page'); // Проверка статических страниц
+            const staticPage = urlParams.get('page'); 
 
             if (staticPage) {
                 renderStaticPage(staticPage);
@@ -731,19 +739,31 @@
             }
         }
 
-        async function fetchArticlesData() {
+        // ФУНКЦИЯ ЗАГРУЗКИ С УЧЕТОМ ПАГИНАЦИИ
+        async function fetchArticlesData(append = false) {
             try {
-                // Добавляем параметр t для обхода кэширования сервера/браузера
-                const response = await fetch(API_URL + '?action=list&t=' + new Date().getTime());
+                if (!append) {
+                    currentOffset = 0;
+                    articlesData = [];
+                }
+                
+                const response = await fetch(`${API_URL}?action=list&limit=${ARTICLES_LIMIT}&offset=${currentOffset}&t=${new Date().getTime()}`);
                 const data = await response.json();
                 
                 if (data.articles) {
-                    articlesData = data.articles.sort((a, b) => {
+                    let fetchedArticles = data.articles;
+                    
+                    if (append) {
+                        articlesData = articlesData.concat(fetchedArticles);
+                    } else {
+                        articlesData = fetchedArticles;
+                    }
+
+                    // Сортировка
+                    articlesData.sort((a, b) => {
                         const parseDate = (dateStr) => {
                             if (!dateStr) return 0;
                             const str = String(dateStr).trim();
-                            
-                            // 1. Ищем российский формат ДД.ММ.ГГГГ или ДД.ММ.ГГ в любой части строки
                             const ruDateMatch = str.match(/(\d{1,2})\.(\d{1,2})\.(\d{2,4})/);
                             if (ruDateMatch) {
                                 let year = parseInt(ruDateMatch[3], 10);
@@ -752,25 +772,26 @@
                                 const day = parseInt(ruDateMatch[1], 10);
                                 return new Date(year, month, day).getTime();
                             }
-                            
-                            // 2. Если формат другой (например ISO из базы Яндекса)
                             const parsed = Date.parse(str);
                             if (!isNaN(parsed)) return parsed;
-                            
-                            return 0; // Если дата совсем не определилась
+                            return 0;
                         };
-                        
                         const timeB = parseDate(b.published_at);
                         const timeA = parseDate(a.published_at);
-                        
-                        // Если даты разные, сортируем по ним (новые сверху)
-                        if (timeB !== timeA) {
-                            return timeB - timeA;
-                        }
-                        
-                        // Запасной вариант сортировки: по ID (если даты одинаковые или не указаны)
+                        if (timeB !== timeA) return timeB - timeA;
                         return (b.id || 0) - (a.id || 0);
                     }); 
+                    
+                    // Управление видимостью кнопки
+                    const loadMoreBtn = document.getElementById('load-more-container');
+                    if (loadMoreBtn) {
+                        // Если сервер отдал столько же, сколько лимит - значит есть еще статьи
+                        if (fetchedArticles.length === ARTICLES_LIMIT) {
+                            loadMoreBtn.style.display = 'block';
+                        } else {
+                            loadMoreBtn.style.display = 'none';
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Ошибка загрузки данных', error);
@@ -778,7 +799,21 @@
             }
         }
 
-        // --- Отрисовка списка статей (Отдельная функция для работы поиска) ---
+        // ЛОГИКА КНОПКИ ПОКАЗАТЬ ЕЩЕ
+        async function loadMoreArticles() {
+            const btn = document.getElementById('load-more-btn');
+            btn.innerText = 'Загрузка...';
+            btn.disabled = true;
+            
+            currentOffset += ARTICLES_LIMIT;
+            await fetchArticlesData(true);
+            filterArticles(); // Перерисовываем с учетом возможного поиска
+            
+            btn.innerText = 'Показать еще материалы ↓';
+            btn.disabled = false;
+        }
+
+        // --- Отрисовка списка статей ---
         function renderArticlesGrid(articlesList) {
             const container = document.getElementById('articles-container');
             if (articlesList.length > 0) {
@@ -810,6 +845,18 @@
         // --- Поиск по статьям ---
         function filterArticles() {
             const query = document.getElementById('article-search').value.toLowerCase();
+            const loadMoreBtn = document.getElementById('load-more-container');
+            
+            if (query !== '') {
+                // Прячем кнопку при поиске
+                if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+            } else {
+                // Возвращаем кнопку, если очистили поиск и статей кратно лимиту
+                if (loadMoreBtn && articlesData.length > 0 && (articlesData.length % ARTICLES_LIMIT === 0)) {
+                    loadMoreBtn.style.display = 'block';
+                }
+            }
+            
             const filtered = articlesData.filter(article => {
                 const titleMatch = article.title && article.title.toLowerCase().includes(query);
                 const contentMatch = article.content && article.content.toLowerCase().includes(query);
@@ -830,6 +877,12 @@
 
             // Отрисовываем полный список
             renderArticlesGrid(articlesData);
+            
+            // Проверяем, нужна ли кнопка загрузки
+            const loadMoreBtn = document.getElementById('load-more-container');
+            if (loadMoreBtn && articlesData.length > 0 && (articlesData.length % ARTICLES_LIMIT === 0)) {
+                loadMoreBtn.style.display = 'block';
+            }
         }
 
         // --- Отрисовка документов (Политика, Оферта) ---
