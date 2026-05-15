@@ -185,6 +185,26 @@
             display: inline-block;
         }
 
+        /* ПОИСКОВАЯ СТРОКА */
+        .search-input {
+            width: 100%;
+            padding: 14px 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            background-color: var(--card-bg);
+            color: var(--text-graphite);
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            margin-bottom: 24px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: var(--forest-green);
+            box-shadow: 0 0 5px rgba(45, 90, 39, 0.2);
+        }
+
         /* БЕНТО СЕТКА (Жесткая структура для ПК) */
         .bento-grid {
             display: grid;
@@ -550,6 +570,9 @@
             </div>
 
             <h2 class="section-title">Опыт и Практика</h2>
+            
+            <input type="text" id="article-search" class="search-input" placeholder="🔍 Найти статью по слову, теме или закону..." oninput="filterArticles()">
+
             <div id="articles-container" class="bento-grid">
                 <p style="color: var(--forest-green); grid-column: 1 / -1;">⏳ Подключаемся к базе Лесовика...</p>
             </div>
@@ -713,7 +736,18 @@
                 const response = await fetch(API_URL + '?action=list');
                 const data = await response.json();
                 if (data.articles) {
-                    articlesData = data.articles.reverse(); 
+                    // УМНАЯ СОРТИРОВКА ПО ДАТЕ
+                    articlesData = data.articles.sort((a, b) => {
+                        const parseDate = (dateStr) => {
+                            if (!dateStr) return new Date(0);
+                            const parts = dateStr.split('.');
+                            if (parts.length === 3) {
+                                return new Date(parts[2], parts[1] - 1, parts[0]);
+                            }
+                            return new Date(0);
+                        };
+                        return parseDate(b.published_at) - parseDate(a.published_at);
+                    }); 
                 }
             } catch (error) {
                 console.error('Ошибка загрузки данных', error);
@@ -721,17 +755,12 @@
             }
         }
 
-        // --- Отрисовка главной страницы ---
-        function renderHomeView() {
-            document.getElementById('article-view').style.display = 'none';
-            document.getElementById('static-page-view').style.display = 'none';
-            document.getElementById('home-view').style.display = 'block';
-            
+        // --- Отрисовка списка статей (Отдельная функция для работы поиска) ---
+        function renderArticlesGrid(articlesList) {
             const container = document.getElementById('articles-container');
-            
-            if (articlesData.length > 0) {
+            if (articlesList.length > 0) {
                 container.innerHTML = '';
-                articlesData.forEach(article => {
+                articlesList.forEach(article => {
                     const imgUrl = article.cover_image_url && article.cover_image_url.trim() !== "" 
                         ? article.cover_image_url 
                         : 'https://placehold.co/600x400/2D5A27/FFF?text=Фото+в+пути';
@@ -751,8 +780,33 @@
                     `;
                 });
             } else {
-                container.innerHTML = '<p style="grid-column: 1 / -1;">Архив пока пуст. Ожидайте новых публикаций!</p>';
+                container.innerHTML = '<p style="grid-column: 1 / -1;">По вашему запросу ничего не найдено.</p>';
             }
+        }
+
+        // --- Поиск по статьям ---
+        function filterArticles() {
+            const query = document.getElementById('article-search').value.toLowerCase();
+            const filtered = articlesData.filter(article => {
+                const titleMatch = article.title && article.title.toLowerCase().includes(query);
+                const contentMatch = article.content && article.content.toLowerCase().includes(query);
+                return titleMatch || contentMatch;
+            });
+            renderArticlesGrid(filtered);
+        }
+
+        // --- Отрисовка главной страницы ---
+        function renderHomeView() {
+            document.getElementById('article-view').style.display = 'none';
+            document.getElementById('static-page-view').style.display = 'none';
+            document.getElementById('home-view').style.display = 'block';
+            
+            // Сбрасываем строку поиска при возврате на главную
+            const searchInput = document.getElementById('article-search');
+            if(searchInput) searchInput.value = '';
+
+            // Отрисовываем полный список
+            renderArticlesGrid(articlesData);
         }
 
         // --- Отрисовка документов (Политика, Оферта) ---
