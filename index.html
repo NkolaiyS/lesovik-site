@@ -736,11 +736,13 @@
                 const response = await fetch(API_URL + '?action=list');
                 const data = await response.json();
                 if (data.articles) {
-                    // УМНАЯ СОРТИРОВКА ПО ДАТЕ
+                    // УМНАЯ СОРТИРОВКА ПО ДАТЕ С ОЧИСТКОЙ
                     articlesData = data.articles.sort((a, b) => {
                         const parseDate = (dateStr) => {
                             if (!dateStr) return new Date(0);
-                            const parts = dateStr.split('.');
+                            // Очищаем от возможных пробелов и времени (если дата записана как "15.05.2026 14:00")
+                            const cleanStr = dateStr.trim().split(' ')[0];
+                            const parts = cleanStr.split('.');
                             if (parts.length === 3) {
                                 return new Date(parts[2], parts[1] - 1, parts[0]);
                             }
