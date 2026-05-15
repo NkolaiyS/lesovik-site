@@ -15,6 +15,7 @@
             --forest-light: #8FBC8F;
             --border-color: #E0E0E0;
             --card-bg: #FFFFFF;
+            --danger-color: #DC2626;
         }
 
         [data-theme="dark"] {
@@ -42,7 +43,7 @@
 
         .container {
             width: 100%;
-            max-width: 900px; /* Занимает 3/4 экрана на десктопе */
+            max-width: 900px;
             box-sizing: border-box;
             padding: 40px 20px;
         }
@@ -162,6 +163,28 @@
             background-color: rgba(143, 188, 143, 0.15);
         }
 
+        .btn-cancel {
+            background-color: #FEE2E2;
+            color: var(--danger-color);
+            border: 1px solid #F87171;
+            padding: 14px;
+            width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            transition: 0.2s;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+            box-sizing: border-box;
+        }
+
+        .btn-cancel:hover {
+            background-color: var(--danger-color);
+            color: #fff;
+        }
+
         #status-message {
             padding: 15px;
             background-color: var(--bg-paper);
@@ -201,7 +224,7 @@
 
         <div class="photo-card">
             <p class="instruction-text">
-                Инструмент фиксации доказательств для актов проверки лесосек, патрулирования и лесохозяйственных мероприятий. Геокоординаты и спутниковое время впекаются напрямую в пиксели фотографии, создавая защищенный архив нарушений. Работает полностью автономно в лесу без интернета.
+                Инструмент фиксации доказательств для актов проверки лесосек, патрулирования и лесохозяйственных мероприятий. Геокоординаты и спутниковое время впекаются напрямую в пиксели фотографии. Работает полностью автономно в лесу без интернета.
             </p>
 
             <div class="form-group">
@@ -220,18 +243,17 @@
             <canvas id="watermark-canvas"></canvas>
 
             <a id="download-btn" class="btn-main" style="display: none;">💾 Сохранить фото со штампом в галерею</a>
+            <button id="reset-btn" class="btn-cancel" onclick="resetPhotoModule()">❌ Сбросить и сделать новое фото</button>
         </div>
 
     </div>
 
     <script>
-        // Проверка и инициализация темы оформления при запуске страницы
         document.addEventListener('DOMContentLoaded', () => {
             if (window.opener && window.opener.document) {
                 const isDark = window.opener.document.documentElement.getAttribute('data-theme') === 'dark';
                 if (isDark) document.documentElement.setAttribute('data-theme', 'dark');
             } else {
-                // Если открыто напрямую, берем системные настройки
                 if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                     document.documentElement.setAttribute('data-theme', 'dark');
                 }
@@ -246,16 +268,32 @@
             const statusMessage = document.getElementById('status-message');
             const canvas = document.getElementById('watermark-canvas');
             const downloadBtn = document.getElementById('download-btn');
+            const resetBtn = document.getElementById('reset-btn');
             const noteInput = document.getElementById('photo-note').value.trim();
 
             statusMessage.style.display = 'block';
-            statusMessage.innerText = '⏳ Ожидание точных координат GPS...';
+            statusMessage.innerText = '⏳ Связь со спутниками GPS... (Пожалуйста, подождите)';
             canvas.style.display = 'none';
             downloadBtn.style.display = 'none';
+            resetBtn.style.display = 'none';
 
-            // Опрашиваем внутренний GPS модуль смартфона с максимальной точностью
+            // БРОНЕБОЙНЫЙ ТАЙМЕР ДЛЯ IPHONE (Защита от зависания внутри помещений)
+            let gpsHasResponded = false;
+            const gpsWatchdog = setTimeout(() => {
+                if (!gpsHasResponded) {
+                    gpsHasResponded = true;
+                    statusMessage.innerText = '⚠️ Сигнал GPS в помещении слишком слаб';
+                    alert('Айфон не смог поймать спутники внутри здания. \n\nЕсли вы тестируете систему дома/в конторе — подойдите ближе к окну. В реальном лесу под открытым небом датчик сработает мгновенно.');
+                    resetPhotoModule();
+                }
+            }, 7000); // Если через 7 секунд ответа нет — прерываем зависание
+
             navigator.geolocation.getCurrentPosition(
                 (position) => {
+                    if (gpsHasResponded) return; // Если уже сработал таймер отсечки — выходим
+                    gpsHasResponded = true;
+                    clearTimeout(gpsWatchdog); // Все отлично, выключаем таймер
+
                     statusMessage.innerText = '⏳ Наложение защитных штампов времени и геопозиции...';
                     
                     const lat = position.coords.latitude.toFixed(6);
@@ -266,7 +304,6 @@
                     reader.onload = function(e) {
                         const img = new Image();
                         img.onload = function() {
-                            // Оптимизируем разрешение снимка под стандарты отчетности для экономии памяти
                             const MAX_WIDTH = 1600;
                             let width = img.width;
                             let height = img.height;
@@ -280,43 +317,34 @@
                             canvas.height = height;
                             const ctx = canvas.getContext('2d');
 
-                            // Отрисовываем исходное изображение в рабочую область canvas
                             ctx.drawImage(img, 0, 0, width, height);
 
-                            // Рассчитываем гармоничные шрифты в зависимости от итогового размера фотографии
                             const fontSize = Math.max(16, Math.round(canvas.width * 0.024));
                             const padding = fontSize;
-
-                            // Определяем количество строк штампа (2 или 3, если есть примечание)
                             const linesCount = noteInput !== "" ? 3.8 : 2.8;
 
-                            // Отрисовываем черную полупрозрачную защитную подложку внизу снимка
                             ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
                             ctx.fillRect(0, canvas.height - (fontSize * linesCount + padding), canvas.width, fontSize * linesCount + padding);
 
-                            // Печатаем заголовок штампа защиты данных
                             ctx.fillStyle = '#FFFFFF';
                             ctx.font = `bold ${fontSize}px 'Inter', sans-serif`;
                             ctx.fillText(`🌲 ЛЕСОВИК • СУДЕБНАЯ ФОТОФИКСАЦИЯ`, padding, canvas.height - (fontSize * (linesCount - 1) + padding / 2));
 
-                            // Печатаем системные спутниковые координаты и время
                             ctx.fillStyle = '#E2E8F0';
                             ctx.font = `${fontSize * 0.85}px 'Inter', sans-serif`;
                             ctx.fillText(`Координаты: СШ ${lat}, ВД ${lon} | Спутниковое время: ${timestamp}`, padding, canvas.height - (fontSize * (linesCount - 2.1) + padding / 2));
 
-                            // Если пользователь ввел номер делянки или примечание — вживляем третьей строкой
                             if (noteInput !== "") {
-                                ctx.fillStyle = '#FEE2E2'; // Делаем текст примечания слегка красноватым/выделенным
+                                ctx.fillStyle = '#FEE2E2'; 
                                 ctx.font = `italic 500 ${fontSize * 0.85}px 'Inter', sans-serif`;
                                 ctx.fillText(`Объект/Нарушение: ${noteInput}`, padding, canvas.height - (fontSize * 0.6 + padding / 2));
                             }
 
-                            // Выводим результат на экран
                             canvas.style.display = 'block';
                             statusMessage.innerText = '✅ Фотография защищена штампом Лесовика';
                             
-                            // Готовим ссылку на скачивание файла без обращения к серверу
                             downloadBtn.style.display = 'block';
+                            resetBtn.style.display = 'block';
                             downloadBtn.href = canvas.toDataURL('image/jpeg', 0.88);
                             downloadBtn.download = `lesovik_evidence_${Date.now()}.jpg`;
                         };
@@ -325,11 +353,26 @@
                     reader.readAsDataURL(file);
                 },
                 (error) => {
+                    if (gpsHasResponded) return;
+                    gpsHasResponded = true;
+                    clearTimeout(gpsWatchdog);
+
                     statusMessage.innerText = '❌ Ошибка работы геолокации';
-                    alert('Ошибка: Не удалось считать координаты GPS. Убедитесь, что в телефоне включена геолокация и вы разрешили браузеру доступ к ней.');
+                    alert('Ошибка: Не удалось получить геопозицию. Убедитесь, что в настройках Айфона включена геолокация и вы разрешили браузеру (Safari/Chrome) доступ к ней.');
+                    resetPhotoModule();
                 },
-                { enableHighAccuracy: true, timeout: 15000 }
+                { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
             );
+        }
+
+        function resetPhotoModule() {
+            document.getElementById('fullscreen-file-input').value = ""; 
+            document.getElementById('watermark-canvas').style.display = 'none'; 
+            document.getElementById('download-btn').style.display = 'none'; 
+            document.getElementById('reset-btn').style.display = 'none'; 
+            document.getElementById('status-message').style.display = 'none'; 
+            document.getElementById('upload-label').innerText = '🌲 Включить камеру телефона'; 
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     </script>
 </body>
