@@ -13,10 +13,9 @@
             font-family: 'Inter', sans-serif;
             background-color: #000;
             color: #fff;
-            overflow: hidden; /* Запрещаем скролл, это AR-интерфейс */
+            overflow: hidden; 
         }
 
-        /* Видоискатель камеры */
         #camera-stream {
             position: absolute;
             top: 0; left: 0;
@@ -25,7 +24,6 @@
             z-index: 1;
         }
 
-        /* Прицел в центре экрана */
         .crosshair {
             position: absolute;
             top: 50%; left: 50%;
@@ -39,7 +37,6 @@
         .crosshair::before { top: 19px; left: 0; width: 40px; height: 2px; }
         .crosshair::after { top: 0; left: 19px; width: 2px; height: 40px; }
         
-        /* Центральная точка */
         .crosshair-dot {
             position: absolute;
             top: 16px; left: 16px;
@@ -48,7 +45,6 @@
             border-radius: 50%;
         }
 
-        /* Интерфейс поверх камеры */
         .ui-layer {
             position: absolute;
             top: 0; left: 0;
@@ -57,7 +53,7 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            pointer-events: none; /* Пропускаем клики сквозь пустые зоны */
+            pointer-events: none; 
         }
 
         .top-panel {
@@ -117,7 +113,6 @@
             font-size: 24px; font-weight: bold; margin-bottom: 10px;
         }
 
-        /* Стартовый экран для Айфона (разрешения) */
         #start-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: #1A2421; z-index: 100;
@@ -130,7 +125,7 @@
 
     <div id="start-screen">
         <h1 style="color: #8FBC8F; font-size: 28px; margin-bottom: 10px;">🌲 AR Высотомер</h1>
-        <p style="color: #E0E0E0; margin-bottom: 30px; line-height: 1.5;">Для работы инструмента необходимо разрешить доступ к камере и датчикам наклона (гироскопу) вашего телефона.</p>
+        <p style="color: #E0E0E0; margin-bottom: 30px; line-height: 1.5;">Для работы инструмента необходимо разрешить доступ к датчикам наклона и камере вашего телефона.</p>
         <button class="btn" onclick="initAltimeter()" style="max-width: 300px;">Разрешить и начать</button>
         <a href="index.html" class="btn btn-outline" style="max-width: 300px; text-decoration: none; display: block; box-sizing: border-box;">← Назад</a>
     </div>
@@ -180,49 +175,44 @@
         let baseAngleRad = null;
         let topAngleRad = null;
 
-        // Инициализация при нажатии кнопки (Требование iOS)
         async function initAltimeter() {
             try {
-                // 1. Запрос камеры
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                document.getElementById('camera-stream').srcObject = stream;
-
-                // 2. Запрос гироскопа (DeviceOrientation API для iOS 13+)
+                // ШАГ 1: Запрашиваем гироскоп ПЕРВЫМ (Требование Apple к мгновенному отклику)
                 if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                     const permission = await DeviceOrientationEvent.requestPermission();
                     if (permission === 'granted') {
                         window.addEventListener('deviceorientation', handleOrientation);
                     } else {
-                        alert('Доступ к гироскопу запрещен. Расчет высоты невозможен.');
+                        alert('Доступ к гироскопу запрещен. Пожалуйста, перезагрузите страницу и нажмите "Разрешить".');
                         return;
                     }
                 } else {
-                    // Для Android и старых iOS
                     window.addEventListener('deviceorientation', handleOrientation);
                 }
 
-                // Прячем стартовый экран
+                // ШАГ 2: Только после гироскопа включаем камеру
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                document.getElementById('camera-stream').srcObject = stream;
+
                 document.getElementById('start-screen').style.display = 'none';
 
             } catch (err) {
-                alert('Ошибка доступа к камере или датчикам: ' + err.message);
+                // Ловим ошибки и выводим точную причину
+                if (err.name === 'NotAllowedError') {
+                    alert('Вы запретили доступ к камере или датчикам в настройках браузера. Откройте настройки Safari и разрешите доступ.');
+                } else {
+                    alert('Техническая ошибка: ' + err.message + '\nУбедитесь, что сайт открыт по HTTPS.');
+                }
             }
         }
 
-        // Обработка данных гироскопа
         function handleOrientation(event) {
-            // beta: наклон вперед-назад. 
-            // Когда телефон стоит вертикально, beta ≈ 90.
-            // Мы вычисляем угол наклона относительно горизонта (0° = горизонт).
             let angleDeg = 90 - event.beta; 
             
-            // Защита от переворота телефона
             if (angleDeg > 90) angleDeg = 90;
             if (angleDeg < -90) angleDeg = -90;
 
             document.getElementById('current-angle').innerText = angleDeg.toFixed(1) + '°';
-            
-            // Перевод в радианы для математики (Math.tan работает с радианами)
             currentAngleRad = angleDeg * (Math.PI / 180);
         }
 
@@ -231,7 +221,6 @@
             const deg = (baseAngleRad * 180 / Math.PI).toFixed(1);
             document.getElementById('base-angle').innerText = deg + '°';
             
-            // Переключаем кнопки
             document.getElementById('btn-base').disabled = true;
             document.getElementById('btn-top').disabled = false;
         }
@@ -252,8 +241,6 @@
                 return;
             }
 
-            // Формула: H = D * (tan(Угол_Вверх) - tan(Угол_Вниз))
-            // Примечание: Угол вниз у нас отрицательный, поэтому математически минус на минус даст плюс высот.
             const height = distance * (Math.tan(topAngleRad) - Math.tan(baseAngleRad));
 
             const resultBox = document.getElementById('result-box');
