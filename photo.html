@@ -43,7 +43,7 @@
 
         .container {
             width: 100%;
-            max-width: 900px;
+            max-width: 900px; 
             box-sizing: border-box;
             padding: 40px 20px;
         }
@@ -264,7 +264,6 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            const label = document.getElementById('upload-label');
             const statusMessage = document.getElementById('status-message');
             const canvas = document.getElementById('watermark-canvas');
             const downloadBtn = document.getElementById('download-btn');
@@ -272,97 +271,105 @@
             const noteInput = document.getElementById('photo-note').value.trim();
 
             statusMessage.style.display = 'block';
-            statusMessage.innerText = '⏳ Связь со спутниками GPS... (Пожалуйста, подождите)';
+            statusMessage.innerText = '⏳ Поиск спутников (максимум 5 секунд)...';
             canvas.style.display = 'none';
             downloadBtn.style.display = 'none';
             resetBtn.style.display = 'none';
 
-            // БРОНЕБОЙНЫЙ ТАЙМЕР ДЛЯ IPHONE (Защита от зависания внутри помещений)
-            let gpsHasResponded = false;
-            const gpsWatchdog = setTimeout(() => {
-                if (!gpsHasResponded) {
-                    gpsHasResponded = true;
-                    statusMessage.innerText = '⚠️ Сигнал GPS в помещении слишком слаб';
-                    alert('Айфон не смог поймать спутники внутри здания. \n\nЕсли вы тестируете систему дома/в конторе — подойдите ближе к окну. В реальном лесу под открытым небом датчик сработает мгновенно.');
-                    resetPhotoModule();
-                }
-            }, 7000); // Если через 7 секунд ответа нет — прерываем зависание
+            let isProcessed = false;
 
+            // ЕДИНАЯ ФУНКЦИЯ ОБРАБОТКИ (Вызывается либо при успехе GPS, либо по тайм-ауту)
+            const processImage = (latStr, lonStr) => {
+                if (isProcessed) return;
+                isProcessed = true;
+
+                statusMessage.innerText = '⏳ Наложение защитных штампов...';
+                const timestamp = new Date().toLocaleString('ru-RU');
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const MAX_WIDTH = 1600;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > MAX_WIDTH) {
+                            height = Math.round((height * MAX_WIDTH) / width);
+                            width = MAX_WIDTH;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const fontSize = Math.max(16, Math.round(canvas.width * 0.024));
+                        const padding = fontSize;
+                        const linesCount = noteInput !== "" ? 3.8 : 2.8;
+
+                        // Черный полупрозрачный фон для текста
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                        ctx.fillRect(0, canvas.height - (fontSize * linesCount + padding), canvas.width, fontSize * linesCount + padding);
+
+                        // Заголовок
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.font = `bold ${fontSize}px 'Inter', sans-serif`;
+                        ctx.fillText(`🌲 ЛЕСОВИК • ФОТОФИКСАЦИЯ`, padding, canvas.height - (fontSize * (linesCount - 1) + padding / 2));
+
+                        // Строка с координатами
+                        if (latStr === 'Нет сигнала') {
+                            ctx.fillStyle = '#FCA5A5'; // Красный цвет предупреждения
+                            ctx.font = `bold ${fontSize * 0.85}px 'Inter', sans-serif`;
+                            ctx.fillText(`Координаты: НЕТ СИГНАЛА GPS | Время: ${timestamp}`, padding, canvas.height - (fontSize * (linesCount - 2.1) + padding / 2));
+                        } else {
+                            ctx.fillStyle = '#E2E8F0'; // Обычный цвет
+                            ctx.font = `${fontSize * 0.85}px 'Inter', sans-serif`;
+                            ctx.fillText(`Координаты: СШ ${latStr}, ВД ${lonStr} | Время: ${timestamp}`, padding, canvas.height - (fontSize * (linesCount - 2.1) + padding / 2));
+                        }
+
+                        // Примечание
+                        if (noteInput !== "") {
+                            ctx.fillStyle = '#FEE2E2'; 
+                            ctx.font = `italic 500 ${fontSize * 0.85}px 'Inter', sans-serif`;
+                            ctx.fillText(`Объект: ${noteInput}`, padding, canvas.height - (fontSize * 0.6 + padding / 2));
+                        }
+
+                        // Финальный вывод на экран
+                        canvas.style.display = 'block';
+                        
+                        if (latStr === 'Нет сигнала') {
+                            statusMessage.innerHTML = '⚠️ <b>Фото готово, но спутники не найдены.</b><br><small>Координаты не добавлены. Подойдите к окну или выйдите на улицу.</small>';
+                        } else {
+                            statusMessage.innerText = '✅ Фотография защищена штампом Лесовика';
+                        }
+                        
+                        downloadBtn.style.display = 'block';
+                        resetBtn.style.display = 'block';
+                        downloadBtn.href = canvas.toDataURL('image/jpeg', 0.88);
+                        downloadBtn.download = `lesovik_evidence_${Date.now()}.jpg`;
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            };
+
+            // 1. Пытаемся получить координаты
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    if (gpsHasResponded) return; // Если уже сработал таймер отсечки — выходим
-                    gpsHasResponded = true;
-                    clearTimeout(gpsWatchdog); // Все отлично, выключаем таймер
-
-                    statusMessage.innerText = '⏳ Наложение защитных штампов времени и геопозиции...';
-                    
-                    const lat = position.coords.latitude.toFixed(6);
-                    const lon = position.coords.longitude.toFixed(6);
-                    const timestamp = new Date().toLocaleString('ru-RU');
-
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const img = new Image();
-                        img.onload = function() {
-                            const MAX_WIDTH = 1600;
-                            let width = img.width;
-                            let height = img.height;
-
-                            if (width > MAX_WIDTH) {
-                                height = Math.round((height * MAX_WIDTH) / width);
-                                width = MAX_WIDTH;
-                            }
-
-                            canvas.width = width;
-                            canvas.height = height;
-                            const ctx = canvas.getContext('2d');
-
-                            ctx.drawImage(img, 0, 0, width, height);
-
-                            const fontSize = Math.max(16, Math.round(canvas.width * 0.024));
-                            const padding = fontSize;
-                            const linesCount = noteInput !== "" ? 3.8 : 2.8;
-
-                            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                            ctx.fillRect(0, canvas.height - (fontSize * linesCount + padding), canvas.width, fontSize * linesCount + padding);
-
-                            ctx.fillStyle = '#FFFFFF';
-                            ctx.font = `bold ${fontSize}px 'Inter', sans-serif`;
-                            ctx.fillText(`🌲 ЛЕСОВИК • СУДЕБНАЯ ФОТОФИКСАЦИЯ`, padding, canvas.height - (fontSize * (linesCount - 1) + padding / 2));
-
-                            ctx.fillStyle = '#E2E8F0';
-                            ctx.font = `${fontSize * 0.85}px 'Inter', sans-serif`;
-                            ctx.fillText(`Координаты: СШ ${lat}, ВД ${lon} | Спутниковое время: ${timestamp}`, padding, canvas.height - (fontSize * (linesCount - 2.1) + padding / 2));
-
-                            if (noteInput !== "") {
-                                ctx.fillStyle = '#FEE2E2'; 
-                                ctx.font = `italic 500 ${fontSize * 0.85}px 'Inter', sans-serif`;
-                                ctx.fillText(`Объект/Нарушение: ${noteInput}`, padding, canvas.height - (fontSize * 0.6 + padding / 2));
-                            }
-
-                            canvas.style.display = 'block';
-                            statusMessage.innerText = '✅ Фотография защищена штампом Лесовика';
-                            
-                            downloadBtn.style.display = 'block';
-                            resetBtn.style.display = 'block';
-                            downloadBtn.href = canvas.toDataURL('image/jpeg', 0.88);
-                            downloadBtn.download = `lesovik_evidence_${Date.now()}.jpg`;
-                        };
-                        img.src = e.target.result;
-                    };
-                    reader.readAsDataURL(file);
+                    processImage(position.coords.latitude.toFixed(6), position.coords.longitude.toFixed(6));
                 },
                 (error) => {
-                    if (gpsHasResponded) return;
-                    gpsHasResponded = true;
-                    clearTimeout(gpsWatchdog);
-
-                    statusMessage.innerText = '❌ Ошибка работы геолокации';
-                    alert('Ошибка: Не удалось получить геопозицию. Убедитесь, что в настройках Айфона включена геолокация и вы разрешили браузеру (Safari/Chrome) доступ к ней.');
-                    resetPhotoModule();
+                    processImage('Нет сигнала', 'Нет сигнала');
                 },
-                { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
+                { enableHighAccuracy: true, timeout: 4500, maximumAge: 0 }
             );
+
+            // 2. ЖЕСТКИЙ ФОЛЛБЭК: Если Safari завис и игнорирует стандартный timeout
+            setTimeout(() => {
+                processImage('Нет сигнала', 'Нет сигнала');
+            }, 5000);
         }
 
         function resetPhotoModule() {
@@ -371,7 +378,6 @@
             document.getElementById('download-btn').style.display = 'none'; 
             document.getElementById('reset-btn').style.display = 'none'; 
             document.getElementById('status-message').style.display = 'none'; 
-            document.getElementById('upload-label').innerText = '🌲 Включить камеру телефона'; 
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     </script>
