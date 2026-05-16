@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Лесовик — Оптический высотомер</title>
+    <title>Лесовик — Оптический высотомер и дальномер</title>
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -81,12 +81,26 @@
             display: flex; align-items: center; justify-content: space-between;
             background: rgba(255,255,255,0.1);
             border-radius: 8px; padding: 10px 15px; margin-bottom: 15px;
+            transition: opacity 0.2s;
         }
         .input-group label { font-weight: 600; font-size: 14px; }
         .input-group input {
             background: transparent; border: none; color: #fff;
             font-size: 18px; font-weight: bold; text-align: right; width: 80px;
             outline: none;
+        }
+
+        /* Блок настроек AR-дистанции */
+        .ar-toggle-box {
+            margin-bottom: 15px;
+        }
+        .ar-toggle-label {
+            font-size: 14px; display: flex; align-items: center; gap: 8px; 
+            color: #8FBC8F; cursor: pointer; font-weight: 600;
+        }
+        .ar-settings {
+            display: none; margin-top: 10px; padding: 12px; 
+            background: rgba(255,255,255,0.1); border-radius: 8px;
         }
 
         .data-display {
@@ -126,7 +140,7 @@
     <div id="start-screen">
         <h1 style="color: #8FBC8F; font-size: 28px; margin-bottom: 10px;">АР Высотомер</h1>
         <p style="color: #E0E0E0; margin-bottom: 30px; line-height: 1.5;">Для работы инструмента необходимо разрешить доступ к датчикам наклона и камере вашего телефона.</p>
-        <button class="btn" onclick="initAltimeter()" style="max-width: 300px;">Разрешить и начать</button>
+        <button class="btn" onclick="initAltimeter()" style="max-width: 300px;">РАЗРЕШИТЬ И НАЧАТЬ</button>
         <a href="index.html" class="btn btn-outline" style="max-width: 300px; text-decoration: none; display: block; box-sizing: border-box;">НАЗАД</a>
     </div>
 
@@ -142,9 +156,23 @@
                 <a href="index.html" style="color: #8FBC8F; text-decoration: none; font-size: 14px; font-weight: bold;">ВЫХОД</a>
             </div>
 
-            <div class="input-group">
+            <div class="input-group" id="distance-group">
                 <label>Дистанция до дерева (м):</label>
                 <input type="number" id="distance" value="10" step="0.5">
+            </div>
+
+            <div class="ar-toggle-box">
+                <label class="ar-toggle-label">
+                    <input type="checkbox" id="auto-distance-toggle" onchange="toggleAutoDistance()" style="width: 18px; height: 18px; accent-color: #2D5A27;">
+                    AR-замер дистанции
+                </label>
+                <div id="ar-settings" class="ar-settings">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <span style="font-size: 12px; font-weight: 600;">Высота телефона от земли (м):</span>
+                        <input type="number" id="phone-height" value="1.6" step="0.1" style="width: 60px; background: transparent; border: 1px solid #8FBC8F; color: #fff; text-align: right; border-radius: 4px; padding: 4px; outline: none; font-weight: bold;">
+                    </div>
+                    <small style="color: #E0E0E0; font-size: 11px;">Дистанция рассчитается сама при фиксации комля. Земля должна быть относительно ровной.</small>
+                </div>
             </div>
 
             <div class="data-display">
@@ -175,6 +203,24 @@
         let baseAngleRad = null;
         let topAngleRad = null;
 
+        // Включение/Отключение авто-замера дистанции
+        function toggleAutoDistance() {
+            const isChecked = document.getElementById('auto-distance-toggle').checked;
+            const arSettings = document.getElementById('ar-settings');
+            const distInput = document.getElementById('distance');
+            const distGroup = document.getElementById('distance-group');
+            
+            if (isChecked) {
+                arSettings.style.display = 'block';
+                distGroup.style.opacity = '0.5'; 
+                distInput.readOnly = true;
+            } else {
+                arSettings.style.display = 'none';
+                distGroup.style.opacity = '1';
+                distInput.readOnly = false;
+            }
+        }
+
         async function initAltimeter() {
             try {
                 if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -204,7 +250,6 @@
         }
 
         function handleOrientation(event) {
-            // Исправленная логика: инвертируем показания, чтобы камера вверх давала плюс
             let angleDeg = event.beta - 90; 
             
             if (angleDeg > 90) angleDeg = 90;
@@ -219,6 +264,19 @@
             const deg = (baseAngleRad * 180 / Math.PI).toFixed(1);
             document.getElementById('base-angle').innerText = deg + '°';
             
+            // ЛОГИКА АВТОМАТИЧЕСКОЙ ДИСТАНЦИИ (AR)
+            const isAutoDist = document.getElementById('auto-distance-toggle').checked;
+            if (isAutoDist) {
+                // Чтобы дистанция рассчиталась, лесничий должен смотреть вниз на комель (отрицательный угол)
+                if (baseAngleRad < -0.05) { 
+                    const h = parseFloat(document.getElementById('phone-height').value) || 1.6;
+                    const calcDist = h / Math.tan(Math.abs(baseAngleRad));
+                    document.getElementById('distance').value = calcDist.toFixed(1);
+                } else {
+                    alert('Для AR-замера дистанции телефон должен быть направлен вниз на основание дерева. Дистанция не изменена.');
+                }
+            }
+
             document.getElementById('btn-base').disabled = true;
             document.getElementById('btn-top').disabled = false;
         }
@@ -235,11 +293,10 @@
             const distance = parseFloat(document.getElementById('distance').value);
             
             if (distance <= 0 || isNaN(distance)) {
-                alert('Пожалуйста, введите корректную дистанцию.');
+                alert('Пожалуйста, укажите дистанцию или воспользуйтесь AR-замером.');
                 return;
             }
 
-            // Абсолютная формула расчета
             const height = distance * Math.abs(Math.tan(topAngleRad) - Math.tan(baseAngleRad));
 
             const resultBox = document.getElementById('result-box');
@@ -269,6 +326,8 @@
             const resultBox = document.getElementById('result-box');
             resultBox.style.display = 'none';
             resultBox.style.background = '#8FBC8F';
+            
+            // Если AR-замер выключен, оставляем дистанцию как есть, если включен - ждем нового замера
         }
     </script>
 </body>
