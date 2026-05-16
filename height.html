@@ -124,10 +124,10 @@
 <body>
 
     <div id="start-screen">
-        <h1 style="color: #8FBC8F; font-size: 28px; margin-bottom: 10px;">🌲 AR Высотомер</h1>
+        <h1 style="color: #8FBC8F; font-size: 28px; margin-bottom: 10px;">АР Высотомер</h1>
         <p style="color: #E0E0E0; margin-bottom: 30px; line-height: 1.5;">Для работы инструмента необходимо разрешить доступ к датчикам наклона и камере вашего телефона.</p>
         <button class="btn" onclick="initAltimeter()" style="max-width: 300px;">Разрешить и начать</button>
-        <a href="index.html" class="btn btn-outline" style="max-width: 300px; text-decoration: none; display: block; box-sizing: border-box;">← Назад</a>
+        <a href="index.html" class="btn btn-outline" style="max-width: 300px; text-decoration: none; display: block; box-sizing: border-box;">НАЗАД</a>
     </div>
 
     <video id="camera-stream" autoplay playsinline></video>
@@ -138,8 +138,8 @@
         
         <div class="top-panel">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h1 style="margin:0;">AR Визир</h1>
-                <a href="index.html" style="color: #8FBC8F; text-decoration: none; font-size: 14px; font-weight: bold;">✕ Выход</a>
+                <h1 style="margin:0;">АР Визир</h1>
+                <a href="index.html" style="color: #8FBC8F; text-decoration: none; font-size: 14px; font-weight: bold;">ВЫХОД</a>
             </div>
 
             <div class="input-group">
@@ -163,9 +163,9 @@
 
         <div class="bottom-panel">
             <div id="result-box">Высота: 0.0 м</div>
-            <button id="btn-base" class="btn" onclick="lockBase()" style="background-color: #DC2626;">1. Прицел на комель (низ)</button>
-            <button id="btn-top" class="btn" onclick="lockTop()" style="background-color: #3B82F6;" disabled>2. Прицел на вершину</button>
-            <button class="btn btn-outline" onclick="resetApp()" style="margin-bottom: 0;">Сбросить замер</button>
+            <button id="btn-base" class="btn" onclick="lockBase()" style="background-color: #DC2626;">1. ПРИЦЕЛ НА КОМЕЛЬ (НИЗ)</button>
+            <button id="btn-top" class="btn" onclick="lockTop()" style="background-color: #3B82F6;" disabled>2. ПРИЦЕЛ НА ВЕРШИНУ</button>
+            <button class="btn btn-outline" onclick="resetApp()" style="margin-bottom: 0;">СБРОСИТЬ ЗАМЕР</button>
         </div>
 
     </div>
@@ -177,7 +177,6 @@
 
         async function initAltimeter() {
             try {
-                // ШАГ 1: Запрашиваем гироскоп ПЕРВЫМ (Требование Apple к мгновенному отклику)
                 if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                     const permission = await DeviceOrientationEvent.requestPermission();
                     if (permission === 'granted') {
@@ -190,14 +189,12 @@
                     window.addEventListener('deviceorientation', handleOrientation);
                 }
 
-                // ШАГ 2: Только после гироскопа включаем камеру
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
                 document.getElementById('camera-stream').srcObject = stream;
 
                 document.getElementById('start-screen').style.display = 'none';
 
             } catch (err) {
-                // Ловим ошибки и выводим точную причину
                 if (err.name === 'NotAllowedError') {
                     alert('Вы запретили доступ к камере или датчикам в настройках браузера. Откройте настройки Safari и разрешите доступ.');
                 } else {
@@ -241,15 +238,17 @@
                 return;
             }
 
-            const height = distance * (Math.tan(topAngleRad) - Math.tan(baseAngleRad));
+            // Абсолютная формула расчета - решает проблему отрицательных высот
+            const height = distance * Math.abs(Math.tan(topAngleRad) - Math.tan(baseAngleRad));
 
             const resultBox = document.getElementById('result-box');
             resultBox.style.display = 'block';
             
-            if (height > 0) {
+            if (height > 0.1) {
                 resultBox.innerText = `Высота: ${height.toFixed(1)} м`;
+                resultBox.style.background = '#8FBC8F';
             } else {
-                resultBox.innerText = `Ошибка замера`;
+                resultBox.innerText = `Замер некорректен`;
                 resultBox.style.background = '#FCA5A5';
             }
 
