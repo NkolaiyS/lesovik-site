@@ -69,6 +69,8 @@
             padding: 12px 15px;
             pointer-events: auto;
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            max-height: 60vh;
+            overflow-y: auto;
         }
 
         .bottom-panel {
@@ -84,7 +86,7 @@
         h1 { margin: 0 0 10px 0; font-size: 18px; color: #8FBC8F; }
 
         .select-group {
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .select-group select {
             width: 100%; padding: 10px; border: 1px solid #8FBC8F;
@@ -107,6 +109,15 @@
 
         .method-settings-block {
             margin-bottom: 10px;
+        }
+
+        /* Блок калибровки */
+        .calibration-trigger-box {
+            margin-bottom: 10px;
+        }
+        .calibration-panel {
+            display: none; background: rgba(59, 130, 246, 0.15);
+            border: 1px dashed #3B82F6; border-radius: 8px; padding: 12px; margin-top: 8px;
         }
 
         .slider-container {
@@ -138,6 +149,11 @@
         
         .btn-outline {
             background-color: transparent; border: 1px solid #8FBC8F; color: #8FBC8F;
+        }
+        .btn-blue {
+            background-color: #3B82F6; color: #fff; border: none; padding: 10px;
+            font-size: 13px; font-weight: 600; width: 100%; border-radius: 6px;
+            cursor: pointer; text-transform: uppercase;
         }
 
         #result-box {
@@ -179,8 +195,8 @@
 
             <div class="select-group">
                 <select id="measurement-method" onchange="switchMethod()">
-                    <option value="fov">Способ 2: Угол обзора матрицы и Дистанция</option>
-                    <option value="biltmore">Способ 4: Проекция Битлмора (вытянутая рука)</option>
+                    <option value="fov">Способ 1: Угол обзора матрицы и Дистанция</option>
+                    <option value="biltmore">Способ 2: Проекция Битлмора (вытянутая рука)</option>
                 </select>
             </div>
 
@@ -204,6 +220,21 @@
                     <div class="input-group">
                         <label>Угол обзора камеры FOV (град):</label>
                         <input type="number" id="camera-fov" value="60" step="1">
+                    </div>
+                    
+                    <div class="calibration-trigger-box">
+                        <button class="btn-blue" id="cal-toggle-btn" onclick="toggleCalibrationBlock()">Калибровка камеры</button>
+                        <div id="calibration-panel" class="calibration-panel">
+                            <div class="input-group">
+                                <label>Ширина эталона Лист А4 (см):</label>
+                                <input type="number" id="cal-target-width" value="29.7" step="0.1">
+                            </div>
+                            <div class="input-group">
+                                <label>Дистанция до эталона (м):</label>
+                                <input type="number" id="cal-target-dist" value="1.0" step="0.1">
+                            </div>
+                            <button class="btn-blue" style="background-color: #2563EB; margin-top: 5px;" onclick="executeCameraCalibration()">Зафиксировать параметры</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -229,6 +260,7 @@
     <script>
         let screenWidth = window.innerWidth;
         let currentSpreadPercent = 20;
+        let isCalibrationOpen = false;
 
         window.addEventListener('resize', () => {
             screenWidth = window.innerWidth;
@@ -249,10 +281,23 @@
             hideResult();
         }
 
+        function toggleCalibrationBlock() {
+            const panel = document.getElementById('calibration-panel');
+            const btn = document.getElementById('cal-toggle-btn');
+            isCalibrationOpen = !isCalibrationOpen;
+            
+            if (isCalibrationOpen) {
+                panel.style.display = 'block';
+                btn.innerText = 'Закрыть калибровку';
+            } else {
+                panel.style.display = 'none';
+                btn.innerText = 'Калибровка камеры';
+            }
+        }
+
         function updateVisors(value) {
             currentSpreadPercent = parseInt(value, 10);
             
-            // Распределяем линии симметрично относительно центра экрана
             const leftPercent = 50 - (currentSpreadPercent / 2);
             const rightPercent = 50 + (currentSpreadPercent / 2);
             
@@ -271,6 +316,38 @@
                 updateVisors(document.getElementById('width-slider').value);
             } catch (err) {
                 alert('Ошибка инициализации видеопотока камеры: ' + err.message + '\nПроверьте настройки разрешений и протокол HTTPS.');
+            }
+        }
+
+        // Выполнение инженерной автокалибровки FOV
+        function executeCameraCalibration() {
+            const targetWidthCm = parseFloat(document.getElementById('cal-target-width').value);
+            const targetDistM = parseFloat(document.getElementById('cal-target-dist').value);
+
+            if (isNaN(targetWidthCm) || targetWidthCm <= 0 || isNaN(targetDistM) || targetDistM <= 0) {
+                alert('Укажите корректные параметры калибровочной цели (ширину и дистанцию).');
+                return;
+            }
+
+            const pct = currentSpreadPercent / 100;
+            if (pct <= 0.05) {
+                alert('Пожалуйста, раздвиньте нижний ползунок так, чтобы красные линии точно совпали с краями калибровочного листа.');
+                return;
+            }
+
+            // Математическая модель обратного расчета угла обзора матрицы:
+            // FOV = (2 * atan(Ширина_Цели / (200 * Дистанция))) / Доля_Экрана
+            const alphaCalRad = 2 * Math.atan(targetWidthCm / (200 * targetDistM));
+            const calculatedFovRad = alphaCalRad / pct;
+            const calculatedFovDeg = calculatedFovRad * (180 / Math.PI);
+
+            // Проверка на физическую реалистичность оптики мобильных устройств
+            if (calculatedFovDeg > 15 && calculatedFovDeg < 130) {
+                document.getElementById('camera-fov').value = calculatedFovDeg.toFixed(1);
+                alert('Калибровка завершена. Реальный угол обзора (FOV) вашей камеры определен как: ' + calculatedFovDeg.toFixed(1) + '°\nЗначение автоматически внесено в базу.');
+                toggleCalibrationBlock(); // закрываем панель
+            } else {
+                alert('Получено нереалистичное оптическое значение FOV: ' + calculatedFovDeg.toFixed(1) + '°\nПроверьте, точно ли вы отмерили 1 метр до листа А4 и правильно ли навели линии.');
             }
         }
 
