@@ -24,14 +24,14 @@
             z-index: 1;
         }
 
-        /* Вертикальные визирные линии разметки ствола */
+        /* Вертикальные визирные линии разметки ствола на заднем плане (под интерфейсом) */
         .measurement-line {
             position: absolute;
             top: 0;
             bottom: 0;
             width: 2px;
             background-color: #FF3B30;
-            z-index: 30;
+            z-index: 10;
             pointer-events: none;
             box-shadow: 0 0 8px rgba(255, 63, 48, 0.6);
         }
@@ -47,7 +47,7 @@
             width: 6px; height: 6px;
             background-color: #3B82F6;
             border-radius: 50%;
-            z-index: 30;
+            z-index: 10;
             pointer-events: none;
         }
 
@@ -105,7 +105,6 @@
             outline: none;
         }
 
-        /* Динамический блок подстроек под выбранный метод */
         .method-settings-block {
             margin-bottom: 10px;
         }
@@ -258,7 +257,7 @@
             const rightPercent = 50 + (currentSpreadPercent / 2);
             
             document.getElementById('line-left').style.left = leftPercent + '%';
-            document.getElementById('line-right').style.right = (100 - rightPercent) + '%';
+            document.getElementById('line-right').style.left = rightPercent + '%';
             
             document.getElementById('slider-value').innerText = currentSpreadPercent + '%';
             hideResult();
@@ -286,30 +285,19 @@
             }
 
             let diameterCm = 0;
-            const pct = currentSpreadPercent / 100; // доля экрана, занимаемая стволом
+            const pct = currentSpreadPercent / 100;
 
             if (method === 'fov') {
-                // МЕТОД 2: Расчет на базе угла обзора матрицы (FOV) и дистанции
                 const fovDegrees = parseFloat(document.getElementById('camera-fov').value) || 60;
-                // Угол, под которым виден ствол дерева
                 const subtendedAngleRad = (pct * fovDegrees) * (Math.PI / 180);
-                
-                // Тригонометрический расчет диаметра цилиндра
                 const diameterMeters = 2 * distance * Math.tan(subtendedAngleRad / 2);
                 diameterCm = diameterMeters * 100;
 
             } else if (method === 'biltmore') {
-                // МЕТОД 4: Цифровая проекция Битлмора (вытянутая рука)
                 const phoneWidthCm = parseFloat(document.getElementById('phone-width').value) || 7.0;
                 const armLengthCm = parseFloat(document.getElementById('arm-length').value) || 60.0;
-                
-                // Переводим дистанцию до дерева в сантиметры
                 const distanceCm = distance * 100;
-                
-                // Физический размер проекции ствола на самом стекле экрана
                 const physicalWidthOnScreenCm = phoneWidthCm * pct;
-                
-                // Расчет по подобию треугольников
                 diameterCm = physicalWidthOnScreenCm * (distanceCm / armLengthCm);
             }
 
