@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лесовик — Оптический высотомер</title>
+    <link rel="icon" type="image/jpeg" href="logo.jpeg">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            font-family: 'Inter', sans-serif;
+            background-color: #000;
+            color: #fff;
+            overflow: hidden; /* Запрещаем скролл, это AR-интерфейс */
+        }
+
+        /* Видоискатель камеры */
+        #camera-stream {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        /* Прицел в центре экрана */
+        .crosshair {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px; height: 40px;
+            z-index: 10;
+        }
+        .crosshair::before, .crosshair::after {
+            content: ''; position: absolute; background: #FF3B30;
+        }
+        .crosshair::before { top: 19px; left: 0; width: 40px; height: 2px; }
+        .crosshair::after { top: 0; left: 19px; width: 2px; height: 40px; }
+        
+        /* Центральная точка */
+        .crosshair-dot {
+            position: absolute;
+            top: 16px; left: 16px;
+            width: 8px; height: 8px;
+            background: #FF3B30;
+            border-radius: 50%;
+        }
+
+        /* Интерфейс поверх камеры */
+        .ui-layer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            pointer-events: none; /* Пропускаем клики сквозь пустые зоны */
+        }
+
+        .top-panel {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 20px;
+            pointer-events: auto;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .bottom-panel {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 20px;
+            pointer-events: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        h1 { margin: 0 0 15px 0; font-size: 20px; color: #8FBC8F; }
+
+        .input-group {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px; padding: 10px 15px; margin-bottom: 15px;
+        }
+        .input-group label { font-weight: 600; font-size: 14px; }
+        .input-group input {
+            background: transparent; border: none; color: #fff;
+            font-size: 18px; font-weight: bold; text-align: right; width: 80px;
+            outline: none;
+        }
+
+        .data-display {
+            font-family: monospace; font-size: 14px; color: #E0E0E0;
+            display: flex; justify-content: space-between; margin-bottom: 5px;
+        }
+
+        .btn {
+            background-color: #2D5A27; color: #fff;
+            border: none; padding: 15px; width: 100%; border-radius: 8px;
+            font-size: 16px; font-weight: 600; text-transform: uppercase;
+            cursor: pointer; margin-bottom: 10px; transition: 0.2s;
+        }
+        .btn:active { background-color: #1a3617; transform: scale(0.98); }
+        .btn:disabled { background-color: #333; color: #777; cursor: not-allowed; }
+        
+        .btn-outline {
+            background-color: transparent; border: 1px solid #8FBC8F; color: #8FBC8F;
+        }
+
+        #result-box {
+            display: none; background: #8FBC8F; color: #000;
+            text-align: center; padding: 15px; border-radius: 8px;
+            font-size: 24px; font-weight: bold; margin-bottom: 10px;
+        }
+
+        /* Стартовый экран для Айфона (разрешения) */
+        #start-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #1A2421; z-index: 100;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 20px; box-sizing: border-box; text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen">
+        <h1 style="color: #8FBC8F; font-size: 28px; margin-bottom: 10px;">🌲 AR Высотомер</h1>
+        <p style="color: #E0E0E0; margin-bottom: 30px; line-height: 1.5;">Для работы инструмента необходимо разрешить доступ к камере и датчикам наклона (гироскопу) вашего телефона.</p>
+        <button class="btn" onclick="initAltimeter()" style="max-width: 300px;">Разрешить и начать</button>
+        <a href="index.html" class="btn btn-outline" style="max-width: 300px; text-decoration: none; display: block; box-sizing: border-box;">← Назад</a>
+    </div>
+
+    <video id="camera-stream" autoplay playsinline></video>
+
+    <div class="crosshair"><div class="crosshair-dot"></div></div>
+
+    <div class="ui-layer">
+        
+        <div class="top-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h1 style="margin:0;">AR Визир</h1>
+                <a href="index.html" style="color: #8FBC8F; text-decoration: none; font-size: 14px; font-weight: bold;">✕ Выход</a>
+            </div>
+
+            <div class="input-group">
+                <label>Дистанция до дерева (м):</label>
+                <input type="number" id="distance" value="10" step="0.5">
+            </div>
+
+            <div class="data-display">
+                <span>Текущий угол:</span>
+                <span id="current-angle">0.0°</span>
+            </div>
+            <div class="data-display" style="color: #FCA5A5;">
+                <span>Угол комля (низ):</span>
+                <span id="base-angle">--</span>
+            </div>
+            <div class="data-display" style="color: #93C5FD;">
+                <span>Угол вершины (верх):</span>
+                <span id="top-angle">--</span>
+            </div>
+        </div>
+
+        <div class="bottom-panel">
+            <div id="result-box">Высота: 0.0 м</div>
+            <button id="btn-base" class="btn" onclick="lockBase()" style="background-color: #DC2626;">1. Прицел на комель (низ)</button>
+            <button id="btn-top" class="btn" onclick="lockTop()" style="background-color: #3B82F6;" disabled>2. Прицел на вершину</button>
+            <button class="btn btn-outline" onclick="resetApp()" style="margin-bottom: 0;">Сбросить замер</button>
+        </div>
+
+    </div>
+
+    <script>
+        let currentAngleRad = 0;
+        let baseAngleRad = null;
+        let topAngleRad = null;
+
+        // Инициализация при нажатии кнопки (Требование iOS)
+        async function initAltimeter() {
+            try {
+                // 1. Запрос камеры
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                document.getElementById('camera-stream').srcObject = stream;
+
+                // 2. Запрос гироскопа (DeviceOrientation API для iOS 13+)
+                if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    const permission = await DeviceOrientationEvent.requestPermission();
+                    if (permission === 'granted') {
+                        window.addEventListener('deviceorientation', handleOrientation);
+                    } else {
+                        alert('Доступ к гироскопу запрещен. Расчет высоты невозможен.');
+                        return;
+                    }
+                } else {
+                    // Для Android и старых iOS
+                    window.addEventListener('deviceorientation', handleOrientation);
+                }
+
+                // Прячем стартовый экран
+                document.getElementById('start-screen').style.display = 'none';
+
+            } catch (err) {
+                alert('Ошибка доступа к камере или датчикам: ' + err.message);
+            }
+        }
+
+        // Обработка данных гироскопа
+        function handleOrientation(event) {
+            // beta: наклон вперед-назад. 
+            // Когда телефон стоит вертикально, beta ≈ 90.
+            // Мы вычисляем угол наклона относительно горизонта (0° = горизонт).
+            let angleDeg = 90 - event.beta; 
+            
+            // Защита от переворота телефона
+            if (angleDeg > 90) angleDeg = 90;
+            if (angleDeg < -90) angleDeg = -90;
+
+            document.getElementById('current-angle').innerText = angleDeg.toFixed(1) + '°';
+            
+            // Перевод в радианы для математики (Math.tan работает с радианами)
+            currentAngleRad = angleDeg * (Math.PI / 180);
+        }
+
+        function lockBase() {
+            baseAngleRad = currentAngleRad;
+            const deg = (baseAngleRad * 180 / Math.PI).toFixed(1);
+            document.getElementById('base-angle').innerText = deg + '°';
+            
+            // Переключаем кнопки
+            document.getElementById('btn-base').disabled = true;
+            document.getElementById('btn-top').disabled = false;
+        }
+
+        function lockTop() {
+            topAngleRad = currentAngleRad;
+            const deg = (topAngleRad * 180 / Math.PI).toFixed(1);
+            document.getElementById('top-angle').innerText = deg + '°';
+            
+            calculateHeight();
+        }
+
+        function calculateHeight() {
+            const distance = parseFloat(document.getElementById('distance').value);
+            
+            if (distance <= 0 || isNaN(distance)) {
+                alert('Пожалуйста, введите корректную дистанцию.');
+                return;
+            }
+
+            // Формула: H = D * (tan(Угол_Вверх) - tan(Угол_Вниз))
+            // Примечание: Угол вниз у нас отрицательный, поэтому математически минус на минус даст плюс высот.
+            const height = distance * (Math.tan(topAngleRad) - Math.tan(baseAngleRad));
+
+            const resultBox = document.getElementById('result-box');
+            resultBox.style.display = 'block';
+            
+            if (height > 0) {
+                resultBox.innerText = `Высота: ${height.toFixed(1)} м`;
+            } else {
+                resultBox.innerText = `Ошибка замера`;
+                resultBox.style.background = '#FCA5A5';
+            }
+
+            document.getElementById('btn-top').disabled = true;
+        }
+
+        function resetApp() {
+            baseAngleRad = null;
+            topAngleRad = null;
+            
+            document.getElementById('base-angle').innerText = '--';
+            document.getElementById('top-angle').innerText = '--';
+            
+            document.getElementById('btn-base').disabled = false;
+            document.getElementById('btn-top').disabled = true;
+            
+            const resultBox = document.getElementById('result-box');
+            resultBox.style.display = 'none';
+            resultBox.style.background = '#8FBC8F';
+        }
+    </script>
+</body>
+</html>
