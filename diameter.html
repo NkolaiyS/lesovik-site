@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лесовик — Оптическая мерная вилка</title>
+    <link rel="icon" type="image/jpeg" href="logo.jpeg">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            font-family: 'Inter', sans-serif;
+            background-color: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        #camera-stream {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        /* Вертикальные визирные линии разметки ствола */
+        .measurement-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #FF3B30;
+            z-index: 30;
+            pointer-events: none;
+            box-shadow: 0 0 8px rgba(255, 63, 48, 0.6);
+        }
+
+        #line-left { left: 40%; }
+        #line-right { left: 60%; }
+
+        /* Центральная вспомогательная точка прицеливания */
+        .center-marker {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 6px; height: 6px;
+            background-color: #3B82F6;
+            border-radius: 50%;
+            z-index: 30;
+            pointer-events: none;
+        }
+
+        .ui-layer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+
+        .top-panel {
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 12px 15px;
+            pointer-events: auto;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .bottom-panel {
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 15px;
+            pointer-events: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: env(safe-area-inset-bottom, 15px);
+        }
+
+        h1 { margin: 0 0 10px 0; font-size: 18px; color: #8FBC8F; }
+
+        .select-group {
+            margin-bottom: 12px;
+        }
+        .select-group select {
+            width: 100%; padding: 10px; border: 1px solid #8FBC8F;
+            border-radius: 8px; background-color: #1A2421; color: #fff;
+            font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
+            outline: none;
+        }
+
+        .input-group {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px; padding: 6px 12px; margin-bottom: 8px;
+        }
+        .input-group label { font-weight: 600; font-size: 13px; }
+        .input-group input {
+            background: transparent; border: none; color: #fff;
+            font-size: 16px; font-weight: bold; text-align: right; width: 80px;
+            outline: none;
+        }
+
+        /* Динамический блок подстроек под выбранный метод */
+        .method-settings-block {
+            margin-bottom: 10px;
+        }
+
+        .slider-container {
+            background: rgba(255,255,255,0.05);
+            padding: 12px; border-radius: 8px; margin-bottom: 12px;
+        }
+        .slider-label-box {
+            display: flex; justify-content: space-between; font-size: 12px;
+            font-weight: 600; margin-bottom: 6px; color: #8FBC8F;
+        }
+        .width-slider {
+            width: 100%; -webkit-appearance: none; background: #333;
+            height: 6px; border-radius: 3px; outline: none;
+            accent-color: #2D5A27;
+        }
+        .width-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 22px; height: 22px;
+            border-radius: 50%; background: #2D5A27; cursor: pointer;
+            border: 2px solid #fff;
+        }
+
+        .btn {
+            background-color: #2D5A27; color: #fff;
+            border: none; padding: 14px; width: 100%; border-radius: 8px;
+            font-size: 15px; font-weight: 600; text-transform: uppercase;
+            cursor: pointer; margin-bottom: 8px; transition: 0.2s;
+        }
+        .btn:active { background-color: #1a3617; transform: scale(0.98); }
+        
+        .btn-outline {
+            background-color: transparent; border: 1px solid #8FBC8F; color: #8FBC8F;
+        }
+
+        #result-box {
+            display: none; background: #8FBC8F; color: #000;
+            text-align: center; padding: 12px; border-radius: 8px;
+            font-size: 22px; font-weight: bold; margin-bottom: 10px;
+        }
+
+        #start-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #1A2421; z-index: 100;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 20px; box-sizing: border-box; text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen">
+        <h1 style="color: #8FBC8F; font-size: 26px; margin-bottom: 10px;">Цифровой мерный калибр</h1>
+        <p style="color: #E0E0E0; margin-bottom: 30px; line-height: 1.5;">Для вычисления диаметра ствола необходим доступ к камере вашего мобильного устройства.</p>
+        <button class="btn" onclick="initDiameterApp()" style="max-width: 300px;">РАЗРЕШИТЬ ДОСТУП</button>
+        <a href="index.html" class="btn btn-outline" style="max-width: 300px; text-decoration: none; display: block; box-sizing: border-box;">НАЗАД</a>
+    </div>
+
+    <video id="camera-stream" autoplay playsinline></video>
+
+    <div id="line-left" class="measurement-line"></div>
+    <div id="line-right" class="measurement-line"></div>
+    <div class="center-marker"></div>
+
+    <div class="ui-layer">
+        
+        <div class="top-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h1 style="margin:0;">Замер диаметра</h1>
+                <a href="index.html" style="color: #8FBC8F; text-decoration: none; font-size: 13px; font-weight: bold;">ВЫХОД</a>
+            </div>
+
+            <div class="select-group">
+                <select id="measurement-method" onchange="switchMethod()">
+                    <option value="fov">Способ 2: Угол обзора матрицы и Дистанция</option>
+                    <option value="biltmore">Способ 4: Проекция Битлмора (вытянутая рука)</option>
+                </select>
+            </div>
+
+            <div class="input-group" id="distance-container">
+                <label>Дистанция до дерева (м):</label>
+                <input type="number" id="distance" value="0" step="0.1" min="0">
+            </div>
+
+            <div class="method-settings-block">
+                <div id="biltmore-settings" style="display: none;">
+                    <div class="input-group">
+                        <label>Физическая ширина экрана (см):</label>
+                        <input type="number" id="phone-width" value="7.0" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label>Длина вытянутой руки (см):</label>
+                        <input type="number" id="arm-length" value="60" step="1">
+                    </div>
+                </div>
+                <div id="fov-settings">
+                    <div class="input-group">
+                        <label>Угол обзора камеры FOV (град):</label>
+                        <input type="number" id="camera-fov" value="60" step="1">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-panel">
+            <div id="result-box">Диаметр ствола: 0.0 см</div>
+
+            <div class="slider-container">
+                <div class="slider-label-box">
+                    <span>Совмещение визиров по коре</span>
+                    <span id="slider-value">20%</span>
+                </div>
+                <input type="range" id="width-slider" class="width-slider" min="5" max="95" value="20" oninput="updateVisors(this.value)">
+            </div>
+
+            <button class="btn" onclick="calculateDiameter()">РАССЧИТАТЬ ДИАМЕТР</button>
+            <button class="btn btn-outline" onclick="resetMeasurement()" style="margin-bottom: 0;">СБРОСИТЬ</button>
+        </div>
+
+    </div>
+
+    <script>
+        let screenWidth = window.innerWidth;
+        let currentSpreadPercent = 20;
+
+        window.addEventListener('resize', () => {
+            screenWidth = window.innerWidth;
+        });
+
+        function switchMethod() {
+            const method = document.getElementById('measurement-method').value;
+            const biltmoreBlock = document.getElementById('biltmore-settings');
+            const fovBlock = document.getElementById('fov-settings');
+            
+            if (method === 'biltmore') {
+                biltmoreBlock.style.display = 'block';
+                fovBlock.style.display = 'none';
+            } else {
+                biltmoreBlock.style.display = 'none';
+                fovBlock.style.display = 'block';
+            }
+            hideResult();
+        }
+
+        function updateVisors(value) {
+            currentSpreadPercent = parseInt(value, 10);
+            
+            // Распределяем линии симметрично относительно центра экрана
+            const leftPercent = 50 - (currentSpreadPercent / 2);
+            const rightPercent = 50 + (currentSpreadPercent / 2);
+            
+            document.getElementById('line-left').style.left = leftPercent + '%';
+            document.getElementById('line-right').style.right = (100 - rightPercent) + '%';
+            
+            document.getElementById('slider-value').innerText = currentSpreadPercent + '%';
+            hideResult();
+        }
+
+        async function initDiameterApp() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                document.getElementById('camera-stream').srcObject = stream;
+                document.getElementById('start-screen').style.display = 'none';
+                updateVisors(document.getElementById('width-slider').value);
+            } catch (err) {
+                alert('Ошибка инициализации видеопотока камеры: ' + err.message + '\nПроверьте настройки разрешений и протокол HTTPS.');
+            }
+        }
+
+        function calculateDiameter() {
+            const method = document.getElementById('measurement-method').value;
+            const distance = parseFloat(document.getElementById('distance').value);
+            const resultBox = document.getElementById('result-box');
+
+            if (isNaN(distance) || distance <= 0) {
+                alert('Пожалуйста, укажите точную дистанцию до дерева (в метрах) перед выполнением оптического расчета.');
+                return;
+            }
+
+            let diameterCm = 0;
+            const pct = currentSpreadPercent / 100; // доля экрана, занимаемая стволом
+
+            if (method === 'fov') {
+                // МЕТОД 2: Расчет на базе угла обзора матрицы (FOV) и дистанции
+                const fovDegrees = parseFloat(document.getElementById('camera-fov').value) || 60;
+                // Угол, под которым виден ствол дерева
+                const subtendedAngleRad = (pct * fovDegrees) * (Math.PI / 180);
+                
+                // Тригонометрический расчет диаметра цилиндра
+                const diameterMeters = 2 * distance * Math.tan(subtendedAngleRad / 2);
+                diameterCm = diameterMeters * 100;
+
+            } else if (method === 'biltmore') {
+                // МЕТОД 4: Цифровая проекция Битлмора (вытянутая рука)
+                const phoneWidthCm = parseFloat(document.getElementById('phone-width').value) || 7.0;
+                const armLengthCm = parseFloat(document.getElementById('arm-length').value) || 60.0;
+                
+                // Переводим дистанцию до дерева в сантиметры
+                const distanceCm = distance * 100;
+                
+                // Физический размер проекции ствола на самом стекле экрана
+                const physicalWidthOnScreenCm = phoneWidthCm * pct;
+                
+                // Расчет по подобию треугольников
+                diameterCm = physicalWidthOnScreenCm * (distanceCm / armLengthCm);
+            }
+
+            resultBox.style.display = 'block';
+            if (!isNaN(diameterCm) && diameterCm > 0.5) {
+                resultBox.innerText = `Диаметр ствола: ${diameterCm.toFixed(1)} см`;
+                resultBox.style.background = '#8FBC8F';
+            } else {
+                resultBox.innerText = `Ошибка расчета параметров`;
+                resultBox.style.background = '#FCA5A5';
+            }
+        }
+
+        function hideResult() {
+            document.getElementById('result-box').style.display = 'none';
+        }
+
+        function resetMeasurement() {
+            document.getElementById('distance').value = '0';
+            document.getElementById('width-slider').value = '20';
+            updateVisors(20);
+            hideResult();
+        }
+    </script>
+</body>
+</html>
