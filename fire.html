@@ -83,7 +83,7 @@
             line-height: 1.5;
         }
 
-        /* Шапка из вашего нового дизайна */
+        /* Шапка нового бесшовного дизайна */
         .header {
             background-color: var(--bg-card);
             border-bottom: 1px solid var(--border-light);
@@ -141,15 +141,6 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.01);
         }
 
-        .action-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
         .btn-back {
             display: inline-flex;
             align-items: center;
@@ -161,6 +152,7 @@
             cursor: pointer;
             font-size: 13px;
             text-decoration: none;
+            margin-bottom: 30px;
             font-weight: 500;
             transition: 0.2s;
         }
@@ -169,34 +161,28 @@
             color: var(--primary-forest);
         }
 
-        /* Стильная кнопка погоды в бесшовном стиле сайта */
-        .btn-weather {
-            display: inline-flex;
+        /* Интегрированная bento-панель информера погоды */
+        .weather-panel {
+            background: var(--input-bg);
+            border-left: 4px solid var(--primary-forest);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 40px;
+            display: flex;
             align-items: center;
-            gap: 8px;
-            background-color: var(--input-bg);
-            color: var(--primary-forest);
-            border: 1px solid var(--border-light);
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: 0.2s;
+            gap: 25px;
         }
-        .btn-weather:hover {
-            background-color: var(--primary-forest);
-            color: #ffffff;
-            border-color: var(--primary-forest);
+        @media (max-width: 650px) {
+            .weather-panel { flex-direction: column; text-align: center; }
         }
 
-        h1.page-title {
-            font-size: 32px;
-            font-weight: 700;
-            color: var(--primary-forest);
-            margin-top: 0;
-            margin-bottom: 40px;
+        .weather-widget-container {
+            flex-shrink: 0;
+            display: block;
+            background-color: var(--bg-card);
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid var(--border-light);
         }
 
         .grid-layout {
@@ -296,11 +282,20 @@
 
 <div class="main-container">
     <div class="content-card">
+        <a href="index.html" class="btn-back">← На главную</a>
         
-        <!-- СТРОКА ДЕЙСТВИЙ: НАЗАД И ПОГОДА -->
-        <div class="action-row">
-            <a href="index.html" class="btn-back">← На главную</a>
-            <a href="https://yandex.ru/pogoda/syktyvkar" target="_blank" class="btn-weather">🌤️ Проверить влажность и погоду (Яндекс)</a>
+        <!-- ОПТИМИЗИРОВАННЫЙ МОДУЛЬ ПОГОДЫ С ВАШИМ КОДОМ МЕТЕОСЕРВИСА -->
+        <div class="weather-panel">
+            <div class="weather-widget-container">
+                <!-- Weather widget by https://www.meteoservice.ru -->
+                <a id="ms-informer-link-e7da243ef6e3fd3c065751533d960818" class="ms-informer-link" href="https://www.meteoservice.ru/weather/overview/syktyvkar" style="font-size:12px; font-weight:600; text-decoration:none; color:var(--primary-forest);">Погода в Сыктывкаре</a>
+                <script class="ms-informer-script" src="https://www.meteoservice.ru/informer/script/e7da243ef6e3fd3c065751533d960818"></script>
+                <!-- End -->
+            </div>
+            <div style="font-size: 13px; line-height: 1.5;">
+                <span style="font-weight: 700; color: var(--primary-forest); display: block; margin-bottom: 2px;">🌤️ Метеопост экспресс-мониторинга района</span>
+                <span style="color: var(--text-main); opacity: 0.8;">Текущие показатели температуры воздуха и относительной влажности транслируются напрямую с серверов метеослужбы. Внесите эти параметры в соответствующие поля ввода ниже для автоматического исчисления КПО.</span>
+            </div>
         </div>
 
         <h1 class="page-title">Калькулятор пожарной опасности и ущерба</h1>
@@ -318,7 +313,7 @@
                 <div class="form-group">
                     <label>Относительная влажность воздуха (%)</label>
                     <input type="number" id="fire-rh" step="1" value="45">
-                    <small style="color:var(--text-muted); font-size:11px; display:block; margin-top:4px;">*Укажите влажность воздуха из прогноза по кнопке выше</small>
+                    <small style="color:var(--text-muted); font-size:11px; display:block; margin-top:4px;">*Значение влажности воздуха переносится из информера выше</small>
                 </div>
                 <div class="form-group">
                     <label>Период без осадков (дней)</label>
@@ -394,7 +389,6 @@
         resBox.innerHTML = `Комплексный индекс горимости по Нестерову: <b>${Math.round(nesterovIndex)}</b><br>Расчетный дефицит точки росы: ${tau.toFixed(1)}°C<br>Текущий пожарный статус выдела: <span style="color:var(--fire-accent); font-weight:700;">${kpoText}</span>`;
     }
 
-    // Расчет ущерба по Постановлению № 2464
     function calcDamage() {
         const kSub = parseFloat(document.getElementById('damage-cat').value);
         const space = parseFloat(document.getElementById('damage-space').value);
