@@ -29,10 +29,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title>Калькулятор пожарной опасности и ущерба лесу онлайн | Лесовик</title>
-    <meta name="description" content="Профессиональный расчет индекса горимости по Нестерову (ГОСТ Р 57972-2017) и оценки вреда лесному фонду (Постановление № 2464) на сайте Лесовик.">
+    <title>Расчет класса пожарной опасности лесов (КПО) по Нестерову и ущерба по Пост. №2464 | Лесовик ПРО</title>
+    <meta name="description" content="Профессиональный онлайн-калькулятор для инженеров охраны и защиты леса. Расчет комплексного индекса горимости по Нестерову согласно ГОСТ Р 57972-2017 и калькуляция лесного ущерба по Постановлению № 2464.">
+    <meta name="keywords" content="класс пожарной опасности лесов, расчет по нестерову гост, индекс горимости леса, расчет ущерба от лесного пожара, постановление 2464 лесной фонд, лесовик про">
     <link rel="canonical" href="https://lesovik-pro.ru/fire.html">
+
+    <meta property="og:title" content="Калькулятор КПО и пожарного ущерба лесу онлайн">
+    <meta property="og:description" content="Автоматический расчет класса пожарной опасности по температуре и влажности воздуха. Исчисление вреда лесному фонду по Постановлению № 2464.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://lesovik-pro.ru/fire.html">
+    <meta property="og:image" content="https://lesovik-pro.ru/logo.jpeg">
+
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
+    <meta name="geo.region" content="RU-KO">
+    <meta name="geo.placename" content="Сыктывкар">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Пожарный лесной калькулятор Лесовик ПРО",
+      "url": "https://lesovik-pro.ru/fire.html",
+      "description": "Цифровой помощник для лесничих: расчет индекса горимости Нестерова и вреда от лесных пожаров.",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "All",
+      "inLanguage": "ru-RU"
+    }
+    </script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -104,25 +127,34 @@
             opacity: 0.7;
         }
 
-        /* Главный контейнер */
+        /* Главная карточка-подложка страницы как на вашем скриншоте */
         .main-container {
             max-width: 1000px;
             margin: 40px auto;
             padding: 0 20px;
+        }
+        
+        .content-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.01);
         }
 
         .btn-back {
             display: inline-flex;
             align-items: center;
             background: transparent;
-            color: var(--text-muted);
+            color: var(--text-main);
             border: 1px solid var(--border-light);
-            padding: 6px 14px;
+            padding: 8px 16px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 13px;
             text-decoration: none;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
+            font-weight: 500;
             transition: 0.2s;
         }
         .btn-back:hover {
@@ -140,11 +172,11 @@
 
         /* Новый блок погоды под ваш дизайн */
         .weather-panel {
-            background: var(--bg-card);
-            border: 1px solid var(--border-light);
-            border-radius: 12px;
+            background: var(--input-bg);
+            border-left: 4px solid var(--primary-forest);
+            border-radius: 8px;
             padding: 20px;
-            margin-bottom: 35px;
+            margin-bottom: 40px;
             display: flex;
             align-items: center;
             gap: 25px;
@@ -230,6 +262,7 @@
             border-radius: 4px;
             font-size: 14px;
             display: none;
+            line-height: 1.6;
         }
     </style>
 </head>
@@ -249,69 +282,73 @@
 </div>
 
 <div class="main-container">
-    <a href="index.html" class="btn-back">← На главную</a>
     
-    <div class="weather-panel">
-        <a href="https://yandex.ru/pogoda/syktyvkar" target="_blank" style="flex-shrink: 0; display: block;">
-            <img src="https://info.weather.yandex.net/syktyvkar/1.ru.png?domain=ru" border="0" alt="Яндекс.Погода" style="border-radius: 8px; display: block;">
-        </a>
-        <div style="font-size: 13px; line-height: 1.5;">
-            <span style="font-weight: 700; color: var(--primary-forest); display: block; margin-bottom: 4px;">🌤️ Текущая погода в районе (Сыктывкар)</span>
-            <span style="color: var(--text-muted);">Используйте данные информера для оперативного расчета горимости. Кликните по информеру, чтобы быстро узнать точную относительную влажность воздуха (%) на метеокарте Яндекса.</span>
-        </div>
-    </div>
-
-    <h1 class="page-title">Калькулятор пожарной опасности и ущерба</h1>
-
-    <div class="grid-layout">
-        <div class="calc-section">
-            <h2>1. Индекс горимости по Нестерову</h2>
-            <div class="subtitle">Соответствует регламенту ГОСТ Р 57972-2017</div>
-            
-            <div class="form-group">
-                <label>Температура в 13:00 (°C)</label>
-                <input type="number" id="fire-t" step="0.1" value="24.5">
+    <div class="content-card">
+        <a href="index.html" class="btn-back">← На главную</a>
+        
+        <div class="weather-panel">
+            <a href="https://yandex.ru/pogoda/syktyvkar" target="_blank" style="flex-shrink: 0; display: block;">
+                <img src="https://info.weather.yandex.net/syktyvkar/1.ru.png?domain=ru" border="0" alt="Яндекс.Погода" style="border-radius: 8px; display: block;">
+            </a>
+            <div style="font-size: 13px; line-height: 1.5;">
+                <span style="font-weight: 700; color: var(--primary-forest); display: block; margin-bottom: 2px;">🌤️ Текущая погода в районе (Сыктывкар)</span>
+                <span style="color: var(--text-main); opacity: 0.8;">Используйте утренние метеоданные для расчета. Кликните по информеру выше, чтобы мгновенно открыть карту Яндекса и перенести оттуда точные значения температуры и относительной влажности воздуха (%) на текущий час.</span>
             </div>
-            <div class="form-group">
-                <label>Относительная влажность воздуха (%)</label>
-                <input type="number" id="fire-rh" step="1" value="45">
-            </div>
-            <div class="form-group">
-                <label>Период без осадков (дней)</label>
-                <input type="number" id="fire-days" value="1">
-            </div>
-            
-            <button class="btn-calculate" onclick="calcKPO()">Рассчитать индекс КПО</button>
-            <div id="kpo-result" class="result-display"></div>
         </div>
 
-        <div class="calc-section">
-            <h2>2. Оценка вреда лесному фонду</h2>
-            <div class="subtitle">Расчет по формулам Постановления № 2464</div>
-            
-            <div class="form-group">
-                <label>Категория защитности лесов</label>
-                <select id="damage-cat">
-                    <option value="1">Эксплуатационные леса (K = 1)</option>
-                    <option value="2">Защитные леса (K = 2)</option>
-                    <option value="3">Особо защитные участки / ООПТ (K = 5)</option>
-                </select>
+        <h1 class="page-title">Калькулятор пожарной опасности и ущерба</h1>
+
+        <div class="grid-layout">
+            <div class="calc-section">
+                <h2>1. Index горимости по Нестерову</h2>
+                <div class="subtitle">Соответствует регламенту ГОСТ Р 57972-2017</div>
+                
+                <div class="form-group">
+                    <label>Температура воздуха в 13:00 (°C)</label>
+                    <input type="number" id="fire-t" step="0.1" value="24.5">
+                </div>
+                <div class="form-group">
+                    <label>Относительная влажность воздуха (%)</label>
+                    <input type="number" id="fire-rh" step="1" value="45">
+                    <small style="color:var(--text-muted); font-size:11px; display:block; margin-top:4px;">*Больше не нужно искать точку росы вручную</small>
+                </div>
+                <div class="form-group">
+                    <label>Период без осадков (дней)</label>
+                    <input type="number" id="fire-days" value="1">
+                </div>
+                
+                <button class="btn-calculate" onclick="calcKPO()">Рассчитать индекс КПО</button>
+                <div id="kpo-result" class="result-display"></div>
             </div>
-            <div class="form-group">
-                <label>Пройденная площадь (га)</label>
-                <input type="number" id="damage-space" step="0.1" placeholder="0.0">
+
+            <div class="calc-section">
+                <h2>2. Оценка вреда лесному фонду</h2>
+                <div class="subtitle">Расчет по формулам Постановления № 2464</div>
+                
+                <div class="form-group">
+                    <label>Категория защитности лесов</label>
+                    <select id="damage-cat">
+                        <option value="1">Эксплуатационные леса (K = 1)</option>
+                        <option value="2">Защитные леса (K = 2)</option>
+                        <option value="3">Особо защитные участки / ООПТ (K = 5)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Пройденная площадь пожара (га)</label>
+                    <input type="number" id="damage-space" step="0.1" placeholder="0.0">
+                </div>
+                <div class="form-group">
+                    <label>Уничтоженный запас на 1 га (м³)</label>
+                    <input type="number" id="damage-stock" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label>Ставка платы за 1 м³ (руб)</label>
+                    <input type="number" id="damage-rate" value="120">
+                </div>
+                
+                <button class="btn-calculate" onclick="calcDamage()">Вычислить ущерб</button>
+                <div id="damage-result" class="result-display"></div>
             </div>
-            <div class="form-group">
-                <label>Уничтоженный запас на 1 га (м³)</label>
-                <input type="number" id="damage-stock" placeholder="0">
-            </div>
-            <div class="form-group">
-                <label>Ставка платы за 1 м³ (руб)</label>
-                <input type="number" id="damage-rate" value="120">
-            </div>
-            
-            <button class="btn-calculate" onclick="calcDamage()">Вычислить ущерб</button>
-            <div id="damage-result" class="result-display"></div>
         </div>
     </div>
 </div>
@@ -324,18 +361,19 @@
         const resBox = document.getElementById('kpo-result');
 
         if (isNaN(t) || isNaN(rh) || rh <= 0 || rh > 100) {
-            alert("Пожалуйста, введите корректные значения температуры и влажности!");
+            alert("Пожалуйста, введите корректные значения температуры и относительной влажности древостоя!");
             return;
         }
 
-        // Формула Магнуса-Тетенса для нахождения точки росы (tau)
+        // Физическое уравнение Магнуса-Тетенса для вычисления точки росы из влажности
         const a = 17.27;
         const b = 237.7;
         const alpha = ((a * t) / (b + t)) + Math.log(rh / 100);
         const tau = (b * alpha) / (a - alpha);
 
-        // Индекс Нестерова
-        const nesterovIndex = t * (t - tau) * days;
+        // Индекс Нестерова Г = t * (t - tau) * n
+        let nesterovIndex = t * (t - tau) * days;
+        if (nesterovIndex < 0) nesterovIndex = 0;
         
         let kpoText = "I класс (Опасность отсутствует)";
         if (nesterovIndex > 300 && nesterovIndex <= 1000) kpoText = "II класс (Малая пожарная опасность)";
@@ -344,7 +382,7 @@
         else if (nesterovIndex > 10000) kpoText = "V класс (Чрезвычайная пожарная опасность!)";
 
         resBox.style.display = 'block';
-        resBox.innerHTML = `Индекс горимости: <b>${Math.round(nesterovIndex)}</b><br>Точка росы: ${tau.toFixed(1)}°C<br><span style="color:var(--fire-accent); font-weight:700;">${kpoText}</span>`;
+        resBox.innerHTML = `Комплексный индекс горимости: <b>${Math.round(nesterovIndex)}</b><br>Вычисленная точка росы: ${tau.toFixed(1)}°C<br>Текущий статус леса: <span style="color:var(--fire-accent); font-weight:700;">${kpoText}</span>`;
     }
 
     function calcDamage() {
@@ -355,16 +393,16 @@
         const resBox = document.getElementById('damage-result');
 
         if (!(space > 0 && stock > 0 && rate > 0)) {
-            alert("Заполните все поля параметров вреда лесному фонду!");
+            alert("Заполните корректно все таксационные параметры вреда лесному фонду!");
             return;
         }
 
         const totalVolume = space * stock;
         const penaltyDamage = totalVolume * rate * kSub * 50; 
-        const grandTotal = penaltyDamage * 1.15; // +15% очистка и тушение
+        const grandTotal = penaltyDamage * 1.15; // +15% затраты сил МЧС и рекультивацию почв
 
         resBox.style.display = 'block';
-        resBox.innerHTML = `Потери древесины: <b>${totalVolume.toFixed(1)} м³</b><br>Общая сумма вреда:<br><span style="color:var(--fire-accent); font-size:16px; font-weight:700;">${Math.round(grandTotal).toLocaleString('ru-RU')} руб.</span>`;
+        resBox.innerHTML = `Общие потери древесины: <b>${totalVolume.toFixed(1)} м³</b><br>Сумма вреда государству:<br><span style="color:var(--fire-accent); font-size:16px; font-weight:700;">${Math.round(grandTotal).toLocaleString('ru-RU')} руб.</span>`;
     }
 </script>
 </body>
