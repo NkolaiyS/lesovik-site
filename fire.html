@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Расчет пожарной опасности и ущерба лесу | Лесовик ПРО</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600&display=swap');
+        
+        :root {
+            --bg-paper: #F9FBF9;
+            --text-graphite: #333333;
+            --forest-green: #2D5A27;
+            --border-color: #E0E0E0;
+            --card-bg: #FFFFFF;
+            --fire-red: #D9534F;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-paper);
+            color: var(--text-graphite);
+            margin: 0; padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; }
+        
+        h1 {
+            font-family: 'Merriweather', serif;
+            color: var(--forest-green);
+            border-bottom: 2px solid var(--forest-green);
+            padding-bottom: 10px;
+        }
+
+        .btn-back {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: transparent; color: var(--forest-green);
+            border: 1px solid var(--forest-green); padding: 8px 16px;
+            border-radius: 8px; cursor: pointer; font-weight: 600;
+            text-decoration: none; margin-bottom: 20px; transition: 0.2s;
+        }
+        .btn-back:hover { background: var(--forest-green); color: #fff; }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        .card h2 {
+            font-family: 'Merriweather', serif;
+            color: var(--fire-red); margin-top: 0; font-size: 20px;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block; font-size: 12px; font-weight: 600;
+            margin-bottom: 5px; text-transform: uppercase; color: var(--text-graphite);
+        }
+        .form-group input, .form-group select {
+            width: 100%; padding: 12px; border: 1px solid var(--border-color);
+            border-radius: 8px; box-sizing: border-box; background: var(--bg-paper);
+        }
+
+        .btn-calc {
+            background-color: var(--forest-green); color: #fff;
+            border: none; padding: 14px; width: 100%; border-radius: 8px;
+            cursor: pointer; font-weight: 600; text-transform: uppercase; transition: 0.2s;
+        }
+        .btn-calc:hover { background-color: #1a3617; }
+
+        .result-box {
+            margin-top: 15px; padding: 15px; background-color: var(--bg-paper);
+            border: 1px dashed var(--forest-green); border-radius: 8px;
+            font-weight: 600; text-align: center; display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="btn-back">← На главную Лесовика</a>
+    <h1>Охрана и Защита Леса</h1>
+    <p style="margin-bottom: 30px; opacity: 0.8;">Профессиональные экспресс-расчеты для инженеров охраны леса и лесничих.</p>
+
+    <div class="grid">
+        <!-- БЛОК 1: КЛАСС ПОЖАРНОЙ ОПАСНОСТИ -->
+        <div class="card">
+            <h2>Класс пожарной опасности (КПО)</h2>
+            <p style="font-size: 12px; color: gray; margin-top: -10px;">Расчет по методу В.Г. Нестерова (ГОСТ Р 57972-2017)</p>
+            
+            <div class="form-group">
+                <label>Температура воздуха в 13:00 (°C)</label>
+                <input type="number" id="fire-t" placeholder="Например: 24" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Точка росы в 13:00 (°C)</label>
+                <input type="number" id="fire-tau" placeholder="Например: 12" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Дней без дождя (осадки < 3мм)</label>
+                <input type="number" id="fire-days" placeholder="Количество дней" value="1">
+            </div>
+            <button class="btn-calc" onclick="calcKPO()">Определить класс</button>
+            <div id="kpo-result" class="result-box"></div>
+        </div>
+
+        <!-- БЛОК 2: РАСЧЕТ УЩЕРБА ОТ ПОЖАРА -->
+        <div class="card">
+            <h2>Оценка ущерба (Пост. № 2464)</h2>
+            <p style="font-size: 12px; color: gray; margin-top: -10px;">Расчет вреда от уничтожения лесных насаждений</p>
+            
+            <div class="form-group">
+                <label>Категория защитности лесов</label>
+                <select id="damage-cat">
+                    <option value="1">Эксплуатационные леса (K = 1)</option>
+                    <option value="2">Защитные леса (K = 2)</option>
+                    <option value="3">Особо защитные участки / ООПТ (K = 5)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Пройденная пожаром площадь (га)</label>
+                <input type="number" id="damage-space" placeholder="Площадь в гектарах" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Уничтоженный запас на 1 га (м³)</label>
+                <input type="number" id="damage-stock" placeholder="Средний запас на гектар">
+            </div>
+            <div class="form-group">
+                <label>Ставка платы за 1 м³ (руб, средняя)</label>
+                <input type="number" id="damage-rate" value="120" placeholder="Ставка по региону">
+            </div>
+            
+            <button class="btn-calc" onclick="calcDamage()">Посчитать ущерб</button>
+            <div id="damage-result" class="result-box"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Логика расчета КПО по Нестерову
+    function calcKPO() {
+        const t = parseFloat(document.getElementById('fire-t').value);
+        const tau = parseFloat(document.getElementById('fire-tau').value);
+        const days = parseInt(document.getElementById('fire-days').value) || 1;
+        const resBox = document.getElementById('kpo-result');
+
+        if (isNaN(t) || isNaN(tau)) {
+            alert("Заполните показатели температуры и точки росы!");
+            return;
+        }
+
+        // Комплексный показатель Нестерова: Г = t * (t - tau) * дни
+        const nesterovIndex = t * (t - tau) * days;
+        
+        let kpoClass = 1;
+        let kpoText = "I класс (Отсутствует опасность)";
+        let color = "#2D5A27";
+
+        if (nesterovIndex > 0 && nesterovIndex <= 300) {
+            kpoClass = 1; kpoText = "I класс (Малая пожарная опасность)"; color = "#2D5A27";
+        } else if (nesterovIndex > 300 && nesterovIndex <= 1000) {
+            kpoClass = 2; kpoText = "II класс (Умеренная пожарная опасность)"; color = "#94af1e";
+        } else if (nesterovIndex > 1000 && nesterovIndex <= 4000) {
+            kpoClass = 3; kpoText = "III класс (Средняя пожарная опасность)"; color = "#f0ad4e";
+        } else if (nesterovIndex > 4000 && nesterovIndex <= 10000) {
+            kpoClass = 4; kpoText = "IV класс (Высокая пожарная опасность)"; color = "#f08f4e";
+        } else if (nesterovIndex > 10000) {
+            kpoClass = 5; kpoText = "V класс (Чрезвычайная пожарная опасность!)"; color = "#D9534F";
+        }
+
+        resBox.style.display = 'block';
+        resBox.style.borderColor = color;
+        resBox.innerHTML = `Индекс Нестерова: <b>${Math.round(nesterovIndex)}</b><br><span style="color:${color}; font-size:16px;">${kpoText}</span>`;
+    }
+
+    // Расчет ущерба по Постановлению № 2464
+    function calcDamage() {
+        const kSub = parseFloat(document.getElementById('damage-cat').value);
+        const space = parseFloat(document.getElementById('damage-space').value);
+        const stock = parseFloat(document.getElementById('damage-stock').value);
+        const rate = parseFloat(document.getElementById('damage-rate').value);
+        const resBox = document.getElementById('damage-result');
+
+        if (!(space > 0 && stock > 0 && rate > 0)) {
+            alert("Заполните все поля параметров ущерба!");
+            return;
+        }
+
+        // Базовая формула: Объем * Ставка * К_защитности * Повышающий коэф за лесонарушение (х50 крат по Постановлению за уничтожение пожаром/рубкой)
+        const totalVolume = space * stock;
+        const baseCost = totalVolume * rate;
+        const penaltyDamage = baseCost * kSub * 50; 
+        
+        // Добавляем условную стоимость затрат на тушение и очистку (инструктивно ~15% от ущерба)
+        const cleanUpCost = penaltyDamage * 0.15;
+        const grandTotal = penaltyDamage + cleanUpCost;
+
+        resBox.style.display = 'block';
+        resBox.innerHTML = `Потери древесины: <b>${totalVolume.toFixed(1)} м³</b><br>Сумма ущерба по Пост. №2464:<br><span style="color:#D9534F; font-size:18px;">${Math.round(grandTotal).toLocaleString('ru-RU')} руб.</span><br><small style="font-size:10px; color:gray;">*Включая расходы на тушение и рекультивацию</small>`;
+    }
+</script>
+</body>
+</html>
