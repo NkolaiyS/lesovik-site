@@ -291,9 +291,15 @@
         /* --- СЕТКА ДЛЯ ОСНОВНЫХ ИНСТРУМЕНТОВ --- */
         .tools-action-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(3, 1fr);
             gap: 24px;
             margin-bottom: 50px;
+        }
+        @media (max-width: 900px) {
+            .tools-action-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 600px) {
+            .tools-action-grid { grid-template-columns: 1fr; gap: 15px; }
         }
 
         .tool-btn-card {
@@ -316,7 +322,7 @@
         .tool-btn-title {
             color: #FFFFFF;
             font-family: 'Merriweather', serif;
-            font-size: 22px;
+            font-size: 20px;
             margin: 0;
         }
 
@@ -543,18 +549,26 @@
             min-height: 250px;
         }
 
-        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
+        /* МОБИЛЬНАЯ АДАПТАЦИЯ ДЛЯ БЕНТО СЕТКИ */
         @media (max-width: 900px) {
             .bento-grid { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 600px) {
             .bento-grid { grid-template-columns: 1fr; }
-            .tools-action-grid { grid-template-columns: 1fr; gap: 15px; }
             .glass-header { padding: 15px 20px; }
             #article-view, #static-page-view { padding: 20px; }
             .full-article-title { font-size: 26px; }
             .footer-content { grid-template-columns: 1fr; gap: 30px; }
         }
+
+        /* Стили для таблицы результатов МДО */
+        .mdo-result-table {
+            width: 100%; border-collapse: collapse; margin-top: 20px; display: none;
+        }
+        .mdo-result-table th, .mdo-result-table td {
+            padding: 12px; border: 1px solid var(--border-color); text-align: left; font-size: 14px;
+        }
+        .mdo-result-table th { background-color: var(--forest-green); color: white; font-family: 'Merriweather', serif; }
     </style>
 </head>
 <body>
@@ -703,6 +717,14 @@
                     <h3 class="tool-btn-title">Оптическая вилка</h3>
                     <div class="tool-info-trigger" onclick="openToolInfo(event, 'diameter')">?</div>
                 </a>
+                <a href="javascript:void(0)" onclick="routeToStaticPage(event, 'mdo')" class="tool-btn-card" style="background: linear-gradient(135deg, #4A7043 0%, #223e1d 100%);">
+                    <h3 class="tool-btn-title">Симулятор МДО</h3>
+                    <div class="tool-info-trigger" onclick="openToolInfo(event, 'mdo')">?</div>
+                </a>
+                <a href="javascript:void(0)" onclick="routeToStaticPage(event, 'fire')" class="tool-btn-card" style="background: linear-gradient(135deg, #b84341 0%, #6e1d1c 100%);">
+                    <h3 class="tool-btn-title">Пожарный калькулятор</h3>
+                    <div class="tool-info-trigger" onclick="openToolInfo(event, 'fire')">?</div>
+                </a>
             </div>
 
             <div class="vk-ad-container">
@@ -744,8 +766,7 @@
         <div id="static-page-view">
             <button class="btn-back" onclick="goHome()">← На главную</button>
             <h1 id="static-title" class="full-article-title">Документ</h1>
-            <div id="static-content" class="full-article-content">
-                </div>
+            <div id="static-content" class="full-article-content"></div>
         </div>
 
     </main>
@@ -807,6 +828,14 @@
             'diameter': {
                 title: 'Оптическая мерная вилка',
                 desc: 'Инструмент для бесконтактного измерения диаметра ствола с использованием камеры смартфона и тригонометрических расчетов (FOV и метод Битлмора).'
+            },
+            'mdo': {
+                title: 'Экспресс-МДО Лесосек',
+                desc: 'Позволяет моментально «раскидать» ликвидный таежный запас выдела на категории крупности товарной древесины и дров по среднему диаметру элементов леса.'
+            },
+            'fire': {
+                title: 'Пожарный инспектор',
+                desc: 'Инструмент оперативного расчета комплексного индекса горимости по Нестерову (ГОСТ Р 57972-2017) и автоматического исчисления материального вреда по Постановлению № 2464.'
             }
         };
 
@@ -848,7 +877,7 @@
             document.getElementById("reading-progress").style.width = scrolled + "%";
         });
 
-        // --- КАЛЬКУЛЯТОРЫ ---
+        // --- ЯДРО КАЛЬКУЛЯТОРОВ ---
         function calcCubature() {
             const species = document.getElementById('cub-species').value;
             const d = parseInt(document.getElementById('cub-d').value);
@@ -988,6 +1017,108 @@
             } else {
                 alert("Введите габариты штабеля и хотя бы одну высоту.");
             }
+        }
+
+        // --- ЛОГИКА НОВЫХ МОДУЛЕЙ ДЛЯ ЛЕСНИЧИХ ---
+        function runEmbeddedMDO() {
+            const species = document.getElementById('mdo-species').value;
+            const space = parseFloat(document.getElementById('mdo-space').value);
+            const d = parseInt(document.getElementById('mdo-d').value);
+            const stock = parseFloat(document.getElementById('mdo-stock').value);
+            const table = document.getElementById('mdo-table-result');
+            const tbody = document.getElementById('mdo-tbody');
+
+            if (!(space > 0 && d > 0 && stock > 0)) {
+                alert("Заполните корректно все полевые параметры!");
+                return;
+            }
+
+            const totalStock = stock * space;
+            let pLarge = 0, pMedium = 0, pSmall = 0, pFirewood = 15; 
+
+            if (d <= 16) {
+                pLarge = 0; pMedium = 15; pSmall = 55; pFirewood = 30;
+            } else if (d > 16 && d <= 24) {
+                pLarge = 15; pMedium = 45; pSmall = 25; pFirewood = 15;
+            } else if (d > 24 && d <= 32) {
+                pLarge = 45; pMedium = 35; pSmall = 10; pFirewood = 10;
+            } else {
+                pLarge = 65; pMedium = 20; pSmall = 5; pFirewood = 10;
+            }
+
+            if (species === 'birch') {
+                pFirewood += 10;
+                let reduceFactor = 10 / (pLarge + pMedium + pSmall);
+                pLarge -= pLarge * reduceFactor;
+                pMedium -= pMedium * reduceFactor;
+                pSmall -= pSmall * reduceFactor;
+            }
+
+            const vLarge = totalStock * (pLarge / 100);
+            const vMedium = totalStock * (pMedium / 100);
+            const vSmall = totalStock * (pSmall / 100);
+            const vFirewood = totalStock * (pFirewood / 100);
+
+            tbody.innerHTML = `
+                <tr><td><b>Крупная товарная</b> (от 26 см)</td><td>${Math.round(pLarge)}%</td><td><b>${vLarge.toFixed(1)} м³</b></td></tr>
+                <tr><td><b>Средняя товарная</b> (14-24 см)</td><td>${Math.round(pMedium)}%</td><td><b>${vMedium.toFixed(1)} м³</b></td></tr>
+                <tr><td><b>Мелкая товарная</b> (6-12 см)</td><td>${Math.round(pSmall)}%</td><td><b>${vSmall.toFixed(1)} м³</b></td></tr>
+                <tr><td><b>Дрова и отходы</b></td><td>${Math.round(pFirewood)}%</td><td><b>${vFirewood.toFixed(1)} м³</b></td></tr>
+                <tr style="background-color: var(--bg-paper);"><td><b>ИТОГО ЛИКВИДНЫЙ ЗАПАС:</b></td><td>100%</td><td><b style="color: var(--forest-green);">${totalStock.toFixed(1)} м³</b></td></tr>
+            `;
+            table.style.display = 'table';
+        }
+
+        function runEmbeddedKPO() {
+            const t = parseFloat(document.getElementById('fire-t').value);
+            const tau = parseFloat(document.getElementById('fire-tau').value);
+            const days = parseInt(document.getElementById('fire-days').value) || 1;
+            const resBox = document.getElementById('kpo-result');
+
+            if (isNaN(t) || isNaN(tau)) {
+                alert("Заполните показатели температуры и точки росы!");
+                return;
+            }
+
+            const nesterovIndex = t * (t - tau) * days;
+            let kpoText = "I класс (Отсутствует опасность)";
+            let color = "#2D5A27";
+
+            if (nesterovIndex > 0 && nesterovIndex <= 300) {
+                kpoText = "I класс (Малая пожарная опасность)"; color = "#2D5A27";
+            } else if (nesterovIndex > 300 && nesterovIndex <= 1000) {
+                kpoText = "II класс (Умеренная пожарная опасность)"; color = "#8FBC8F";
+            } else if (nesterovIndex > 1000 && nesterovIndex <= 4000) {
+                kpoText = "III класс (Средняя пожарная опасность)"; color = "#f0ad4e";
+            } else if (nesterovIndex > 4000 && nesterovIndex <= 10000) {
+                kpoText = "IV класс (Высокая пожарная опасность)"; color = "#f08f4e";
+            } else if (nesterovIndex > 10000) {
+                kpoText = "V класс (Чрезвычайная пожарная опасность!)"; color = "#D9534F";
+            }
+
+            resBox.style.display = 'block';
+            resBox.style.borderColor = color;
+            resBox.innerHTML = `Индекс Нестерова: <b>${Math.round(nesterovIndex)}</b><br><span style="color:${color}; font-size:15px; font-weight:700;">${kpoText}</span>`;
+        }
+
+        function runEmbeddedDamage() {
+            const kSub = parseFloat(document.getElementById('damage-cat').value);
+            const space = parseFloat(document.getElementById('damage-space').value);
+            const stock = parseFloat(document.getElementById('damage-stock').value);
+            const rate = parseFloat(document.getElementById('damage-rate').value);
+            const resBox = document.getElementById('damage-result');
+
+            if (!(space > 0 && stock > 0 && rate > 0)) {
+                alert("Заполните все поля параметров ущерба!");
+                return;
+            }
+
+            const totalVolume = space * stock;
+            const penaltyDamage = totalVolume * rate * kSub * 50; 
+            const grandTotal = penaltyDamage * 1.15;
+
+            resBox.style.display = 'block';
+            resBox.innerHTML = `Потери древесины: <b>${totalVolume.toFixed(1)} м³</b><br>Сумма ущерба (Пост. №2464):<br><span style="color:#D9534F; font-size:18px; font-weight:700;">${Math.round(grandTotal).toLocaleString('ru-RU')} руб.</span>`;
         }
 
         // --- РОУТИНГ И РАБОТА С БАЗОЙ (SPA) ---
@@ -1176,14 +1307,11 @@
                     <h3>1. Общие положения</h3>
                     <p>Настоящая политика обработки персональных данных составлена в соответствии с требованиями Федерального закона от 27.07.2006. №152-ФЗ «О персональных данных» и определяет порядок обработки персональных данных и меры по обеспечению безопасности персональных данных ИП Худяков Николай Сергеевич (далее — Оператор).</p>
                     <h3>2. Данные, которые мы собираем</h3>
-                    <p>Оператор не собирает персональные данные, позволяющие идентифицировать личность (ФИО, адрес, telephone), без добровольного согласия пользователя. Сайт использует системы аналитики (Яндекс.Метрика), которые могут собирать обезличенные данные: IP-адрес, тип устройства, время нахождения на сайте, cookies и данные Вебвизора.</p>
+                    <p>Оператор не собирает персональные данные, позволяющие идентифицировать личность (ФИО, адрес, телефон), без добровольного согласия пользователя. Сайт использует системы аналитики (Яндекс.Метрика), которые могут собирать обезличенные данные: IP-адрес, тип устройства, время нахождения на сайте, cookies и данные Вебвизора.</p>
                     <h3>3. Цели обработки</h3>
                     <p>Цель обработки обезличенных данных — улучшение работы сайта, анализ посещаемости и показ релевантной рекламы.</p>
                     <h3>4. Реквизиты Оператора</h3>
-                    <p>ИП Худяков Николай Сергеевич<br>
-                    ИНН: 111801576622<br>
-                    ОГРН: 323110000009152<br>
-                    Email для связи: folgoal@gmail.com</p>
+                    <p>ИП Худяков Николай Сергеевич<br>ИНН: 111801576622<br>ОГРН: 323110000009152<br>Email для связи: folgoal@gmail.com</p>
                 `;
             } else if (pageType === 'offer') {
                 titleEl.innerText = 'Договор-оферта';
@@ -1191,14 +1319,47 @@
                     <h3>1. Предмет соглашения</h3>
                     <p>Сайт «Лесовик» (lesovik-pro.ru) предоставляет пользователю доступ к информационным материалам и программным инструментам (калькуляторам) для лесного хозяйства.</p>
                     <h3>2. Отказ от ответственности</h3>
-                    <p><strong>Все результаты расчетов, полученные с помощью инструментов на сайте lesovik-pro.ru, носят исключительно справочный и ознакомительный характер.</strong> Оператор не несет ответственности за любые убытки или ошибки, возникшие в результате использования данных расчетов в профессиональной деятельности, отчетности или при заключении сделок. Пользователь обязан перепроверять результаты расчетов в соответствии с действующими государственными стандартами (ГОСТ) и нормативными актами.</p>
+                    <p><strong>Все результаты расчетов, полученные с помощью инструментов на сайте lesovik-pro.ru, носят исключительно справочный и ознакомительный характер.</strong> Оператор не несет ответственности за любые убытки или ошибки, возникшие в результате использования данных расчетов в профессиональной деятельности, отчетности или при заключении сделок. Официальные вычисления МДО и КПО должны производиться в соответствии с государственными стандартами (ГОСТ) и методическими указаниями Рослесхоза.</p>
                     <h3>3. Интеллектуальная собственность</h3>
                     <p>Контент сайта является собственностью ИП Худяков Н. С. Копирование материалов допускается только с активной ссылкой на первоисточник.</p>
                     <h3>4. Реквизиты Оператора</h3>
-                    <p>ИП Худяков Николай Сергеевич<br>
-                    ИНН: 111801576622<br>
-                    ОГРН: 323110000009152<br>
-                    Email для связи: folgoal@gmail.com</p>
+                    <p>ИП Худяков Николай Сергеевич<br>ИНН: 111801576622<br>ОГРН: 323110000009152<br>Email для связи: folgoal@gmail.com</p>
+                `;
+            } else if (pageType === 'mdo') {
+                titleEl.innerText = 'Мобильный симулятор МДО лесосек';
+                contentEl.innerHTML = `
+                    <p style="font-size:14px; opacity:0.8; margin-bottom:20px;">Оперативная экспресс-оценка товарной структуры дерева прямо на лесосеке без ПК.</p>
+                    <div class="form-group"><label>Преобладающая порода выдела</label><select id="mdo-species"><option value="pine">Сосна / Ель (Хвойные)</option><option value="birch">Береза / Осина (Мягколиственные)</option></select></div>
+                    <div class="form-group"><label>Площадь лесосеки (га)</label><input type="number" id="mdo-space" value="1.0" step="0.1"></div>
+                    <div class="form-group"><label>Средний диаметр насаждения (см)</label><input type="number" id="mdo-d" placeholder="Например: 24"></div>
+                    <div class="form-group"><label>Общий ликвидный запас на 1 га (м³)</label><input type="number" id="mdo-stock" placeholder="Например: 220"></div>
+                    <button class="btn-calc" onclick="runEmbeddedMDO()">Выполнить оценку лесосеки</button>
+                    <table id="mdo-table-result" class="mdo-result-table"><thead><tr><th>Категория сортиментов</th><th>Процент</th><th>Объем партии (м³)</th></tr></thead><tbody id="mdo-tbody"></tbody></table>
+                `;
+            } else if (pageType === 'fire') {
+                titleEl.innerText = 'Калькулятор пожарной опасности и ущерба';
+                contentEl.innerHTML = `
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                        <div>
+                            <h3 style="font-family:'Merriweather',serif; color:var(--forest-green);">1. Индекс горимости по Нестерову</h3>
+                            <p style="font-size:12px; color:gray;">Соответствует регламенту ГОСТ Р 57972-2017</p>
+                            <div class="form-group"><label>Температура в 13:00 (°C)</label><input type="number" id="fire-t" placeholder="24.5" step="0.1"></div>
+                            <div class="form-group"><label>Точка росы в 13:00 (°C)</label><input type="number" id="fire-tau" placeholder="12.1" step="0.1"></div>
+                            <div class="form-group"><label>Дней без осадков (>3мм)</label><input type="number" id="fire-days" value="1"></div>
+                            <button class="btn-calc" onclick="runEmbeddedKPO()">Определить класс</button>
+                            <div id="kpo-result" class="calc-result"></div>
+                        </div>
+                        <div>
+                            <h3 style="font-family:'Merriweather',serif; color:var(--forest-green);">2. Оценка вреда лесному фонду</h3>
+                            <p style="font-size:12px; color:gray;">Расчет по формулам Постановления № 2464</p>
+                            <div class="form-group"><label>Категория защитности лесов</label><select id="damage-cat"><option value="1">Эксплуатационные леса (K=1)</option><option value="2">Защитные леса (K=2)</option><option value="3">Особо защитные участки / ООПТ (K=5)</option></select></div>
+                            <div class="form-group"><label>Пройденная площадь (га)</label><input type="number" id="damage-space" placeholder="Гектары" step="0.1"></div>
+                            <div class="form-group"><label>Уничтоженный запас на 1 га (м³)</label><input type="number" id="damage-stock" placeholder="Запас на га"></div>
+                            <div class="form-group"><label>Ставка платы за 1 м³ (руб)</label><input type="number" id="damage-rate" value="120"></div>
+                            <button class="btn-calc" onclick="runEmbeddedDamage()">Посчитать ущерб</button>
+                            <div id="damage-result" class="calc-result"></div>
+                        </div>
+                    </div>
                 `;
             } else {
                 titleEl.innerText = 'Страница не найдена';
