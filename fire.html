@@ -93,26 +93,46 @@
         }
         .btn-back:hover { background: var(--input-bg); color: var(--primary-forest); }
 
-        /* Полностью автоматическая Bento-панель живой погоды */
+        /* Обновленная ультра-современная графическая Bento-панель живой погоды */
         .weather-panel {
             background: var(--input-bg); border-left: 4px solid var(--primary-forest);
-            border-radius: 8px; padding: 22px; margin-bottom: 40px;
+            border-radius: 12px; padding: 24px; margin-bottom: 40px;
             display: flex; justify-content: space-between; align-items: center; gap: 25px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
         }
-        .weather-info-text { font-size: 13px; line-height: 1.5; }
-        .weather-search-block { display: flex; gap: 8px; flex-shrink: 0; width: 320px; }
+        .weather-info-text { flex: 1; font-size: 13px; line-height: 1.6; }
+        
+        /* Инженерный графический блок отображения текущих метеоданных */
+        .weather-display-widget {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: var(--bg-card);
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+            margin-top: 12px;
+        }
+        .widget-icon-box img { width: 54px; height: 54px; display: block; }
+        .widget-data-box { display: flex; flex-direction: column; gap: 2px; }
+        .widget-temp-line { font-size: 22px; font-weight: 700; color: var(--primary-forest); letter-spacing: -0.5px; }
+        .widget-rh-line { font-size: 12px; font-weight: 600; color: #b38f43; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .weather-search-block { display: flex; gap: 8px; flex-shrink: 0; width: 320px; flex-direction: column; }
         .weather-search-input {
-            flex: 1; padding: 10px 14px; border: 1px solid var(--border-light);
-            border-radius: 6px; font-size: 13px; background: var(--bg-card); outline: none;
+            width: 100%; padding: 10px 14px; border: 1px solid var(--border-light);
+            border-radius: 6px; font-size: 13px; background: var(--bg-card); color: var(--text-main); outline: none; box-sizing: border-box;
         }
         .weather-search-btn {
             background: var(--primary-forest); color: white; border: none;
-            padding: 10px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;
+            padding: 10px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; width: 100%;
         }
         .weather-search-btn:hover { opacity: 0.9; }
 
-        @media (max-width: 850px) {
-            .weather-panel { flex-direction: column; align-items: stretch; gap: 15px; }
+        @media (max-width: 900px) {
+            .weather-panel { flex-direction: column; align-items: stretch; gap: 20px; text-align: center; }
+            .weather-display-widget { justify-content: center; }
             .weather-search-block { width: 100%; }
         }
 
@@ -136,8 +156,7 @@
         .result-display { margin-top: 20px; padding: 15px; background-color: var(--input-bg); border-left: 4px solid var(--primary-forest); border-radius: 4px; font-size: 14px; display: none; line-height: 1.6; }
     </style>
 </head>
-
-    <body>
+<body>
 
 <div class="header">
     <a href="index.html" class="logo-block">
@@ -158,8 +177,18 @@
         
         <div class="weather-panel">
             <div class="weather-info-text">
-                <span style="font-weight: 700; color: var(--primary-forest); display: block; margin-bottom: 4px;" id="weather-location-title">🌤️ Определение таксационной погоды...</span>
-                <span style="color: var(--text-main); opacity: 0.85;" id="weather-status-text">Система запрашивает спутниковые метеоданные для автоматической вставки параметров влажности и температуры в калькулятор.</span>
+                <span style="font-weight: 700; color: var(--primary-forest); display: block; font-size: 15px; margin-bottom: 6px;" id="weather-location-title">🌤️ Определение таксационной погоды...</span>
+                <span style="color: var(--text-main); opacity: 0.85; display: block; margin-bottom: 12px;" id="weather-status-text">Система запрашивает спутниковые метеоданные для автоматической вставки параметров влажности и температуры в калькулятор.</span>
+                
+                <div class="weather-display-widget" id="weather-live-widget" style="display: none;">
+                    <div class="widget-icon-box">
+                        <img id="widget-live-icon" src="" alt="Погода">
+                    </div>
+                    <div class="widget-data-box">
+                        <div id="widget-live-temp" class="widget-temp-line">--°C</div>
+                        <div id="widget-live-rh" class="widget-rh-line">Влажность: --%</div>
+                    </div>
+                </div>
             </div>
             
             <div class="weather-search-block">
@@ -225,7 +254,7 @@
     </div>
 </div>
 
-        <script>
+<script>
     // Инициализация вашего личного верифицированного API ключа
     const WEATHER_API_KEY = '247c067b320c444c869130443262805';
 
@@ -237,14 +266,21 @@
         const humidity = data.current.humidity;
         const locationName = data.location.name;
         const regionName = data.location.region;
+        const iconUrl = 'https:' + data.current.condition.icon; // Запрос графической иконки условий
 
         // Автоматическая подстановка метеопараметров в поля калькулятора Нестерова
         document.getElementById('fire-t').value = temp.toFixed(1);
         document.getElementById('fire-rh').value = humidity;
 
-        // Обновление текстового Bento-интерфейса
-        document.getElementById('weather-location-title').innerText = `🌤️ Метеопост: ${locationName} (${regionName})`;
-        document.getElementById('weather-status-text').innerText = `Параметры успешно обновлены спутником! Текущая температура: ${temp}°C, относительная влажность воздуха: ${humidity}%. Данные внесены в форму расчета Нестерова.`;
+        // Наполнение и активация графического виджета погоды
+        document.getElementById('widget-live-icon').src = iconUrl;
+        document.getElementById('widget-live-temp').innerText = `${temp > 0 ? '+' : ''}${temp.toFixed(1)} °C`;
+        document.getElementById('widget-live-rh').innerText = `Относ. влажность: ${humidity}%`;
+        document.getElementById('weather-live-widget').style.display = 'inline-flex';
+
+        // Обновление текстового интерфейса панели
+        document.getElementById('weather-location-title').innerText = `🌲 Метеопост: ${locationName}`;
+        document.getElementById('weather-status-text').innerText = `Данные по региону (${regionName}) актуализированы спутником и автоматически занесены в форму расчета КПО.`;
     }
 
     // Поиск погоды по текстовому названию любого населенного пункта РФ
@@ -354,4 +390,3 @@
 </script>
 </body>
 </html>
-
