@@ -102,7 +102,7 @@
         }
         .weather-info-text { flex: 1; font-size: 13px; line-height: 1.6; }
         
-        /* Инженерный графический блок отображения текущих метеоданных */
+        /* Инженерный графический блок отображения текущих метеоданных, переделанный в ссылку */
         .weather-display-widget {
             display: flex;
             align-items: center;
@@ -113,6 +113,14 @@
             border: 1px solid var(--border-light);
             box-shadow: 0 4px 10px rgba(0,0,0,0.02);
             margin-top: 12px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+        }
+        .weather-display-widget:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+            border-color: var(--primary-forest);
         }
         .widget-icon-box img { width: 54px; height: 54px; display: block; }
         .widget-data-box { display: flex; flex-direction: column; gap: 2px; }
@@ -180,15 +188,16 @@
                 <span style="font-weight: 700; color: var(--primary-forest); display: block; font-size: 15px; margin-bottom: 6px;" id="weather-location-title">🌤️ Определение таксационной погоды...</span>
                 <span style="color: var(--text-main); opacity: 0.85; display: block; margin-bottom: 12px;" id="weather-status-text">Система запрашивает спутниковые метеоданные для автоматической вставки параметров влажности и температуры в калькулятор.</span>
                 
-                <div class="weather-display-widget" id="weather-live-widget" style="display: none;">
+                <a class="weather-display-widget" id="weather-live-widget" href="weather.html" style="display: none;">
                     <div class="widget-icon-box">
                         <img id="widget-live-icon" src="" alt="Погода">
                     </div>
                     <div class="widget-data-box">
                         <div id="widget-live-temp" class="widget-temp-line">--°C</div>
                         <div id="widget-live-rh" class="widget-rh-line">Влажность: --%</div>
+                        <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">📊 Подробный прогноз на день/неделю →</div>
                     </div>
-                </div>
+                </a>
             </div>
             
             <div class="weather-search-block">
@@ -278,9 +287,12 @@
         document.getElementById('widget-live-rh').innerText = `Относ. влажность: ${humidity}%`;
         document.getElementById('weather-live-widget').style.display = 'inline-flex';
 
-        // Обновление текстового интерфейса панели
-        document.getElementById('weather-location-title').innerText = `🌲 Метеопост: ${locationName}`;
-        document.getElementById('weather-status-text').innerText = `Данные по региону (${regionName}) актуализированы спутником и автоматически занесены в форму расчета КПО.`;
+        // Передаем название города параметром в ссылку, чтобы новая страница сразу знала, какую погоду открывать
+        document.getElementById('weather-live-widget').href = `weather.html?city=${encodeURIComponent(locationName)}`;
+
+        // Обновление текстового интерфейса панели: Выводим регион строго рядом с населенным пунктом
+        document.getElementById('weather-location-title').innerText = `🌲 Метеопост: ${locationName}, ${regionName}`;
+        document.getElementById('weather-status-text').innerText = `Данные метеорологических условий успешно актуализированы спутником и занесены в форму расчета КПО.`;
     }
 
     // Поиск погоды по текстовому названию любого населенного пункта РФ
