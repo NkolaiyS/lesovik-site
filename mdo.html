@@ -38,7 +38,7 @@
     <meta property="og:description" content="Инженерный модуль МДО для лесничеств. Раскладка ликвидного запаса выдела по товарным таблицам Рослесхоза для загрузки во ФГИС ЛК.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://lesovik-pro.ru/mdo.html">
-    <meta property="og:image" content="https://lesovik-pro.ru/logo.jpeg">
+    <meta property="og:image" content="logo.jpeg">
 
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
     <meta name="geo.region" content="RU-KO">
@@ -86,7 +86,7 @@
             --card-shadow: 0 0 15px rgba(83, 141, 73, 0.1);
         }
 
-        /* БЛОКИРОВКА БОКОВОГО СДВИГА */
+        /* БЛОКИРОВКА БОКОВОГО СДВИГА НА СМАРТФОНАХ */
         html, body {
             margin: 0; padding: 0;
             width: 100%; max-width: 100%;
@@ -99,22 +99,36 @@
 
         *, *:before, *:after { box-sizing: inherit; }
 
-        /* МАТОВОЕ СТЕКЛО ДЛЯ НЕПОДВИЖНОЙ ШАПКИ */
+        /* МАТОВОЕ СТЕКЛО ДЛЯ НЕПОДВИЖНОЙ ШАПКИ (ЛОГОТИП СМЕЩЕН ВЛЕВО) */
         .header {
             position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
             background-color: var(--header-bg); border-bottom: 1px solid var(--border-light);
-            padding: 15px 20px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+            padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             box-sizing: border-box;
         }
 
         .logo-block {
-            grid-column: 2; display: flex; align-items: center; gap: 10px;
-            text-decoration: none; color: var(--primary-forest); font-weight: 700; font-size: 22px; letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--primary-forest);
+            font-weight: 700;
+            font-size: 22px;
+            letter-spacing: -0.5px;
         }
-        .logo-icon { width: 32px; height: 32px; border: 2px solid var(--primary-forest); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        /* Стилизация контейнера аватарки/логотипа из файла logo.jpeg */
+        .logo-icon-img {
+            width: 34px;
+            height: 34px;
+            border: 2px solid var(--primary-forest);
+            border-radius: 50%;
+            object-fit: cover;
+            display: block;
+        }
         
-        .theme-container { grid-column: 3; justify-self: end; }
+        .theme-container { display: block; }
 
         .theme-toggle-btn {
             background: transparent; border: 1px solid var(--border-light); color: var(--text-main);
@@ -156,19 +170,13 @@
         .row-species { background-color: rgba(59, 102, 52, 0.06); font-weight: 700; color: var(--primary-forest); }
         .row-total-group { background-color: var(--input-bg); font-weight: 600; }
         .row-grand-final { background-color: #2c3e29; color: white; font-weight: 700; font-size: 15px; }
-
-        @media (max-width: 900px) {
-            .header { display: flex; justify-content: space-between; }
-            .logo-block { grid-column: auto; }
-            .theme-container { grid-column: auto; }
-        }
     </style>
 </head>
 <body>
 
 <div class="header">
     <a href="index.html" class="logo-block">
-        <div class="logo-icon">🌲</div>
+        <img src="logo.jpeg" class="logo-icon-img" alt="Лесовик">
         <span>Лесовик</span>
     </a>
     <div class="theme-container">
@@ -269,7 +277,6 @@
     }
 
     // ОФИЦИАЛЬНАЯ МАТРИЦА СОРТНОСТИ РОСЛЕСХОЗА ПО РЕГИОНАМ
-    // Структура коэффициентов: [1 сорт, 2 сорт, 3 сорт] в зависимости от разряда высот (I, II, III)
     const regionalSortTables = {
         komi: {
             coniferous: { 1: [0.35, 0.50, 0.15], 2: [0.25, 0.55, 0.20], 3: [0.15, 0.55, 0.30] },
@@ -279,7 +286,7 @@
         kostroma: {
             coniferous: { 1: [0.38, 0.48, 0.14], 2: [0.28, 0.52, 0.20], 3: [0.18, 0.52, 0.30] },
             deciduous: { 1: [0.20, 0.52, 0.28], 2: [0.12, 0.53, 0.35], 3: [0.05, 0.50, 0.45] },
-            defectFactor: { osina: 0.18, bereza: 0.08 } // В Костроме фаутность ниже, чем на Севере
+            defectFactor: { osina: 0.18, bereza: 0.08 }
         },
         arkhangelsk: {
             coniferous: { 1: [0.32, 0.52, 0.16], 2: [0.22, 0.56, 0.22], 3: [0.12, 0.54, 0.34] },
@@ -359,7 +366,6 @@
             const speciesTotalStock = stock * space * species.share;
             let pLarge = 0, pMedium = 0, pSmall = 0, pTech = 8, pFirewood = 10, pWaste = 5; 
 
-            // Сортиментные сетки по категориям крупности
             if (dSelector === 'thin') { 
                 pLarge = 0; pMedium = hSelector === 1 ? 24 : 14; pSmall = hSelector === 1 ? 52 : 44;
             } else if (dSelector === 'medium') { 
@@ -372,7 +378,6 @@
             pWaste = species.isConiferous ? 6 : 8;
             pFirewood = 100 - (pLarge + pMedium + pSmall + pTech + pWaste);
 
-            // РЕГИОНАЛЬНЫЙ УЧЕТ СКРЫТЫХ ПОРОКОВ И ФАУТНОСТИ
             if (species.fullName === 'Береза' || species.fullName === 'Осина') {
                 let defectFactor = (species.fullName === 'Осина') ? regionTable.defectFactor.osina : regionTable.defectFactor.bereza; 
                 let shift = (pLarge + pMedium + pSmall) * defectFactor;
@@ -382,7 +387,6 @@
                 if(pLarge < 0) pLarge = 0;
             }
 
-            // РЕГИОНАЛЬНОЕ РАСПРЕДЕЛЕНИЕ СОРТНОСТИ (1, 2, 3 СОРТ)
             const sortMatrix = species.isConiferous ? regionTable.coniferous[hSelector] : regionTable.deciduous[hSelector];
             const s1 = sortMatrix[0], s2 = sortMatrix[1], s3 = sortMatrix[2];
 
