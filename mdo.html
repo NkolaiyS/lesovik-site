@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Экспресс-МДО Лесосек онлайн | Лесовик ПРО</title>
+    <title>Профессиональная материально-денежная оценка (МДО) лесосек | Лесовик ПРО</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600&display=swap');
         
@@ -13,6 +13,7 @@
             --forest-green: #2D5A27;
             --border-color: #E0E0E0;
             --card-bg: #FFFFFF;
+            --footer-bg: #2C3531;
         }
 
         body {
@@ -23,13 +24,14 @@
             line-height: 1.6;
         }
 
-        .container { max-width: 700px; margin: 0 auto; }
+        .container { max-width: 800px; margin: 0 auto; }
         
         h1 {
             font-family: 'Merriweather', serif;
             color: var(--forest-green);
             border-bottom: 2px solid var(--forest-green);
             padding-bottom: 10px;
+            margin-bottom: 5px;
         }
 
         .btn-back {
@@ -48,14 +50,23 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.02);
         }
 
+        .grid-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 600px) { .grid-inputs { grid-template-columns: 1fr; } }
+
         .form-group { margin-bottom: 15px; }
         .form-group label {
             display: block; font-size: 12px; font-weight: 600;
-            margin-bottom: 5px; text-transform: uppercase; color: var(--text-green);
+            margin-bottom: 5px; text-transform: uppercase; color: var(--forest-green);
         }
         .form-group input, .form-group select {
             width: 100%; padding: 12px; border: 1px solid var(--border-color);
             border-radius: 8px; box-sizing: border-box; background: var(--bg-paper);
+            color: var(--text-graphite); font-family: 'Inter', sans-serif;
         }
 
         .btn-calc {
@@ -66,110 +77,205 @@
         .btn-calc:hover { background-color: #1a3617; }
 
         .result-table {
-            width: 100%; border-collapse: collapse; margin-top: 20px; display: none;
+            width: 100%; border-collapse: collapse; margin-top: 25px; display: none;
         }
         .result-table th, .result-table td {
-            padding: 12px; border: 1px solid var(--border-color); text-align: left;
+            padding: 12px; border: 1px solid var(--border-color); text-align: left; font-size: 14px;
         }
-        .result-table th { background-color: var(--forest-green); color: white; }
+        .result-table th { background-color: var(--forest-green); color: white; font-family: 'Merriweather', serif; }
+        
+        .row-species { background-color: rgba(45, 90, 39, 0.05); font-weight: 600; }
+        .row-total { background-color: var(--footer-bg); color: white; font-weight: 600; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <a href="index.html" class="btn-back">← На главную Лесовика</a>
-    <h1>Симулятор МДО Лесосек</h1>
-    <p style="margin-bottom: 30px; opacity: 0.8;">Быстрое моделирование товарной структуры выдела (крупная, средняя, мелкая деловая древесина и дрова).</p>
+    <h1>Инженерный модуль МДО лесосек</h1>
+    <p style="margin-bottom: 30px; opacity: 0.8;">Полноценный расчет материально-денежной оценки лесотаксационного выдела с распределением запаса по породам состава и разрядам высот.</p>
 
     <div class="card">
-        <div class="form-group">
-            <label>Преобладающая порода</label>
-            <select id="mdo-species">
-                <option value="pine">Сосна / Ель (Хвойные)</option>
-                <option value="birch">Береза / Осина (Мягколиственные)</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Площадь лесосеки (га)</label>
-            <input type="number" id="mdo-space" value="1.0" step="0.1">
-        </div>
-        <div class="form-group">
-            <label>Средний диаметр насаждения (см)</label>
-            <input type="number" id="mdo-d" placeholder="Например: 24">
-        </div>
-        <div class="form-group">
-            <label>Общий ликвидный запас на 1 га (м³)</label>
-            <input type="number" id="mdo-stock" placeholder="Например: 220">
+        <div style="margin-bottom: 20px;">
+            <div class="form-group">
+                <label>Таксационная формула состава насаждения</label>
+                <input type="text" id="mdo-formula" value="7С2Б1Е" placeholder="Например: 7С2Б1Е, 6Е4Б, 10Ос">
+                <small style="color:gray; font-size:11px; display:block; margin-top:4px;">
+                    *Пишите долю породы и буквенный код: <b>С</b>-сосна, <b>Е</b>-ель, <b>Б</b>-береза, <b>Ос</b>-осина, <b>Л</b>-лиственница, <b>К</b>-кедр, <b>Д</b>-дуб.
+                </small>
+            </div>
         </div>
 
-        <button class="btn-calc" onclick="runMDO()">Выполнить оценку лесосеки</button>
+        <div class="grid-inputs">
+            <div>
+                <div class="form-group">
+                    <label>Площадь лесосеки (га)</label>
+                    <input type="number" id="mdo-space" value="1.0" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>Средняя категория крупности (Ø)</label>
+                    <select id="mdo-d-select">
+                        <option value="medium" selected>Среднее насаждение (Ø 18-28 см)</option>
+                        <option value="large">Крупное насаждение (Ø от 32 см)</option>
+                        <option value="thin">Тонкомерный древостой (Ø до 16 см)</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <div class="form-group">
+                    <label>Общий ликвидный запас на 1 га (м³)</label>
+                    <input type="number" id="mdo-stock" placeholder="Например: 220" value="220">
+                </div>
+                <div class="form-group">
+                    <label>Разряд высот насаждения</label>
+                    <select id="mdo-h-select">
+                        <option value="1" selected>I разряд высот</option>
+                        <option value="2">II разряд высот</option>
+                        <option value="3">III разряд высот</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-calc" onclick="runMDO()">Выполнить ведомость МДО выдела</button>
 
         <table id="mdo-table-result" class="result-table">
             <thead>
                 <tr>
-                    <th>Сортимент / Категория</th>
-                    <th>Процент (%)</th>
-                    <th>Объем на лесосеке (м³)</th>
+                    <th>Элемент леса / Сортиментная категория</th>
+                    <th>Выход (%)</th>
+                    <th>Объем по выделу (м³)</th>
                 </tr>
             </thead>
             <tbody id="mdo-tbody">
-                <!-- Сюда JS вставит данные -->
-            </tbody>
+                </tbody>
         </table>
     </div>
 </div>
 
 <script>
     function runMDO() {
-        const species = document.getElementById('mdo-species').value;
+        const formulaInput = document.getElementById('mdo-formula').value.trim();
         const space = parseFloat(document.getElementById('mdo-space').value);
-        const d = parseInt(document.getElementById('mdo-d').value);
         const stock = parseFloat(document.getElementById('mdo-stock').value);
+        const dSelector = document.getElementById('mdo-d-select').value;
+        const hSelector = parseInt(document.getElementById('mdo-h-select').value, 10);
         const table = document.getElementById('mdo-table-result');
         const tbody = document.getElementById('mdo-tbody');
 
-        if (!(space > 0 && d > 0 && stock > 0)) {
-            alert("Заполните корректно все полевые параметры!");
+        if (!formulaInput || isNaN(space) || isNaN(stock) || space <= 0 || stock <= 0) {
+            alert("Заполните корректно параметры лесосеки и формулу состава!");
             return;
         }
 
-        const totalStock = stock * space;
+        // Регулярное выражение для разбора состава (разбивает на пары Коэффициент + КодПороды)
+        const pattern = /(\d+)([a-zA-Zа-яА-ЯёЁ]+)/g;
+        let matches = [...formulaInput.matchAll(pattern)];
         
-        // Товарные коэффициенты распределения в зависимости от диаметра по лесохозяйственным стандартам
-        let pLarge = 0, pMedium = 0, pSmall = 0, pFirewood = 15; // 15% сучья и отходы по умолчанию
-
-        if (d <= 16) {
-            pLarge = 0; pMedium = 15; pSmall = 55; pFirewood = 30;
-        } else if (d > 16 && d <= 24) {
-            pLarge = 15; pMedium = 45; pSmall = 25; pFirewood = 15;
-        } else if (d > 24 && d <= 32) {
-            pLarge = 45; pMedium = 35; pSmall = 10; pFirewood = 10;
-        } else {
-            pLarge = 65; pMedium = 20; pSmall = 5; pFirewood = 10;
+        if (matches.length === 0) {
+            alert("Неверный формат состава! Используйте стандартный таксационный вид, например: 7С2Б1Е или 10Ос.");
+            return;
         }
 
-        // Если береза/осина — процент дров традиционно увеличивается из-за кривизны и гнили
-        if (species === 'birch') {
-            pFirewood += 10;
-            let reduceFactor = 10 / (pLarge + pMedium + pSmall);
-            pLarge -= pLarge * reduceFactor;
-            pMedium -= pMedium * reduceFactor;
-            pSmall -= pSmall * reduceFactor;
-        }
+        let parsedComposition = [];
+        let totalCoeff = 0;
 
-        const vLarge = totalStock * (pLarge / 100);
-        const vMedium = totalStock * (pMedium / 100);
-        const vSmall = totalStock * (pSmall / 100);
-        const vFirewood = totalStock * (pFirewood / 100);
+        matches.forEach(m => {
+            let coeff = parseInt(m[1], 10);
+            let rawCode = m[2].toLowerCase();
+            let fullName = 'Прочие лиственные';
 
-        tbody.innerHTML = `
-            <tr><td><b>Крупная товарная</b> (от 26 см)</td><td>${Math.round(pLarge)}%</td><td><b>${vLarge.toFixed(1)} м³</b></td></tr>
-            <tr><td><b>Средняя товарная</b> (14-24 см)</td><td>${Math.round(pMedium)}%</td><td><b>${vMedium.toFixed(1)} м³</b></td></tr>
-            <tr><td><b>Мелкая товарная</b> (6-12 см)</td><td>${Math.round(pSmall)}%</td><td><b>${vSmall.toFixed(1)} м³</b></td></tr>
-            <tr><td><b>Дрова и отходы</b></td><td>${Math.round(pFirewood)}%</td><td><b>${vFirewood.toFixed(1)} м³</b></td></tr>
-            <tr style="background:#e2eee2;"><td><b>ИТОГО ЛИКВИДНЫЙ ЗАПАС:</b></td><td>100%</td><td><b>${totalStock.toFixed(1)} м³</b></td></tr>
+            if (/с|сос/.test(rawCode)) fullName = 'Сосна';
+            else if (/е|ел/.test(rawCode)) fullName = 'Ель';
+            else if (/б|бер/.test(rawCode)) fullName = 'Береза';
+            else if (/ос|оси/.test(rawCode)) fullName = 'Осина';
+            else if (/л|лис/.test(rawCode)) fullName = 'Лиственница';
+            else if (/к|кед/.test(rawCode)) fullName = 'Кедр';
+            else if (/д|дуб/.test(rawCode)) fullName = 'Дуб';
+            else if (/п|пих/.test(rawCode)) fullName = 'Пихта';
+
+            totalCoeff += coeff;
+            parsedComposition.push({ coeff, fullName, rawCode: m[2].toUpperCase() });
+        });
+
+        // Нормируем доли к единице (в сумме состав должен давать 100% ликвидного запаса)
+        parsedComposition.forEach(item => {
+            item.share = item.coeff / totalCoeff;
+        });
+
+        tbody.innerHTML = '';
+        let summary = { large: 0, medium: 0, small: 0, firewood: 0, total: 0 };
+
+        parsedComposition.forEach(species => {
+            const speciesTotalStock = stock * space * species.share;
+            
+            // Базовая матрица распределения сортиментов по ГОСТ и разрядам высот
+            let pLarge = 0, pMedium = 0, pSmall = 0, pFirewood = 12; 
+
+            if (dSelector === 'thin') { 
+                pLarge = 0; 
+                pMedium = hSelector === 1 ? 25 : 15; 
+                pSmall = hSelector === 1 ? 55 : 45;
+                pFirewood = 100 - (pLarge + pMedium + pSmall);
+            } else if (dSelector === 'medium') { 
+                pLarge = hSelector === 1 ? 30 : 15;
+                pMedium = hSelector === 1 ? 45 : 50;
+                pSmall = hSelector === 1 ? 15 : 20;
+                pFirewood = 100 - (pLarge + pMedium + pSmall);
+            } else { 
+                pLarge = hSelector === 1 ? 65 : 52;
+                pMedium = hSelector === 1 ? 22 : 32;
+                pSmall = 3;
+                pFirewood = 100 - (pLarge + pMedium + pSmall);
+            }
+
+            // Коррекция на гниль и фаутность лиственного хозяйства (Береза, Осина)
+            if (species.fullName === 'Береза' || species.fullName === 'Осина') {
+                let defectFactor = (species.fullName === 'Осина') ? 0.20 : 0.12; // у осины процент скрытой гнили выше
+                let shift = (pLarge + pMedium + pSmall) * defectFactor;
+                pFirewood += shift;
+                pLarge -= shift * 0.5;
+                pMedium -= shift * 0.3;
+                pSmall -= shift * 0.2;
+            }
+
+            let vLarge = speciesTotalStock * (pLarge / 100);
+            let vMedium = speciesTotalStock * (pMedium / 100);
+            let vSmall = speciesTotalStock * (pSmall / 100);
+            let vFirewood = speciesTotalStock * (pFirewood / 100);
+
+            summary.large += vLarge;
+            summary.medium += vMedium;
+            summary.small += vSmall;
+            summary.firewood += vFirewood;
+            summary.total += speciesTotalStock;
+
+            tbody.innerHTML += `
+                <tr class="row-species">
+                    <td>🌳 Порода: ${species.rawCode} (${species.fullName}) — Доля в составе: ${(species.share * 10).toFixed(1)} ед.</td>
+                    <td>100%</td>
+                    <td>${speciesTotalStock.toFixed(1)} м³</td>
+                </tr>
+                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Крупная деловая древесина (от 26 см)</td><td>${Math.round(pLarge)}%</td><td>${vLarge.toFixed(2)} м³</td></tr>
+                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Средняя деловая древесина (14 - 24 см)</td><td>${Math.round(pMedium)}%</td><td>${vMedium.toFixed(2)} м³</td></tr>
+                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Мелкая деловая древесина (6 - 12 см)</td><td>${Math.round(pSmall)}%</td><td>${vSmall.toFixed(2)} м³</td></tr>
+                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Технологическое сырье, дрова и отходы рубки</td><td>${Math.round(pFirewood)}%</td><td>${vFirewood.toFixed(2)} м³</td></tr>
+            `;
+        });
+
+        // Консолидированный итог материальной оценки по лесосеке
+        tbody.innerHTML += `
+            <tr class="row-total"><td>ИТОГО КРУПНЫЙ ДЕЛОВОЙ ВЫХОД ПО ВЫДЕЛУ</td><td>-</td><td>${summary.large.toFixed(2)} м³</td></tr>
+            <tr class="row-total"><td>ИТОГО СРЕДНИЙ ДЕЛОВОЙ ВЫХОД ПО ВЫДЕЛУ</td><td>-</td><td>${summary.medium.toFixed(2)} м³</td></tr>
+            <tr class="row-total"><td>ИТОГО МЕЛКИЙ ДЕЛОВОЙ ВЫХОД ПО ВЫДЕЛУ</td><td>-</td><td>${summary.small.toFixed(2)} м³</td></tr>
+            <tr class="row-total"><td>ИТОГО ДРОВЯНАЯ ДРЕВЕСИНА И ЛЕСОСЕЧНЫЕ ОТХОДЫ</td><td>-</td><td>${summary.firewood.toFixed(2)} м³</td></tr>
+            <tr style="background-color: var(--forest-green); color: white; font-weight: 700; font-size: 15px;">
+                <td>ОБЩИЙ ЛИКВИДНЫЙ ЗАПАС ЛЕСОСЕКИ (S = ${space} га)</td>
+                <td>100%</td>
+                <td>${summary.total.toFixed(1)} м³</td>
+            </tr>
         `;
-        
+
         table.style.display = 'table';
     }
 </script>
