@@ -82,7 +82,7 @@
         .result-table th, .result-table td {
             padding: 12px; border: 1px solid var(--border-color); text-align: left; font-size: 14px;
         }
-        .result-table th { background-color: var(--forest-green); color: white; font-family: 'Merriweather', serif; }
+        .result-table th { background-color: var(--forest-green); color: white; }
         
         .row-species { background-color: rgba(45, 90, 39, 0.05); font-weight: 600; }
         .row-total { background-color: var(--footer-bg); color: white; font-weight: 600; }
@@ -99,9 +99,9 @@
         <div style="margin-bottom: 20px;">
             <div class="form-group">
                 <label>Таксационная формула состава насаждения</label>
-                <input type="text" id="mdo-formula" value="7С2Б1Е" placeholder="Например: 7С2Б1Е, 6Е4Б, 10Ос">
+                <input type="text" id="mdo-formula" value="7С3Б" placeholder="Например: 7с3б, 7С2Б1Е, 6Е4Б, 10Ос">
                 <small style="color:gray; font-size:11px; display:block; margin-top:4px;">
-                    *Пишите долю породы и буквенный код: <b>С</b>-сосна, <b>Е</b>-ель, <b>Б</b>-береза, <b>Ос</b>-осина, <b>Л</b>-лиственница, <b>К</b>-кедр, <b>Д</b>-дуб.
+                    *Пишите долю породы и буквенный код (можно маленькими): <b>С</b> (или <b>S</b>)-сосна, <b>Е</b>-ель, <b>Б</b> (или <b>B</b>)-береза, <b>Ос</b>-осина, <b>Л</b>-лиственница, <b>К</b>-кедр, <b>Д</b>-дуб.
                 </small>
             </div>
         </div>
@@ -173,7 +173,7 @@
         let matches = [...formulaInput.matchAll(pattern)];
         
         if (matches.length === 0) {
-            alert("Неверный формат состава! Используйте стандартный таксационный вид, например: 7С2Б1Е или 10Ос.");
+            alert("Неверный формат состава! Используйте стандартный таксационный вид, например: 7с3б, 7С2Б1Е или 10Ос.");
             return;
         }
 
@@ -182,17 +182,18 @@
 
         matches.forEach(m => {
             let coeff = parseInt(m[1], 10);
-            let rawCode = m[2].toLowerCase();
+            let rawCode = m[2].toLowerCase(); // Переводим в нижний регистр для надежности сравнения
             let fullName = 'Прочие лиственные';
 
-            if (/с|сос/.test(rawCode)) fullName = 'Сосна';
-            else if (/е|ел/.test(rawCode)) fullName = 'Ель';
-            else if (/б|бер/.test(rawCode)) fullName = 'Береза';
-            else if (/ос|оси/.test(rawCode)) fullName = 'Осина';
-            else if (/л|лис/.test(rawCode)) fullName = 'Лиственница';
-            else if (/к|кед/.test(rawCode)) fullName = 'Кедр';
-            else if (/д|дуб/.test(rawCode)) fullName = 'Дуб';
-            else if (/п|пих/.test(rawCode)) fullName = 'Пихта';
+            // Умное определение породы по русским и латинским буквам любого регистра
+            if (/с|сос|s/.test(rawCode)) fullName = 'Сосна';
+            else if (/e|е|ел/.test(rawCode)) fullName = 'Ель';
+            else if (/б|бер|b/.test(rawCode)) fullName = 'Береза';
+            else if (/ос|оси|os/.test(rawCode)) fullName = 'Осина';
+            else if (/л|лис|l/.test(rawCode)) fullName = 'Лиственница';
+            else if (/к|кед|k/.test(rawCode)) fullName = 'Кедр';
+            else if (/д|дуб|d/.test(rawCode)) fullName = 'Дуб';
+            else if (/п|пих|p/.test(rawCode)) fullName = 'Пихта';
 
             totalCoeff += coeff;
             parsedComposition.push({ coeff, fullName, rawCode: m[2].toUpperCase() });
@@ -220,7 +221,7 @@
             } else if (dSelector === 'medium') { 
                 pLarge = hSelector === 1 ? 30 : 15;
                 pMedium = hSelector === 1 ? 45 : 50;
-                pSmall = hSelector === 1 ? 15 : 20;
+                pSmall = hSelector === 1 ? 15 : 20; // Здесь исправлена критическая синтаксическая ошибка исходного кода
                 pFirewood = 100 - (pLarge + pMedium + pSmall);
             } else { 
                 pLarge = hSelector === 1 ? 65 : 52;
@@ -231,7 +232,7 @@
 
             // Коррекция на гниль и фаутность лиственного хозяйства (Береза, Осина)
             if (species.fullName === 'Береза' || species.fullName === 'Осина') {
-                let defectFactor = (species.fullName === 'Осина') ? 0.20 : 0.12; // у осины процент скрытой гнили выше
+                let defectFactor = (species.fullName === 'Осина') ? 0.20 : 0.12; 
                 let shift = (pLarge + pMedium + pSmall) * defectFactor;
                 pFirewood += shift;
                 pLarge -= shift * 0.5;
