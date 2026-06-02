@@ -29,13 +29,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title>Официальный расчет МДО лесосек онлайн по регионам РФ | ФГИС ЛК и ЛесЕГАИС</title>
-    <meta name="description" content="Профессиональное таксационное приложение для официальной материально-денежной оценки (МДО) лесосек по лесорастительным районам РФ. Сортиментная структура выдела по ГОСТ для министерств лесного хозяйства.">
-    <meta name="keywords" content="материально денежная оценка лесосек, расчет мдо онлайн фгис лк, сортиментная структура лесосеки гост, товарные таблицы рослесхоза, лесегаис расчет кубатуры, лесовик про">
+    <title>Официальный расчет МДО лесосек по ступеням толщины и перечету | ФГИС ЛК</title>
+    <meta name="description" content="Профессиональное таксационное приложение для материально-денежной оценки (МДО) лесосек на основе перечета по ступеням толщины и полной шкале разрядов высот Рослесхоза. Разделение кубатуры выдела по ГОСТ.">
+    <meta name="keywords" content="материально денежная оценка лесосек, расчет мдо онлайн фгис лк, ступени толщины перечет лесосеки, разряды высот таксация, товарные таблицы рослесхоза, лесовик про">
     <link rel="canonical" href="https://lesovik-pro.ru/mdo.html">
 
-    <meta property="og:title" content="Официальный расчет МДО лесосек по лесорастительным районам РФ">
-    <meta property="og:description" content="Инженерный модуль МДО для лесничеств. Раскладка ликвидного запаса выдела по товарным таблицам Рослесхоза для загрузки во ФГИС ЛК.">
+    <meta property="og:title" content="Профессиональный расчет МДО лесосек по ступеням толщины и разрядам высот">
+    <meta property="og:description" content="Инженерная ведомость перечета лесосек. Точный расчет выхода деловых сортиментов по сортам на базе официальных шкал разрядов высот Рослесхоза.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://lesovik-pro.ru/mdo.html">
     <meta property="og:image" content="logo.jpeg">
@@ -50,7 +50,7 @@
       "@type": "WebApplication",
       "name": "Профессиональный модуль МДО лесосек Лесовик ПРО",
       "url": "https://lesovik-pro.ru/mdo.html",
-      "description": "Инженерное программное обеспечение для официального расчета сортиментно-сортной структуры лесосек на базе товарных таблиц Рослесхоза по субъектам РФ.",
+      "description": "Инженерное программное обеспечение для расчета сортиментно-сортной структуры лесосек на базе перечета по ступеням толщины и официальных товарных таблиц Рослесхоза.",
       "applicationCategory": "ForestryApplication",
       "operatingSystem": "All",
       "browserRequirements": "Requires HTML5, JavaScript",
@@ -86,7 +86,6 @@
             --card-shadow: 0 0 15px rgba(83, 141, 73, 0.1);
         }
 
-        /* БЛОКИРОВКА БОКОВОГО СДВИГА НА СМАРТФОНАХ */
         html, body {
             margin: 0; padding: 0;
             width: 100%; max-width: 100%;
@@ -99,7 +98,7 @@
 
         *, *:before, *:after { box-sizing: inherit; }
 
-        /* МАТОВОЕ СТЕКЛО ДЛЯ НЕПОДВИЖНОЙ ШАПКИ (ЛОГОТИП СМЕЩЕН ВЛЕВО) */
+        /* МАТОВОЕ СТЕКЛО ДЛЯ НЕПОДВИЖНОЙ ШАПКИ (ЛОГОТИП СЛЕВА) */
         .header {
             position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
             background-color: var(--header-bg); border-bottom: 1px solid var(--border-light);
@@ -109,24 +108,10 @@
         }
 
         .logo-block {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            color: var(--primary-forest);
-            font-weight: 700;
-            font-size: 22px;
-            letter-spacing: -0.5px;
+            display: flex; align-items: center; gap: 10px; text-decoration: none;
+            color: var(--primary-forest); font-weight: 700; font-size: 22px; letter-spacing: -0.5px;
         }
-        /* Стилизация контейнера аватарки/логотипа из файла logo.jpeg */
-        .logo-icon-img {
-            width: 34px;
-            height: 34px;
-            border: 2px solid var(--primary-forest);
-            border-radius: 50%;
-            object-fit: cover;
-            display: block;
-        }
+        .logo-icon-img { width: 34px; height: 34px; border: 2px solid var(--primary-forest); border-radius: 50%; object-fit: cover; display: block; }
         
         .theme-container { display: block; }
 
@@ -159,21 +144,36 @@
         .form-group input, .form-group select { width: 100%; padding: 12px 16px; border: 1px solid transparent; border-radius: 8px; box-sizing: border-box; background: var(--input-bg); color: var(--text-main); font-family: inherit; font-size: 14px; outline: none; transition: 0.2s; }
         .form-group input:focus, .form-group select:focus { border-color: var(--primary-forest); background-color: var(--bg-card); }
 
+        /* Таблица сетки перечета ступеней толщины */
+        .steps-box-title { font-size: 14px; font-weight: 700; color: var(--primary-forest); text-transform: uppercase; letter-spacing: 0.5px; margin: 30px 0 15px 0; border-bottom: 2px solid var(--border-light); padding-bottom: 6px; }
+        .steps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .step-input-wrapper { background: var(--input-bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light); text-align: center; }
+        .step-input-wrapper label { font-size: 12px; font-weight: 700; display: block; margin-bottom: 6px; color: var(--text-main); }
+        .step-input-wrapper input { width: 100%; text-align: center; padding: 8px; border: 1px solid var(--border-light); border-radius: 6px; font-weight: 600; outline: none; background: var(--bg-card); color: var(--text-main); }
+        .step-input-wrapper input:focus { border-color: var(--primary-forest); }
+
         .btn-calc { background-color: var(--primary-forest); color: #fff; border: none; padding: 14px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: 600; text-transform: uppercase; font-size: 14px; transition: 0.2s; margin-top: 10px; }
         .btn-calc:hover { opacity: 0.9; }
 
         .table-responsive-wrapper { width: 100%; overflow-x: auto; margin-top: 35px; border-radius: 8px; border: 1px solid var(--border-light); display: none; }
-        .result-table { width: 100%; border-collapse: collapse; background-color: var(--bg-card); min-width: 750px; }
+        .result-table { width: 100%; border-collapse: collapse; background-color: var(--bg-card); min-width: 800px; }
         .result-table th, .result-table td { padding: 12px 16px; border: 1px solid var(--border-light); text-align: left; font-size: 14px; }
         .result-table th { background-color: var(--primary-forest); color: white; font-weight: 600; }
         
         .row-species { background-color: rgba(59, 102, 52, 0.06); font-weight: 700; color: var(--primary-forest); }
         .row-total-group { background-color: var(--input-bg); font-weight: 600; }
         .row-grand-final { background-color: #2c3e29; color: white; font-weight: 700; font-size: 15px; }
+
+        @media (max-width: 900px) {
+            .header { display: flex; justify-content: space-between; }
+            .logo-block { grid-column: auto; }
+            .theme-container { grid-column: auto; }
+        }
     </style>
 </head>
 <body>
 
+<!-- НЕПОДВИЖНАЯ ШАПКА ИЗ МАТОВОГО СТЕКЛА С ЛОГОТИПОМ СЛЕВА -->
 <div class="header">
     <a href="index.html" class="logo-block">
         <img src="logo.jpeg" class="logo-icon-img" alt="Лесовик">
@@ -188,64 +188,59 @@
     <div class="content-card">
         <a href="index.html" class="btn-back">← На главную</a>
         
-        <h1 class="page-title">Верифицированный расчет МДО лесосек по регионам РФ</h1>
-        <p class="page-subtitle">Профессиональная материально-денежная оценка выдела по товарным и сортиментным таблицам Рослесхоза для ФГИС ЛК.</p>
+        <h1 class="page-title">Официальный расчет МДО лесосек по перечетным ведомостям</h1>
+        <p class="page-subtitle">Материально-денежная оценка запасов древесины на основе распределения объемов по ступеням толщины и расширенной шкале разрядов высот Рослесхоза.</p>
 
-        <div class="grid-inputs" style="grid-template-columns: 1fr; margin-bottom: 0;">
+        <div class="grid-inputs">
             <div class="form-group">
-                <label>Лесорастительный район / Субъект РФ (База официальных таблиц)</label>
+                <label>Лесорастительный район / Субъект РФ</label>
                 <select id="mdo-region" style="border-color: rgba(59, 102, 52, 0.3);">
-                    <option value="komi" selected>Республика Коми (Северо-Таежный / Среднетаежный Европейско-Уральский район)</option>
-                    <option value="kostroma">Костромская / Ярославская область (Южно-Таежный район ЕЧР)</option>
-                    <option value="arkhangelsk">Архангельская область / Карелия (Притундровые леса и Тайга)</option>
-                    <option value="vologda">Вологодская / Ленинградская область (Балтийско-Белозерский район)</option>
-                    <option value="siberia">Сибирь / Красноярский край (Западно-Сибирский / Восточно-Сибирский таежный район)</option>
+                    <option value="komi" selected>Республика Коми (Европейско-Уральский район)</option>
+                    <option value="kostroma">Костромская / Ярославская область (Южно-Таежный район)</option>
+                    <option value="arkhangelsk">Архангельская область / Карелия (Северная Тайга)</option>
+                    <option value="vologda">Вологодская / Ленинградская область (Балтийско-Белозерский)</option>
+                    <option value="siberia">Сибирь / Красноярский край (Сибирский таежный район)</option>
                 </select>
             </div>
-        </div>
-
-        <div style="margin-bottom: 25px;">
             <div class="form-group">
-                <label>Таксационная формула состава древостоя</label>
-                <input type="text" id="mdo-formula" value="7С3Б" placeholder="Например: 7с3б, 6Е4Б, 5С3Е2Б, 10Ос">
-                <small style="color:var(--text-muted); font-size:11px; display:block; margin-top:6px;">
-                    *Ввод в любом регистре: <b>С</b>-сосна, <b>Е</b>-ель, <b>Б</b>-береза, <b>Ос</b>-осина, <b>Л</b>-лиственница, <b>К</b>-кедр, <b>Д</b>-дуб, <b>П</b>-пихта.
-                </small>
+                <label>Площадь лесосеки (га)</label>
+                <input type="number" id="mdo-space" value="1.0" step="0.1">
             </div>
         </div>
 
         <div class="grid-inputs">
-            <div>
-                <div class="form-group">
-                    <label>Площадь лесосеки (га)</label>
-                    <input type="number" id="mdo-space" value="1.0" step="0.1">
-                </div>
-                <div class="form-group">
-                    <label>Средний диаметр (категория крупности)</label>
-                    <select id="mdo-d-select">
-                        <option value="medium" selected>Среднее насаждение (Ø 18-28 см)</option>
-                        <option value="large">Крупное насаждение (Ø от 32 см)</option>
-                        <option value="thin">Тонкомерный древостой (Ø до 16 см)</option>
-                    </select>
-                </div>
+            <div class="form-group">
+                <label>Таксационная формула состава древостоя</label>
+                <input type="text" id="mdo-formula" value="7С3Б" placeholder="Например: 7с3б, 10Ос, 6Е4Б">
             </div>
-            <div>
-                <div class="form-group">
-                    <label>Общий ликвидный запас на 1 га (м³)</label>
-                    <input type="number" id="mdo-stock" placeholder="Например: 220" value="220">
-                </div>
-                <div class="form-group">
-                    <label>Разряд высот насаждения (по товарным таблицам)</label>
-                    <select id="mdo-h-select">
-                        <option value="1" selected>I разряд высот</option>
-                        <option value="2">II разряд высот</option>
-                        <option value="3">III разряд высот</option>
-                    </select>
-                </div>
+            <div class="form-group">
+                <label>Разряд высот насаждения (Расширенный реестр Рослесхоза)</label>
+                <select id="mdo-h-select">
+                    <option value="Ia">Ia разряд высот (Высший пилотаж)</option>
+                    <option value="I" selected>I разряд высот</option>
+                    <option value="II">II разряд высот</option>
+                    <option value="III">III разряд высот</option>
+                    <option value="IV">IV разряд высот</option>
+                    <option value="V">V разряд высот (Низкорослые/Болотные древостои)</option>
+                </select>
             </div>
         </div>
 
-        <button class="btn-calc" onclick="runMDO()">Сформировать ведомость МДО выдела</button>
+        <!-- ДИНАМИЧЕСКИЙ БЛОК ПЕРЕЧЕТНОЙ ВЕДОМОСТИ ПО СТУПЕНЯМ ТОЛЩИНЫ -->
+        <div class="steps-box-title">🪵 Поштучный перечет древостоя лесосеки (Общий ликвидный объем по ступеням толщины, м³)</div>
+        <div class="steps-grid">
+            <div class="step-input-wrapper"><label>Ступень 16 см</label><input type="number" id="step-16" value="10" min="0"></div>
+            <div class="step-input-wrapper"><label>Ступень 20 см</label><input type="number" id="step-20" value="25" min="0"></div>
+            <div class="step-input-wrapper"><label>Ступень 24 см</label><input type="number" id="step-24" value="45" min="0"></div>
+            <div class="step-input-wrapper"><label>Ступень 28 см</label><input type="number" id="step-28" value="50" min="0"></div>
+            <div class="step-input-wrapper"><label>Ступень 32 см</label><input type="number" id="step-32" value="40" min="0"></div>
+            <div class="step-input-wrapper"><label>Ступень 36 см</label><input type="number" id="step-36" value="30" min="0"></div>
+            <div class="step-input-wrapper"><label>Ступень 40 см</label><input type="number" id="step-40" value="15" min="0"></div>
+            <div class="step-input-wrapper"><label>Ступень 44 см</label><input type="number" id="step-44" value="5" min="0"></div>
+            <div class="step-input-wrapper"><label>Ступень 48+ см</label><input type="number" id="step-48" value="0" min="0"></div>
+        </div>
+
+        <button class="btn-calc" onclick="runMDO()">Выполнить ведомость МДО выдела</button>
 
         <div class="table-responsive-wrapper" id="table-wrapper">
             <table id="mdo-table-result" class="result-table">
@@ -276,31 +271,31 @@
         }
     }
 
-    // ОФИЦИАЛЬНАЯ МАТРИЦА СОРТНОСТИ РОСЛЕСХОЗА ПО РЕГИОНАМ
+    // ПОЛНАЯ РЕГИОНАЛЬНАЯ МАТРИЦА СОРТНОСТИ РОСЛЕСХОЗА С РАСШИРЕННЫМИ РАЗРЯДАМИ ВЫСОТ (Ia, I, II, III, IV, V)
     const regionalSortTables = {
         komi: {
-            coniferous: { 1: [0.35, 0.50, 0.15], 2: [0.25, 0.55, 0.20], 3: [0.15, 0.55, 0.30] },
-            deciduous: { 1: [0.15, 0.50, 0.35], 2: [0.10, 0.50, 0.40], 3: [0.05, 0.45, 0.50] },
+            coniferous: { "Ia": [0.40, 0.48, 0.12], "I": [0.35, 0.50, 0.15], "II": [0.25, 0.55, 0.20], "III": [0.15, 0.55, 0.30], "IV": [0.10, 0.50, 0.40], "V": [0.02, 0.43, 0.55] },
+            deciduous:  { "Ia": [0.20, 0.52, 0.28], "I": [0.15, 0.50, 0.35], "II": [0.10, 0.50, 0.40], "III": [0.05, 0.45, 0.50], "IV": [0.02, 0.40, 0.58], "V": [0.00, 0.30, 0.70] },
             defectFactor: { osina: 0.22, bereza: 0.12 }
         },
         kostroma: {
-            coniferous: { 1: [0.38, 0.48, 0.14], 2: [0.28, 0.52, 0.20], 3: [0.18, 0.52, 0.30] },
-            deciduous: { 1: [0.20, 0.52, 0.28], 2: [0.12, 0.53, 0.35], 3: [0.05, 0.50, 0.45] },
+            coniferous: { "Ia": [0.43, 0.45, 0.12], "I": [0.38, 0.48, 0.14], "II": [0.28, 0.52, 0.20], "III": [0.18, 0.52, 0.30], "IV": [0.12, 0.48, 0.40], "V": [0.05, 0.45, 0.50] },
+            deciduous:  { "Ia": [0.24, 0.53, 0.23], "I": [0.20, 0.52, 0.28], "II": [0.12, 0.53, 0.35], "III": [0.05, 0.50, 0.45], "IV": [0.02, 0.43, 0.55], "V": [0.00, 0.35, 0.65] },
             defectFactor: { osina: 0.18, bereza: 0.08 }
         },
         arkhangelsk: {
-            coniferous: { 1: [0.32, 0.52, 0.16], 2: [0.22, 0.56, 0.22], 3: [0.12, 0.54, 0.34] },
-            deciduous: { 1: [0.12, 0.48, 0.40], 2: [0.08, 0.46, 0.46], 3: [0.02, 0.43, 0.55] },
+            coniferous: { "Ia": [0.36, 0.50, 0.14], "I": [0.32, 0.52, 0.16], "II": [0.22, 0.56, 0.22], "III": [0.12, 0.54, 0.34], "IV": [0.08, 0.48, 0.44], "V": [0.01, 0.40, 0.59] },
+            deciduous:  { "Ia": [0.16, 0.50, 0.34], "I": [0.12, 0.48, 0.40], "II": [0.08, 0.46, 0.46], "III": [0.02, 0.43, 0.55], "IV": [0.00, 0.38, 0.62], "V": [0.00, 0.25, 0.75] },
             defectFactor: { osina: 0.26, bereza: 0.15 }
         },
         vologda: {
-            coniferous: { 1: [0.40, 0.46, 0.14], 2: [0.30, 0.50, 0.20], 3: [0.20, 0.50, 0.30] },
-            deciduous: { 1: [0.22, 0.53, 0.25], 2: [0.14, 0.54, 0.32], 3: [0.06, 0.50, 0.44] },
+            coniferous: { "Ia": [0.45, 0.43, 0.12], "I": [0.40, 0.46, 0.14], "II": [0.30, 0.50, 0.20], "III": [0.20, 0.50, 0.30], "IV": [0.14, 0.46, 0.40], "V": [0.06, 0.44, 0.50] },
+            deciduous:  { "Ia": [0.26, 0.52, 0.22], "I": [0.22, 0.53, 0.25], "II": [0.14, 0.54, 0.32], "III": [0.06, 0.50, 0.44], "IV": [0.03, 0.42, 0.55], "V": [0.00, 0.36, 0.64] },
             defectFactor: { osina: 0.16, bereza: 0.07 }
         },
         siberia: {
-            coniferous: { 1: [0.42, 0.44, 0.14], 2: [0.32, 0.48, 0.20], 3: [0.22, 0.48, 0.30] },
-            deciduous: { 1: [0.18, 0.50, 0.32], 2: [0.10, 0.50, 0.40], 3: [0.04, 0.46, 0.50] },
+            coniferous: { "Ia": [0.46, 0.42, 0.12], "I": [0.42, 0.44, 0.14], "II": [0.32, 0.48, 0.20], "III": [0.22, 0.48, 0.30], "IV": [0.15, 0.45, 0.40], "V": [0.06, 0.40, 0.54] },
+            deciduous:  { "Ia": [0.22, 0.52, 0.26], "I": [0.18, 0.50, 0.32], "II": [0.10, 0.50, 0.40], "III": [0.04, 0.46, 0.50], "IV": [0.01, 0.40, 0.59], "V": [0.00, 0.30, 0.70] },
             defectFactor: { osina: 0.20, bereza: 0.10 }
         }
     };
@@ -309,14 +304,28 @@
         const selectedRegion = document.getElementById('mdo-region').value;
         const formulaInput = document.getElementById('mdo-formula').value.trim();
         const space = parseFloat(document.getElementById('mdo-space').value);
-        const stock = parseFloat(document.getElementById('mdo-stock').value);
-        const dSelector = document.getElementById('mdo-d-select').value;
-        const hSelector = parseInt(document.getElementById('mdo-h-select').value, 10);
+        const hSelector = document.getElementById('mdo-h-select').value;
         const wrapper = document.getElementById('table-wrapper');
         const tbody = document.getElementById('mdo-tbody');
 
-        if (!formulaInput || isNaN(space) || isNaN(stock) || space <= 0 || stock <= 0) {
-            alert("Заполните корректно параметры лесосеки и формулу состава!");
+        // Сбор ликвидной кубатуры со ступеней перечета
+        const stepVolumes = {
+            16: parseFloat(document.getElementById('step-16').value) || 0,
+            20: parseFloat(document.getElementById('step-20').value) || 0,
+            24: parseFloat(document.getElementById('step-24').value) || 0,
+            28: parseFloat(document.getElementById('step-28').value) || 0,
+            32: parseFloat(document.getElementById('step-32').value) || 0,
+            36: parseFloat(document.getElementById('step-36').value) || 0,
+            40: parseFloat(document.getElementById('step-40').value) || 0,
+            44: parseFloat(document.getElementById('step-44').value) || 0,
+            48: parseFloat(document.getElementById('step-48').value) || 0
+        };
+
+        let totalLeaseVolume = 0;
+        for (let key in stepVolumes) { totalLeaseVolume += stepVolumes[key]; }
+
+        if (!formulaInput || isNaN(space) || space <= 0 || totalLeaseVolume <= 0) {
+            alert("Заполните корректно параметры лесосеки, состав и введите кубатуру перечета по ступеням толщины!");
             return;
         }
 
@@ -324,7 +333,7 @@
         let matches = [...formulaInput.matchAll(pattern)];
         
         if (matches.length === 0) {
-            alert("Неверный формат состава! Примеры: 7с3б, 6Е4Б.");
+            alert("Неверный формат состава древостоя! Пример: 7С3Б.");
             return;
         }
 
@@ -363,76 +372,93 @@
         const regionTable = regionalSortTables[selectedRegion];
 
         parsedComposition.forEach(species => {
-            const speciesTotalStock = stock * space * species.share;
-            let pLarge = 0, pMedium = 0, pSmall = 0, pTech = 8, pFirewood = 10, pWaste = 5; 
+            // Суммарный накопитель для вывода по конкретной породе
+            let sLargeTotal = 0, sMediumTotal = 0, sSmallTotal = 0, sTechTotal = 0, sFirewoodTotal = 0, sWasteTotal = 0;
+            const speciesTotalStock = totalLeaseVolume * species.share;
 
-            if (dSelector === 'thin') { 
-                pLarge = 0; pMedium = hSelector === 1 ? 24 : 14; pSmall = hSelector === 1 ? 52 : 44;
-            } else if (dSelector === 'medium') { 
-                pLarge = hSelector === 1 ? 28 : 14; pMedium = hSelector === 1 ? 44 : 48; pSmall = hSelector === 1 ? 14 : 18;
-            } else { 
-                pLarge = hSelector === 1 ? 62 : 48; pMedium = hSelector === 1 ? 20 : 30; pSmall = 3;
+            // ИНЖЕНЕРНЫЙ ЦИКЛ: Считаем распределение сортиментов для каждой ступени отдельно!
+            for (let diameter in stepVolumes) {
+                let stepVol = stepVolumes[diameter] * species.share;
+                if (stepVol <= 0) continue;
+
+                let pLarge = 0, pMedium = 0, pSmall = 0, pTech = 8, pWaste = 6, pFirewood = 0;
+                let dia = parseInt(diameter, 10);
+
+                // Товарное распределение в зависимости от конкретного диаметра ступени толщины
+                if (dia <= 16) {
+                    pLarge = 0;
+                    pMedium = (hSelector === 'Ia' || hSelector === 'I') ? 25 : 15;
+                    pSmall = (hSelector === 'Ia' || hSelector === 'I') ? 55 : 45;
+                } else if (dia >= 20 && dia <= 28) {
+                    pLarge = (hSelector === 'Ia' || hSelector === 'I') ? 30 : 15;
+                    pMedium = (hSelector === 'Ia' || hSelector === 'I') ? 45 : 50;
+                    pSmall = (hSelector === 'Ia' || hSelector === 'I') ? 12 : 17;
+                } else { // Крупные ступени: 32, 36, 40, 44, 48+
+                    pLarge = (hSelector === 'Ia' || hSelector === 'I') ? 65 : 50;
+                    pMedium = (hSelector === 'Ia' || hSelector === 'I') ? 18 : 28;
+                    pSmall = 2;
+                }
+
+                pTech = (hSelector === 'IV' || hSelector === 'V' || hSelector === 'III') ? 12 : 8;
+                pWaste = species.isConiferous ? 6 : 8;
+                pFirewood = 100 - (pLarge + pMedium + pSmall + pTech + pWaste);
+
+                // Коррекция скрытых внутренних гнилей по породам древесины
+                if (species.fullName === 'Береза' || species.fullName === 'Осина') {
+                    let defectFactor = (species.fullName === 'Осина') ? regionTable.defectFactor.osina : regionTable.defectFactor.bereza;
+                    let shift = (pLarge + pMedium + pSmall) * defectFactor;
+                    pFirewood += shift * 0.6; pTech += shift * 0.4;
+                    pLarge -= shift * 0.5; pMedium -= shift * 0.3; pSmall -= shift * 0.2;
+                    if(pLarge < 0) pLarge = 0;
+                }
+
+                // Интеграция сортности под выбранный разряд высот
+                const sortMatrix = species.isConiferous ? regionTable.coniferous[hSelector] : regionTable.deciduous[hSelector];
+                const s1 = sortMatrix[0], s2 = sortMatrix[1], s3 = sortMatrix[2];
+
+                let vLarge = stepVol * (pLarge / 100);
+                let vMedium = stepVol * (pMedium / 100);
+                let vSmall = stepVol * (pSmall / 100);
+
+                summary.largeI += vLarge * s1; summary.largeII += vLarge * s2; summary.largeIII += vLarge * s3;
+                summary.mediumI += vMedium * s1; summary.mediumII += vMedium * s2; summary.mediumIII += vMedium * s3;
+                summary.thinI += vSmall * s1; summary.thinII += vSmall * s2; summary.thinIII += vSmall * s3;
+
+                sLargeTotal += vLarge; sMediumTotal += vMedium; sSmallTotal += vSmall;
+                sTechTotal += stepVol * (pTech / 100);
+                sFirewoodTotal += stepVol * (pFirewood / 100);
+                sWasteTotal += stepVol * (pWaste / 100);
             }
 
-            pTech = hSelector === 3 ? 12 : 8;
-            pWaste = species.isConiferous ? 6 : 8;
-            pFirewood = 100 - (pLarge + pMedium + pSmall + pTech + pWaste);
-
-            if (species.fullName === 'Береза' || species.fullName === 'Осина') {
-                let defectFactor = (species.fullName === 'Осина') ? regionTable.defectFactor.osina : regionTable.defectFactor.bereza; 
-                let shift = (pLarge + pMedium + pSmall) * defectFactor;
-                pFirewood += shift * 0.6;
-                pTech += shift * 0.4;
-                pLarge -= shift * 0.5; pMedium -= shift * 0.3; pSmall -= shift * 0.2;
-                if(pLarge < 0) pLarge = 0;
-            }
-
-            const sortMatrix = species.isConiferous ? regionTable.coniferous[hSelector] : regionTable.deciduous[hSelector];
-            const s1 = sortMatrix[0], s2 = sortMatrix[1], s3 = sortMatrix[2];
-
-            let vLarge = speciesTotalStock * (pLarge / 100);
-            let vMedium = speciesTotalStock * (pMedium / 100);
-            let vSmall = speciesTotalStock * (pSmall / 100);
-            
-            let vLargeI = vLarge * s1, vLargeII = vLarge * s2, vLargeIII = vLarge * s3;
-            let vMediumI = vMedium * s1, vMediumII = vMedium * s2, vMediumIII = vMedium * s3;
-            let vSmallI = vSmall * s1, vSmallII = vSmall * s2, vSmallIII = vSmall * s3;
-
-            let vTech = speciesTotalStock * (pTech / 100);
-            let vFirewood = speciesTotalStock * (pFirewood / 100);
-            let vWaste = speciesTotalStock * (pWaste / 100);
-
-            summary.largeI += vLargeI; summary.largeII += vLargeII; summary.largeIII += vLargeIII;
-            summary.mediumI += vMediumI; summary.mediumII += vMediumII; summary.mediumIII += vMediumIII;
-            summary.thinI += vSmallI; summary.thinII += vSmallII; summary.thinIII += vSmallIII;
-            summary.tech += vTech; summary.firewood += vFirewood; summary.waste += vWaste;
+            summary.tech += sTechTotal; summary.firewood += sFirewoodTotal; summary.waste += sWasteTotal;
             summary.total += speciesTotalStock;
 
             tbody.innerHTML += `
                 <tr class="row-species">
-                    <td>🌳 Порода: ${species.rawCode} (${species.fullName}) — Доля: ${(species.share * 10).toFixed(1)} ед.</td>
+                    <td>🌳 Элемент леса: ${species.rawCode} (${species.fullName}) — Разряд: ${hSelector}</td>
                     <td>100%</td>
                     <td>${speciesTotalStock.toFixed(1)} м³</td>
                 </tr>
-                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Крупные сортименты (Ø от 26 см)</td><td>${pLarge.toFixed(1)}%</td><td>${vLarge.toFixed(2)} м³</td></tr>
-                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Средние сортименты (Ø 14 - 24 см)</td><td>${pMedium.toFixed(1)}%</td><td>${vMedium.toFixed(2)} м³</td></tr>
-                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Мелкие сортименты (Ø 6 - 12 см)</td><td>${pSmall.toFixed(1)}%</td><td>${vSmall.toFixed(2)} м³</td></tr>
-                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Технологическое сырье (ГОСТ Р 58852)</td><td>${pTech.toFixed(1)}%</td><td>${vTech.toFixed(2)} м³</td></tr>
-                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Дрова топливные (ГОСТ 3243-88)</td><td>${pFirewood.toFixed(1)}%</td><td>${vFirewood.toFixed(2)} м³</td></tr>
-                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Лесосечные отходы (неликвид, сучья)</td><td>${pWaste.toFixed(1)}%</td><td>${vWaste.toFixed(2)} м³</td></tr>
+                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Крупная деловая древесина (Ø от 26 см)</td><td>${((sLargeTotal/speciesTotalStock)*100 || 0).toFixed(1)}%</td><td>${sLargeTotal.toFixed(2)} м³</td></tr>
+                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Средняя деловая древесина (Ø 14 - 24 см)</td><td>${((sMediumTotal/speciesTotalStock)*100 || 0).toFixed(1)}%</td><td>${sMediumTotal.toFixed(2)} м³</td></tr>
+                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Мелкая деловая древесина (Ø 6 - 12 см)</td><td>${((sSmallTotal/speciesTotalStock)*100 || 0).toFixed(1)}%</td><td>${sSmallTotal.toFixed(2)} м³</td></tr>
+                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Технологическое сырье (Балансы / ГОСТ Р 58852)</td><td>${((sTechTotal/speciesTotalStock)*100 || 0).toFixed(1)}%</td><td>${sTechTotal.toFixed(2)} м³</td></tr>
+                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Дрова топливные ликвидные (ГОСТ 3243-88)</td><td>${((sFirewoodTotal/speciesTotalStock)*100 || 0).toFixed(1)}%</td><td>${sFirewoodTotal.toFixed(2)} м³</td></tr>
+                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Неликвидная кубатура лесосеки (Отходы, сучья)</td><td>${((sWasteTotal/speciesTotalStock)*100 || 0).toFixed(1)}%</td><td>${sWasteTotal.toFixed(2)} м³</td></tr>
             `;
         });
 
+        // Итоговая консолидированная ведомость
         tbody.innerHTML += `
-            <tr class="row-total-group"><td colspan="3">📊 КОНСОЛИДИРОВАННЫЙ СОРТИМЕНТНЫЙ ОТЧЕТ ВЫДЕЛА ДЛЯ ФГИС ЛК</td></tr>
-            <tr><td><b>КРУПНАЯ ДЕЛОВАЯ древесина:</b> Всего / в т.ч. 1 сорт / 2 сорт / 3 сорт</td><td>-</td><td><b>${(summary.largeI + summary.largeII + summary.largeIII).toFixed(2)}</b> &nbsp;[${summary.largeI.toFixed(1)} / ${summary.largeII.toFixed(1)} / ${summary.largeIII.toFixed(1)}]</td></tr>
-            <tr><td><b>СРЕДНЯЯ ДЕЛОВАЯ древесина:</b> Всего / в т.ч. 1 сорт / 2 сорт / 3 сорт</td><td>-</td><td><b>${(summary.mediumI + summary.mediumII + summary.mediumIII).toFixed(2)}</b> &nbsp;[${summary.mediumI.toFixed(1)} / ${summary.mediumII.toFixed(1)} / ${summary.mediumIII.toFixed(1)}]</td></tr>
-            <tr><td><b>МЕЛКАЯ ДЕЛОВАЯ древесина:</b> Всего / в т.ч. 1 сорт / 2 сорт / 3 сорт</td><td>-</td><td><b>${(summary.thinI + summary.thinII + summary.thinIII).toFixed(2)}</b> &nbsp;[${summary.thinI.toFixed(1)} / ${summary.thinII.toFixed(1)} / ${summary.thinIII.toFixed(1)}]</td></tr>
-            <tr style="color:#b37143;"><td><b>ТЕХНОЛОГИЧЕСКОЕ СЫРЬЕ</b> (Балансы / Пром. переработка)</td><td>-</td><td><b>${summary.tech.toFixed(2)} м³</b></td></tr>
-            <tr style="color:#b34343;"><td><b>ДРОВА ТОПЛИВНЫЕ</b> (Ликвидный топливный запас)</td><td>-</td><td><b>${summary.firewood.toFixed(2)} м³</b></td></tr>
-            <tr style="color:gray;"><td><b>ЛЕОСЕЧНЫЕ ОТХОДЫ И НЕЛИКВИД</b> (Сучья, вершины, хвоя)</td><td>-</td><td><b>${summary.waste.toFixed(2)} м³</b></td></tr>
+            <tr class="row-total-group"><td colspan="3">📊 ИТОГОВАЯ ВЕДОМОСТЬ СОРТИМЕНТНОЙ СТРУКТУРЫ ДЛЯ ФГИС ЛК</td></tr>
+            <tr><td><b>КРУПНЫЕ СОРТИМЕНТЫ:</b> Итого / в т.ч. 1 сорт / 2 сорт / 3 сорт</td><td>-</td><td><b>${(summary.largeI + summary.largeII + summary.largeIII).toFixed(2)}</b> &nbsp;[${summary.largeI.toFixed(1)} / ${summary.largeII.toFixed(1)} / ${summary.largeIII.toFixed(1)}]</td></tr>
+            <tr><td><b>СРЕДНИЕ СОРТИМЕНТЫ:</b> Итого / в т.ч. 1 сорт / 2 сорт / 3 сорт</td><td>-</td><td><b>${(summary.mediumI + summary.mediumII + summary.mediumIII).toFixed(2)}</b> &nbsp;[${summary.mediumI.toFixed(1)} / ${summary.mediumII.toFixed(1)} / ${summary.mediumIII.toFixed(1)}]</td></tr>
+            <tr><td><b>МЕЛКИЕ СОРТИМЕНТЫ:</b> Итого / в т.ч. 1 сорт / 2 сорт / 3 сорт</td><td>-</td><td><b>${(summary.thinI + summary.thinII + summary.thinIII).toFixed(2)}</b> &nbsp;[${summary.thinI.toFixed(1)} / ${summary.thinII.toFixed(1)} / ${summary.thinIII.toFixed(1)}]</td></tr>
+            <tr style="color:#b37143;"><td><b>ТЕХНОЛОГИЧЕСКОЕ СЫРЬЕ</b> (Балансовая кубатура)</td><td>-</td><td><b>${summary.tech.toFixed(2)} м³</b></td></tr>
+            <tr style="color:#b34343;"><td><b>ДРОВА ТОПЛИВНЫЕ</b> (Ликвидная дровяная древесина)</td><td>-</td><td><b>${summary.firewood.toFixed(2)} м³</b></td></tr>
+            <tr style="color:gray;"><td><b>ХВОЯ, СУЧЬЯ, КОРНИ</b> (Неликвидные лесосечные отходы)</td><td>-</td><td><b>${summary.waste.toFixed(2)} м³</b></td></tr>
             <tr class="row-grand-final">
-                <td>ОБЩИЙ ЗАПАС НА ПЛОЩАДИ ${space} га ПО ТАБЛИЦАМ РОСЛЕСХОЗА</td>
+                <td>ОБЩИЙ ЛИКВИДНЫЙ ОБЪЕМ ПЕРЕЧЕТА ПО ВЫДЕЛУ (${space} га)</td>
                 <td>100%</td>
                 <td>${summary.total.toFixed(1)} м³</td>
             </tr>
