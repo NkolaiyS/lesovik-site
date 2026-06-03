@@ -120,8 +120,7 @@
 
         .page-subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 35px; }
 
-        .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 25px; }
-        @media (max-width: 650px) { .grid-inputs { grid-template-columns: 1fr; } }
+        .grid-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-bottom: 25px; }
 
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-size: 11px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; color: var(--text-main); letter-spacing: 0.5px; }
@@ -181,7 +180,7 @@
         <a href="index.html" class="btn-back">← На главную</a>
         
         <h1 class="page-title">Инженерный таксационный калькулятор МДО</h1>
-        <p class="page-subtitle">Профессиональная материально-денежная оценка выдела. Поштучный ввод перечета в <b>штуках деревьев</b>. Индивидуальные разряды высот и персональная стоимость устанавливаются для каждой породы отдельно.</p>
+        <p class="page-subtitle">Профессиональная материально-денежная оценка выдела. Поддержка сплошного и выборочного перечета (ленты, круговые площадки постоянного радиуса) по таблицам Рослесхоза.</p>
 
         <div class="grid-inputs">
             <div class="form-group">
@@ -195,8 +194,13 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Площадь лесосеки (га)</label>
-                <input type="number" id="mdo-space" value="1.0" step="0.1">
+                <label>Общая площадь лесосеки (га)</label>
+                <input type="number" id="mdo-space" value="50.0" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>Фактическая площадь перечета (га)</label>
+                <input type="number" id="mdo-sample-space" value="2.0" step="0.01">
+                <small style="color:var(--text-muted); font-size:11px; display:block; margin-top:4px;">*Суммарная площадь лент или круговых площадок</small>
             </div>
             <div class="form-group">
                 <label>Лесотаксовый пояс платы</label>
@@ -224,7 +228,7 @@
             <button class="btn-add-species" onclick="addSpeciesBlock()">➕ Добавить в перечетку</button>
         </div>
 
-        <div class="field-peruchet-section-title">📋 Ведомости перечета элементов леса по ступеням толщины (Ввод в штуках)</div>
+        <div class="field-peruchet-section-title">📋 Данные перечета на круговых площадках / лентах (Ввод в штуках деревьев)</div>
         <div id="peruchet-dynamic-container"></div>
 
         <button class="btn-calc" onclick="runMDO()">Выполнить ведомость МДО выдела</button>
@@ -235,7 +239,7 @@
                     <tr>
                         <th>Элемент леса / Сортиментная группа древесины и сортность</th>
                         <th>Выход (%)</th>
-                        <th>Объем по выделу (м³)</th>
+                        <th>Объем по всему выделу (м³)</th>
                         <th>Сумма платы (руб.)</th>
                     </tr>
                 </thead>
@@ -257,7 +261,6 @@
         }
     }
 
-    // ОФИЦИАЛЬНЫЙ ТАКСАЦИОННЫЙ РЕЕСТР ОБЪЕМОВ ОДНОГО СТВОЛА ПО ШКАЛЕ РОСЛЕСХОЗА (М³)
     const treeVolumeTable = {
         "Ia": { 16: 0.16, 20: 0.31, 24: 0.52, 28: 0.79, 32: 1.11, 36: 1.49, 40: 1.91, 44: 2.38, 48: 2.90 },
         "I":  { 16: 0.14, 20: 0.28, 24: 0.47, 28: 0.71, 32: 1.00, 36: 1.34, 40: 1.72, 44: 2.14, 48: 2.61 },
@@ -267,7 +270,6 @@
         "V":  { 16: 0.07, 20: 0.14, 24: 0.23, 28: 0.35, 32: 0.50, 36: 0.68, 40: 0.88, 44: 1.10, 48: 1.35 }
     };
 
-    // ОФИЦИАЛЬНАЯ МАТРИЦА СОРТНОСТИ РОСЛЕСХОЗА С ПОПОРОДНЫМИ ТАБЛИЦАМИ ПО РЕГИОНАМ РФ
     const regionalSortTables = {
         komi: {
             coniferous: { "Ia": [0.40, 0.48, 0.12], "I": [0.35, 0.50, 0.15], "II": [0.25, 0.55, 0.20], "III": [0.15, 0.55, 0.30], "IV": [0.10, 0.50, 0.40], "V": [0.02, 0.43, 0.55] },
@@ -305,8 +307,7 @@
         const isConiferous = isConiferousStr === 'true';
 
         if (addedSpeciesCodes.has(rawCode)) {
-            alert(`Порода ${rawCode} уже добавлена в текущую перечетную ведомость!`);
-            return;
+            alert(`Порода ${rawCode} уже добавлена!`); return;
         }
 
         addedSpeciesCodes.add(rawCode);
@@ -342,7 +343,7 @@
 
         diameters.forEach(d => {
             let defVal = "0";
-            if (rawCode === 'С' && d === 16) defVal = "1"; // Предустановка теста Андрея
+            if (rawCode === 'С' && d === 16) defVal = "1";
             if (rawCode === 'С' && d === 28) defVal = "40";
             if (rawCode === 'Б' && d === 24) defVal = "15";
 
@@ -360,29 +361,35 @@
 
     function removeSpeciesBlock(rawCode) {
         const block = document.getElementById(`block-${rawCode}`);
-        if (block) {
-            block.remove();
-            addedSpeciesCodes.delete(rawCode);
-        }
+        if (block) { block.remove(); addedSpeciesCodes.delete(rawCode); }
     }
 
     function runMDO() {
         const selectedRegion = document.getElementById('mdo-region').value;
-        const space = parseFloat(document.getElementById('mdo-space').value);
+        const totalSpace = parseFloat(document.getElementById('mdo-space').value);
+        const sampleSpace = parseFloat(document.getElementById('mdo-sample-space').value);
         const beltFactor = document.getElementById('mdo-belt').value === "1" ? 1.0 : 0.8;
         const wrapper = document.getElementById('table-wrapper');
         const tbody = document.getElementById('mdo-tbody');
         const blocks = document.querySelectorAll('.species-peruchet-block');
 
-        if (isNaN(space) || space <= 0) {
-            alert("Заполните корректно параметры площади лесосеки!");
+        if (isNaN(totalSpace) || totalSpace <= 0 || isNaN(sampleSpace) || sampleSpace <= 0) {
+            alert("Заполните корректно общую площадь лесосеки и площадь перечета!");
+            return;
+        }
+
+        if (sampleSpace > totalSpace) {
+            alert("Ошибка: Площадь перечетных лент не может быть больше общей площади лесосеки!");
             return;
         }
 
         if (blocks.length === 0) {
-            alert("Перечетная ведомость пуста! Добавьте хотя бы одну лесную породу.");
+            alert("Перечетная ведомость пуста! Добавьте элементы леса.");
             return;
         }
+
+        // ВЫЧИСЛЕНИЕ КОЭФФИЦИЕНТА ПЕРЕВОДА НА ВСЮ ПЛОЩАДЬ ДЕЛЯНКИ (Масштабирование Рослесхоза)
+        const scaleFactor = totalSpace / sampleSpace;
 
         tbody.innerHTML = '';
         
@@ -395,19 +402,18 @@
 
         const regionTable = regionalSortTables[selectedRegion];
         let speciesVolumesReport = [];
-        let grandTotalLeaseVolume = 0;
+        let grandTotalSampleVolume = 0;
 
-        // ЭТАП 1: ИСПРАВЛЕННЫЙ ЦИКЛ ПЕРЕСЧЕТА ШТУК В КУБОМЕТРЫ ПО ИНДИВИДУАЛЬНЫМ ПОРОДАМ
+        // ЭТАП 1: Расчет кубатуры на пробной площади перечета (внутри лент/площадок)
         blocks.forEach(block => {
             const rawCode = block.getAttribute('data-rawcode');
             const isConiferous = block.getAttribute('data-coniferous') === 'true';
             const hSelector = block.querySelector('.species-h-select').value;
             const speciesCustomPrice = parseFloat(block.querySelector('.species-price-input').value) || 0;
             
-            let speciesStockVolume = 0;
-            let stepsCalculatedData = {};
+            let speciesSampleVolume = 0;
+            let stepsSampleData = {};
 
-            // Важное исправление: Ищем элементы по классу .step-tree-input, а не абстрактные инпуты настроек
             const inputs = block.querySelectorAll('.step-tree-input');
             inputs.forEach(inp => {
                 let treeCount = parseInt(inp.value, 10) || 0;
@@ -416,50 +422,49 @@
                     let singleTreeVol = treeVolumeTable[hSelector][dia];
                     let totalStepVol = treeCount * singleTreeVol;
                     
-                    speciesStockVolume += totalStepVol;
-                    stepsCalculatedData[dia] = totalStepVol;
+                    speciesSampleVolume += totalStepVol;
+                    stepsSampleData[dia] = totalStepVol;
                 }
             });
 
-            if (speciesStockVolume > 0) {
-                grandTotalLeaseVolume += speciesStockVolume;
+            if (speciesSampleVolume > 0) {
+                grandTotalSampleVolume += speciesSampleVolume;
                 speciesVolumesReport.push({
-                    rawCode, isConiferous, hSelector, speciesCustomPrice, speciesStockVolume, stepsCalculatedData
+                    rawCode, isConiferous, hSelector, speciesCustomPrice, speciesSampleVolume, stepsSampleData
                 });
             }
         });
 
-        if (grandTotalLeaseVolume === 0) {
+        if (grandTotalSampleVolume === 0) {
             alert("Введите количество стволов перечета в штуках деревьев!");
             return;
         }
 
-        // Автоматическая генерация и сортировка формулы состава насаждения по Рослесхозу
-        speciesVolumesReport.sort((a, b) => b.speciesStockVolume - a.speciesStockVolume);
+        // Автоматическая генерация формулы состава насаждения (по соотношению объемов)
+        speciesVolumesReport.sort((a, b) => b.speciesSampleVolume - a.speciesSampleVolume);
         let compositionFormulaStr = "";
         let calculatedSharesSum = 0;
 
         speciesVolumesReport.forEach((item, index) => {
-            let shareTen = Math.round((item.speciesStockVolume / grandTotalLeaseVolume) * 10);
+            let shareTen = Math.round((item.speciesSampleVolume / grandTotalSampleVolume) * 10);
             if (index === speciesVolumesReport.length - 1 && index > 0) {
                 shareTen = 10 - calculatedSharesSum;
             }
             if (shareTen < 0) shareTen = 0;
             calculatedSharesSum += shareTen;
 
-            if (shareTen > 0) {
-                compositionFormulaStr += `${shareTen}${item.rawCode}`;
-            }
+            if (shareTen > 0) compositionFormulaStr += `${shareTen}${item.rawCode}`;
         });
         if (!compositionFormulaStr || calculatedSharesSum === 0) compositionFormulaStr = "10С";
 
-        // ЭТАП 2: ПОЛНЫЙ И НЕУРЕЗАННЫЙ СОРТИМЕНТНО-СТОИМОСТНОЙ РАСЧЕТ КАТЕГОРИЙ ГОСТа
+        // ЭТАП 2: Масштабирование кубатуры на всю площадь делянки и денежная оценка
         speciesVolumesReport.forEach(species => {
             let sLargeTotal = 0, sMediumTotal = 0, sSmallTotal = 0, sTechTotal = 0, sFirewoodTotal = 0, sWasteTotal = 0;
             let activeTaxRate = species.speciesCustomPrice * beltFactor; 
 
-            for (let diameter in species.stepsCalculatedData) {
-                let stepVol = species.stepsCalculatedData[diameter];
+            for (let diameter in species.stepsSampleData) {
+                // Пересчитываем кубометры с ленты на всю делянку с помощью scaleFactor
+                let stepVol = species.stepsSampleData[diameter] * scaleFactor;
                 let dia = parseInt(diameter, 10);
 
                 let pLarge = 0, pMedium = 0, pSmall = 0, pTech = 8, pWaste = 6, pFirewood = 0;
@@ -507,6 +512,9 @@
                 sWasteTotal += stepVol * (pWaste / 100);
             }
 
+            // Масштабированный объем по всей породе на площади делянки
+            const speciesTotalEscalatedVolume = species.speciesSampleVolume * scaleFactor;
+
             let speciesCashLarge = sLargeTotal * (activeTaxRate * 1.5);
             let speciesCashMedium = sMediumTotal * (activeTaxRate * 1.2);
             let speciesCashSmall = sSmallTotal * (activeTaxRate * 0.9);
@@ -515,37 +523,37 @@
             let speciesTotalCash = speciesCashLarge + speciesCashMedium + speciesCashSmall + speciesCashTech + speciesCashFirewood;
 
             summary.tech += sTechTotal; summary.firewood += sFirewoodTotal; summary.waste += sWasteTotal;
-            summary.totalVol += species.speciesStockVolume;
+            summary.totalVol += speciesTotalEscalatedVolume;
             summary.totalCash += speciesTotalCash;
 
-            // Вывод попородных строк по ГОСТам
             tbody.innerHTML += `
                 <tr class="row-species">
-                    <td>🌳 Элемент леса: ${species.rawCode} — Объем: ${species.speciesStockVolume.toFixed(3)} м³ (Ставка: ${species.speciesCustomPrice} руб.)</td>
+                    <td>🌳 Элемент леса: ${species.rawCode} — Всего на ${totalSpace} га: ${speciesTotalEscalatedVolume.toFixed(2)} м³ (Перечет на ${sampleSpace} га)</td>
                     <td>100%</td>
-                    <td><b>${species.speciesStockVolume.toFixed(2)} м³</b></td>
+                    <td><b>${speciesTotalEscalatedVolume.toFixed(2)} м³</b></td>
                     <td><b>${speciesTotalCash.toFixed(2)} руб.</b></td>
                 </tr>
-                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Крупные сортименты деловые (Ø от 26 см)</td><td>${((sLargeTotal/species.speciesStockVolume)*100).toFixed(1)}%</td><td>${sLargeTotal.toFixed(2)} м³</td><td>${speciesCashLarge.toFixed(2)} руб.</td></tr>
-                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Средние сортименты деловые (Ø 14 - 24 см)</td><td>${((sMediumTotal/species.speciesStockVolume)*100).toFixed(1)}%</td><td>${sMediumTotal.toFixed(2)} м³</td><td>${speciesCashMedium.toFixed(2)} руб.</td></tr>
-                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Мелкие сортименты деловые (Ø 6 - 12 см)</td><td>${((sSmallTotal/species.speciesStockVolume)*100).toFixed(1)}%</td><td>${sSmallTotal.toFixed(2)} м³</td><td>${speciesCashSmall.toFixed(2)} руб.</td></tr>
-                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Технологическое сырье (Балансовая древесина)</td><td>${((sTechTotal/species.speciesStockVolume)*100).toFixed(1)}%</td><td>${sTechTotal.toFixed(2)} м³</td><td>${speciesCashTech.toFixed(2)} руб.</td></tr>
-                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Дрова топливные ликвидные (ГОСТ 3243-88)</td><td>${((sFirewoodTotal/species.speciesStockVolume)*100).toFixed(1)}%</td><td>${sFirewoodTotal.toFixed(2)} м³</td><td>${speciesCashFirewood.toFixed(2)} руб.</td></tr>
-                <tr style="color: gray;"><td>&nbsp;&nbsp;&nbsp;&nbsp;• Лесосечные неликвидные отходы (Вершины, сучья)</td><td>${((sWasteTotal/species.speciesStockVolume)*100).toFixed(1)}%</td><td>${sWasteTotal.toFixed(2)} м³</td><td>0.00 руб.</td></tr>
+                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Крупные сортименты деловые (Ø от 26 см)</td><td>${((sLargeTotal/speciesTotalEscalatedVolume)*100).toFixed(1)}%</td><td>${sLargeTotal.toFixed(2)} м³</td><td>${speciesCashLarge.toFixed(2)} руб.</td></tr>
+                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Средние сортименты деловые (Ø 14 - 24 см)</td><td>${((sMediumTotal/speciesTotalEscalatedVolume)*100).toFixed(1)}%</td><td>${sMediumTotal.toFixed(2)} м³</td><td>${speciesCashMedium.toFixed(2)} руб.</td></tr>
+                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Мелкие сортименты деловые (Ø 6 - 12 см)</td><td>${((sSmallTotal/speciesTotalEscalatedVolume)*100).toFixed(1)}%</td><td>${sSmallTotal.toFixed(2)} м³</td><td>${speciesCashSmall.toFixed(2)} руб.</td></tr>
+                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Технологическое сырье (Балансовая древесина)</td><td>${((sTechTotal/speciesTotalEscalatedVolume)*100).toFixed(1)}%</td><td>${sTechTotal.toFixed(2)} м³</td><td>${speciesCashTech.toFixed(2)} руб.</td></tr>
+                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Дрова топливные ликвидные (ГОСТ 3243-88)</td><td>${((sFirewoodTotal/speciesTotalEscalatedVolume)*100).toFixed(1)}%</td><td>${sFirewoodTotal.toFixed(2)} м³</td><td>${speciesCashFirewood.toFixed(2)} руб.</td></tr>
+                <tr style="color: gray;"><td>&nbsp;&nbsp;&nbsp;&nbsp;• Лесосечные неликвидные отходы (Вершины, сучья)</td><td>${((sWasteTotal/speciesTotalEscalatedVolume)*100).toFixed(1)}%</td><td>${sWasteTotal.toFixed(2)} м³</td><td>0.00 руб.</td></tr>
             `;
         });
 
-        // Консолидированная ведомость
+        // Консолидированная итоговая ведомость перечета лесосеки
         tbody.innerHTML += `
-            <tr class="row-total-group"><td colspan="4">📊 КОНСОЛИДИРОВАННАЯ ВЕДОМОСТЬ МДО ЛЕСОСЕКИ (РАСЧЕТНЫЙ СОСТАВ: <span style="color:var(--primary-forest); font-weight:800;">${compositionFormulaStr}</span>)</td></tr>
+            <tr class="row-total-group"><td colspan="4">📊 КОНСОЛИДИРОВАННАЯ ВЕДОМОСТЬ МДО (МАСШТАБИРОВАНИЕ ${scaleFactor.toFixed(1)}x НА ОБЩУЮ ПЛОЩАДЬ ${totalSpace} га)</td></tr>
+            <tr class="row-total-group"><td colspan="4">РАСЧЕТНЫЙ СОСТАВ НАБОРНОГО ДРЕВОСТОЯ: <span style="color:var(--primary-forest); font-weight:800;">${compositionFormulaStr}</span></td></tr>
             <tr><td><b>КРУПНЫЙ ПИЛОВОЧНИК:</b> Итого выхода по классам сортности 1 / 2 / 3</td><td>-</td><td><b>${(summary.largeI + summary.largeII + summary.largeIII).toFixed(2)} м³</b></td><td>[${summary.largeI.toFixed(1)} / ${summary.largeII.toFixed(1)} / ${summary.largeIII.toFixed(1)}] м³</td></tr>
             <tr><td><b>СРЕДНИЙ СТРОИТЕЛЬНЫЙ ЛЕС:</b> Итого выхода по классам сортности 1 / 2 / 3</td><td>-</td><td><b>${(summary.mediumI + summary.mediumII + summary.mediumIII).toFixed(2)} м³</b></td><td>[${summary.mediumI.toFixed(1)} / ${summary.mediumII.toFixed(1)} / ${summary.mediumIII.toFixed(1)}] м³</td></tr>
             <tr><td><b>МЕЛКИЙ ПОДТОВАРНИК:</b> Итого выхода по классам сортности 1 / 2 / 3</td><td>-</td><td><b>${(summary.thinI + summary.thinII + summary.thinIII).toFixed(2)} м³</b></td><td>[${summary.thinI.toFixed(1)} / ${summary.thinII.toFixed(1)} / ${summary.thinIII.toFixed(1)}] м³</td></tr>
             <tr style="color:#b37143;"><td><b>ТЕХНОЛОГИЧЕСКОЕ СЫРЬЕ И БАЛАНСЫ</b> (ГОСТ Р 58852)</td><td>-</td><td><b>${summary.tech.toFixed(2)} м³</b></td><td>-</td></tr>
-            <tr style="color:#b34343;"><td><b>ДРОВА ТОПЛИВНЫЕ ЧИСТЫЕ</b> (Ликвидная кубатура)</td><td>-</td><td><b>${summary.firewood.toFixed(2)} м³</b></td><td>-</td></tr>
-            <tr style="color:gray;"><td><b>ОТХОДЫ ЛЕСОЗАГОТОВОК</b> (За вычетом ликвидного запаса)</td><td>-</td><td><b>${summary.waste.toFixed(2)} м³</b></td></tr>
+            <tr style="color:#b34343;"><td><b>ДРОВА ТОПЛИВНЫЕ ЧИСТЫЕ</b> (Ликвидная кубатура делянки)</td><td>-</td><td><b>${summary.firewood.toFixed(2)} м³</b></td><td>-</td></tr>
+            <tr style="color:gray;"><td><b>ОТХОДЫ ЛЕСОЗАГОТОВОК</b> (Сучья, вершины, неликвид)</td><td>-</td><td><b>${summary.waste.toFixed(2)} м³</b></td></tr>
             <tr class="row-grand-final">
-                <td>ОБЩИЙ МАТЕРИАЛЬНО-ДЕНЕЖНЫЙ РЕЗУЛЬТАТ ПО ДЕЛЯНКЕ (${space} га)</td>
+                <td>ОБЩИЙ МАТЕРИАЛЬНО-ДЕНЕЖНЫЙ РЕЗУЛЬТАТ ПО ДЕЛЯНКЕ (${totalSpace} га)</td>
                 <td>100%</td>
                 <td>${summary.totalVol.toFixed(2)} м³</td>
                 <td>${summary.totalCash.toLocaleString('ru-RU', {minimumFractionDigits: 2, maximumFractionDigits: 2})} руб.</td>
