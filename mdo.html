@@ -29,13 +29,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title>Официальный расчет МДО лесосек по перечетным ведомостям пород | ФГИС ЛК</title>
-    <meta name="description" content="Инженерное таксационное приложение для материально-денежной оценки (МДО) лесосек на основе фактического полевого перечета по ступеням толщины. Автоматический расчет формулы состава древостоя.">
-    <meta name="keywords" content="материально денежная оценка лесосек, расчет мдо онлайн фгис лк, перечетная ведомость по породам, ступени толщины таксация, товарные таблицы рослесхоза, лесовик про">
+    <title>Официальный динамический расчет МДО лесосек по элементам леса | ФГИС ЛК</title>
+    <meta name="description" content="Профессиональное лесохозяйственное приложение для динамического формирования перечетных ведомостей МДО по породам и ступеням толщины. Автоматический расчет формулы состава насаждения по ГОСТ.">
+    <meta name="keywords" content="материально денежная оценка лесосек, расчет мдо онлайн фгис лк, динамическая перечетная ведомость, ступени толщины таксация, товарные таблицы рослесхоза, лесовик про">
     <link rel="canonical" href="https://lesovik-pro.ru/mdo.html">
 
-    <meta property="og:title" content="Профессиональный расчет МДО лесосек с автовычислением состава древостоя">
-    <meta property="og:description" content="Таксационный модуль МДО для лесничеств. Ввод фактического перечета по породам и ступеням толщины с автоматической генерацией состава по таблицам Рослесхоза.">
+    <meta property="og:title" content="Динамический расчет МДО лесосек по породам и ступеням толщины">
+    <meta property="og:description" content="Умный таксационный модуль МДО. Добавление элементов леса на лету прямо на выделе с автоматическим выводом формулы состава по нормативам Рослесхоза.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://lesovik-pro.ru/mdo.html">
     <meta property="og:image" content="logo.jpeg">
@@ -130,11 +130,21 @@
         .form-group input, .form-group select { width: 100%; padding: 12px 16px; border: 1px solid transparent; border-radius: 8px; box-sizing: border-box; background: var(--input-bg); color: var(--text-main); font-family: inherit; font-size: 14px; outline: none; transition: 0.2s; }
         .form-group input:focus, .form-group select:focus { border-color: var(--primary-forest); background-color: var(--bg-card); }
 
-        /* Попородные блоки полевого перечета */
+        /* Блок управления элементами леса */
+        .selector-box-wrapper { background: var(--input-bg); padding: 20px; border-radius: 10px; border: 1px solid var(--border-light); margin-bottom: 30px; display: flex; align-items: flex-end; gap: 15px; }
+        @media (max-width: 600px) { .selector-box-wrapper { flex-direction: column; align-items: stretch; } }
+        .btn-add-species { background-color: var(--primary-forest); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; height: 47px; transition: 0.2s; }
+        .btn-add-species:hover { opacity: 0.9; }
+
+        /* Динамические попородные карточки перечета */
         .field-peruchet-section-title { font-size: 14px; font-weight: 700; color: var(--primary-forest); text-transform: uppercase; letter-spacing: 0.5px; margin: 35px 0 15px 0; padding-bottom: 6px; border-bottom: 2px solid var(--border-light); }
-        .species-peruchet-block { background: var(--input-bg); border-radius: 10px; padding: 20px; margin-bottom: 25px; border: 1px solid var(--border-light); }
-        .species-title-badge { font-size: 15px; font-weight: 700; color: var(--primary-forest); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .species-peruchet-block { background: var(--input-bg); border-radius: 10px; padding: 20px; margin-bottom: 25px; border: 1px solid var(--border-light); position: relative; animation: slideDown 0.25s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         
+        .species-title-badge { font-size: 15px; font-weight: 700; color: var(--primary-forest); margin-bottom: 15px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .btn-delete-species { background: transparent; color: var(--fire-accent); border: 1px solid var(--border-light); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s; margin-left: auto; }
+        .btn-delete-species:hover { background: var(--fire-accent); color: white; }
+
         .steps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 10px; }
         .step-input-wrapper { background: var(--bg-card); padding: 10px; border-radius: 6px; border: 1px solid var(--border-light); text-align: center; }
         .step-input-wrapper label { font-size: 11px; font-weight: 700; display: block; margin-bottom: 4px; color: var(--text-muted); }
@@ -152,12 +162,6 @@
         .row-species { background-color: rgba(59, 102, 52, 0.06); font-weight: 700; color: var(--primary-forest); }
         .row-total-group { background-color: var(--input-bg); font-weight: 600; }
         .row-grand-final { background-color: #2c3e29; color: white; font-weight: 700; font-size: 15px; }
-
-        @media (max-width: 900px) {
-            .header { display: flex; justify-content: space-between; }
-            .logo-block { grid-column: auto; }
-            .theme-container { grid-column: auto; }
-        }
     </style>
 </head>
 <body>
@@ -176,8 +180,8 @@
     <div class="content-card">
         <a href="index.html" class="btn-back">← На главную</a>
         
-        <h1 class="page-title">Инженерный таксационный расчет МДО лесосек</h1>
-        <p class="page-subtitle">Профессиональная материально-денежная оценка выдела на основе полевого перечета. Формула состава древостоя рассчитывается автоматически по результатам кубатуры.</p>
+        <h1 class="page-title">Инженерный таксационный калькулятор МДО</h1>
+        <p class="page-subtitle">Профессиональная материально-денежная оценка выдела. Формируйте список пород делянки в любом порядке — система сама рассчитает кубатуру и официальную формулу состава.</p>
 
         <div class="grid-inputs">
             <div class="form-group">
@@ -196,60 +200,27 @@
             </div>
         </div>
 
-        <div class="field-peruchet-section-title">🪵 Полевой перечет лесосеки по элементам леса (м³)</div>
-        <div id="peruchet-static-container">
-            <div class="species-peruchet-block" data-fullname="Сосна" data-coniferous="true" data-rawcode="С">
-                <div class="species-title-badge">
-                    <span>🌲 Элемент леса: <b>С (Сосна)</b></span>
-                    <div class="form-group" style="margin:0 0 0 auto; display:flex; align-items:center; gap:8px;">
-                        <label style="margin:0; font-size:10px;">Разряд высот:</label>
-                        <select class="species-h-select" style="padding:4px 8px; font-size:12px; background:var(--bg-card);">
-                            <option value="Ia">Ia разряд</option><option value="I" selected>I разряд</option><option value="II">II разряд</option><option value="III">III разряд</option><option value="IV">IV разряд</option><option value="V">V разряд</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="steps-grid" data-species="С"></div>
+        <!-- ИНТЕРФЕЙС ЖИВОГО ДОБАВЛЕНИЯ ПОРОД НА ВЫДЕЛЕ -->
+        <div class="selector-box-wrapper">
+            <div class="form-group" style="margin: 0; flex: 1;">
+                <label>Выбрать породу из таксационного описания выдела</label>
+                <select id="species-selector">
+                    <option value="С|true|🌲 Сосна (С)">🌲 Сосна (С)</option>
+                    <option value="Е|true|🌲 Ель (Е)">🌲 Ель (Е)</option>
+                    <option value="Б|false|🌳 Береза (Б)">🌳 Береза (Б)</option>
+                    <option value="Ос|false|🌳 Осина / Тополь (Ос)">🌳 Осина / Тополь (Ос)</option>
+                    <option value="Л|true|🌲 Лиственница (Л)">🌲 Лиственница (Л)</option>
+                    <option value="К|true|🌲 Кедр (К)">🌲 Кедр (К)</option>
+                    <option value="Д|false|🌳 Дуб (Д)">🌳 Дуб (Д)</option>
+                    <option value="П|true|🌲 Пихта (П)">🌲 Пихта (П)</option>
+                </select>
             </div>
-
-            <div class="species-peruchet-block" data-fullname="Ель" data-coniferous="true" data-rawcode="Е">
-                <div class="species-title-badge">
-                    <span>🌲 Элемент леса: <b>Е (Ель)</b></span>
-                    <div class="form-group" style="margin:0 0 0 auto; display:flex; align-items:center; gap:8px;">
-                        <label style="margin:0; font-size:10px;">Разряд высот:</label>
-                        <select class="species-h-select" style="padding:4px 8px; font-size:12px; background:var(--bg-card);">
-                            <option value="Ia">Ia разряд</option><option value="I" selected>I разряд</option><option value="II">II разряд</option><option value="III">III разряд</option><option value="IV">IV разряд</option><option value="V">V разряд</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="steps-grid" data-species="Е"></div>
-            </div>
-
-            <div class="species-peruchet-block" data-fullname="Береза" data-coniferous="false" data-rawcode="Б">
-                <div class="species-title-badge">
-                    <span>🌳 Элемент леса: <b>Б (Береза)</b></span>
-                    <div class="form-group" style="margin:0 0 0 auto; display:flex; align-items:center; gap:8px;">
-                        <label style="margin:0; font-size:10px;">Разряд высот:</label>
-                        <select class="species-h-select" style="padding:4px 8px; font-size:12px; background:var(--bg-card);">
-                            <option value="Ia">Ia разряд</option><option value="I" selected>I разряд</option><option value="II">II разряд</option><option value="III" selected>III разряд</option><option value="IV">IV разряд</option><option value="V">V разряд</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="steps-grid" data-species="Б"></div>
-            </div>
-
-            <div class="species-peruchet-block" data-fullname="Осина" data-coniferous="false" data-rawcode="ОС">
-                <div class="species-title-badge">
-                    <span>🌳 Элемент леса: <b>Ос (Осина)</b></span>
-                    <div class="form-group" style="margin:0 0 0 auto; display:flex; align-items:center; gap:8px;">
-                        <label style="margin:0; font-size:10px;">Разряд высот:</label>
-                        <select class="species-h-select" style="padding:4px 8px; font-size:12px; background:var(--bg-card);">
-                            <option value="Ia">Ia разряд</option><option value="I" selected>I разряд</option><option value="II" selected>II разряд</option><option value="III">III разряд</option><option value="IV">IV разряд</option><option value="V">V разряд</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="steps-grid" data-species="ОС"></div>
-            </div>
+            <button class="btn-add-species" onclick="addSpeciesBlock()">➕ Добавить в перечетку</button>
         </div>
+
+        <!-- КОНТЕЙНЕР ДЛЯ ДИНАМИЧЕСКИХ ВЕДОМОСТЕЙ ПЕРЕЧЕТА -->
+        <div class="field-peruchet-section-title">📋 Ведомости перечета элементов леса по ступеням толщины</div>
+        <div id="peruchet-dynamic-container"></div>
 
         <button class="btn-calc" onclick="runMDO()">Выполнить ведомость МДО выдела</button>
 
@@ -270,6 +241,18 @@
 </div>
 
 <script>
+    function toggleTheme() {
+        const body = document.documentElement;
+        const btn = document.getElementById('themeBtn');
+        if (body.getAttribute('data-theme') === 'dark') {
+            body.removeAttribute('data-theme');
+            btn.innerHTML = 'Ночная тема 🌙';
+        } else {
+            body.setAttribute('data-theme', 'dark');
+            btn.innerHTML = 'Дневная тема ☀️';
+        }
+    }
+
     const regionalSortTables = {
         komi: {
             coniferous: { "Ia": [0.40, 0.48, 0.12], "I": [0.35, 0.50, 0.15], "II": [0.25, 0.55, 0.20], "III": [0.15, 0.55, 0.30], "IV": [0.10, 0.50, 0.40], "V": [0.02, 0.43, 0.55] },
@@ -299,28 +282,68 @@
     };
 
     const diameters = [16, 20, 24, 28, 32, 36, 40, 44, 48];
+    const addedSpeciesCodes = new Set();
 
-    // Инициализация полей перечета для статического набора главных пород леса
-    function initStaticGrids() {
-        const grids = document.querySelectorAll('.steps-grid');
-        grids.forEach(grid => {
-            const speciesCode = grid.getAttribute('data-species');
-            let html = '';
-            diameters.forEach(d => {
-                // Базовые таксационные значения по умолчанию (для демонстрации перечета)
-                let defaultVal = "0";
-                if (speciesCode === 'С' && (d === 24 || d === 28 || d === 32)) defaultVal = d === 28 ? "40" : "20";
-                if (speciesCode === 'Б' && (d === 16 || d === 20)) defaultVal = "15";
+    // ЖИВАЯ ГЕНЕРАЦИЯ КАРТОЧКИ ПЕРЕЧЕТА ПРИ КЛИКЕ НА КНОПКУ
+    function addSpeciesBlock() {
+        const selector = document.getElementById('species-selector');
+        const [rawCode, isConiferousStr, displayLabel] = selector.value.split('|');
+        const isConiferous = isConiferousStr === 'true';
 
-                html += `
-                    <div class="step-input-wrapper">
-                        <label>${d === 48 ? '48+ см' : d + ' см'}</label>
-                        <input type="number" id="inp-${speciesCode}-${d}" data-diameter="${d}" value="${defaultVal}" min="0">
+        if (addedSpeciesCodes.has(rawCode)) {
+            alert(`Порода ${rawCode} уже добавлена в текущую перечетную ведомость!`);
+            return;
+        }
+
+        addedSpeciesCodes.add(rawCode);
+        const container = document.getElementById('peruchet-dynamic-container');
+
+        let blockHtml = `
+            <div class="species-peruchet-block" id="block-${rawCode}" data-fullname="${rawCode}" data-coniferous="${isConiferous}" data-rawcode="${rawCode}">
+                <div class="species-title-badge">
+                    <span>${displayLabel}</span>
+                    
+                    <div class="form-group" style="margin:0 0 0 auto; display:flex; align-items:center; gap:8px; width:auto;">
+                        <label style="margin:0; font-size:10px; white-space:nowrap;">Разряд высот:</label>
+                        <select class="species-h-select" style="padding:4px 8px; font-size:12px; background:var(--bg-card); width:110px;">
+                            <option value="Ia">Ia разряд</option>
+                            <option value="I" selected>I разряд</option>
+                            <option value="II">II разряд</option>
+                            <option value="III">III разряд</option>
+                            <option value="IV">IV разряд</option>
+                            <option value="V">V разряд</option>
+                        </select>
                     </div>
-                `;
-            });
-            grid.innerHTML = html;
+                    
+                    <button class="btn-delete-species" onclick="removeSpeciesBlock('${rawCode}')">Удалить поряду</button>
+                </div>
+                <div class="steps-grid">
+        `;
+
+        diameters.forEach(d => {
+            // Закладываем таксационные дефолты для ускорения проверки
+            let defVal = "0";
+            if (rawCode === 'С' && (d === 24 || d === 28)) defVal = "20";
+            if (rawCode === 'Б' && d === 20) defVal = "15";
+
+            blockHtml += `
+                <div class="step-input-wrapper">
+                    <label>${d === 48 ? '48+ см' : d + ' см'}</label>
+                    <input type="number" id="inp-${rawCode}-${d}" data-diameter="${d}" value="${defVal}" min="0">
+                </div>
+            `;
         });
+
+        blockHtml += `</div></div>`;
+        container.insertAdjacentHTML('beforeend', blockHtml);
+    }
+
+    function removeSpeciesBlock(rawCode) {
+        const block = document.getElementById(`block-${rawCode}`);
+        if (block) {
+            block.remove();
+            addedSpeciesCodes.delete(rawCode);
+        }
     }
 
     function runMDO() {
@@ -332,6 +355,11 @@
 
         if (isNaN(space) || space <= 0) {
             alert("Заполните корректно параметры площади лесосеки!");
+            return;
+        }
+
+        if (blocks.length === 0) {
+            alert("Перечетная ведомость пуста! Добавьте хотя бы одну лесную породу.");
             return;
         }
 
@@ -348,10 +376,9 @@
         let grandTotalLeaseVolume = 0;
         let speciesVolumesReport = [];
 
-        // Первый проход: Собираем фактические объемы по породам для расчета состава
+        // ИНЖЕНЕРНЫЙ СБОР КУБОМЕТРОВ ПО ВСЕМ ЖИВЫМ КАРТОЧКАМ ПЕРЕЧЕТА
         blocks.forEach(block => {
             const rawCode = block.getAttribute('data-rawcode');
-            const fullName = block.getAttribute('data-fullname');
             const isConiferous = block.getAttribute('data-coniferous') === 'true';
             const hSelector = block.querySelector('.species-h-select').value;
             
@@ -371,28 +398,41 @@
             if (speciesStock > 0) {
                 grandTotalLeaseVolume += speciesStock;
                 speciesVolumesReport.push({
-                    rawCode, fullName, isConiferous, hSelector, speciesStock, stepsData
+                    rawCode, isConiferous, hSelector, speciesStock, stepsData
                 });
             }
         });
 
         if (grandTotalLeaseVolume === 0) {
-            alert("Пожалуйста, введите кубометры перечета хотя бы для одного элемента леса!");
+            alert("Введите фактические кубометры перечета в ячейки ступеней толщины!");
             return;
         }
 
-        // МАТЕМАТИЧЕСКИЙ РАСЧЕТ ОФИЦИАЛЬНОЙ ФОРМУЛЫ СОСТАВА ДРЕВОСТОЯ РОСЛЕСХОЗА
+        // АВТОМАТИЧЕСКАЯ СОРТИРОВКА ПОРОД ПО УБЫВАНИЮ ОБЪЕМА И ГЕНЕРАЦИЯ ОФИЦИАЛЬНОЙ ФОРМУЛЫ СТАТЬИ
+        // Сортируем массив, чтобы доминирующие элементы леса выходили на первое место в формуле
+        speciesVolumesReport.sort((a, b) => b.speciesStock - a.speciesStock);
+
         let compositionFormulaStr = "";
-        speciesVolumesReport.forEach(item => {
+        let calculatedSharesSum = 0;
+
+        speciesVolumesReport.forEach((item, index) => {
             let shareTen = Math.round((item.speciesStock / grandTotalLeaseVolume) * 10);
+            
+            // Корректировка округления долей, чтобы в сумме всегда выходило ровно 10 единиц состава
+            if (index === speciesVolumesReport.length - 1 && index > 0) {
+                shareTen = 10 - calculatedSharesSum;
+            }
+            if (shareTen < 0) shareTen = 0;
+            calculatedSharesSum += shareTen;
+
             if (shareTen > 0) {
-                compositionFormulaStr += `${shareTen}${item.rawCode === 'ОС' ? 'Ос' : item.rawCode}`;
+                compositionFormulaStr += `${shareTen}${item.rawCode}`;
             }
         });
-        // Защита округления (если получилось например 10С, оставляем 10С)
-        if (!compositionFormulaStr) compositionFormulaStr = "10С";
 
-        // Второй проход: Рассчитываем сортименты по каждой найденной породе отдельно
+        if (!compositionFormulaStr || calculatedSharesSum === 0) compositionFormulaStr = "10С";
+
+        // КОРРЕКТНЫЙ СОРТИМЕНТНЫЙ РАСЧЕТ КАЖДОГО ЭЛЕМЕНТА ЛЕСА
         speciesVolumesReport.forEach(species => {
             let sLargeTotal = 0, sMediumTotal = 0, sSmallTotal = 0, sTechTotal = 0, sFirewoodTotal = 0, sWasteTotal = 0;
 
@@ -420,8 +460,9 @@
                 pWaste = species.isConiferous ? 6 : 8;
                 pFirewood = 100 - (pLarge + pMedium + pSmall + pTech + pWaste);
 
-                if (species.fullName === 'Береза' || species.fullName === 'Осина') {
-                    let defectFactor = (species.fullName === 'Осина') ? regionTable.defectFactor.osina : regionTable.defectFactor.bereza;
+                // Дифференциация брака для лиственных элементов древостоя
+                if (species.rawCode === 'Б' || species.rawCode === 'Ос') {
+                    let defectFactor = (species.rawCode === 'Ос') ? regionTable.defectFactor.osina : regionTable.defectFactor.bereza;
                     let shift = (pLarge + pMedium + pSmall) * defectFactor;
                     pFirewood += shift * 0.6; pTech += shift * 0.4;
                     pLarge -= shift * 0.5; pMedium -= shift * 0.3; pSmall -= shift * 0.2;
@@ -450,7 +491,7 @@
 
             tbody.innerHTML += `
                 <tr class="row-species">
-                    <td>🌳 Элемент леса: ${species.rawCode === 'ОС' ? 'Ос' : species.rawCode} (${species.fullName}) — Разряд высот: ${species.hSelector}</td>
+                    <td>🌳 Элемент леса: ${species.rawCode} — Разряд высот: ${species.hSelector}</td>
                     <td>100%</td>
                     <td>${species.speciesStock.toFixed(1)} м³</td>
                 </tr>
@@ -463,13 +504,13 @@
             `;
         });
 
-        // Консолидированный отчет с выведенной формулой состава
+        // Финальный консолидированный отчет
         tbody.innerHTML += `
-            <tr class="row-total-group"><td colspan="3">📊 ИТОГОВАЯ ВЕДОМОСТЬ МДО ДЛЯ ФГИС ЛК (СОСТАВ ДРЕВОСТОЯ: <span style="color:var(--primary-forest); font-weight:800;">${compositionFormulaStr}</span>)</td></tr>
+            <tr class="row-total-group"><td colspan="3">📊 ИТОГОВАЯ ВЕДОМОСТЬ МДО ДЛЯ ФГИС ЛК (СОСТАВ ДРЕВОСТОЯ: <span style="color:var(--primary-forest); font-weight:800; letter-spacing: 0.5px;">${compositionFormulaStr}</span>)</td></tr>
             <tr><td><b>КРУПНЫЕ СОРТИМЕНТЫ:</b> Итого / в т.ч. 1 сорт / 2 сорт / 3 сорт</td><td>-</td><td><b>${(summary.largeI + summary.largeII + summary.largeIII).toFixed(2)}</b> &nbsp;[${summary.largeI.toFixed(1)} / ${summary.largeII.toFixed(1)} / ${summary.largeIII.toFixed(1)}]</td></tr>
             <tr><td><b>СРЕДНИЕ СОРТИМЕНТЫ:</b> Итого / в т.ч. 1 сорт / 2 сорт / 3 сорт</td><td>-</td><td><b>${(summary.mediumI + summary.mediumII + summary.mediumIII).toFixed(2)}</b> &nbsp;[${summary.mediumI.toFixed(1)} / ${summary.mediumII.toFixed(1)} / ${summary.mediumIII.toFixed(1)}]</td></tr>
             <tr><td><b>МЕЛКИЕ СОРТИМЕНТЫ:</b> Итого / в т.ч. 1 сорт / 2 сорт / 3 сорт</td><td>-</td><td><b>${(summary.thinI + summary.thinII + summary.thinIII).toFixed(2)}</b> &nbsp;[${summary.thinI.toFixed(1)} / ${summary.thinII.toFixed(1)} / ${summary.thinIII.toFixed(1)}]</td></tr>
-            <option style="color:#b37143;" disabled><td><b>ТЕХНОЛОГИЧЕСКОЕ СЫРЬЕ</b> (Балансовая кубатура выдела)</td><td>-</td><td><b>${summary.tech.toFixed(2)} м³</b></td></tr>
+            <tr style="color:#b37143;"><td><b>ТЕХНОЛОГИЧЕСКОЕ СЫРЬЕ</b> (Балансовая кубатура выдела)</td><td>-</td><td><b>${summary.tech.toFixed(2)} м³</b></td></tr>
             <tr style="color:#b34343;"><td><b>ДРОВА ТОПЛИВНЫЕ</b> (Ликвидная дровяная древесина)</td><td>-</td><td><b>${summary.firewood.toFixed(2)} м³</b></td></tr>
             <tr style="color:gray;"><td><b>ХВОЯ, СУЧЬЯ, КОРНИ</b> (Неликвидные лесосечные отходы)</td><td>-</td><td><b>${summary.waste.toFixed(2)} м³</b></td></tr>
             <tr class="row-grand-final">
@@ -482,7 +523,13 @@
         wrapper.style.display = 'block';
     }
 
-    document.addEventListener('DOMContentLoaded', initStaticGrids);
+    // Автоматическая вставка двух базовых хвойно-лиственных пород для удобства старта
+    document.addEventListener('DOMContentLoaded', () => {
+        addSpeciesBlock(); // Авто-добавление Сосны
+        document.getElementById('species-selector').value = 'Б|false|🌳 Береза (Б)';
+        addSpeciesBlock(); // Авто-добавление Березы
+        document.getElementById('species-selector').value = 'С|true|🌲 Сосна (С)'; // Возвращаем селектор
+    });
 </script>
 </body>
 </html>
