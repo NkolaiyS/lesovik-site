@@ -120,7 +120,7 @@
 
         .page-subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 35px; }
 
-        .grid-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-bottom: 25px; }
+        .grid-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-bottom: 25px; }
 
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-size: 11px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; color: var(--text-main); letter-spacing: 0.5px; }
@@ -140,8 +140,7 @@
         .btn-delete-species { background: transparent; color: var(--fire-accent); border: 1px solid var(--border-light); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s; margin-left: auto; }
         .btn-delete-species:hover { background: var(--fire-accent); color: white; }
 
-        /* Раздельная сетка подетальных цен по Постановлению № 310 */
-        .species-settings-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; width: 100%; margin-bottom: 20px; background: var(--bg-card); padding: 15px; border-radius: 8px; border: 1px solid var(--border-light); }
+        .species-settings-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; width: 100%; margin-bottom: 20px; background: var(--bg-card); padding: 15px; border-radius: 8px; border: 1px solid var(--border-light); }
 
         .steps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 10px; }
         .step-input-wrapper { background: var(--bg-card); padding: 10px; border-radius: 6px; border: 1px solid var(--border-light); text-align: center; }
@@ -179,8 +178,9 @@
         <a href="index.html" class="btn-back">← На главную</a>
         
         <h1 class="page-title">Инженерный таксационный калькулятор МДО</h1>
-        <p class="page-subtitle">Профессиональная материально-денежная оценка выдела. Поштучный ввод перечета в <b>штуках деревьев</b>. Индивидуальные разряды высот и **раздельные цены по категориям товарной крупности** (Постановление № 310) для каждой породы отдельно.</p>
+        <p class="page-subtitle">Профессиональная материально-денежная оценка выдела. Поштучный ввод фактических данных в <b>штуках деревьев</b>. Индивидуальные разряды высот элементов леса и **прямой ввод ставок платы** за категории крупности по прейскуранту региона.</p>
 
+        <!-- ОПТИМИЗИРОВАННЫЙ БЛОК ГЛОБАЛЬНЫХ ПАРАМЕТРОВ ЛЕСОСЕКИ -->
         <div class="grid-inputs">
             <div class="form-group">
                 <label>Лесорастительный район / Субъект РФ</label>
@@ -199,12 +199,7 @@
             <div class="form-group">
                 <label>Фактическая площадь перечета (га)</label>
                 <input type="number" id="mdo-sample-space" value="2.0" step="0.01">
-                <small style="color:var(--text-muted); font-size:11px; display:block; margin-top:4px;">*Суммарная площадь лент или круговых площадок</small>
-            </div>
-            <div class="form-group">
-                <label>Поправочный коэффициент пояса платы</label>
-                <input type="number" id="mdo-belt-factor" value="1.00" step="0.05">
-                <small style="color:var(--text-muted); font-size:11px; display:block; margin-top:4px;">*I пояс = 1.0, II пояс = 0.8 (или по региональному закону)</small>
+                <small style="color:var(--text-muted); font-size:11px; display:block; margin-top:4px;">*Общая площадь таксационных лент или круговых площадок</small>
             </div>
         </div>
 
@@ -368,7 +363,6 @@
         const selectedRegion = document.getElementById('mdo-region').value;
         const totalSpace = parseFloat(document.getElementById('mdo-space').value);
         const sampleSpace = parseFloat(document.getElementById('mdo-sample-space').value);
-        const beltFactor = parseFloat(document.getElementById('mdo-belt-factor').value) || 1.0;
         const wrapper = document.getElementById('table-wrapper');
         const tbody = document.getElementById('mdo-tbody');
         const blocks = document.querySelectorAll('.species-peruchet-block');
@@ -508,11 +502,11 @@
 
             const speciesTotalEscalatedVolume = species.speciesSampleVolume * scaleFactor;
 
-            let cashLarge = sLargeTotal * species.prLarge * beltFactor;
-            let cashMedium = sMediumTotal * species.prMedium * beltFactor;
-            let cashSmall = sSmallTotal * species.prSmall * beltFactor;
-            let cashTech = sTechTotal * species.prFirewood * beltFactor; 
-            let cashFirewood = sFirewoodTotal * species.prFirewood * beltFactor;
+            let cashLarge = sLargeTotal * species.prLarge;
+            let cashMedium = sMediumTotal * species.prMedium;
+            let cashSmall = sSmallTotal * species.prSmall;
+            let cashTech = sTechTotal * species.prFirewood; 
+            let cashFirewood = sFirewoodTotal * species.prFirewood;
             let speciesTotalCash = cashLarge + cashMedium + cashSmall + cashTech + cashFirewood;
 
             summary.tech += sTechTotal; summary.firewood += sFirewoodTotal; summary.waste += sWasteTotal;
@@ -559,7 +553,7 @@
         addSpeciesBlock();
         document.getElementById('species-selector').value = 'Б|false|180|110|60|25|🌳 Береза (Б)';
         addSpeciesBlock();
-        document.getElementById('species-selector').value = 'С|true|450|320|180|40|🌲 Сосна (С)';
+        document.getElementById('species-selector').value = 'С|true|266.45|190.05|94.79|6.60|🌲 Сосна (С)';
     });
 </script>
 </body>
