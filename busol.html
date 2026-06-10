@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <script type="text/javascript">
+        // --- ПЕРЕХВАТ БОТОВ ДЛЯ SEO-ПРЕВЬЮ ---
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const postSlug = urlParams.get('post');
+            const userAgent = (navigator.userAgent || '').toLowerCase();
+            const isBot = /telegrambot|vkshare|facebookexternalhit|twitterbot|slackbot|whatsapp|viber/i.test(userAgent);
+            
+            if (postSlug && isBot) {
+                window.location.href = 'https://functions.yandexcloud.net/d4ecn5ag33dcdd2deivd?post=' + encodeURIComponent(postSlug);
+            }
+        })();
+
+        // --- ЯНДЕКС МЕТРИКА ---
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)}; m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109130409', 'ym');
+
+        ym(109130409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="google-site-verification" content="rLtNyEQ2h992Lp8m73ynLM8J6xY5tJcr3dbVwbO35rU" />
+    
+    <title>Буссоль онлайн: замер азимута и углов лесосеки камерой телефона | Лесовик</title>
+    <meta name="description" content="Бесплатная электронная буссоль и геодезический компас для отвода лесосек. Точное измерение магнитных азимутов, внутренних углов поворота делянки и визиров с помощью гироскопа и камеры смартфона.">
+    <meta name="keywords" content="буссоль онлайн, буссоль лазерная карманная, электронная буссоль для телефона, компас таксатора, измерение азимута онлайн, отвод лесосек, углы поворота делянки, Лесовик Про">
+    <link rel="canonical" href="https://lesovik-pro.ru/busol.html">
+
+    <meta property="og:title" content="Электронная буссоль онлайн с визиром и уровнем | Лесовик">
+    <meta property="og:description" content="Геодезический прибор таксатора в кармане. Разбивка лесосек, фиксация азимутов и замер внутренних углов через камеру смартфона.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://lesovik-pro.ru/busol.html">
+    <meta property="og:image" content="https://lesovik-pro.ru/logo.jpeg">
+    <meta property="og:image:width" content="500">
+    <meta property="og:image:height" content="500">
+
+    <link rel="icon" type="image/jpeg" href="logo.jpeg">
+    <meta name="geo.region" content="RU-KO">
+    <meta name="geo.placename" content="Сыктывкар">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --bg-paper: #F9FBF9;
+            --text-graphite: #333333;
+            --forest-green: #2D5A27;
+            --forest-light: #8FBC8F;
+            --border-color: #E0E0E0;
+            --card-bg: #FFFFFF;
+            --glass-bg: rgba(249, 251, 249, 0.75);
+            --footer-bg: #2C3531;
+            --danger: #DC2626;
+            --success: #16A34A;
+        }
+
+        [data-theme="dark"] {
+            --bg-paper: #1A2421;
+            --text-graphite: #F9FBF9;
+            --forest-green: #8FBC8F;
+            --forest-light: #2D5A27;
+            --border-color: #3A4F46;
+            --card-bg: #22302B;
+            --glass-bg: rgba(26, 36, 33, 0.75);
+            --footer-bg: #111815;
+        }
+
+        html, body {
+            margin: 0; padding: 0;
+            width: 100%; max-width: 100%;
+            overflow-x: hidden;
+            background-color: var(--bg-paper); color: var(--text-graphite);
+            font-family: 'Inter', sans-serif; line-height: 1.6;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        *, *:before, *:after { box-sizing: inherit; }
+
+        .glass-header {
+            position: sticky; top: 0; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 40px; background: var(--glass-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .logo-container { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .header-logo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--forest-green); }
+        .glass-header h1 { font-family: 'Merriweather', serif; color: var(--forest-green); margin: 0; font-size: 22px; }
+
+        .header-seo-text { font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; color: var(--text-graphite); opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; display: none; }
+        @media (min-width: 900px) { .header-seo-text { display: block; } }
+
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        .btn-back { display: inline-flex; align-items: center; gap: 8px; background: transparent; color: var(--forest-green); border: 1px solid var(--forest-green); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; transition: 0.2s; font-size: 13px; }
+        .btn-back:hover { background: var(--forest-green); color: var(--bg-paper); }
+        
+        .theme-toggle { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 8px; border-radius: 8px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; width: 40px; height: 40px; }
+        .theme-toggle:hover { background-color: var(--forest-green); color: var(--bg-paper); }
+
+        main { flex: 1; }
+        .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+
+        .grid-layout { display: grid; grid-template-columns: 1fr; gap: 30px; }
+        @media (min-width: 800px) { .grid-layout { grid-template-columns: 1.2fr 1fr; gap: 35px; } }
+
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 4px 4px 0px rgba(0,0,0,0.02); }
+        h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 20px; margin-bottom: 5px; }
+        .subtitle { font-size: 12px; color: var(--text-graphite); opacity: 0.6; margin-bottom: 20px; }
+
+        /* ИНТЕРФЕЙС ВИЗУАЛЬНОЙ БУССОЛИ */
+        .camera-viewport-wrapper { position: relative; width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid var(--border-color); }
+        #video-preview { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* ВЕРТИКАЛЬНАЯ НИТЬ ПРИЦЕЛА */
+        .visir-line { position: absolute; top: 0; left: 50%; width: 2px; height: 100%; background: rgba(255,255,255,0.4); transform: translateX(-50%); z-index: 10; pointer-events: none; }
+        .visir-center-dot { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; background: transparent; border: 2px solid #FFF; border-radius: 50%; transform: translate(-50%, -50%); z-index: 11; }
+
+        /* ИСКУССТВЕННЫЙ ГОРИЗОНТ (АВИАГОРИЗОНТ) */
+        .horizon-gyro-scope { position: absolute; top: 50%; left: 50%; width: 140px; height: 140px; border: 2px solid var(--danger); border-radius: 50%; transform: translate(-50%, -50%); z-index: 5; pointer-events: none; transition: border-color 0.2s; }
+        .horizon-gyro-scope::before { content: ''; position: absolute; top: 50%; left: -15px; width: 30px; height: 2px; background: var(--danger); transform: translateY(-50%); transition: background-color 0.2s; }
+        .horizon-gyro-scope::after { content: ''; position: absolute; top: 50%; right: -15px; width: 30px; height: 2px; background: var(--danger); transform: translateY(-50%); transition: background-color 0.2s; }
+        
+        .horizon-gyro-scope.level-perfect { border-color: var(--success); }
+        .horizon-gyro-scope.level-perfect::before, .horizon-gyro-scope.level-perfect::after { background-color: var(--success); }
+
+        /* ИНФОРМАЦИОННЫЕ ПАНЕЛИ ПОВЕРХ КАМЕРЫ */
+        .overlay-data-box { position: absolute; padding: 10px 14px; background: rgba(0, 0, 0, 0.65); color: #FFF; border-radius: 6px; font-family: monospace; font-size: 14px; z-index: 20; pointer-events: none; }
+        .top-left-status { top: 15px; left: 15px; }
+        .top-right-status { top: 15px; right: 15px; text-align: right; }
+        .bottom-center-angle { bottom: 15px; left: 50%; transform: translateX(-50%); background: rgba(22, 163, 74, 0.85); font-size: 18px; font-weight: 700; white-space: nowrap; border-radius: 30px; padding: 8px 20px; display: none; }
+
+        /* БЛОК КНОПОК УПРАВЛЕНИЯ */
+        .control-panel-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+        .btn-action { padding: 14px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; transition: 0.2s; text-align: center; }
+        .btn-set-zero { background-color: var(--forest-green); color: #FFF; }
+        .btn-reset-zero { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-graphite); }
+        .btn-lock-measure { grid-column: span 2; background-color: #E0E0E0; color: #888; cursor: not-allowed; font-size: 15px; }
+        .btn-lock-measure.ready-to-fire { background-color: var(--forest-green); color: #FFF; cursor: pointer; box-shadow: 0 4px 10px rgba(45, 90, 39, 0.2); }
+
+        /* ЖУРНАЛ КАТАЛОГА ЗАМЕРОВ ДЕЛЯНКИ */
+        .measurements-log-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .measurements-log-table th, .measurements-log-table td { padding: 10px; font-size: 14px; border-bottom: 1px solid var(--border-color); text-align: left; }
+        .measurements-log-table th { font-weight: 700; text-transform: uppercase; font-size: 11px; color: var(--forest-green); letter-spacing: 0.5px; }
+        .btn-clear-log { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600; }
+
+        /* СЕО ТЕКСТ */
+        .seo-info-section { margin-top: 40px; padding-top: 30px; border-top: 2px solid var(--border-color); color: var(--text-graphite); opacity: 0.85; }
+        .seo-info-section h2 { font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 22px; margin-bottom: 15px; }
+        .seo-info-section h3 { font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 17px; margin-top: 25px; margin-bottom: 10px; }
+        .seo-info-section p { font-size: 14px; line-height: 1.7; margin-bottom: 15px; text-align: justify; }
+        .seo-info-section ul { font-size: 14px; padding-left: 20px; margin-bottom: 15px; }
+        .seo-info-section li { margin-bottom: 6px; }
+
+        footer { background-color: var(--footer-bg); color: #E0E0E0; padding: 50px 20px 20px; margin-top: auto; font-size: 14px; }
+        .footer-content { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; margin-bottom: 40px; }
+        .footer-logo { fill: #E0E0E0; width: 28px; height: 28px; margin-bottom: 10px; }
+        .footer-column h4 { font-family: 'Merriweather', serif; color: #E0E0E0; font-size: 16px; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 10px; }
+        .footer-column a { color: #8FBC8F; text-decoration: none; display: block; margin-bottom: 10px; }
+        .footer-bottom { text-align: center; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.05); font-size: 12px; opacity: 0.6; }
+
+        @media (max-width: 600px) { .glass-header { padding: 15px 20px; } .container { padding: 15px; } .card { padding: 16px; } }
+    </style>
+</head>
+<body>
+
+    <header class="glass-header">
+        <a href="index.html" class="logo-container">
+            <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
+            <h1>Лесовик</h1>
+        </a>
+        <div class="header-seo-text">Электронная буссоль • Геодезия выдела • Отвод лесосек</div>
+        <div class="header-right">
+            <a href="index.html" class="btn-back">← На главную</a>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="grid-layout">
+            
+            <div class="card" style="padding: 16px;">
+                <h2>Визирная рамка буссоли</h2>
+                <div class="subtitle">Наведите вертикальную нить на веху. Замер доступен только по зеленому уровню.</div>
+                
+                <div class="camera-viewport-wrapper">
+                    <div class="visir-line"></div>
+                    <div class="visir-center-dot"></div>
+                    
+                    <div id="gyro-ring" class="horizon-gyro-scope"></div>
+                    
+                    <div class="overlay-data-box top-left-status">
+                        АЗИМУТ: <span id="live-azimuth" style="color:#8FBC8F; font-weight:bold;">0.0°</span><br>
+                        УГОЛ X: <span id="live-pitch">0°</span>
+                    </div>
+                    <div class="overlay-data-box top-right-status">
+                        ГОРИЗОНТ Y: <span id="live-roll">0°</span><br>
+                        БАЗА (0°): <span id="base-azimuth">НЕТ</span>
+                    </div>
+                    
+                    <div id="angle-turn-badge" class="overlay-data-box bottom-center-angle">ПОВОРОТ: 0.0°</div>
+
+                    <video id="video-preview" autoplay playsinline muted></video>
+                </div>
+
+                <div class="control-panel-buttons">
+                    <button class="btn-action btn-set-zero" onclick="setZeroDirection()">🔒 Фиксировать 0°</button>
+                    <button class="btn-action btn-reset-zero" onclick="resetZeroDirection()">Сбросить</button>
+                    <button id="btn-capture" class="btn-action btn-lock-measure" onclick="captureMeasurement()" disabled>Поймайте уровень горизонта</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Журнал полевой съемки визиров</h2>
+                <div class="subtitle">Сюда автоматически заносятся зафиксированные румбы линий делянки.</div>
+                
+                <div style="max-height: 380px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-paper);">
+                    <table class="measurements-log-table">
+                        <thead>
+                            <tr>
+                                <th>№ Линии</th>
+                                <th>Азимут</th>
+                                <th>Угол повор.</th>
+                                <th><button class="btn-clear-log" onclick="clearLog()">Очистить</button></th>
+                            </tr>
+                        </thead>
+                        <tbody id="log-tbody">
+                            <tr><td colspan="4" style="color:gray; text-align:center; padding:20px 10px;">Журнал пуст. Наведите визир и зафиксируйте точку.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="margin-top: 20px; background: rgba(45, 90, 39, 0.04); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <span style="font-weight: 700; color: var(--forest-green); display: block; font-size: 13px; margin-bottom: 5px;">⚠️ ТАКСАТОРУ НА ЗАМЕТКУ:</span>
+                    <span style="font-size: 12px; line-height: 1.5; display: block; opacity: 0.9;">
+                        Перед началом съемок в густом подросте обязательно откалибруйте датчик компаса в телефоне, покрутив его в воздухе по траектории восьмерки. Убедитесь, что чехол смартфона не имеет магнитных защелок.
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <section class="seo-info-section">
+            <h2>Отвод лесосек и измерение углов электронной буссолью</h2>
+            <p><strong>Буссоль в лесоустройстве</strong> — это базовый геодезический инструмент, применяемый инженерами и лесничими для таксации, отвода лесосек, замера направлений ходовых линий (визиров) и определения внутренних углов делянок. Точность построения полигона делянки напрямую влияет на правильность исчисления площадей выдела и корректность отображения квартальных сеток во ФГИС ЛК.</p>
+            
+            <h3>Как правильно вести перечет и геодезическую съемку лесосек:</h3>
+            <ul>
+                <li><strong>Магнитный азимут:</strong> Это горизонтальный угол, отсчитываемый от северного направления магнитного меридиана по ходу часовой стрелки до линии направления визира. Варьируется в пределах от 0 до 360 градусов.</li>
+                <li><strong>Румб линии:</strong> Острый угол, измеряемый от ближайшего направления меридиана (северного или южного) до заданной линии. Используется для составления полевых абрисов.</li>
+                <li><strong>Внутренний угол поворота:</strong> Угол между смежными сторонами лесосечного полигона. При прямоугольном отводе лесосек углы поворота визира на углах делянки должны составлять строго 90 градусов.</li>
+            </ul>
+
+            <h3>Инструкция по работе с оптическим онлайн-визиром</h3>
+            <p>В отличие от классической металлической буссоли БГ-1, требующей жесткой установки штатива, электронная буссоль «Лесовик» использует метод вертикального проецирования вешек на матрицу камеры. Таксатор удерживает устройство вертикально перед собой. Встроенный датчик-магнитометр непрерывно считывает углы курса, а акселерометр отслеживает пространственные наклоны по осям Pitch и Roll.</p>
+            <p>Для предотвращения таксационной погрешности кнопка фиксации румба активируется только в момент, когда кольцо авиагоризонта горит зеленым цветом — это сигнализирует о том, что плоскость замера идеально параллельна земной поверхности. Функция фиксации ноль-направления позволяет мгновенно отложить перпендикулярный визир под углом 90 градусов без использования таблиц приращений и полевых вычислений.</p>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-column">
+                <svg class="footer-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/>
+                    <rect x="10.5" y="20" width="3" height="4"/>
+                </svg>
+                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 18px;">Лесовик</div>
+                <div style="font-size: 13px; margin-top: 5px; opacity: 0.8;">Цифровой инструмент таксатора. База знаний, калькуляторы и профильные статьи для специалистов леса.</div>
+            </div>
+            <div class="footer-column">
+                <h4>Правовая информация</h4>
+                <a href="index.html?page=policy" style="color:#8FBC8F; text-decoration:none; display:block; margin-bottom:10px;">Политика конфиденциальности</a>
+                <a href="index.html?page=offer" style="color:#8FBC8F; text-decoration:none; display:block;">Договор-оферта</a>
+            </div>
+            <div class="footer-column">
+                <h4>Контакты</h4>
+                <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; text-decoration:none;">✉️ folgoal@gmail.com</a>
+                <div style="font-size: 12px; margin-top: 15px; opacity: 0.6;">
+                    * Цифровая буссоль предназначена для визирования и экспресс-оценки геометрии лесосек на таксационных пробах.
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 Создано для профессионалов леса. Все права защищены.
+        </div>
+    </footer>
+
+<script>
+    let currentAzimuth = 0;
+    let baseAzimuth = null;
+    let isLevel = false;
+    let measurementsLog = [];
+
+    function toggleTheme() {
+        const body = document.documentElement;
+        if (body.getAttribute('data-theme') === 'dark') {
+            body.removeAttribute('data-theme');
+        } else {
+            body.setAttribute('data-theme', 'dark');
+        }
+    }
+
+    // ИНИЦИАЛИЗАЦИЯ ПОТОКА КАМЕРЫ НА ЭКРАН
+    async function startCamera() {
+        const video = document.getElementById('video-preview');
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { exact: "environment" } }, // Задняя камера
+                audio: false
+            });
+            video.srcObject = stream;
+        } catch (err) {
+            // Если нет задней камеры (на ПК), берем любую доступную
+            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                .then(stream => video.srcObject = stream)
+                .catch(e => console.error("Камера заблокирована", e));
+        }
+    }
+
+    // ОБРАБОТКА ДАТЧИКОВ КОМПАСА И ГИРОСКОПА СМАРТФОНА
+    function initOrientationSensors() {
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener('deviceorientation', function(event) {
+                // Обработка азимута (с поправкой на таксационный компас Safari / Android)
+                let heading = event.webkitCompassHeading || (360 - event.alpha);
+                if (!heading) heading = 0;
+                
+                currentAzimuth = heading;
+                document.getElementById('live-azimuth').innerText = `${currentAzimuth.toFixed(1)}°`;
+
+                // Забираем углы наклона корпуса телефона
+                let pitch = Math.round(event.beta || 0); // Наклон вперед-назад
+                let roll = Math.round(event.gamma || 0);  // Наклон влево-вправо
+
+                document.getElementById('live-pitch').innerText = `${pitch}°`;
+                document.getElementById('live-roll').innerText = `${roll}°`;
+
+                // Логика вычисления угла поворота от зафиксированной базы
+                const badge = document.getElementById('angle-turn-badge');
+                if (baseAzimuth !== null) {
+                    let turnAngle = currentAzimuth - baseAzimuth;
+                    if (turnAngle < 0) turnAngle += 360;
+                    badge.innerText = `ПОВОРОТ: ${turnAngle.toFixed(1)}°`;
+                    badge.style.display = 'block';
+                } else {
+                    badge.style.display = 'none';
+                }
+
+                // ЭТАЛОННАЯ ИНЖЕНЕРНАЯ ПРОВЕРКА УРОВНЯ ГОРИЗОНТА
+                // Допуск погрешности в руках мастера леса — всего 3 градуса завала
+                const gyroRing = document.getElementById('gyro-ring');
+                const btnCapture = document.getElementById('btn-capture');
+
+                if (Math.abs(pitch - 90) <= 5 && Math.abs(roll) <= 4) {
+                    // Телефон удерживается вертикально перед собой с минимальным завалом
+                    isLevel = true;
+                    gyroRing.classList.add('level-perfect');
+                    btnCapture.classList.add('ready-to-fire');
+                    btnCapture.innerText = "➕ Зафиксировать румб в журнал";
+                    btnCapture.disabled = false;
+                } else {
+                    isLevel = false;
+                    gyroRing.classList.remove('level-perfect');
+                    btnCapture.classList.remove('ready-to-fire');
+                    btnCapture.innerText = "Поймайте уровень горизонта";
+                    btnCapture.disabled = true;
+                }
+            }, true);
+        } else {
+            alert("Ваш смартфон не поддерживает аппаратные гироскопы и компасы!");
+        }
+    }
+
+    function setZeroDirection() {
+        baseAzimuth = currentAzimuth;
+        document.getElementById('base-azimuth').innerText = `${baseAzimuth.toFixed(1)}°`;
+    }
+
+    document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+
+    function resetZeroDirection() {
+        baseAzimuth = null;
+        document.getElementById('base-azimuth').innerText = `НЕТ`;
+        document.getElementById('angle-turn-badge').style.display = 'none';
+    }
+
+    function captureMeasurement() {
+        if (!isLevel) return;
+
+        let turnAngleStr = "—";
+        if (baseAzimuth !== null) {
+            let turnAngle = currentAzimuth - baseAzimuth;
+            if (turnAngle < 0) turnAngle += 360;
+            turnAngleStr = `${turnAngle.toFixed(1)}°`;
+        }
+
+        const newMeasurement = {
+            id: measurementsLog.length + 1,
+            azimuth: `${currentAzimuth.toFixed(1)}°`,
+            turn: turnAngleStr
+        };
+
+        measurementsLog.push(newMeasurement);
+        renderLogTable();
+    }
+
+    function renderLogTable() {
+        const tbody = document.getElementById('log-tbody');
+        if (measurementsLog.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="color:gray; text-align:center; padding:20px 10px;">Журнал пуст. Наведите визир и зафиксируйте точку.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = "";
+        measurementsLog.forEach(m => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>Линия №${m.id}</b></td>
+                    <td><span style="color:var(--forest-green); font-weight:700;">${m.azimuth}</span></td>
+                    <td>${m.turn}</td>
+                    <td><span style="color:gray; font-size:12px;">✔️ Записано</span></td>
+                </tr>
+            `;
+        });
+    }
+
+    function clearLog() {
+        if (confirm("Очистить текущий журнал полевой съемки?")) {
+            measurementsLog = [];
+            renderLogTable();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        startCamera();
+        // Запрашиваем официальные права на датчики iOS 13+ / Android
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            document.body.addEventListener('click', function initOnFirstTouch() {
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') { initOrientationSensors(); }
+                    })
+                    .catch(console.error);
+                document.body.removeEventListener('click', initOnFirstTouch);
+            });
+        } else {
+            initOrientationSensors();
+        }
+    });
+</script>
+</body>
+</html>
