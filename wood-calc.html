@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <script type="text/javascript">
+        // --- ПЕРЕХВАТ БОТОВ ДЛЯ SEO-ПРЕВЬЮ ---
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const postSlug = urlParams.get('post');
+            const userAgent = (navigator.userAgent || '').toLowerCase();
+            const isBot = /telegrambot|vkshare|facebookexternalhit|twitterbot|slackbot|whatsapp|viber/i.test(userAgent);
+            
+            if (postSlug && isBot) {
+                window.location.href = 'https://functions.yandexcloud.net/d4ecn5ag33dcdd2deivd?post=' + encodeURIComponent(postSlug);
+            }
+        })();
+
+        // --- ЯНДЕКС МЕТРИКА (ВАШ ЕДИНЫЙ ID) ---
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109130409', 'ym');
+
+        ym(109130409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Калькулятор пиломатериалов онлайн: расчет кубатуры доски, бруса и вагонки | Лесовик</title>
+    <meta name="description" content="Профессиональный строительный калькулятор древесины. Моментальный перевод штук доски в кубы, расчет бруса на дом или баню, вычисление площади вагонки с учетом нахлеста. Расчет точной стоимости и веса для подбора машины.">
+    <meta name="keywords" content="расчет кубатуры доски, кубатурник обрезной доски, калькулятор бруса на баню, расчет вагонки онлайн, перевод штук в кубы, вес пиломатериала калькулятор, лесовик про">
+    <link rel="canonical" href="https://lesovik-pro.ru/wood-calc.html">
+
+    <meta property="og:title" content="Умный калькулятор пиломатериалов: доска, брус, вагонка">
+    <meta property="og:description" content="Перевод штук в кубы, расчет стоимости доски и бруса, вычисление точного веса партии и подбор грузового транспорта прямо с телефона.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://lesovik-pro.ru/wood-calc.html">
+    <meta property="og:image" content="https://lesovik-pro.ru/logo.jpeg">
+    
+    <link rel="icon" type="image/jpeg" href="logo.jpeg">
+    <meta name="geo.region" content="RU-KO">
+    <meta name="geo.placename" content="Сыктывкар">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --bg-paper: #F9FBF9;
+            --text-graphite: #333333;
+            --forest-green: #2D5A27;
+            --forest-light: #8FBC8F;
+            --border-color: #E0E0E0;
+            --card-bg: #FFFFFF;
+            --glass-bg: rgba(249, 251, 249, 0.75);
+            --footer-bg: #2C3531;
+            --danger: #DC2626;
+            --accent-gold: #D4AF37;
+        }
+
+        [data-theme="dark"] {
+            --bg-paper: #1A2421;
+            --text-graphite: #F9FBF9;
+            --forest-green: #8FBC8F;
+            --forest-light: #2D5A27;
+            --border-color: #3A4F46;
+            --card-bg: #22302B;
+            --glass-bg: rgba(26, 36, 33, 0.75);
+            --footer-bg: #111815;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-paper);
+            color: var(--text-graphite);
+            margin: 0; padding: 0;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            display: flex; flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .glass-header {
+            position: sticky; top: 0; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 40px; background: var(--glass-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-container { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .header-logo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--forest-green); }
+        .glass-header h1 { font-family: 'Merriweather', serif; color: var(--forest-green); margin: 0; font-size: 22px; }
+        
+        .btn-back { display: inline-flex; align-items: center; gap: 8px; background: transparent; color: var(--forest-green); border: 1px solid var(--forest-green); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; font-size: 13px; }
+        .btn-back:hover { background: var(--forest-green); color: var(--bg-paper); }
+
+        .theme-toggle { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 8px; border-radius: 8px; cursor: pointer; font-size: 18px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+
+        main { flex: 1; }
+        .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+
+        /* ТАБЫ ДЛЯ ПЕРЕКЛЮЧЕНИЯ КАЛЬКУЛЯТОРОВ */
+        .calc-tabs { display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; overflow-x: auto; }
+        .tab-btn { background: transparent; border: none; color: var(--text-graphite); font-family: 'Merriweather', serif; font-size: 16px; padding: 10px 20px; cursor: pointer; opacity: 0.6; white-space: nowrap; border-radius: 8px 8px 0 0; }
+        .tab-btn.active { opacity: 1; color: var(--forest-green); font-weight: 700; border-bottom: 3px solid var(--forest-green); }
+
+        .calc-section { display: none; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 30px; box-shadow: 4px 4px 15px rgba(0,0,0,0.02); }
+        .calc-section.active { display: block; }
+
+        h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 22px; margin-bottom: 25px; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        @media (max-width: 600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; gap: 15px; } }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 11px; font-weight: 700; color: var(--forest-green); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        select, input { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 16px; background-color: var(--bg-paper); color: var(--text-graphite); box-sizing: border-box; }
+        select:focus, input:focus { outline: none; border-color: var(--forest-green); }
+
+        .btn-calc { background-color: var(--forest-green); color: #fff; border: none; padding: 16px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-size: 14px; transition: 0.2s; margin-top: 10px; }
+        .btn-calc:hover { background-color: var(--text-graphite); }
+
+        /* БЛОК РЕЗУЛЬТАТОВ */
+        .result-box { margin-top: 25px; padding: 25px; background-color: rgba(45, 90, 39, 0.03); border: 2px dashed var(--forest-green); border-radius: 12px; display: none; }
+        .result-box h4 { margin-top: 0; font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 18px; margin-bottom: 15px; }
+        .res-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed var(--border-color); font-size: 15px; }
+        .res-row:last-of-type { border-bottom: none; font-weight: 700; font-size: 18px; color: var(--forest-green); padding-top: 12px; }
+        
+        .truck-info { margin-top: 15px; padding: 12px; background: var(--bg-paper); border-radius: 8px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; border-left: 4px solid var(--forest-light); }
+
+        .vk-ad-container { margin: 40px 0; text-align: center; min-height: 250px; }
+
+        footer { background-color: var(--footer-bg); color: #E0E0E0; padding: 50px 20px 20px; margin-top: auto; font-size: 14px; }
+        .footer-content { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; margin-bottom: 40px; }
+        .footer-logo { fill: #E0E0E0; width: 28px; height: 28px; margin-bottom: 10px; }
+        .footer-column h4 { font-family: 'Merriweather', serif; color: #E0E0E0; font-size: 16px; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 10px; }
+        .footer-column a { color: #8FBC8F; text-decoration: none; display: block; margin-bottom: 10px; }
+        .footer-column a:hover { color: #FFFFFF; text-decoration: underline; }
+        .footer-bottom { text-align: center; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.05); font-size: 12px; opacity: 0.6; }
+    </style>
+</head>
+<body>
+
+    <header class="glass-header">
+        <a href="index.html" class="logo-container">
+            <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
+            <h1>Лесовик</h1>
+        </a>
+        <div class="header-seo-text">Калькулятор древесины • Точный расчет кубатуры и стоимости</div>
+        <div class="header-right">
+            <a href="index.html" class="btn-back">← На главную</a>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+        </div>
+    </header>
+
+    <main class="container">
+        
+        <div class="calc-tabs">
+            <button class="tab-btn active" onclick="switchTab('tab-board', this)">📋 Обрезная доска / Брус</button>
+            <button class="tab-btn" onclick="switchTab('tab-house', this)">🏠 Расчет на Дом / Баню</button>
+            <button class="tab-btn" onclick="switchTab('tab-lining', this)">🪵 Вагонка / Имитация</button>
+        </div>
+
+        <div id="tab-board" class="calc-section active">
+            <h2>Расчет объема и стоимости обрезного пиломатериала</h2>
+            
+            <div class="form-group">
+                <label>Порода и влажность дерева</label>
+                <select id="board-wood-type">
+                    <option value="800">Хвоя свежесрубленная (Сосна, Ель) ~800 кг/м³</option>
+                    <option value="500">Хвоя сухая (Камерная сушка) ~500 кг/м³</option>
+                    <option value="850">Лиственница свежая ~850 кг/м³</option>
+                    <option value="650">Лиственница сухая ~650 кг/м³</option>
+                    <option value="850">Береза свежая ~850 кг/м³</option>
+                </select>
+            </div>
+
+            <div class="grid-3">
+                <div class="form-group">
+                    <label>Толщина (мм)</label>
+                    <input type="number" id="board-t" value="50">
+                </div>
+                <div class="form-group">
+                    <label>Ширина (мм)</label>
+                    <input type="number" id="board-w" value="150">
+                </div>
+                <div class="form-group">
+                    <label>Длина (м)</label>
+                    <input type="number" id="board-l" value="6" step="0.1">
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Количество (шт)</label>
+                    <input type="number" id="board-qty" value="45" oninput="clearVolumeInput()">
+                </div>
+                <div class="form-group">
+                    <label>Или Требуемый объем (м³)</label>
+                    <input type="number" id="board-vol" placeholder="Например: 2.5" step="0.001" oninput="clearQtyInput()">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Цена продавца (рублей)</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="number" id="board-price" value="16000" placeholder="Внесите сумму">
+                    <select id="board-price-type" style="width: 40%;">
+                        <option value="per_cube">За 1 куб (м³)</option>
+                        <option value="per_piece">За 1 штуку</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn-calc" onclick="calculateBoard()">Рассчитать параметры и цену</button>
+
+            <div id="board-result" class="result-box"></div>
+        </div>
+
+        <div id="tab-house" class="calc-section">
+            <h2>Расчет стенового бруса/бревна на сруб коробки</h2>
+            
+            <div class="form-group">
+                <label>Материал стен</label>
+                <select id="house-wood-type">
+                    <option value="700">Брус хвойный естественной влажности ~700 кг/м³</option>
+                    <option value="450">Брус хвойный сухой ~450 кг/м³</option>
+                    <option value="800">Бревно хвойное сырое ~800 кг/м³</option>
+                </select>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Периметр стен (м) — Сумма длин всех стен</label>
+                    <input type="number" id="house-p" value="24" placeholder="Например: 6х6 = 24">
+                </div>
+                <div class="form-group">
+                    <label>Высота стен коробки (м)</label>
+                    <input type="number" id="house-h" value="2.5" step="0.1">
+                </div>
+            </div>
+
+            <div class="grid-3">
+                <div class="form-group">
+                    <label>Толщина стены (мм)</label>
+                    <input type="number" id="house-t" value="150" placeholder="Толщина бруса">
+                </div>
+                <div class="form-group">
+                    <label>Высота одного бруса (мм)</label>
+                    <input type="number" id="house-w" value="150" placeholder="Ширина/Высота в венце">
+                </div>
+                <div class="form-group">
+                    <label>Длина одного бруса (м)</label>
+                    <input type="number" id="house-l" value="6">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Цена пиломатериала за 1 куб (м³)</label>
+                <input type="number" id="house-price" value="18000">
+            </div>
+
+            <button class="btn-calc" onclick="calculateHouse()">Посчитать стеновой материал</button>
+
+            <div id="house-result" class="result-box"></div>
+        </div>
+
+        <div id="tab-lining" class="calc-section">
+            <h2>Расчет обшивочной доски (Вагонка, Имитация бруса, Блок-хаус)</h2>
+            
+            <div class="form-group">
+                <label>Материал обшивки</label>
+                <select id="lining-wood-type">
+                    <option value="500">Вагонка сухая хвоя ~500 кг/м³</option>
+                    <option value="650">Лиственница сухая ~650 кг/м³</option>
+                    <option value="400">Липа сухая (для бани) ~400 кг/м³</option>
+                </select>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Общая площадь обшивки под зашивку (кв.м)</label>
+                    <input type="number" id="lining-area" value="30" placeholder="Площадь стен/потолка">
+                </div>
+                <div class="form-group">
+                    <label>Запас на торцовку и брак (%)</label>
+                    <select id="lining-margin">
+                        <option value="1.05">5% (Рекомендуемый)</option>
+                        <option value="1.10">10% (Если много углов)</option>
+                        <option value="1.00">Без запаса (Впритык)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid-3">
+                <div class="form-group">
+                    <img src="" onerror="this.style.display='none'">
+                    <label>Полная ширина ламели с пазом (мм)</label>
+                    <input type="number" id="lining-w-full" value="96" placeholder="Например: 96">
+                </div>
+                <div class="form-group">
+                    <label>Рабочая ширина БЕЗ шипа/паза (мм)</label>
+                    <input type="number" id="lining-w-work" value="88" placeholder="Например: 88">
+                </div>
+                <div class="form-group">
+                    <label>Длина ламели (м)</label>
+                    <input type="number" id="lining-l" value="3" step="0.1">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Цена обшивки</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="number" id="lining-price" value="650" placeholder="Сумма">
+                    <select id="lining-price-type" style="width: 40%;">
+                        <option value="per_sq">За 1 кв.м (м²)</option>
+                        <option value="per_piece">За 1 штуку (ламель)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn-calc" onclick="calculateLining()">Посчитать обшивку</button>
+
+            <div id="lining-result" class="result-box"></div>
+        </div>
+
+        <div class="vk-ad-container">
+            <script async src="https://ad.mail.ru/static/ads-async.js"></script>
+            <ins class="mrg-tag" style="display:block;text-decoration: none;" data-ad-client="ad-2008430" data-ad-slot="2008430"></ins>
+            <script>(MRGtag = window.MRGtag || []).push({})</script>
+        </div>
+
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-column">
+                <svg class="footer-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/>
+                    <rect x="10.5" y="20" width="3" height="4"/>
+                </svg>
+                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 18px;">Лесовик</div>
+                <div style="font-size: 13px; margin-top: 5px; opacity: 0.8;">Профессиональные строительные расчеты древесины для пилорам и лесозаготовителей Коми.</div>
+            </div>
+            <div class="footer-column">
+                <h4>Правовая информация</h4>
+                <a href="index.html?page=policy">Политика конфиденциальности</a>
+                <a href="index.html?page=offer">Договор-оферта</a>
+            </div>
+            <div class="footer-column">
+                <h4>Контакты и Поддержка</h4>
+                <a href="mailto:folgoal@gmail.com">✉️ folgoal@gmail.com</a>
+                <div style="font-size: 11px; opacity: 0.5; margin-top: 10px;">ИП Худяков Н. С., ИНН 111801576622</div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 Лесовик ПРО. Точные кубатурники прямоугольного и круглого леса.
+        </div>
+    </footer>
+
+    <script>
+        // ЛОГИКА ТАБОВ
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.calc-section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function toggleTheme() {
+            const body = document.documentElement;
+            const btn = document.getElementById('themeBtn');
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme'); btn.innerHTML = '🌙';
+            } else {
+                body.setAttribute('data-theme', 'dark'); btn.innerHTML = '☀️';
+            }
+        }
+
+        // Автоматическая очистка полей-антагонистов
+        function clearVolumeInput() { document.getElementById('board-vol').value = ''; }
+        function clearQtyInput() { document.getElementById('board-qty').value = ''; }
+
+        // АВТОТРАНСПОРТНЫЙ ОПРЕДЕЛИТЕЛЬ ВЕСА
+        function getTruckRecommendation(weightTons) {
+            if (weightTons <= 0.05) return "🚗 Можно везти в багажнике легкового авто (до 50 кг).";
+            if (weightTons <= 0.45) return "🚙 Подойдет стандартный легковой прицеп или багажник на крыше (до 450 кг).";
+            if (weightTons <= 1.5) return "🚚 Нужна Газель или легкий грузовик (грузоподъемность до 1.5 тонн).";
+            if (weightTons <= 3.5) return "🚛 Нужен Валдай или ГАЗель Next повышенной емкости (до 3.5 тонн).";
+            if (weightTons <= 5.0) return "🚛 Требуется среднетоннажный грузовик (ГАЗон Next, ЗИЛ до 5 тонн).";
+            return "🚜 Внимание! Вес критический. Нужен длинномер, КамАЗ или Манипулятор (свыше 5 тонн).";
+        }
+
+        // РАСЧЕТ 1: ОБРЕЗНАЯ ДОСКА / БРУС
+        function calculateBoard() {
+            const density = parseFloat(document.getElementById('board-wood-type').value);
+            const t = parseFloat(document.getElementById('board-t').value) / 1000;
+            const w = parseFloat(document.getElementById('board-w').value) / 1000;
+            const l = parseFloat(document.getElementById('board-l').value);
+            const price = parseFloat(document.getElementById('board-price').value) || 0;
+            const priceType = document.getElementById('board-price-type').value;
+            const resBox = document.getElementById('board-result');
+
+            if (!(t > 0 && w > 0 && l > 0)) { alert("Укажите верные габариты материала!"); return; }
+
+            const v_single = t * w * l;
+            let qty = parseInt(document.getElementById('board-qty').value);
+            let vol = parseFloat(document.getElementById('board-vol').value);
+
+            if (isNaN(qty) && isNaN(vol)) { alert("Введите количество штук или объем!"); return; }
+
+            if (!isNaN(vol) && vol > 0) {
+                qty = Math.ceil(vol / v_single);
+                document.getElementById('board-qty').value = qty;
+            }
+            
+            const totalVol = v_single * qty;
+            document.getElementById('board-vol').value = totalVol.toFixed(4);
+
+            let totalPrice = 0;
+            let pricePerPiece = 0;
+            let pricePerCube = 0;
+
+            if (priceType === 'per_cube') {
+                totalPrice = totalVol * price;
+                pricePerCube = price;
+                pricePerPiece = v_single * price;
+            } else {
+                totalPrice = qty * price;
+                pricePerPiece = price;
+                pricePerCube = price / v_single;
+            }
+
+            const weight = totalVol * density;
+            const weightTons = weight / 1000;
+
+            resBox.style.display = 'block';
+            resBox.innerHTML = `
+                <h4>Результаты расчетов:</h4>
+                <div class="res-row"><span>Общий объем заказа:</span><span><b>${totalVol.toFixed(3)} м³</b></span></div>
+                <div class="res-row"><span>Точное количество:</span><span><b>${qty} шт.</b></span></div>
+                <div class="res-row"><span>Объем одной штуки:</span><span>${v_single.toFixed(4)} м³</span></div>
+                <div class="res-row"><span>В одном кубе:</span><span>${(1 / v_single).toFixed(1)} шт.</span></div>
+                <div class="res-row"><span>Вес всей древесины:</span><span><b>${weight.toFixed(0)} кг (${weightTons.toFixed(2)} т)</b></span></div>
+                <div class="res-row"><span>Цена за 1 штуку:</span><span>${Math.round(pricePerPiece).toLocaleString()} руб.</span></div>
+                <div class="res-row"><span>Цена за 1 куб (м³):</span><span>${Math.round(pricePerCube).toLocaleString()} руб.</span></div>
+                <div class="res-row"><span>ОБЩАЯ СТОИМОСТЬ:</span><span>${Math.round(totalPrice).toLocaleString()} руб.</span></div>
+                <div class="truck-info">${getTruckRecommendation(weightTons)}</div>
+            `;
+        }
+
+        // РАСЧЕТ 2: ДОМ / БАНЯ
+        function calculateHouse() {
+            const density = parseFloat(document.getElementById('house-wood-type').value);
+            const p = parseFloat(document.getElementById('house-p').value);
+            const h = parseFloat(document.getElementById('house-h').value);
+            const bt = parseFloat(document.getElementById('house-t').value) / 1000;
+            const bw = parseFloat(document.getElementById('house-w').value) / 1000;
+            const bl = parseFloat(document.getElementById('house-l').value);
+            const price = parseFloat(document.getElementById('house-price').value) || 0;
+            const resBox = document.getElementById('house-result');
+
+            if (!(p > 0 && h > 0 && bt > 0 && bw > 0 && bl > 0)) { alert("Заполните все геометрические параметры сруба!"); return; }
+
+            const v_single = bt * bw * bl;
+            const countRows = Math.ceil(h / bw); // Количество венцов/рядов вверх
+            const totalLengthNeeded = p * countRows; // Общая погонная длина бруса
+            const qtyPieces = Math.ceil(totalLengthNeeded / bl); // Штук бруса
+            const totalVol = v_single * qtyPieces;
+            const totalPrice = totalVol * price;
+            const weightTons = (totalVol * density) / 1000;
+
+            resBox.style.display = 'block';
+            resBox.innerHTML = `
+                <h4>Результаты расчета стенового комплекта:</h4>
+                <div class="res-row"><span>Необходимо венцов (рядов):</span><span><b>${countRows} шт.</b></span></div>
+                <div class="res-row"><span>Всего штук бруса (${bl}м):</span><span><b>${qtyPieces} шт.</b></span></div>
+                <div class="res-row"><span>Общий объем стен:</span><span><b>${totalVol.toFixed(3)} м³</b></span></div>
+                <div class="res-row"><span>Общий вес бруса:</span><span><b>${(totalVol * density).toFixed(0)} кг (${weightTons.toFixed(2)} т)</b></span></div>
+                <div class="res-row"><span>Ориентировочная цена штуки:</span><span>${Math.round(v_single * price).toLocaleString()} руб.</span></div>
+                <div class="res-row"><span>ИТОГО ЗА СТЕНОВОЙ МАТЕРИАЛ:</span><span>${Math.round(totalPrice).toLocaleString()} руб.</span></div>
+                <div class="truck-info">${getTruckRecommendation(weightTons)}</div>
+            `;
+        }
+
+        // РАСЧЕТ 3: ВАГОНКА / ИМИТАЦИЯ БРУСА
+        function calculateLining() {
+            const density = parseFloat(document.getElementById('lining-wood-type').value);
+            const targetArea = parseFloat(document.getElementById('lining-area').value);
+            const margin = parseFloat(document.getElementById('lining-margin').value);
+            const wFull = parseFloat(document.getElementById('lining-w-full').value) / 1000;
+            const wWork = parseFloat(document.getElementById('lining-w-work').value) / 1000;
+            const l = parseFloat(document.getElementById('lining-l').value);
+            const price = parseFloat(document.getElementById('lining-price').value) || 0;
+            const priceType = document.getElementById('lining-price-type').value;
+            const resBox = document.getElementById('lining-result');
+
+            if (!(targetArea > 0 && wFull > 0 && wWork > 0 && l > 0)) { alert("Проверьте параметры обшивки и ламелей!"); return; }
+
+            const areaWithMargin = targetArea * margin;
+            const sqSingleWork = wWork * l; // Рабочая площадь одной ламели
+            const qtyPieces = Math.ceil(areaWithMargin / sqSingleWork); // Общее количество ламелей
+            
+            // Физический объем по полной толщине. Заложим среднюю толщину вагонки 14 мм (0.014 м) для расчета веса
+            const v_single_full = 0.014 * wFull * l; 
+            const totalVol = v_single_full * qtyPieces;
+            const weightTons = (totalVol * density) / 1000;
+
+            let totalPrice = 0;
+            if (priceType === 'per_sq') {
+                totalPrice = targetArea * margin * price;
+            } else {
+                totalPrice = qtyPieces * price;
+            }
+
+            resBox.style.display = 'block';
+            resBox.innerHTML = `
+                <h4>Результаты расчета обшивки:</h4>
+                <div class="res-row"><span>Площадь с учетом запаса:</span><span>${areaWithMargin.toFixed(1)} м²</span></div>
+                <div class="res-row"><span>Рабочая площадь 1 штуки:</span><span>${sqSingleWork.toFixed(3)} м²</span></div>
+                <div class="res-row"><span>Требуется ламелей:</span><span><b>${qtyPieces} шт.</b></span></div>
+                <div class="res-row"><span>Физический объем (справочно):</span><span>${totalVol.toFixed(3)} м³</span></div>
+                <div class="res-row"><span>Масса всей партии:</span><span><b>${(totalVol * density).toFixed(0)} кг (${weightTons.toFixed(2)} т)</b></span></div>
+                <div class="res-row"><span>ОБЩАЯ СТОИМОСТЬ:</span><span>${Math.round(totalPrice).toLocaleString()} руб.</span></div>
+                <div class="truck-info">${getTruckRecommendation(weightTons)}</div>
+            `;
+        }
+    </script>
+</body>
+</html>
