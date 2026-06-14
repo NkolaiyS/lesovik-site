@@ -79,6 +79,7 @@
             display: flex; flex-direction: column;
             min-height: 100vh;
             -webkit-text-size-adjust: 100%;
+            overflow-x: hidden;
         }
 
         .glass-header {
@@ -113,7 +114,7 @@
         .tab-btn.active { opacity: 1; color: var(--forest-green); font-weight: 700; border-bottom: 3px solid var(--forest-green); }
 
         /* ПРОСТОРНАЯ И ШИРОКАЯ СЕТКА ДЛЯ ПК ВЕРСИИ */
-        .calc-section { display: none; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 35px 40px; box-shadow: 4px 4px 15px rgba(0,0,0,0.02); box-sizing: border-box; }
+        .calc-section { display: none; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 35px 40px; box-shadow: 4px 4px 15px rgba(0,0,0,0.02); box-sizing: border-box; overflow-x: hidden; }
         .calc-section.active { display: block; }
 
         h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 24px; margin-bottom: 30px; }
@@ -129,9 +130,9 @@
         .btn-calc { background-color: var(--forest-green); color: #fff; border: none; padding: 18px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-size: 14px; transition: 0.2s; margin-top: 10px; box-sizing: border-box; }
         .btn-calc:hover { background-color: var(--text-graphite); }
 
-        .result-box { margin-top: 30px; padding: 30px; background-color: rgba(45, 90, 39, 0.03); border: 2px dashed var(--forest-green); border-radius: 12px; display: none; box-sizing: border-box; }
+        .result-box { margin-top: 30px; padding: 30px; background-color: rgba(45, 90, 39, 0.03); border: 2px dashed var(--forest-green); border-radius: 12px; display: none; box-sizing: border-box; overflow-x: hidden; }
         .result-box h4 { margin-top: 0; font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 20px; margin-bottom: 20px; }
-        .res-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border-color); font-size: 16px; gap: 10px; }
+        .res-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border-color); font-size: 16px; gap: 10px; box-sizing: border-box; }
         .res-row span:first-child { text-align: left; }
         .res-row span:last-child { text-align: right; white-space: nowrap; }
         .res-row:last-of-type { border-bottom: none; font-weight: 700; font-size: 20px; color: var(--forest-green); padding-top: 14px; }
@@ -148,7 +149,7 @@
         .footer-column a:hover { color: #FFFFFF; text-decoration: underline; }
         .footer-bottom { text-align: center; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.05); font-size: 12px; opacity: 0.6; }
 
-        /* --- ЖЕСТКАЯ МОБИЛЬНАЯ АДАПТАЦИЯ (БЕЗ СОКРАЩЕНИЙ ЛОГИКИ) --- */
+        /* --- ЖЕСТКАЯ МОБИЛЬНАЯ АДАПТАЦИЯ (АНТИ-РАСКАЧИВАНИЕ СТРАНИЦЫ) --- */
         @media (max-width: 768px) {
             .glass-header { padding: 12px 15px; gap: 10px; }
             .glass-header h1 { font-size: 18px; }
@@ -157,19 +158,43 @@
             .theme-toggle { width: 36px; height: 36px; font-size: 16px; }
             
             .container { margin: 20px auto; padding: 0 12px; }
-            .calc-section { padding: 20px 15px; border-radius: 8px; }
+            .calc-section { padding: 20px 15px; border-radius: 8px; overflow-x: hidden !important; }
             
             h2 { font-size: 18px; margin-bottom: 15px; }
             
             /* Перестроение всех сеток в одну колонку на смартфоне */
-            .grid-2, .grid-3 { grid-template-columns: 1fr; gap: 12px; }
+            .grid-2, .grid-3 { grid-template-columns: 1fr !important; gap: 12px; }
             .tab-btn { font-size: 14px; padding: 10px 14px; }
             select, input { padding: 12px; font-size: 15px; }
             
-            /* Превращение строк вывода результатов в удобный вертикальный блок */
-            .res-row { flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px 0; font-size: 14px; }
-            .res-row span:last-child { align-self: flex-end; }
-            .res-row:last-of-type { font-size: 16px; }
+            /* ТРАНСФОРМАЦИЯ СТРОК РЕЗУЛЬТАТОВ В СТРОГИЕ ВЕРТИКАЛЬНЫЕ КАРТОЧКИ */
+            .result-box { padding: 20px 15px !important; overflow-x: hidden !important; }
+            .result-box h4 { font-size: 18px !important; margin-bottom: 15px !important; }
+            
+            .res-row { 
+                display: block !important; 
+                width: 100% !important;
+                padding: 10px 0 !important; 
+                font-size: 14px !important; 
+                border-bottom: 1px dashed var(--border-color) !important;
+                box-sizing: border-box !important;
+            }
+            .res-row span { 
+                display: block !important; 
+                width: 100% !important;
+                text-align: left !important; 
+            }
+            /* Выделение правого блока со значениями/цифрами */
+            .res-row span:last-child { 
+                margin-top: 4px !important;
+                font-weight: 700 !important;
+                color: var(--forest-green) !important;
+                white-space: normal !important; /* Разрешаем перенос длинных цифр */
+            }
+            .res-row:last-of-type { font-size: 18px !important; padding-top: 12px !important; }
+            .res-row:last-of-type span:last-child { font-size: 20px !important; }
+            
+            .truck-info { font-size: 13px !important; padding: 12px !important; flex-direction: column; align-items: flex-start; gap: 6px; }
             
             footer { padding: 30px 15px 20px; }
             .footer-content { grid-template-columns: 1fr; gap: 25px; }
@@ -382,7 +407,7 @@
                 </svg>
                 <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 18px;">Лесовик</div>
                 <div style="font-size: 13px; margin-top: 5px; opacity: 0.8; text-align: justify;">
-                    Профессиональные строительные расчеты древесины для пилорам, покупателей пиломатериалов и лесозаготовителей. Электронный кубатурник обеспечивает мгновенный расчет обрезной и необрезной доски, профилированного бруса, оцилиндрованного бревна и погонажных изделий (вагонка, block-house). Инструмент помогает точно вычислить физический вес партии для выбора грузового автотранспорта или перевозки в багажнике.
+                    Профессиональные строительные расчеты древесины для пилорам, покупателей пиломатериалов и лесозаготовителей. Электронный кубатурник обеспечивает мгновенный расчет обрезной и необрезной доски, профилированного бруса, оцилиндрованного бревна и погонажных изделий (вагонка, блок-house). Инструмент помогает точно вычислить физический вес партии для выбора грузового автотранспорта или перевозки в багажнике.
                 </div>
             </div>
             <div class="footer-column">
