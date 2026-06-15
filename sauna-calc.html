@@ -29,13 +29,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- СЕО ОПТИМИЗАЦИЯ ПО СЛОВАМ ВОРДСТАТА -->
     <title>Строительный калькулятор бани: расчет бревна, бруса, расходников и стоимости работы | Лесовик</title>
     <meta name="description" content="Умный онлайн кубатурник и калькулятор бани. Расчет бруса, кругляка, оцилиндровки, крепежа, бензина и мха. Сравнение стоимости строительства своими силами, с помощником или бригадой.">
     <meta name="keywords" content="калькулятор бани онлайн, расчет бревна на баню, расчет бруса кубатурник, сколько стоит построить баню, сруб на мох, лесовик про">
     <link rel="canonical" href="https://lesovik-pro.ru/sauna-calc.html">
 
-    <!-- OPEN GRAPH -->
     <meta property="og:title" content="Умный строительный калькулятор бани под ключ: расчет материалов и сметы">
     <meta property="og:description" content="Честный расчет кубатуры древесины, мха, гвоздей, бензина и стоимости работы строителей прямо с телефона.">
     <meta property="og:type" content="website">
@@ -120,6 +118,7 @@
         .calc-section.active { display: block; }
 
         h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 24px; margin-bottom: 30px; }
+        h3 { font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 18px; margin-top: 25px; margin-bottom: 15px; border-bottom: 1px dashed var(--border-color); padding-bottom: 5px; }
 
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
@@ -221,23 +220,23 @@
     <main class="container">
         
         <div class="calc-tabs">
-            <button class="tab-btn active" onclick="switchTab('tab-material', this)">🪵 Расчет сруба и сметы</button>
+            <button class="tab-btn active" onclick="switchTab('tab-material', this)">🪵 Сруб и Параметры</button>
             <button class="tab-btn" onclick="switchTab('tab-foundation', this)">🧱 Выбор фундамента и оклада</button>
             <button class="tab-btn" onclick="switchTab('tab-layout', this)">📐 Планировка, печь и стоки</button>
         </div>
 
-        <!-- ТАБ 1: РАСЧЕТ МАТЕРИАЛОВ И СМЕТЫ -->
         <div id="tab-material" class="calc-section active">
             <h2>Расчет объема древесины, расходников и стоимости работ</h2>
             
+            <h3>1. Конструктив стен бани</h3>
             <div class="grid-2">
                 <div class="form-group">
                     <label>Материал для стен бани:</label>
                     <select id="b-material" onchange="updateThicknessOptions()">
-                        <option value="round|800|18000">Кругляк ручной рубки (Сосна/Ель естественной влажности)</option>
-                        <option value="ocil|750|21000">Оцилиндрованное бревно (Калиброванное по ГОСТ)</option>
-                        <option value="brus-raw|700|16000">Брус обычный обрезной (Под усадку)</option>
-                        <option value="brus-prof|500|24000">Брус профилированный камерной сушки</option>
+                        <option value="round|800">Кругляк ручной рубки (Сосна/Ель естественной влажности)</option>
+                        <option value="ocil|750">Оцилиндрованное бревно (Калиброванное по ГОСТ)</option>
+                        <option value="brus-raw|700">Брус обычный обрезной (Под усадку)</option>
+                        <option value="brus-prof|500">Брус профилированный камерной сушки</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -264,18 +263,40 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label>Кто будет выполнять строительные работы?</label>
-                <select id="b-work-type">
-                    <option value="self">Строю полностью сам со своими силами (0 рублей за работу)</option>
-                    <option value="helper">Нанимаю одного подсобного помощника (фиксированная оплата в день)</option>
-                    <option value="crew">Вызываю профессиональную бригаду плотников под ключ</option>
-                </select>
+            <h3>2. Окна цен и рынка пиломатериалов</h3>
+            <div class="grid-3">
+                <div class="form-group">
+                    <label>Цена стенового леса за куб (м³)</label>
+                    <input type="number" id="p-wood-cube" value="18000" step="500">
+                </div>
+                <div class="form-group">
+                    <label>Цена доски 100х150/50х150 за штуку</label>
+                    <input type="number" id="p-board-piece" value="850" step="50">
+                </div>
+                <div class="form-group">
+                    <label>Цена кровли за 1 кв. метр (руб/м²)</label>
+                    <input type="number" id="p-roof-sq" value="650" step="50">
+                </div>
             </div>
 
-            <button class="btn-calc" onclick="calculateSauna()">Рассчитать полную смету проекта</button>
+            <h3>3. Организация и наем труда</h3>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Кто будет выполнять строительные работы?</label>
+                    <select id="b-work-type" onchange="toggleWorkCostInput()">
+                        <option value="self">Строю полностью сам со своими силами (0 рублей)</option>
+                        <option value="helper">Нанимаю одного подсобного помощника (оплата за дни)</option>
+                        <option value="crew">Вызываю профессиональную бригаду плотников под ключ</option>
+                    </select>
+                </div>
+                <div class="form-group" id="work-price-group" style="display:none;">
+                    <label id="work-price-label">Ставка оплаты (в рублях):</label>
+                    <input type="number" id="p-work-value" value="3500">
+                </div>
+            </div>
 
-            <!-- НАМЕРТВО ВШИТЫЙ РЕКЛАМНЫЙ БАННЕР -->
+            <button class="btn-calc" onclick="calculateSauna()">Рассчитать полную спецификацию и смету</button>
+
             <div class="ad-banner-box">
                 <p>Место под вашу рекламу пиломатериалов, печей или строительных бригад</p>
                 <span>Для размещения баннера или контактов пишите на почту: folgoal@gmail.com</span>
@@ -284,7 +305,6 @@
             <div id="sauna-result" class="result-box"></div>
         </div>
 
-        <!-- ТАБ 2: ГИД ПО ФУНДАМЕНТАМ И ОКЛАДУ -->
         <div id="tab-foundation" class="calc-section">
             <h2>На что надежно ставить сруб: покрышки, бетон или пеньки?</h2>
             
@@ -328,7 +348,6 @@
             </div>
         </div>
 
-        <!-- ТАБ 3: ПЛАНИРОВКА, ПЕЧЬ И СТОКИ -->
         <div id="tab-layout" class="calc-section">
             <h2>Организация пространства бани: парилка, моечная, вентиляция и стоки</h2>
             
@@ -350,7 +369,7 @@
             <div class="advice-card">
                 <div class="advice-text">
                     <h4>💨 Куда выводить трубу и где делать вытяжку</h4>
-                    <p><b>Труба дымохода:</b> Выводится строго вертикально вверх через потолок и крышу, как можно ближе к коньку (не далее 1.5м от него). Высота трубы над коньком — 50 см, тогда зимний сходящий пласт снега ее не сорвет. Прямая труба обеспечивает идеальную тягу без скопления сажи.
+                    <p><b>Труба дымохода:</b> Выводится строго вертикально вверх через потолок и крышу, как можно ближе к коньку (не далее 1.5м от него). Высота трубы над коньком — 50 см, тогда зимний сходящий пласт снега ее не сорвет. Ппрямая труба обеспечивает идеальную тягу без скопления сажи.
                     <br><b>Вентиляция Басту:</b> Приток воздуха делаем трубой 110мм с улицы под самую печь. Отработанный сырой воздух забираем коробом из противоположного угла **у самого пола (20 см от досок)**, поднимаем трубу вверх и выводим сквозь стену на улицу. Голова в такой парилке болеть не будет никогда!</p>
                 </div>
             </div>
@@ -363,7 +382,6 @@
             </div>
         </div>
 
-        <!-- ПОДЕЛИТЬСЯ САЙТОМ -->
         <div class="share-box">
             <div class="share-title">📢 Поделиться строительным калькулятором бани с мужиками</div>
             <div class="share-desc">Понравился точный расчет сметы, материалов, расходников и честный разбор дедовских строительных технологий? Сохраните себе или отправьте ссылку друзьям!</div>
@@ -424,105 +442,145 @@
             const mat = document.getElementById('b-material').value.split('|')[0];
             const tInput = document.getElementById('b-thickness');
             if (mat.includes('brus')) {
-                tInput.value = 150; // стандарт бруса
+                tInput.value = 150;
             } else {
-                tInput.value = 220; // стандарт бревна
+                tInput.value = 220;
             }
         }
 
-        // МАТЕМАТИЧЕСКИЙ РАСЧЕТ СМЕТЫ БАНИ
+        function toggleWorkCostInput() {
+            const type = document.getElementById('b-work-type').value;
+            const group = document.getElementById('work-price-group');
+            const label = document.getElementById('work-price-label');
+            const valInput = document.getElementById('p-work-value');
+
+            if (type === 'self') {
+                group.style.display = 'none';
+            } else if (type === 'helper') {
+                group.style.display = 'block';
+                label.innerText = "Ставка подсобника (руб/день):";
+                valInput.value = 3500;
+            } else {
+                group.style.display = 'block';
+                label.innerText = "Стоимость сборки под ключ (за 1 м³ бревна/бруса):";
+                valInput.value = 12000;
+            }
+        }
+
+        // ЖЕЛЕЗНАЯ МАТЕМАТИКА ПОЛНОЙ ВЕДОМОСТИ ЗАКУПОК И СМЕТЫ
         function calculateSauna() {
             const matData = document.getElementById('b-material').value.split('|');
             const matType = matData[0];
             const density = parseFloat(matData[1]);
-            const basePricePerCube = parseFloat(matData[2]);
 
             const wallsType = parseInt(document.getElementById('b-walls').value);
             const sideLength = parseFloat(document.getElementById('b-length').value) || 0;
             const thicknessMm = parseFloat(document.getElementById('b-thickness').value) || 0;
             const targetHeight = parseFloat(document.getElementById('b-height').value) || 0;
+            
+            // Получаем цены из пользовательских окошек
+            const priceWoodCube = parseFloat(document.getElementById('p-wood-cube').value) || 0;
+            const priceBoardPiece = parseFloat(document.getElementById('p-board-piece').value) || 0;
+            const priceRoofSq = parseFloat(document.getElementById('p-roof-sq').value) || 0;
+            
             const workType = document.getElementById('b-work-type').value;
+            const workValue = parseFloat(document.getElementById('p-work-value').value) || 0;
             const resBox = document.getElementById('sauna-result');
 
             if (sideLength <= 0 || thicknessMm <= 0 || targetHeight <= 0) { alert("Заполните корректно параметры бани!"); return; }
 
-            // Расчет высоты сруба с учетом усадки (для сырого дерева 8%, для сухого 3%)
+            // Расчет венцов
             const shrinkageCoeff = matType.includes('prof') ? 1.03 : 1.08;
             const buildingHeight = targetHeight * shrinkageCoeff;
-
-            // Количество венцов (рабочая высота венца примерно равна его ширине/сечению)
             const thicknessM = thicknessMm / 1000;
             const rowsCount = Math.ceil(buildingHeight / thicknessM);
 
-            // Количество штук бревен/бруса на один венец
-            // 4 стены = 4 штуки. 5-стенок = 5 штук в ряду
             const piecesPerRow = (wallsType === 5) ? 5 : 4;
             const totalPieces = rowsCount * piecesPerRow;
 
-            // Расчет чистого объема древесины по геометрическому методу
             let singlePieceVolume = 0;
             if (matType === 'round' || matType === 'ocil') {
-                // Формула объема цилиндра: PI * R^2 * L
                 singlePieceVolume = Math.PI * Math.pow(thicknessM / 2, 2) * sideLength;
             } else {
-                // Брус прямоугольный: T * W * L (предположим квадратное или стандартное сечение)
                 singlePieceVolume = thicknessM * thicknessM * sideLength;
             }
 
             const totalVolumeCubes = singlePieceVolume * totalPieces;
             const totalWeightTons = (totalVolumeCubes * density) / 1000;
 
-            // Балки пола и потолка (матицы): брус 100х150мм с шагом 59см врезается по осям
-            const beamsCount = Math.ceil(sideLength / 0.7) + 1; 
-            const totalBeamsPieces = beamsCount * 2; // пол + потолок
-            const singleBeamVol = 0.1 * 0.15 * sideLength;
-            const totalBeamsVol = singleBeamVol * totalBeamsPieces;
+            // Расчет досок на балки пола и потолка (матицы): брус 100х150мм
+            const beamsCount = Math.ceil(sideLength / 0.6) + 1; 
+            const totalBeamsPieces = beamsCount * 2; 
 
-            // Финансовый расчет материалов
-            const woodCost = (totalVolumeCubes + totalBeamsVol) * basePricePerCube;
+            // Расчет стропильной системы крыши (доска 50х150мм)
+            const rafterPairs = Math.ceil(sideLength / 0.8) + 1;
+            const totalRafterPieces = rafterPairs * 2; 
+
+            // Площадь двускатной крыши с выпуском (скат примерно равен половине ширины бани * 1.2 на наклон)
+            const roofArea = (sideLength * (sideLength * 0.7)) * 2;
+
+            // Трубы (Вентиляция Басту + Сток)
+            const ventTubesCount = 2; // Приток и вытяжка
+            const drainTubesCount = 1; // Сток из моечной
+
+            // ФИНАНСОВЫЙ РАСЧЕТ ПО ВНЕСЕННЫМ ПОЛЬЗОВАТЕЛЕМ ЦЕНАМ
+            const costWallWood = totalVolumeCubes * priceWoodCube;
+            const costBeamsWood = totalBeamsPieces * priceBoardPiece;
+            const costRaftersWood = totalRafterPieces * priceBoardPiece;
+            const costRoofSheets = roofArea * priceRoofSq;
             
-            // Расходники: мох/джут, гвозди, саморезы, ГСМ для бензопилы
-            const расходникиСтоимость = (totalPieces * 150) + 5000; 
+            const totalMaterialsCost = costWallWood + costBeamsWood + costRaftersWood + costRoofSheets;
 
-            // Стоимость работы
-            let workCost = 0;
-            let workDays = Math.ceil((totalPieces / 4)); // примерная скорость рубки/сборки
+            // Межвенцовый утеплитель (мох/джут), крепеж, трубы, ГСМ
+            const costConsumables = (totalPieces * 180) + 7000; 
+
+            // Расчет стоимости работы
+            let totalWorkCost = 0;
+            let workDays = Math.ceil(totalPieces / 4) + 4; // дни на сруб + стропила
             
             if (workType === 'helper') {
-                workCost = workDays * 3500; // фиксированная оплата помощнику в день
+                totalWorkCost = workDays * workValue;
             } else if (workType === 'crew') {
-                workCost = woodCost * 0.9; // бригада берет около 90% от стоимости основного дерева
+                totalWorkCost = totalVolumeCubes * workValue;
             }
 
-            const totalProjectCost = woodCost + расходникиСтоимость + workCost;
+            const totalProjectCost = totalMaterialsCost + costConsumables + totalWorkCost;
 
-            // Расчет ГСМ для пилы справочно
             const fuelLiters = Math.ceil(totalPieces * 0.6);
             const chainOilLiters = Math.ceil(fuelLiters * 0.7);
 
             resBox.style.display = 'block';
             resBox.innerHTML = `
-                <h4>Сводная строительная смета бани под ключ:</h4>
-                <div class="res-row"><span>Чистый расчетный объем стен бани:</span><span><b>${totalVolumeCubes.toFixed(2)} м³</b></span></div>
-                <div class="res-row"><span>Всего штук бревен/бруса на стены (${sideLength}м):</span><span><b>${totalPieces} шт.</b> (${rowsCount} венцов в высоту)</span></div>
-                <div class="res-row"><span>Физическая масса стенового комплекта:</span><span><b>~${totalWeightTons.toFixed(1)} тонн</b> (нужен лесовоз)</span></div>
-                <div class="res-row"><span>Балки пола и потолка (100х150 мм):</span><span><b>${totalBeamsPieces} шт.</b> (${totalBeamsVol.toFixed(2)} м³)</span></div>
-                <hr style="border:none; border-top:1px dashed var(--border-color)">
-                <div class="res-row"><span>Стоимость пиломатериала (стены + балки):</span><span>${Math.round(woodCost).toLocaleString()} руб.</span></div>
-                <div class="res-row"><span>Межвенцовый утеплитель (мох/джут) + крепеж + ГСМ:</span><span>${Math.round(расходникиСтоимость).toLocaleString()} руб.</span></div>
-                <div class="res-row"><span>Стоимость строительных работ:</span><span><b>${workCost > 0 ? Math.round(workCost).toLocaleString() + ' руб.' : '0 руб. (Своими силами)'}</b></span></div>
-                <div class="res-row"><span>Ориентировочный расход бензина пилы:</span><span>~${fuelLiters} л бензина / ~${chainOilLiters} л масла цепи</span></div>
-                <div class="res-row"><span>ОБЩАЯ СТОИМОСТЬ СТРОИТЕЛЬСТВА БАНИ:</span><span><b>${Math.round(totalProjectCost).toLocaleString()} руб.</b></span></div>
+                <h4>Детализированная ведомость закупок и спецификация:</h4>
                 
-                <div class="note-info">🌲 <b>Рекомендация Лесовика при рубке за деревней:</b> Если вы рубите сруб на удаленной делянке или за деревней, обязательно пронумеруйте каждое бревно маркером или краской по торцам (например: Ю-1, Ю-2 — Южная стена, 1 и 2 венец) перед разборкой и погрузкой в лесовоз. В сентябре на месте вы соберете этот конструктор за 2 дня без единой подгонки!</div>
+                <div class="res-row"><span>1. Стеновое бревно/брус (${sideLength}м, сечение ${thicknessMm}мм):</span><span><b>${totalPieces} шт.</b> (${totalVolumeCubes.toFixed(2)} м³)</span></div>
+                <div class="res-row"><span>2. Балки пола и потолка (брус 100х150 мм, 4м):</span><span><b>${totalBeamsPieces} шт.</b></span></div>
+                <div class="res-row"><span>3. Стропильные ноги крыши (доска 50х150 мм, 4м):</span><span><b>${totalRafterPieces} шт.</b></span></div>
+                <div class="res-row"><span>4. Площадь двускатной кровли (с припуском):</span><span><b>${Math.round(roofArea)} кв. м</b></span></div>
+                <div class="res-row"><span>5. Вентиляционные трубы Басту (пластик 110 мм):</span><span><b>${ventTubesCount} шт.</b> (по 3м)</span></div>
+                <div class="res-row"><span>6. Сливные трубы канализации моечной (110 мм):</span><span><b>${drainTubesCount} шт.</b></span></div>
+                <div class="res-row"><span>7. Общая масса пиломатериалов для логистики:</span><span>~${totalWeightTons.toFixed(1)} тонн</span></div>
+                
+                <h3>Финансовый отчет по вашей смете:</h3>
+                <div class="res-row"><span>Стоимость стенового леса:</span><span>${Math.round(costWallWood).toLocaleString()} руб.</span></div>
+                <div class="res-row"><span>Стоимость балок и стропильной системы:</span><span>${Math.round(costBeamsWood + costRaftersWood).toLocaleString()} руб.</span></div>
+                <div class="res-row"><span>Стоимость кровельного покрытия:</span><span>${Math.round(costRoofSheets).toLocaleString()} руб.</span></div>
+                <div class="res-row"><span>Межвенцовый мох/джут, трубы, крепеж, ГСМ пилы:</span><span>${Math.round(costConsumables).toLocaleString()} руб.</span></div>
+                <div class="res-row"><span>Затраты на оплату строительных работ:</span><span><b>${totalWorkCost > 0 ? Math.round(totalWorkCost).toLocaleString() + ' руб.' : '0 руб. (Своими силами)'}</b></span></div>
+                
+                <hr style="border:none; border-top:1px dashed var(--forest-green); margin:15px 0;">
+                <div class="res-row"><span>Расход топлива пилы (справочно):</span><span>~${fuelLiters} л бензина / ~${chainOilLiters} л масла</span></div>
+                <div class="res-row"><span>ПОЛНАЯ СТОИМОСТЬ БАНИ ПОД КЛЮЧ:</span><span><b style="color:var(--danger); font-size:22px;">${Math.round(totalProjectCost).toLocaleString()} руб.</b></span></div>
+                
+                <div class="note-info">🌲 <b>Важное руководство Лесовика:</b> Сборку сруба на мох производите строго в сентябре, когда мох на болотах наливается влагой и становится эластичным. Перевозя сруб, предварительно срубленный за деревней, обязательно проверьте маркировку торцов бревен — это сэкономит вам недели времени при сборке на основном месте!</div>
             `;
             resBox.scrollIntoView({ behavior: 'smooth' });
         }
 
         function shareSite() {
             const shareData = {
-                title: 'Лесовик ПРО — Умный строительный калькулятор-аудитор бани',
-                text: 'Полный расчет кубатуры сруба, расходников, ГСМ и стоимости работы плотников прямо со смартфона.',
+                title: 'Лесовик ПРО — Строительный калькулятор бани под ключ',
+                text: 'Полный расчет кубатуры, досок, стропил, кровли и детальной сметы работы плотников.',
                 url: window.location.href
             };
             if (navigator.share) {
