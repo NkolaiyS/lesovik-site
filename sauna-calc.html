@@ -29,13 +29,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <title>Строительный калькулятор бани под ключ: расчет бревна, бруса и всех материалов | Лесовик</title>
-    <meta name="description" content="Бесплатный расчет материалов для строительства бани онлайн. Ведомость закупок: кубатура сруба, доски пола, стропила, объём минваты, мешки мха, гвозди и расход ГСМ пилы.">
-    <meta name="keywords" content="калькулятор бани онлайн, расчет бревна на баню, расчет бруса кубатурник, сколько материалов надо на баню, сруб на мох, лесовик про">
+    <title>Интерактивный строительный калькулятор бани под ключ с управлением ценами | Лесовик</title>
+    <meta name="description" content="Профессиональный калькулятор бани. Автоматический расчет объемов материалов с возможностью ручного ввода цен строителя. Сохранение сметы в LocalStorage и управление затратами онлайн.">
+    <meta name="keywords" content="калькулятор бани онлайн, интерактивная смета бани, расчет бревна, кубатурник сруба, калькулятор материалов бани лесовик">
     <link rel="canonical" href="https://lesovik-pro.ru/sauna-calc.html">
 
-    <meta property="og:title" content="Умный строительный калькулятор бани под ключ: расчет материалов и сметы">
-    <meta property="og:description" content="Честный расчет кубатуры древесины, утеплителя, мха, гвоздей, бензина и стоимости работы строителей прямо с телефона.">
+    <meta property="og:title" content="Умный строительный калькулятор бани: интерактивная ведомость закупок под ключ">
+    <meta property="og:description" content="Управляйте ценами материалов самостоятельно. Считайте кубатуру, доски, утеплитель, крепеж и сохраняйте результаты в памяти телефона.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://lesovik-pro.ru/sauna-calc.html">
     <meta property="og:image" content="https://lesovik-pro.ru/logo.jpeg">
@@ -107,7 +107,7 @@
         .theme-toggle:hover { background-color: var(--forest-green); color: var(--bg-paper); }
 
         main { flex: 1; min-width: 0; width: 100%; box-sizing: border-box; }
-        .container { max-width: 1000px; margin: 100px auto 40px; padding: 0 20px; box-sizing: border-box; }
+        .container { max-width: 1100px; margin: 100px auto 40px; padding: 0 20px; box-sizing: border-box; }
 
         .calc-tabs { display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; box-sizing: border-box; }
         .calc-tabs::-webkit-scrollbar { display: none; }
@@ -131,6 +131,10 @@
         .btn-calc { background-color: var(--forest-green); color: #fff; border: none; padding: 16px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-size: 14px; transition: 0.2s; margin-top: 10px; box-sizing: border-box; }
         .btn-calc:hover { background-color: var(--text-graphite); }
 
+        .btn-reset-container { display: flex; justify-content: flex-end; margin-bottom: 15px; }
+        .btn-reset { background-color: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s; }
+        .btn-reset:hover { background-color: var(--danger); color: #FFFFFF; }
+
         .ad-banner-box { 
             margin: 25px 0; padding: 20px; 
             border: 2px dashed var(--accent-gold); 
@@ -141,30 +145,31 @@
         .ad-banner-box p { margin: 0 0 8px 0; font-family: 'Merriweather', serif; font-size: 16px; font-weight: 700; color: var(--text-graphite); }
         .ad-banner-box span { font-size: 13px; opacity: 0.8; color: var(--forest-green); font-weight: 600; }
 
-        .result-box { margin-top: 30px; padding: 30px; background-color: rgba(45, 90, 39, 0.03); border: 2px dashed var(--forest-green); border-radius: 12px; display: none; box-sizing: border-box; overflow-x: hidden; width: 100%; }
+        .result-box { margin-top: 30px; padding: 30px; background-color: rgba(45, 90, 39, 0.01); border: 2px solid var(--forest-green); border-radius: 12px; display: none; box-sizing: border-box; width: 100%; }
         .result-box h4 { margin-top: 0; font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 20px; margin-bottom: 20px; }
         
-        .res-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border-color); font-size: 16px; gap: 10px; box-sizing: border-box; width: 100%; }
-        .res-row span:first-child { text-align: left; }
-        .res-row span:last-child { text-align: right; white-space: nowrap; font-weight: 700; color: var(--forest-green); }
-        .res-row:last-of-type { border-bottom: none; font-weight: 700; font-size: 20px; color: var(--forest-green); padding-top: 14px; }
+        /* ТАБЛИЧНАЯ СМЕТА ДЛЯ РУЧНОГО УПРАВЛЕНИЯ ЦЕНАМИ */
+        .smeta-table-wrapper { width: 100%; overflow-x: auto; margin-bottom: 25px; border: 1px solid var(--border-color); border-radius: 8px; }
+        .smeta-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; min-width: 650px; }
+        .smeta-table th { background-color: rgba(45, 90, 39, 0.05); color: var(--forest-green); padding: 12px 15px; font-weight: 700; border-bottom: 2px solid var(--border-color); }
+        .smeta-table td { padding: 10px 15px; border-bottom: 1px dashed var(--border-color); vertical-align: middle; }
+        .smeta-table tr:last-child td { border-bottom: none; background-color: rgba(45, 90, 39, 0.02); font-weight: 700; }
+        
+        .input-price { width: 90px; padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; text-align: right; background-color: var(--card-bg); color: var(--text-graphite); font-weight: 600; }
+        .input-price:focus { border-color: var(--forest-green); outline: none; }
+        .td-volume { font-weight: 600; color: var(--text-graphite); }
+        .td-total-row { font-weight: 700; color: var(--forest-green); text-align: right; }
+
+        .grand-total-box { display: flex; justify-content: space-between; align-items: center; padding: 20px 15px; background-color: rgba(220, 38, 38, 0.04); border: 1px solid var(--danger); border-radius: 8px; margin-top: 20px; font-size: 20px; font-weight: 700; color: var(--danger); }
 
         .note-info { margin-top: 20px; padding: 15px; background: var(--bg-paper); border-radius: 8px; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 10px; border-left: 4px solid var(--forest-light); box-sizing: border-box; width: 100%; }
 
-        .advice-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 20px; border-left: 4px solid var(--forest-green); }
+        .advice-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 25px; margin-bottom: 25px; border-left: 4px solid var(--forest-green); }
         .advice-num { font-size: 24px; font-weight: 700; color: var(--forest-light); font-family: 'Merriweather', serif; margin-bottom: 5px; }
-        .advice-text h4 { margin: 0 0 8px 0; font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 18px; }
-        .advice-text p { margin: 0; font-size: 15px; opacity: 0.9; text-align: justify; }
-
-        .share-box { margin-top: 25px; padding: 20px; background: rgba(45, 90, 39, 0.02); border: 1px solid var(--border-color); border-radius: 12px; text-align: center; box-sizing: border-box; width: 100%; }
-        .share-title { font-family: 'Merriweather', serif; font-size: 15px; color: var(--forest-green); margin-top: 0; margin-bottom: 10px; font-weight: 700; }
-        .share-desc { font-size: 13px; opacity: 0.8; margin-bottom: 15px; line-height: 1.4; }
-        .btn-share { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background-color: var(--forest-green); color: #FFFFFF; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; width: auto; }
-
-        .pc-share-popup { display: none; margin-top: 15px; padding: 12px; background: var(--bg-paper); border: 1px solid var(--forest-light); border-radius: 8px; align-items: center; gap: 8px; justify-content: space-between; box-sizing: border-box; }
-        .share-url-text { font-size: 13px; color: var(--text-graphite); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; text-align: left; background: transparent; border: none; font-family: inherit; }
-        .btn-copy-link { background: var(--card-bg); border: 1px solid var(--forest-green); color: var(--forest-green); padding: 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; box-sizing: border-box; flex-shrink: 0; transition: 0.2s; }
-        .copy-toast { display: none; font-size: 12px; color: var(--forest-green); font-weight: 600; margin-top: 6px; }
+        .advice-text h4 { margin: 0 0 10px 0; font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 18px; }
+        .advice-text p { margin: 0 0 12px 0; font-size: 15px; opacity: 0.9; text-align: justify; line-height: 1.6; }
+        .advice-text ul { margin: 0 0 12px 0; padding-left: 20px; font-size: 14px; opacity: 0.95; }
+        .advice-text ul li { margin-bottom: 6px; }
 
         footer { background-color: var(--footer-bg); color: #E0E0E0; padding: 50px 20px 20px; margin-top: auto; font-size: 14px; box-sizing: border-box; width: 100%; }
         .footer-content { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; margin-bottom: 40px; }
@@ -190,14 +195,10 @@
             .tab-btn { font-size: 14px; padding: 10px 14px; }
             select, input { padding: 12px; font-size: 15px; }
             
-            .result-box { padding: 20px 15px !important; width: 100% !important; }
-            .res-row { display: block !important; width: 100% !important; padding: 10px 0 !important; font-size: 14px !important; border-bottom: 1px dashed var(--border-color) !important; }
-            .res-row span { display: block !important; width: 100% !important; text-align: left !important; }
-            .res-row span:last-child { margin-top: 4px !important; font-weight: 700 !important; color: var(--forest-green) !important; }
-            .res-row:last-of-type { font-size: 18px !important; padding-top: 12px !important; }
+            .result-box { padding: 15px 10px !important; width: 100% !important; }
+            .grand-total-box { font-size: 16px !important; flex-direction: column; gap: 8px; text-align: center; }
             
             .note-info { font-size: 13px !important; padding: 12px !important; flex-direction: column; align-items: flex-start; gap: 6px; width: 100% !important; }
-            .share-box { width: 100% !important; padding: 15px 12px !important; }
             footer { padding: 30px 15px 20px; width: 100%; }
             .footer-content { grid-template-columns: 1fr; gap: 25px; }
         }
@@ -210,7 +211,7 @@
             <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
             <h1>Лесовик</h1>
         </a>
-        <div class="header-seo-text">Онлайн кубатурники прямоугольного и круглого леса • Комплексный расчет бани под ключ</div>
+        <div class="header-seo-text">Интерактивный кубатурник-смета • Ручное управление ценами материалов строителя</div>
         <div class="header-actions">
             <a href="index.html" class="btn-back">← На главную</a>
             <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
@@ -219,6 +220,10 @@
 
     <main class="container">
         
+        <div class="btn-reset-container">
+            <button class="btn-reset" onclick="clearSmetaStorage()">🧹 Сбросить смету и начать новый объект</button>
+        </div>
+
         <div class="calc-tabs">
             <button class="tab-btn active" onclick="switchTab('tab-material', this)">🪵 Сруб и Смета</button>
             <button class="tab-btn" onclick="switchTab('tab-foundation', this)">🧱 Фундамент и Оклад</button>
@@ -227,83 +232,86 @@
         </div>
 
         <div id="tab-material" class="calc-section active">
-            <h2>Расчет объема древесины, расходников и стоимости работ</h2>
+            <h2>Инженерный расчет объемов и интерактивная смета цен</h2>
             
-            <h3>1. Конструктив стен бани</h3>
+            <h3>1. Геометрические параметры бани</h3>
             <div class="grid-2">
                 <div class="form-group">
-                    <label>Материал для стен бани:</label>
+                    <label>Материал стен:</label>
                     <select id="b-material" onchange="updateThicknessOptions()">
-                        <option value="round|800">Кругляк ручной рубки (Сосна/Ель естественной влажности)</option>
-                        <option value="ocil|750">Оцилиндрованное бревно (Калиброванное по ГОСТ)</option>
+                        <option value="round|800">Кругляк ручной рубки (Сосна/Ель Коми)</option>
+                        <option value="ocil|750">Оцилиндрованное бревно (Калиброванное)</option>
                         <option value="brus-raw|700">Брус обычный обрезной (Под усадку)</option>
                         <option value="brus-prof|500">Брус профилированный камерной сушки</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Конструкция сруба бани:</label>
+                    <label>Конструкция сруба:</label>
                     <select id="b-walls">
-                        <option value="4">Обычная коробка (4 стены)</option>
-                        <option value="5">Пятистенок (5 стен — жесткая рубленая перегородка)</option>
+                        <option value="4">Четырехстенок (Обычная коробка)</option>
+                        <option value="5">Пятистенок (Сплошная внутренняя перегородка)</option>
                     </select>
                 </div>
             </div>
 
             <div class="grid-3">
                 <div class="form-group">
-                    <label>Длина бревна/бруса (метры)</label>
+                    <label>Длина стены (метры)</label>
                     <input type="number" id="b-length" value="4" step="0.5">
                 </div>
                 <div class="form-group">
-                    <label>Ширина бревна/бруса (сечение в мм)</label>
+                    <label>Диаметр / Сечение (мм)</label>
                     <input type="number" id="b-thickness" value="220">
                 </div>
                 <div class="form-group">
-                    <label>Желаемая высота потолка (метры)</label>
+                    <label>Высота потолка чистовая (м)</label>
                     <input type="number" id="b-height" value="2.2" step="0.1">
                 </div>
             </div>
 
-            <h3>2. Окна цен и рынка пиломатериалов</h3>
-            <div class="grid-3">
-                <div class="form-group">
-                    <label>Цена стенового леса за куб (м³)</label>
-                    <input type="number" id="p-wood-cube" value="18000" step="500">
-                </div>
-                <div class="form-group">
-                    <label>Цена доски за штуку (4м, 100х150/50х150)</label>
-                    <input type="number" id="p-board-piece" value="850" step="50">
-                </div>
-                <div class="form-group">
-                    <label>Цена кровли за 1 кв. метр (руб/м²)</label>
-                    <input type="number" id="p-roof-sq" value="650" step="50">
-                </div>
+            <h3>2. Наемный труд строителей</h3>
+            <div class="form-group">
+                <label>Организация сборки:</label>
+                <select id="b-work-type">
+                    <option value="self">Строю полностью самостоятельно (0 руб.)</option>
+                    <option value="helper">Нанимаю одного подсобника с оплатой за день</option>
+                    <option value="crew">Вызываю профессиональную плотницкую бригаду</option>
+                </select>
             </div>
 
-            <h3>3. Организация и наем труда</h3>
-            <div class="grid-2">
-                <div class="form-group">
-                    <label>Кто будет выполнять строительные работы?</label>
-                    <select id="b-work-type" onchange="toggleWorkCostInput()">
-                        <option value="self">Строю полностью сам со своими силами (0 рублей)</option>
-                        <option value="helper">Нанимаю одного подсобного помощника (оплата за дни)</option>
-                        <option value="crew">Вызываю профессиональную бригаду плотников под ключ</option>
-                    </select>
-                </div>
-                <div class="form-group" id="work-price-group" style="display:none;">
-                    <label id="work-price-label">Ставка оплаты (в рублях):</label>
-                    <input type="number" id="p-work-value" value="3500">
-                </div>
-            </div>
-
-            <button class="btn-calc" onclick="calculateSauna()">Рассчитать полную спецификацию и смету</button>
+            <button class="btn-calc" onclick="calculateSauna()">Рассчитать точные объемы для закупки</button>
 
             <div class="ad-banner-box">
                 <p>Место под вашу рекламу пиломатериалов, печей или строительных бригад</p>
                 <span>Для размещения баннера или контактов пишите на почту: folgoal@gmail.com</span>
             </div>
 
-            <div id="sauna-result" class="result-box"></div>
+            <div id="sauna-result" class="result-box">
+                <h4>Автоматическая ведомость объемов. Внесите цены вашего поставщика:</h4>
+                
+                <div class="smeta-table-wrapper">
+                    <table class="smeta-table">
+                        <thead>
+                            <tr>
+                                <th>Наименование материала / Расходника</th>
+                                <th>Инженерный объем</th>
+                                <th>Цена за ед. (руб)</th>
+                                <th style="text-align: right;">Итого по строке</th>
+                            </tr>
+                        </thead>
+                        <tbody id="smeta-tbody">
+                            </tbody>
+                    </table>
+                </div>
+
+                <div class="grand-total-box">
+                    <span>ОБЩИЕ ЗАТРАТЫ НА СТРОИТЕЛЬСТВО БАНИ ПОД КЛЮЧ:</span>
+                    <span id="grand-total-value">0 руб.</span>
+                </div>
+                
+                <div id="fuel-info-block" style="margin-top:15px; font-size:13px; opacity:0.8; font-weight:500;"></div>
+                <div class="note-info" id="dynamic-instruction-note"></div>
+            </div>
         </div>
 
         <div id="tab-foundation" class="calc-section">
@@ -312,39 +320,33 @@
             <div class="advice-card">
                 <div class="advice-num">01</div>
                 <div class="advice-text">
-                    <h4>Автомобильные покрышки (Народный ультраэконом)</h4>
-                    <p><b>Что это:</b> Б/у покрышки от грузовиков набиваются до отказа плотным речным песком или мелким щебнем. 
-                    <br><b>Надежность:</b> Удивительно высокая для легких бань. Резина не гниет, песок внутри амортизирует сезонное пучение глины в Коми. Высота такого столба — 25-30 см. 
-                    <br><b>Важно:</b> Поверх покрышки обязательно кладется кусок рубероида, чтобы резина не передавала свой запах первому венцу при нагреве.</p>
+                    <h4>Автомобильные покрышки (Народный неубиваемый ультраэконом)</h4>
+                    <p><b>Суть технологии:</b> Б/у покрышки от грузовых авто (ЗиЛ, КамАЗ) раскладываются по углам и под перерубами, а затем намертво набиваются сухим речным песком или мелким гравием с послойным тромбованием киянкой. Покрышка работает как демпфер.</p>
+                    <p><b>Надежность в Коми:</b> Феноменальная. Резина полностью исключает капиллярный подсос влаги из почвы, не гниет в сырости, а песочное ядро внутри мягко компенсирует морозное пучение суглинков, распределяя вес легкого сруба. Высота подушки составляет 25–30 см.</p>
+                    <p><b>Критический нюанс:</b> Набивать покрышку нужно «с горкой». Поверх набитого песка обязательно укладывается жесткое основание (например, плоский шифер или тротуарная плитка) и минимум два слоя рубероида. Это полностью исключит контакт древесины с резиной и уберет специфический запах при летнем нагреве.</p>
                 </div>
             </div>
 
             <div class="advice-card">
                 <div class="advice-num">02</div>
                 <div class="advice-text">
-                    <h4>Винтовые сваи или Бетонная лента (Капитальный ГОСТ)</h4>
-                    <p><b>Что это:</b> Стальные сваи диаметром 89 или 102 мм, закрученные ниже уровня промерзания почвы (для Сыктывкара — 1.7 метра), либо мелкозаглубленная бетонная лента высотой 40-50 см.
-                    <br><b>Надежность:</b> 100% монолит. Сруб стоит высоко над землей (минимум 30-40 см от травы), продухи открыты, нижние бревна всегда сухие и вентилируются.</p>
-                </div>
-            </div>
-
-            <div class="advice-card">
-                <div class="advice-num">03</div>
-                <div class="advice-text">
-                    <h4>Лиственные или осиновые «пеньки» (Таежный дедовский метод)</h4>
-                    <p><b>Что это:</b> Толстые чураки из комлевой части лиственницы или осины диаметром от 40 см, обожженные на костре и пропитанные дегтем/отработкой, закапываются в землю по углам.
-                    <br><b>Надежность:</b> Стоит по 30-40 лет, но в современном мире применяется редко из-за сложности поиска качественных просмоленных чураков.</p>
+                    <h4>Винтовые сваи и Мелкозаглубленная лента (Капитальный инженерный подход)</h4>
+                    <p><b>Винтовые стальные сваи:</b> Идеальный выбор для уклонов и пучинистых грунтов. Для бани используют сваи диаметром 89 мм (под легкий брус) или 102–108 мм (под тяжелое бревно). Лопасть сваи обязана зайти ниже точки промерзания почвы — для Сыктывкара и прилегающих районов это минимум 1.7–1.8 метра. После закручивания ствол сваи заливается бетоном марки М200, чтобы выдавить кислород и остановить внутреннюю коррозию.</p>
+                    <p><b>Бетонная лента (МЗЛФ):</b> Требует копки траншеи на 40 см, устройства песчаной подушки в 20 см с проливкой, выставления опалубки и обязательного армирования каркасом из рифленой арматуры диаметром 12 мм (две жилы снизу, две сверху). Высота цоколя над землей должна быть не менее 30–40 см.</p>
                 </div>
             </div>
 
             <div class="advice-card">
                 <div class="advice-num">🔥</div>
                 <div class="advice-text">
-                    <h4>Жесткое правило первого (окладного) венца:</h4>
-                    <p>Каким бы ни был фундамент, первый венец **никогда не должен лежать прямо на нем**. 
-                    <br>1. Сначала укладываем 2 слоя гидроизоляции (стеклоизол).
-                    <br>2. Сверху кладем **подкладную доску из лиственницы** толщиной 50 мм, обильно промазанную антисептиком.
-                    <br>3. И только на доску сажаем первые бревна, у которых снизу стесан ровный кант (лыска). Если через 25 лет низ бани начнет подгнивать, вы просто вытащите домкратом и замените подкладную доску, сохранив весь сруб целым!</p>
+                    <h4>Устав первого венца: Защита от гниения на полвека</h4>
+                    <p>Самая частая ошибка дачника — положить нижнее бревно прямо на бетон или сваю через тонкую полоску рубероида. Через 12–15 лет нижний венец превратится в труху от сырости. Как делать по-умному:</p>
+                    <ul>
+                        <li><b>Шаг 1:</b> Поверх фундамента раскатывается качественный гидроизол на битумной мастике (в 2 слоя).</li>
+                        <li><b>Шаг 2:</b> Укладывается подкладная (буферная) доска из <b>лиственницы</b> толщиной 50 мм и шириной 150–200 мм. Лиственница не боится сырости, со временем она каменеет. Доска тщательно пропитывается трудновымываемым антисептиком (типа Неомид 430).</li>
+                        <li><b>Шаг 3:</b> Нижняя пласть окладного бревна стесывается на ровный кант (лыску) шириной не менее 12 см для плотной посадки на доску.</li>
+                    </ul>
+                    <p><b>В чем выгода:</b> Если через 25–30 лет доска подгниет, вы просто поднимете баню обычным бутылочным домкратом, вытащите старую доску и замените ее на новую. Весь сруб при этом останется абсолютно целым!</p>
                 </div>
             </div>
         </div>
@@ -354,60 +356,84 @@
             
             <div class="advice-card">
                 <div class="advice-text">
-                    <h4>📐 Умная планировка и теплый предбанник</h4>
-                    <p>Сделайте по-умному: весь бревенчатый сруб разделите пополам каркасной перегородкой (липа/осина через фольгу) на <b>парилку</b> и <b>моечную</b>. А теплый предбанник (комнату отдыха) пристройте в виде каркасного теплого пристроя (150мм минваты между стойками) под общей крышей. Там будет просторно, и предбанник никогда не покроется инеем зимой.</p>
+                    <h4>📐 Профессиональное зонирование сруба</h4>
+                    <p>Не делайте совмещенную парилку-моечную, как в старых избах — это негигиенично, тяжело дышать и невозможно нормально просушить помещение. Если у вас сруб 4х4 или 5х5 метров, разделите его жесткой перегородкой на два изолированных отсека.</p>
+                    <p><b>Парилка</b> должна быть компактной (чтобы печь быстро ее прогревала), но позволять лечь в полный рост — оптимально 2х2 или 2х2.3 метра. <b>Моечная</b> делается обособленной. Перегородку между ними лучше собирать каркасным методом: стойки 50х100 мм, внутри базальтовая вата высокой плотности, со стороны парилки обязательно закрывается <b>фольгой на крафт-бумаге</b> с проклейкой швов алюминиевым скотчем, и обшивается осиной или липой.</p>
                 </div>
             </div>
 
             <div class="advice-card">
                 <div class="advice-text">
-                    <h4>🧱 Как расположить печь, чтобы топить из предбанника</h4>
-                    <p>Выбирайте печь с **удлиненным топочным порталом**. Сама печь стоит в парилке, а ее морда (топка) врезается сквозь стену и выходит в предбанник. Вы подкидываете дрова из комнаты отдыха: там тепло, сухо, нет мусора от коры и щепок, а стеклянная дверца работает как камин.</p>
+                    <h4>🧱 Монтаж печи и топка из предбанника</h4>
+                    <p>Печь с выносным топливным каналом — это стандарт комфорта. Печь монтируется в парилке, а её топочный тоннель проходит сквозь стену в предбанник (комнату отдыха).</p>
+                    <p><b>Плюсы:</b> В предбаннике всегда сухо, тепло, нет летящей от дров коры, щепок и золы. Из парилки не высасывается дефицитный кислород для горения. Проходной узел в стене обкладывается шамотным красным кирпичом (минимум по 25 см от металла печи в каждую сторону) для пожарной безопасности.</p>
                 </div>
             </div>
 
             <div class="advice-card">
                 <div class="advice-text">
-                    <h4>💨 Куда выводить трубу и где делать вытяжку</h4>
-                    <p><b>Труба дымохода:</b> Выводится строго вертикально вверх через потолок и крышу, как можно ближе к коньку (не далее 1.5м от него). Высота трубы над коньком — 50 см, тогда зимний сходящий пласт снега ее не сорвет. Прямая труба обеспечивает идеальную тягу без скопления сажи.
-                    <br><b>Вентиляция Басту:</b> Приток воздуха делаем трубой 110мм с улицы под самую печь. Отработанный сырой воздух забираем коробом из противоположного угла **у самого пола (20 см от досок)**, поднимаем трубу вверх и выводим сквозь стену на улицу. Голова в такой парилке болеть не будет никогда!</p>
+                    <h4>💨 Трубный узел и вентиляция «Басту» (Голова не заболит)</h4>
+                    <p><b>Дымоход:</b> Используйте сэндвич-трубы с толщиной внутренней стенки из нержавейки 0.8–1 мм (марка стали AISI 310 или 321 — они держат критический нагрев бани). Потолочно-проходной узел (ППУ) заполняется керамзитом или минеритовой ватой, использование монтажной пены там строго запрещено! Выход трубы над кровлей должен быть выше конька на 50 см, если расстояние до конька менее 1.5м.</p>
+                    <p><b>Вентиляция:</b> Забудьте про простое открывание двери. Делаем приток — пластиковая или нержавеющая труба диаметром 110 мм заводится с улицы под саму печь, к полу. Холодный воздух с улицы, проходя под печью, моментально нагревается и поднимается вверх. Вытяжка — короб из противоположного угла. Забор воздуха идет <b>на высоте 20–30 см от пола</b>, короб поднимается вертикально по стене и выходит через стену на улицу. Воздух в парилке обновляется каждые 15 минут, сырость уходит, полы сохнут сами.</p>
                 </div>
             </div>
 
             <div class="advice-card">
                 <div class="advice-text">
-                    <h4>🌊 Проливной пол и стоки в моечной</h4>
-                    <p>В моечной лаги пола обрабатываются жестким антисептиком. Под ними заливается бетонный лоток под наклоном (или монтируется пластиковый поддон), который собирает воду в одну точку и по 110-й трубе уводит ее в дренажный септик за пределы бани. Сверху на лаги стелется половая доска из **лиственницы** с зазором 5 мм между ними. Вода уходит мгновенно, пол теплый, лиственница не гниет десятилетиями.</p>
+                    <h4>🌊 Проливной гидроизолированный пол в моечной</h4>
+                    <p>Самый надежный пол для русской бани. Под моечным отделением вынимается грунт на глубину 30 см, формируется корыто с уклоном к центру, застилается плотной пленкой и бетонируется (стяжка 5-7 см) с выводом в сливную пластиковую трубу 110 мм. Труба уходит в дренажный септик (бочку с отверстиями, засыпанную щебнем) за границы фундамента бани на 2-3 метра.</p>
+                    <p>Поверх бетона на лаги укладывается строганая плаха из <b>лиственницы</b> толщиной 35–40 мм с фиксированным зазором между досками в 5 мм. Доски не прикручиваются намертво, а укладываются в пазы, чтобы летом их можно было легко поднять, вынести на солнце и просушить.</p>
                 </div>
             </div>
         </div>
 
         <div id="tab-checklist" class="calc-section">
-            <h2>Мужское руководство: Инструменты, правила безопасности и банный инвентарь</h2>
+            <h2>Глубокий чек-лист плотника: Инструменты, электрика и устав здоровья</h2>
             
-            <h3>1. Необходимый инструмент по этапам работ</h3>
+            <h3>1. Исчерпывающий набор инструментов и оснастки</h3>
             <div class="advice-card">
                 <div class="advice-text">
-                    <p>🪓 <b>Для рубки и возведения стен:</b> Бензопила фермерского класса (Stihl 250 / Husqvarna 450 или аналоги от 2.5 л.с.), запасные цепи (2 шт.), круглый напильник для заточки, плотницкий топор с прямой заточкой, разметочная черта, низкооборотистая дрель со сверлом 25 мм под нагели, деревянная киянка.
-                    <br>🪚 <b>Для полов, перегородок и потолка:</b> Шуруповерт (минимум 2 аккумулятора), циркулярная пила (паркетка), строительный уровень (1 метр), угольник, рулетка 5 метров.
-                    <br>🔨 <b>Для кровельных работ:</b> Ножницы по металлу (никаких болгарок для резки профнастила/черепицы — искры сжигают защитный цинк, металл сгниет), строительный степлер, молоток.</p>
+                    <h4>🪓 Стеновые работы и заготовка</h4>
+                    <ul>
+                        <li><b>Бензопила:</b> Класс фермерский/полупрофессиональный (мощность 2.5–3.5 л.с., например Stihl MS 250, Husqvarna 450). Длина шины 40 см.</li>
+                        <li><b>Расходники пилы:</b> 2-3 запасные цепи, круглый напильник 4.0 или 4.8 мм с держателем для ручной правки зубьев на бревне. Масло минеральное для цепи (М8/Автол) — 5л.</li>
+                        <li><b>Плотницкий инструмент:</b> Топор с прямым широким лезвием (вес 1.2-1.5 кг) для тески пазов, разметочная плотницкая черта (металлическая с уровнем) для точного копирования профиля нижнего бревна, нагельная мощная низкооборотистая дрель ( Rebir / Интерскол) с хвостовиком Морзе и сверлом по дереву диаметром 25 мм, тяжелая деревянная или полиуретановая киянка (1.5 кг) для осадки нагелей.</li>
+                    </ul>
+
+                    <h4>🪚 Отделочные работы (Полы, потолок, вагонка)</h4>
+                    <ul>
+                        <li><b>Электроинструмент:</b> Шуруповерт аккумуляторный (18V, пара емких литиевых батарей), ручная дисковая пила («паркетка») с глубиной пропила до 55-65 мм, электролобзик.</li>
+                        <li><b>Ручной ружейный инвентарь:</b> Строительный ручной степлер (металлический, регулируемый) + 5 коробок скоб (тип 53, размер 8 и 10 мм) для фиксации пароизоляционной фольги и ветрозащитных мембран; пассатижи плоские комбинированные, круглогубцы строительные, набор бит (строительные Torx и Pozidriv).</li>
+                        <li><b>Измерительный узел:</b> Строительный реечный уровень (длина 100 см и длинный пузырьковый 200 см), строительный металлический угольник 30х50 см, жесткая рулетка 5-8 метров с фиксатором.</li>
+                    </ul>
+
+                    <h4>🔌 Временная электрика и освещение площадки</h4>
+                    <ul>
+                        <li><b>Силовой кабель:</b> Удлинитель на катушке из гибкого резинового кабеля КГ-ХЛ (не дубеет на морозе в Коми) сечением 3х2.5 мм² длиной 30–50 метров.</li>
+                        <li><b>Освещение:</b> Светодиодный двойной прожектор (IP65 влагозащищенный) мощностью 50W на регулируемой телескопической стойке-штативе — работа на делянке часто уходит в сумерки.</li>
+                        <li><b>Штабной щиток:</b> Временный переносной бокс с двухполюсным автоматом на 16А и тремя влагозащищенными розетками для безопасного подключения пил и зарядок шуруповертов.</li>
+                    </ul>
+
+                    <h4>🛡️ Средства индивидуальной защиты (СИЗ)</h4>
+                    <ul>
+                        <li>Строительные защитные очки с поликарбонатным стеклом (защита от летящей стружки пилы).</li>
+                        <li>Респираторы полумаски (типа 3M или Алина-А) — 5 шт. Обязательны при раскрое и укладке базальтовой минваты на потолок, иначе легкие забьются стеклянной пылью.</li>
+                        <li>Плотные перчатки с нитриловым или х/б покрытием — упаковка (20 пар).</li>
+                    </ul>
                 </div>
             </div>
 
-            <h3>2. Устав здоровья и безопасности на стройке (ЗОЖ)</h3>
+            <h3>2. Устав здоровья плотника и выносливости (ЗОЖ)</h3>
             <div class="advice-card" style="border-left-color: var(--danger);">
                 <div class="advice-text">
-                    <p>💪 <b>Обильное чистое питье:</b> Тяжелая физическая работа вымывает литры влаги. Берите с собой только чистую колодезную воду или горячий травяной чай. Питье защищает суставы от перегрузок и поддерживает выносливость сердца.
-                    <br>❌ <b>Жесткое табу на алкоголь и сладкую газировку:</b> Алкоголь на стройке — прямая дорога к тяжелым травмам от пилы или бревна. Сладкая газировка резко забивает мышцы сахаром, вызывая дикую жажду и быструю утомляемость через полчаса работы.</p>
+                    <h4>🚰 Водный баланс — топливо для суставов и сердца</h4>
+                    <p>Рубка сруба и ворочание бревен диаметром 220 мм — это колоссальная кардио- и силовая нагрузка. Организм плотника через пот теряет до 3-4 литров жидкости за смену. При дефиците воды кровь густеет, резко возрастает нагрузка на сердце, а межпозвоночные диски и суставы теряют эластичность, что ведет к срыву спины.</p>
+                    <p><b>Правило питья:</b> Берите с собой чистую родниковую воду или горячий заваренный термос с травами (иван-чай, смородина, мята). Пейте по 3-4 глотка каждые 20 минут работы, не дожидаясь дикого чувства жажды.</p>
+                    <h4>❌ Сухой закон и запрет на сладкие газировки</h4>
+                    <p><b>Алкоголь:</b> Полное и жесткое табу на строительной площадке. Спиртное притупляет скорость реакции на доли секунды. Бензопила, вращающаяся со скоростью 13 000 оборотов в минуту, при обратном ударе не прощает задержки реакции — это гарантированная инвалидность.</p>
+                    <p><b>Сладкая газировка (Кола, лимонады):</b> Исключить полностью. Быстрые сахара вызывают резкий скачок глюкозы в крови и мощный выброс инсулина. Через 30 минут после выпитой бутылки наступает углеводный провал: мышцы становятся «ватными», появляется сонливость, а жажда усиливается в два раза.</p>
                 </div>
             </div>
-
-            <h3>3. Банный инвентарь под ключ (Ориентировочная смета, руб)</h3>
-            <div class="res-row"><span>Березовые веники (10 шт, заготовка в июне):</span><span><b>Самостоятельно (0 руб)</b> / 2 500 руб</span></div>
-            <div class="res-row"><span>Дубовые веники (5 шт, заготовка в августе):</span><span><b>Самостоятельно (0 руб)</b> / 2 000 руб</span></div>
-            <div class="res-row"><span>Обливное ведро или шайка (Лиственница):</span><span>4 500 руб</span></div>
-            <div class="res-row"><span>Запарник для веников с пластиковой вставкой:</span><span>2 300 руб</span></div>
-            <div class="res-row"><span>Войлочные шапки и рукавицы для защиты от перегрева:</span><span>900 руб</span></div>
         </div>
 
     </main>
@@ -418,7 +444,7 @@
                 <svg class="footer-logo" width="28" height="28" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/><rect x="10.5" y="20" width="3" height="4"/></svg>
                 <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 18px; margin-bottom: 10px;">Лесовик</div>
                 <div style="font-size: 13px; opacity: 0.8; text-align: justify; line-height: 1.5;">
-                    Профессиональный независимый строительный кубатурник-калькулятор рубленой бани из круглого бревна, оцилиндровки и бруса под ключ. Модуль осуществляет детальный расчет кубатуры стенового комплекта, перекладин, балок пола и потолка (матиц) с учетом технологических припусков на чаши и проценты естественной усадки древесины. Оценка стоимости работ плотников и нормы расхода ГСМ.
+                    Профессиональный интерактивный строительный калькулятор-смета рубленой бани из круглого бревна, оцилиндровки и бруса под ключ. Модуль осуществляет расчет точных объемов пиломатериалов и предоставляет строителю полную свободу ручного ввода цен с автоматическим сохранением сметы в кэш браузера.
                 </div>
             </div>
             <div class="footer-column">
@@ -436,6 +462,37 @@
     </footer>
 
     <script>
+        // Глобальный объект хранения объемов, чтобы пересчитывать смету на лету
+        let calculatedVolumes = {
+            woodCubes: 0, woodPieces: 0, mossBags: 0, beamsPieces: 0,
+            insulationPackages: 0, insulationCubes: 0, rafterPieces: 0,
+            obreshetkaPieces: 0, roofArea: 0, nailsKg: 0, screwsPcs: 0,
+            ventTubes: 2, drainTubes: 1, workCost: 0, fuelLiters: 0, chainOilLiters: 0
+        };
+
+        // Базовые (дефолтные) цены за единицу
+        const defaultPrices = {
+            woodCube: 18000, mossBag: 450, beamPiece: 850,
+            insulationPack: 1200, rafterPiece: 850, obreshetkaPiece: 350,
+            roofSq: 650, ventTube: 600, drainTube: 800,
+            nailKg: 250, screwPc: 4, workUnit: 3500
+        };
+
+        window.onload = function() {
+            // Если в локал сторадж есть сохраненные параметры геометрии, подгрузим их
+            if(localStorage.getItem('b_length')) document.getElementById('b-length').value = localStorage.getItem('b_length');
+            if(localStorage.getItem('b_thickness')) document.getElementById('b-thickness').value = localStorage.getItem('b_thickness');
+            if(localStorage.getItem('b_height')) document.getElementById('b-height').value = localStorage.getItem('b_height');
+            if(localStorage.getItem('b_material')) document.getElementById('b-material').value = localStorage.getItem('b_material');
+            if(localStorage.getItem('b_walls')) document.getElementById('b-walls').value = localStorage.getItem('b_walls');
+            if(localStorage.getItem('b_work_type')) document.getElementById('b-work-type').value = localStorage.getItem('b_work_type');
+
+            // Автоматически запускаем расчет, если есть сохраненные объемы
+            if(localStorage.getItem('smeta_active') === 'true') {
+                calculateSauna();
+            }
+        };
+
         function switchTab(tabId, btn) {
             document.querySelectorAll('.calc-section').forEach(sec => sec.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -456,33 +513,18 @@
         function updateThicknessOptions() {
             const mat = document.getElementById('b-material').value.split('|')[0];
             const tInput = document.getElementById('b-thickness');
-            if (mat.includes('brus')) {
-                tInput.value = 150;
-            } else {
-                tInput.value = 220;
+            tInput.value = mat.includes('brus') ? 150 : 220;
+        }
+
+        function clearSmetaStorage() {
+            if(confirm("Вы действительно хотите полностью очистить текущую смету и сбросить кэш для нового объекта?")) {
+                localStorage.clear();
+                alert("Память очищена. Страница будет перезагружена.");
+                window.location.reload();
             }
         }
 
-        function toggleWorkCostInput() {
-            const type = document.getElementById('b-work-type').value;
-            const group = document.getElementById('work-price-group');
-            const label = document.getElementById('work-price-label');
-            const valInput = document.getElementById('p-work-value');
-
-            if (type === 'self') {
-                group.style.display = 'none';
-            } else if (type === 'helper') {
-                group.style.display = 'block';
-                label.innerText = "Ставка подсобника (руб/день):";
-                valInput.value = 3500;
-            } else {
-                group.style.display = 'block';
-                label.innerText = "Стоимость сборки под ключ (за 1 м³ стен):";
-                valInput.value = 12000;
-            }
-        }
-
-        // ГЛОБАЛЬНЫЙ СКВОЗНОЙ ИНЖЕНЕРНЫЙ РАСЧЕТ ВСЕХ МАТЕРИАЛОВ
+        // ОСНОВНОЙ ИНЖЕНЕРНЫЙ РАСЧЕТ ОБЪЕМОВ (ПРОРАБ)
         function calculateSauna() {
             const matData = document.getElementById('b-material').value.split('|');
             const matType = matData[0];
@@ -492,18 +534,20 @@
             const sideLength = parseFloat(document.getElementById('b-length').value) || 0;
             const thicknessMm = parseFloat(document.getElementById('b-thickness').value) || 0;
             const targetHeight = parseFloat(document.getElementById('b-height').value) || 0;
-            
-            const priceWoodCube = parseFloat(document.getElementById('p-wood-cube').value) || 0;
-            const priceBoardPiece = parseFloat(document.getElementById('p-board-piece').value) || 0;
-            const priceRoofSq = parseFloat(document.getElementById('p-roof-sq').value) || 0;
-            
             const workType = document.getElementById('b-work-type').value;
-            const workValue = parseFloat(document.getElementById('p-work-value').value) || 0;
-            const resBox = document.getElementById('sauna-result');
 
             if (sideLength <= 0 || thicknessMm <= 0 || targetHeight <= 0) { alert("Заполните корректно параметры бани!"); return; }
 
-            // 1. Стены и усадка
+            // Сохраняем геометрию в LocalStorage
+            localStorage.setItem('b_length', sideLength);
+            localStorage.setItem('b_thickness', thicknessMm);
+            localStorage.setItem('b_height', targetHeight);
+            localStorage.setItem('b_material', document.getElementById('b-material').value);
+            localStorage.setItem('b_walls', wallsType);
+            localStorage.setItem('b_work_type', workType);
+            localStorage.setItem('smeta_active', 'true');
+
+            // 1. Расчет стен с учетом коэффициентов усадки сырого/сухого леса
             const shrinkageCoeff = matType.includes('prof') ? 1.03 : 1.08;
             const buildingHeight = targetHeight * shrinkageCoeff;
             const thicknessM = thicknessMm / 1000;
@@ -517,114 +561,149 @@
             } else {
                 singlePieceVolume = thicknessM * thicknessM * sideLength;
             }
-            const totalVolumeCubes = singlePieceVolume * totalPieces;
-            const totalWeightTons = (totalVolumeCubes * density) / 1000;
+            
+            calculatedVolumes.woodPieces = totalPieces;
+            calculatedVolumes.woodCubes = singlePieceVolume * totalPieces;
 
-            // 2. Межвенцовый мох (1 строительный мешок 50л уходит примерно на 3 бревна длины 4м)
-            const mossBags = Math.ceil((totalPieces * sideLength) / 12);
+            // 2. Межвенцовый утеплитель (Мох: 1 мешок 50л на ~12 погонных метров паза кругляка)
+            calculatedVolumes.mossBags = Math.ceil((totalPieces * sideLength) / 12);
 
-            // 3. Балки пола и потолка (матицы): брус 100х150 мм с шагом 60см
+            // 3. Матицы / Балки (Брус 100х150мм с шагом 60см)
             const beamsCount = Math.ceil(sideLength / 0.6) + 1; 
-            const totalBeamsPieces = beamsCount * 2; 
+            calculatedVolumes.beamsPieces = beamsCount * 2; 
 
-            // 4. Утеплитель потолка (Каменная вата толщиной 150 мм на площадь потолка)
+            // 4. Потолочный пирог (Минвата толщиной 150мм плотностью 35-45 кг/м³)
             const ceilingArea = sideLength * sideLength;
-            const insulationVolumeCubes = ceilingArea * 0.15;
-            const insulationPackages = Math.ceil(insulationVolumeCubes / 0.3); // в одной пачке минваты около 0.3 куба
+            calculatedVolumes.insulationCubes = ceilingArea * 0.15;
+            calculatedVolumes.insulationPackages = Math.ceil(calculatedVolumes.insulationCubes / 0.3);
 
-            // 5. Стропила (доска 50х150 мм) и обрешетка (доска 25x150 мм)
+            // 5. Стропильная система (Доска 50х150мм с шагом 80см) и обрешетка (25х150мм)
             const rafterPairs = Math.ceil(sideLength / 0.8) + 1;
-            const totalRafterPieces = rafterPairs * 2; 
-            const roofArea = (sideLength * (sideLength * 0.7)) * 2;
-            const totalObreshetkaPieces = Math.ceil((roofArea / 0.15) / 4); // эффективное покрытие доски 4м
+            calculatedVolumes.rafterPieces = rafterPairs * 2;
+            calculatedVolumes.roofArea = (sideLength * (sideLength * 0.7)) * 2; // условный двухскатный вылет
+            calculatedVolumes.obreshetkaPieces = Math.ceil((calculatedVolumes.roofArea / 0.15) / 4);
 
-            // 6. Крепеж и трубы
-            const nailsKg = Math.ceil(totalPieces * 0.15) + 5; // гвозди строительные 120/150мм
-            const roofScrews = Math.ceil(roofArea * 8); // 8 саморезов на 1 кв.м кровли
-            const ventTubes = 2; // приток и вытяжка Басту
-            const drainTubes = 1; // сток воды
+            // 6. Крепеж строительный
+            calculatedVolumes.nailsKg = Math.ceil(totalPieces * 0.15) + 5;
+            calculatedVolumes.screwsPcs = Math.ceil(calculatedVolumes.roofArea * 8);
 
-            // ФИНАНСОВЫЙ РАСЧЕТ
-            const costWallWood = totalVolumeCubes * priceWoodCube;
-            const costBeamsWood = totalBeamsPieces * priceBoardPiece;
-            const costRaftersWood = totalRafterPieces * priceBoardPiece;
-            const costObreshetka = totalObreshetkaPieces * (priceBoardPiece * 0.3); // черновая доска дешевле бруса
-            const costRoofSheets = roofArea * priceRoofSq;
-            const costInsulation = insulationPackages * 1200; // средняя цена пачки ваты в Коми
-
-            const totalMaterialsCost = costWallWood + costBeamsWood + costRaftersWood + costObreshetka + costRoofSheets + costInsulation;
-            const costConsumables = (totalPieces * 180) + (nailsKg * 250) + 4000; 
-
-            // Работа
-            let totalWorkCost = 0;
-            let workDays = Math.ceil(totalPieces / 4) + 5; 
+            // 7. Расчет трудозатрат бригады или подсобника
+            let defaultWorkPrice = 0;
+            let workDays = Math.ceil(totalPieces / 4) + 5;
             if (workType === 'helper') {
-                totalWorkCost = workDays * workValue;
+                calculatedVolumes.workVolume = workDays; 
+                calculatedVolumes.workUnitLabel = "дней работы";
+                defaultWorkPrice = 3500;
             } else if (workType === 'crew') {
-                totalWorkCost = totalVolumeCubes * workValue;
-            }
-
-            const totalProjectCost = totalMaterialsCost + costConsumables + totalWorkCost;
-
-            const fuelLiters = Math.ceil(totalPieces * 0.6);
-            const chainOilLiters = Math.ceil(fuelLiters * 0.7);
-
-            resBox.style.display = 'block';
-            resBox.innerHTML = `
-                <h4>Полная спецификация и ведомость закупок под ваши размеры:</h4>
-                
-                <div class="res-row"><span>1. Стеновое бревно/брус (длина ${sideLength}м):</span><span><b>${totalPieces} шт.</b> (${totalVolumeCubes.toFixed(2)} м³)</span></div>
-                <div class="res-row"><span>2. Межвенцовый красный мох (мешки по 50 литров):</span><span><b>${mossBags} мешков</b></span></div>
-                <div class="res-row"><span>3. Балки пола и потолка (брус 100х150 мм, 4м):</span><span><b>${totalBeamsPieces} шт.</b></span></div>
-                <div class="res-row"><span>4. Утеплитель потолка (Минвата 150мм):</span><span><b>${insulationPackages} упаковок</b> (${insulationVolumeCubes.toFixed(1)} м³)</span></div>
-                <div class="res-row"><span>5. Стропила кровли (доска 50х150 мм, 4м):</span><span><b>${totalRafterPieces} шт.</b></span></div>
-                <div class="res-row"><span>6. Обрешетка крыши (черновая доска 25х150 мм, 4м):</span><span><b>${totalObreshetkaPieces} шт.</b></span></div>
-                <div class="res-row"><span>7. Площадь кровельного покрытия (профнастил):</span><span><b>${Math.round(roofArea)} кв. м</b> (${roofScrews} саморезов)</span></div>
-                <div class="res-row"><span>8. Трубы вентиляции Басту + Слив канализации:</span><span><b>${ventTubes} вентиляционных / ${drainTubes} сливная</b></span></div>
-                <div class="res-row"><span>9. Строительные гвозди (120/150 мм) в коробках:</span><span><b>${nailsKg} кг</b></span></div>
-                <div class="res-row"><span>10. Общая масса груза для доставки (пиломатериалы):</span><span><b>~${totalWeightTons.toFixed(1)} тонн</b></span></div>
-                
-                <h3>Финансовый отчет по вашей смете:</h3>
-                <div class="res-row"><span>Стоимость стенового бревна/бруса:</span><span>${Math.round(costWallWood).toLocaleString()} руб.</span></div>
-                <div class="res-row"><span>Стоимость балок, стропил и обрешетки:</span><span>${Math.round(costBeamsWood + costRaftersWood + costObreshetka).toLocaleString()} руб.</span></div>
-                <div class="res-row"><span>Стоимость каменной ваты на потолок:</span><span>${Math.round(costInsulation).toLocaleString()} руб.</span></div>
-                <div class="res-row"><span>Стоимость профнастила/черепицы:</span><span>${Math.round(costRoofSheets).toLocaleString()} руб.</span></div>
-                <div class="res-row"><span>Затраты на крепеж, ГСМ пилы, мох и трубы:</span><span>${Math.round(costConsumables).toLocaleString()} руб.</span></div>
-                <div class="res-row"><span>Затраты на оплату строительных работ:</span><span><b>${totalWorkCost > 0 ? Math.round(totalWorkCost).toLocaleString() + ' руб.' : '0 руб. (Своими силами)'}</b></span></div>
-                
-                <hr style="border:none; border-top:1px dashed var(--forest-green); margin:15px 0;">
-                <div class="res-row"><span>Расход ГСМ бензопилы на рубку чаш и пазов:</span><span>~${fuelLiters} л бензина / ~${chainOilLiters} л масла цепи</span></div>
-                <div class="res-row"><span>ПОЛНАЯ СТОИМОСТЬ СТРОИТЕЛЬСТВА БАНИ ПОД КЛЮЧ:</span><span><b style="color:var(--danger); font-size:22px;">${Math.round(totalProjectCost).toLocaleString()} руб.</b></span></div>
-                
-                <div class="note-info">🌲 <b>Инструкция мастера:</b> Сборку сруба на мох производите строго в сентябре, когда мох на болотах Коми наливается влагой и становится эластичным. Перевозя сруб, предварительно срубленный за деревней, обязательно проверьте маркировку торцов бревен — это сэкономит вам недели времени при сборке на основном месте!</div>
-            `;
-            resBox.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function shareSite() {
-            const shareData = {
-                title: 'Лесовик ПРО — Строительный калькулятор бани под ключ',
-                text: 'Полный расчет кубатуры, досок, стропил, кровли и детальной сметы работы плотников.',
-                url: window.location.href
-            };
-            if (navigator.share) {
-                navigator.share(shareData).catch(err => console.log(err));
+                calculatedVolumes.workVolume = calculatedVolumes.woodCubes; 
+                calculatedVolumes.workUnitLabel = "м³ стен";
+                defaultWorkPrice = 12000;
             } else {
-                const popup = document.getElementById('pcShareBlock');
-                const input = document.getElementById('shareUrlField');
-                input.value = window.location.href;
-                popup.style.display = (popup.style.display === 'flex') ? 'none' : 'flex';
+                calculatedVolumes.workVolume = 0;
+                calculatedVolumes.workUnitLabel = "самостоятельно";
+                defaultWorkPrice = 0;
             }
+
+            // ГСМ пилы (информационный срез)
+            calculatedVolumes.fuelLiters = Math.ceil(totalPieces * 0.6);
+            calculatedVolumes.chainOilLiters = Math.ceil(calculatedVolumes.fuelLiters * 0.7);
+
+            // РЕНДЕРИНГ ИНТЕРАКТИВНОЙ СМЕТЫ С ЛОКАЛ СТОРАДЖЕМ ДЛЯ ЦЕН
+            renderSmetaTable(workType, defaultWorkPrice);
         }
 
-        function copyShareLink() {
-            const input = document.getElementById('shareUrlField');
-            input.select();
-            navigator.clipboard.writeText(input.value).then(() => {
-                const toast = document.getElementById('copyToastMessage');
-                toast.style.display = 'block';
-                setTimeout(() => { toast.style.display = 'none'; }, 3000);
+        function renderSmetaTable(workType, defaultWorkPrice) {
+            const tbody = document.getElementById('smeta-tbody');
+            
+            // Массив строк таблицы для генерации
+            const items = [
+                { id: 'wood', name: 'Стеновой брус/бревно сруба', volStr: `${calculatedVolumes.woodPieces} шт (${calculatedVolumes.woodCubes.toFixed(2)} м³)`, storageKey: 'price_wood', def: defaultPrices.woodCube, mult: calculatedVolumes.woodCubes },
+                { id: 'moss', name: 'Красный мох сфагнум (мешки 50л)', volStr: `${calculatedVolumes.mossBags} мешков`, storageKey: 'price_moss', def: defaultPrices.mossBag, mult: calculatedVolumes.mossBags },
+                { id: 'beams', name: 'Балки пола и перекрытий (100х150мм)', volStr: `${calculatedVolumes.beamsPieces} шт`, storageKey: 'price_beams', def: defaultPrices.beamPiece, mult: calculatedVolumes.beamsPieces },
+                { id: 'insulation', name: 'Каменная вата потолка (упаковки)', volStr: `${calculatedVolumes.insulationPackages} упак (${calculatedVolumes.insulationCubes.toFixed(1)} м³)`, storageKey: 'price_insulation', def: defaultPrices.insulationPack, mult: calculatedVolumes.insulationPackages },
+                { id: 'rafters', name: 'Стропильные доски (50х150мм)', volStr: `${calculatedVolumes.rafterPieces} шт`, storageKey: 'price_rafters', def: defaultPrices.rafterPiece, mult: calculatedVolumes.rafterPieces },
+                { id: 'obreshetka', name: 'Обрешетка крыши (доска 25х150мм)', volStr: `${calculatedVolumes.obreshetkaPieces} шт`, storageKey: 'price_obreshetka', def: defaultPrices.obreshetkaPiece, mult: calculatedVolumes.obreshetkaPieces },
+                { id: 'roof', name: 'Кровельное покрытие (профнастил/черепица)', volStr: `${Math.round(calculatedVolumes.roofArea)} кв.м`, storageKey: 'price_roof', def: defaultPrices.roofSq, mult: calculatedVolumes.roofArea },
+                { id: 'nails', name: 'Строительные гвозди (120/150мм)', volStr: `${calculatedVolumes.nailsKg} кг`, storageKey: 'price_nails', def: defaultPrices.nailKg, mult: calculatedVolumes.nailsKg },
+                { id: 'screws', name: 'Кровельные саморезы со сверлом', volStr: `${calculatedVolumes.screwsPcs} шт`, storageKey: 'price_screws', def: defaultPrices.screwPc, mult: calculatedVolumes.screwsPcs },
+                { id: 'vent', name: 'Трубы вентиляции Басту (110мм)', volStr: `${calculatedVolumes.ventTubes} шт`, storageKey: 'price_vent', def: defaultPrices.ventTube, mult: calculatedVolumes.ventTubes },
+                { id: 'drain', name: 'Труба слива воды из моечной', volStr: `${calculatedVolumes.drainTubes} шт`, storageKey: 'price_drain', def: defaultPrices.drainTube, mult: calculatedVolumes.drainTubes }
+            ];
+
+            // Если наемный труд активирован, добавим строчку работы строителей
+            if (workType !== 'self') {
+                items.push({
+                    id: 'work',
+                    name: `Оплата труда строителей (${calculatedVolumes.workUnitLabel})`,
+                    volStr: `${calculatedVolumes.workVolume.toFixed(1)} ${calculatedVolumes.workUnitLabel.split(' ')[0]}`,
+                    storageKey: 'price_work_custom',
+                    def: defaultWorkPrice,
+                    mult: calculatedVolumes.workVolume
+                });
+            }
+
+            tbody.innerHTML = '';
+
+            items.forEach(item => {
+                // Извлекаем сохраненную цену из LocalStorage или ставим дефолтную
+                let savedPrice = localStorage.getItem(item.storageKey);
+                let currentPrice = (savedPrice !== null) ? parseFloat(savedPrice) : item.def;
+
+                let rowTotal = Math.round(currentPrice * item.mult);
+
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><b>${item.name}</b></td>
+                    <td class="td-volume">${item.volStr}</td>
+                    <td>
+                        <input type="number" class="input-price" data-key="${item.storageKey}" data-mult="${item.mult}" value="${currentPrice}" oninput="updateRowTotal(this)">
+                    </td>
+                    <td class="td-total-row" id="total-${item.id}">${rowTotal.toLocaleString()} руб.</td>
+                `;
+                tbody.appendChild(tr);
             });
+
+            // Обновляем общую сумму по калькулятору
+            recalculateGrandTotal();
+
+            // Выводим данные по ГСМ бензопилы
+            document.getElementById('fuel-info-block').innerHTML = `⛽ <b>Норма расхода ГСМ пилы:</b> На выпиловку чаш и пазов уйдет примерно <b>${calculatedVolumes.fuelLiters} литров бензина АИ-92</b> и <b>${calculatedVolumes.chainOilLiters} литров чистого цепного масла</b> (не лейте черную отработку, чтобы не убить маслонасос шины!).`;
+
+            // Установка динамического интеллектуального ЗОЖ-совета плотнику
+            document.getElementById('dynamic-instruction-note').innerHTML = `🌲 <b>Инструкция Лесовика:</b> Все объемы посчитаны с инженерным запасом 5-7% на торцевые обрезки досок. Вы можете свободно менять цены прямо в таблице — система запомнит их для вашего удобства. На сборку сруба обязательно возьмите с собой чистую колодезную воду и травяной чай для поддержки сердца, сладкую газировку и алкоголь оставьте за пределами стройплощадки!`;
+
+            document.getElementById('sauna-result').style.display = 'block';
+        }
+
+        // ПЕРЕСЧЕТ СТРОКИ СМЕТЫ ПРИ ИЗМЕНЕНИИ ЦЕНЫ СТРОИТЕЛЕМ НА ЛЕТУ
+        function updateRowTotal(inputElement) {
+            const storageKey = inputElement.getAttribute('data-key');
+            const multiplier = parseFloat(inputElement.getAttribute('data-mult')) || 0;
+            const newPrice = parseFloat(inputElement.value) || 0;
+
+            // Записываем новую цену в память браузера
+            localStorage.setItem(storageKey, newPrice);
+
+            // Пересчитываем ячейку итога по этой строке
+            const totalCell = inputElement.closest('tr').querySelector('.td-total-row');
+            let newTotal = Math.round(newPrice * multiplier);
+            totalCell.innerText = newTotal.toLocaleString() + ' руб.';
+
+            // Пересчитываем глобальный итог по бане
+            recalculateGrandTotal();
+        }
+
+        // ГЛОБАЛЬНЫЙ ПЕРЕСЧЕТ СУММЫ ВСЕХ СТРОК
+        function recalculateGrandTotal() {
+            let total = 0;
+            document.querySelectorAll('.smeta-table tbody tr').forEach(row => {
+                const totalCell = row.querySelector('.td-total-row');
+                if (totalCell) {
+                    let val = parseInt(totalCell.innerText.replace(/[^0-9]/g, '')) || 0;
+                    total += val;
+                }
+            });
+            document.getElementById('grand-total-value').innerText = total.toLocaleString() + ' руб.';
         }
     </script>
 </body>
