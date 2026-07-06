@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>Строительные, загородные и садовые калькуляторы онлайн | Лесовик</title>
+    <meta name="description" content="Полный набор бесплатных строительных калькуляторов для дачников и застройщиков. Инженерный расчет доски, бруса, заборов, теплиц, бани под ключ и поиск воды для колодца.">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/jpeg" href="logo.jpeg">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600&display=swap');
+
+        :root {
+            --bg-paper: #F9FBF9;
+            --text-graphite: #333333;
+            --forest-green: #2D5A27;
+            --forest-light: #8FBC8F;
+            --border-color: #E0E0E0;
+            --card-bg: #FFFFFF;
+            --glass-bg: rgba(249, 251, 249, 0.7);
+            --footer-bg: #2C3531;
+        }
+
+        [data-theme="dark"] {
+            --bg-paper: #1A2421;
+            --text-graphite: #F9FBF9;
+            --forest-green: #8FBC8F;
+            --forest-light: #2D5A27;
+            --border-color: #3A4F46;
+            --card-bg: #22302B;
+            --glass-bg: rgba(26, 36, 33, 0.7);
+            --footer-bg: #111815;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-paper);
+            color: var(--text-graphite);
+            margin: 0; padding: 0;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            display: flex; flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .glass-header {
+            position: sticky; top: 0; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 40px; background: var(--glass-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .logo-container { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .header-logo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--forest-green); }
+        .glass-header h1 { font-family: 'Merriweather', serif; color: var(--forest-green); margin: 0; font-size: 22px; }
+        
+        .header-right { display: flex; align-items: center; gap: 15px; }
+
+        .theme-toggle {
+            background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green);
+            padding: 8px; border-radius: 8px; cursor: pointer; font-size: 18px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; width: 40px; height: 40px;
+        }
+        .theme-toggle:hover { background-color: var(--forest-green); color: var(--bg-paper); }
+
+        main { flex: 1; }
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+
+        .btn-back { display: inline-flex; align-items: center; gap: 8px; background: transparent; color: var(--forest-green); border: 1px solid var(--forest-green); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-bottom: 30px; text-decoration: none; transition: 0.2s; font-size: 14px; }
+        .btn-back:hover { background: var(--forest-green); color: var(--bg-paper); }
+
+        h2.section-title {
+            font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 26px;
+            border-bottom: 2px solid var(--forest-green); padding-bottom: 10px; margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        .hub-description-box {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--forest-green);
+            border-radius: 8px;
+            padding: 20px 25px;
+            margin-bottom: 35px;
+            font-size: 15px;
+            opacity: 0.9;
+            text-align: justify;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.01);
+        }
+
+        .tools-action-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px; }
+        @media (max-width: 900px) { .tools-action-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 600px) { .tools-action-grid { grid-template-columns: 1fr; gap: 15px; } }
+
+        .tool-btn-card { background: linear-gradient(135deg, #446A37 0%, #224017 100%); border-radius: 12px; padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; text-decoration: none; box-shadow: 0 6px 15px rgba(0,0,0,0.08); transition: 0.2s; }
+        .tool-btn-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.12); }
+        .tool-btn-title { color: #FFFFFF; font-family: 'Merriweather', serif; font-size: 16px; margin: 0; }
+        .tool-info-trigger { background: rgba(255, 255, 255, 0.15); color: #FFFFFF; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 15px; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.3); }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 10005; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+        .modal-box { background: var(--card-bg); border: 1px solid var(--forest-green); border-radius: 12px; padding: 30px; width: 90%; max-width: 500px; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .modal-close-btn { position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 20px; color: var(--text-graphite); cursor: pointer; opacity: 0.6; }
+        .modal-title { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 24px; margin-bottom: 15px; }
+        .modal-desc { font-size: 15px; line-height: 1.6; color: var(--text-graphite); margin: 0; }
+
+        footer { background-color: var(--footer-bg); color: #E0E0E0; padding: 50px 20px 20px; margin-top: auto; font-size: 14px; }
+        .footer-content { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; margin-bottom: 40px; }
+        .footer-logo { fill: #E0E0E0; width: 28px; height: 28px; margin-bottom: 10px; }
+        .footer-column h4 { font-family: 'Merriweather', serif; color: #E0E0E0; font-size: 16px; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 10px; }
+        .footer-column a { color: #8FBC8F; text-decoration: none; display: block; margin-bottom: 10px; }
+        .footer-bottom { text-align: center; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.05); font-size: 12px; opacity: 0.6; }
+    </style>
+</head>
+<body>
+
+    <header class="glass-header">
+        <div class="logo-container">
+            <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
+            <h1>Лесовик</h1>
+        </div>
+        <div class="header-right">
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <a href="index.html" class="btn-back">← На главную страницу</a>
+        <br>
+        <h2 class="section-title">Строительная и Садовая Ведомость</h2>
+        
+        <div class="hub-description-box">
+            Добро пожаловать в инженерный хаб «Лесовика». Здесь собраны независимые, точные алгоритмы расчетов параметров загородного строительства и ухода за участком. Все модули спроектированы по отечественным ГОСТам и строительным регламентам. Система производит автоматический перевод штук в кубы, рассчитывает чистый физический вес партий материалов и вычисляет нормы расхода расходных элементов, крепежей и ГСМ.
+        </div>
+
+        <div class="tools-action-grid">
+            <a href="wood-calc.html" class="tool-btn-card">
+                <h3 class="tool-btn-title">Доска, Брус, Вагонка</h3>
+                <div class="tool-info-trigger" onclick="openToolInfo(event, 'wood_calc')">?</div>
+            </a>
+            <a href="fence-calc.html" class="tool-btn-card">
+                <h3 class="tool-btn-title">Калькулятор Забора</h3>
+                <div class="tool-info-trigger" onclick="openToolInfo(event, 'fence')">?</div>
+            </a>
+            <a href="greenhouse-calc.html" class="tool-btn-card">
+                <h3 class="tool-btn-title">Калькулятор Теплицы</h3>
+                <div class="tool-info-trigger" onclick="openToolInfo(event, 'greenhouse')">?</div>
+            </a>
+            <a href="sauna-calc.html" class="tool-btn-card">
+                <h3 class="tool-btn-title">Калькулятор Бани</h3>
+                <div class="tool-info-trigger" onclick="openToolInfo(event, 'sauna')">?</div>
+            </a>
+            <a href="well-calc.html" class="tool-btn-card">
+                <h3 class="tool-btn-title">Поиск воды и Колодец</h3>
+                <div class="tool-info-trigger" onclick="openToolInfo(event, 'well')">?</div>
+            </a>
+            <a href="garden-calc.html" class="tool-btn-card">
+                <h3 class="tool-btn-title">Полив и Почва</h3>
+                <div class="tool-info-trigger" onclick="openToolInfo(event, 'garden')">?</div>
+            </a>
+            <a href="beton-calc.html" class="tool-btn-card">
+                <h3 class="tool-btn-title">Калькулятор Бетона</h3>
+                <div class="tool-info-trigger" onclick="openToolInfo(event, 'beton')">?</div>
+            </a>
+            <a href="credit-calc.html" class="tool-btn-card">
+                <h3 class="tool-btn-title">Кредитный калькулятор</h3>
+                <div class="tool-info-trigger" onclick="openToolInfo(event, 'credit')">?</div>
+            </a>
+            <a href="microgreen-calc.html" class="tool-btn-card">
+                <h3 class="tool-btn-title">Польза микрозелени</h3>
+                <div class="tool-info-trigger" onclick="openToolInfo(event, 'microgreen')">?</div>
+            </a>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-column">
+                <svg class="footer-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/>
+                    <rect x="10.5" y="20" width="3" height="4"/>
+                </svg>
+                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 18px;">Лесовик</div>
+                <div style="font-size: 13px; margin-top: 5px; opacity: 0.8;">Цифровой инструмент таксатора и застройщика. База знаний, калькуляторы и профильные статьи.</div>
+            </div>
+            <div class="footer-column">
+                <h4>Правовая информация</h4>
+                <span style="color:#8FBC8F; display:block; margin-bottom:10px;">Политика конфиденциальности</span>
+                <span style="color:#8FBC8F; display:block;">Договор-оферта</span>
+            </div>
+            <div class="footer-column">
+                <h4>Контакты</h4>
+                <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; text-decoration:none;">✉️ folgoal@gmail.com</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 Лесовик ПРО. Все права защищены.
+        </div>
+    </footer>
+
+    <div id="tool-modal" class="modal-overlay" onclick="closeToolInfo(event)">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <button class="modal-close-btn" onclick="closeToolInfo(event)">✕</button>
+            <h3 id="modal-title" class="modal-title"></h3>
+            <p id="modal-desc" class="modal-desc"></p>
+        </div>
+    </div>
+
+    <script>
+        const toolsDescriptions = {
+            'wood_calc': { title: 'Кубатурник древесины', desc: 'Расчет объема и веса пиломатериалов: доски, обрезного бруса и вагонки с автоматическим подбором грузового автотранспорта.' },
+            'fence': { title: 'Калькулятор забора', desc: 'Строительный расчет параметров ограждений: количество листов профнастила, кубатура досок, столбы, прожилины и крепежные элементы.' },
+            'greenhouse': { title: 'Калькулятор теплиц', desc: 'Инженерный раскрой сотового поликарбоната, кубатурник земли для грядок и краш-тест каркаса на зимнюю снеговую нагрузку.' },
+            'sauna': { title: 'Калькулятор бани под ключ', desc: 'Интерактивная ERP-ведомость закупки сруба из бревна или бруса, балок, утеплителя, кровли и ГСМ с ручным управлением ценами поставщика.' },
+            'well': { title: 'Строительство колодца', desc: 'Интерактивный тест-анализ поиска скрытых водоносных жил по растениям-индикаторам и расчет объема гофрированных труб шахты колодца.' },
+            'garden': { title: 'Полив и Почва', desc: 'Автоматическое определение pH кислотности почвы по дикорастущим сорнякам-индикаторам и расчет расхода воды для капельных систем автополива.' },
+            'beton': { title: 'Калькулятор бетона', desc: 'Инженерный расчет кубатуры бетонной смеси, штук фундаментных блоков, пропорций цемента, песка и щебня в ведрах.' },
+            'credit': { title: 'Финансовый калькулятор', desc: 'Расчет параметров строительных кредитов, переплаты по процентам, ежемесячного аннуитетного платежа и графиков усадки долга.' },
+            'microgreen': { title: 'Калькулятор микрозелени', desc: 'Оценка витаминной и нутриентной ценности молодых проростков суперфудов, кулинарные рецепты шедевров и технологии сити-фермерства.' }
+        };
+
+        function openToolInfo(event, toolKey) {
+            event.preventDefault(); 
+            event.stopPropagation();
+            document.getElementById('modal-title').innerText = toolsDescriptions[toolKey].title;
+            document.getElementById('modal-desc').innerText = toolsDescriptions[toolKey].desc;
+            document.getElementById('tool-modal').style.display = 'flex';
+        }
+
+        function closeToolInfo(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            document.getElementById('tool-modal').style.display = 'none';
+        }
+
+        function toggleTheme() {
+            const body = document.documentElement;
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+            }
+        }
+    </script>
+</body>
+</html>
