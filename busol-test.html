@@ -27,7 +27,6 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
     <meta name="google-site-verification" content="rLtNyEQ2h992Lp8m73ynLM8J6xY5tJcr3dbVwbO35rU" />
     
     <title>Буссоль онлайн: замер азимута и углов лесосеки камерой телефона | Лесовик</title>
@@ -40,8 +39,6 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://lesovik-pro.ru/busol.html">
     <meta property="og:image" content="https://lesovik-pro.ru/logo.jpeg">
-    <meta property="og:image:width" content="500">
-    <meta property="og:image:height" content="500">
 
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
     <meta name="geo.region" content="RU-KO">
@@ -83,7 +80,6 @@
             background-color: var(--bg-paper); color: var(--text-graphite);
             font-family: 'Inter', sans-serif; line-height: 1.5;
             box-sizing: border-box;
-            transition: background-color 0.3s, color 0.3s;
         }
 
         *, *:before, *:after { box-sizing: inherit; }
@@ -91,18 +87,20 @@
         /* ОКНО АКТИВАЦИИ ЛИЦЕНЗИИ */
         #activation-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111827; color: #FFF; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
         .license-box { background: #1F2937; padding: 20px; border-radius: 12px; width: 100%; max-width: 340px; border: 1px solid #374151; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        .crypto-id { background: #111827; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 14px; color: #3B82F6; margin: 12px 0; border: 1px solid #374151; word-break: break-all; user-select: all; }
+        .crypto-id { background: #111827; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 15px; color: #3B82F6; margin: 12px 0; border: 1px solid #374151; word-break: break-all; user-select: all; }
         .license-input { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #4B5563; background: #111827; color: #FFF; font-size: 14px; text-align: center; margin-bottom: 12px; text-transform: uppercase; }
         .btn-activate { width: 100%; padding: 14px; background: #16A34A; color: #FFF; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; }
 
-        /* АДАПТИВНАЯ ШАПКА */
-        .glass-header {
-            position: sticky; top: 0; z-index: 1000;
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 20px; background: var(--glass-bg);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-color);
-        }
+        /* ПОПАП ВЫБОРА ТЕМЫ */
+        .theme-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
+        .theme-popup-box { background: var(--card-bg); border: 1px solid var(--border-color); padding: 24px; border-radius: 12px; width: 100%; max-width: 300px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        .theme-popup-title { font-family: 'Merriweather', serif; font-size: 18px; margin-bottom: 15px; color: var(--forest-green); }
+        .theme-option-btn { width: 100%; height: 46px; margin-bottom: 10px; border: 1px solid var(--border-color); background: var(--bg-paper); color: var(--text-graphite); font-weight: 600; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .theme-option-btn:hover { border-color: var(--forest-green); color: var(--forest-green); }
+        .btn-close-popup { background: transparent; border: none; color: #888; font-size: 12px; cursor: pointer; margin-top: 5px; text-decoration: underline; }
+
+        /* ШАГ ЗА ШАГОМ АДАПТАЦИЯ ШАПКИ */
+        .glass-header { position: sticky; top: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-color); }
         .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; }
         .header-logo { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid var(--forest-green); }
         .glass-header h1 { font-family: 'Merriweather', serif; color: var(--forest-green); margin: 0; font-size: 18px; }
@@ -112,10 +110,10 @@
         .header-right { display: flex; align-items: center; gap: 10px; }
         .btn-back { display: inline-flex; align-items: center; gap: 6px; background: transparent; color: var(--forest-green); border: 1px solid var(--forest-green); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; text-decoration: none; font-size: 12px; }
         
-        /* УНИВЕРСАЛЬНАЯ СЕТКА КОНТЕЙНЕРА */
+        .btn-theme-trigger { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; font-family: 'Inter', sans-serif; height: 34px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .btn-theme-trigger:hover { background: var(--forest-green); color: var(--bg-paper); }
+
         .container { width: 100%; max-width: 1000px; margin: 0 auto; padding: 15px; }
-        
-        /* МОБИЛЬНЫЙ ВЫВОД: СТРОГО В ОДНУ КОЛОНКУ НА СМАРТФОНАХ */
         .grid-layout { display: flex; flex-direction: column; gap: 16px; }
         @media (min-width: 800px) { .grid-layout { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; } }
 
@@ -124,7 +122,7 @@
         h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 18px; margin-bottom: 4px; }
         .subtitle { font-size: 11px; color: var(--text-graphite); opacity: 0.6; margin-bottom: 15px; }
 
-        /* ИНТЕРФЕЙС КАМЕРЫ (АДАПТИВНЫЙ) */
+        /* ИНТЕРФЕЙС КАМЕРЫ */
         .camera-viewport-wrapper { position: relative; width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid var(--border-color); }
         #video-preview { width: 100%; height: 100%; object-fit: cover; }
         .visir-line { position: absolute; top: 0; left: 50%; width: 2px; height: 100%; background: rgba(255,255,255,0.4); transform: translateX(-50%); z-index: 10; pointer-events: none; }
@@ -135,13 +133,12 @@
         .horizon-gyro-scope.level-perfect { border-color: var(--success); }
         .horizon-gyro-scope.level-perfect::before, .horizon-gyro-scope.level-perfect::after { background-color: var(--success); }
 
-        /* ДАТЧИКИ ПОВЕРХ ВИЗИРА */
         .overlay-data-box { position: absolute; padding: 8px 12px; background: rgba(0, 0, 0, 0.7); color: #FFF; border-radius: 6px; font-family: monospace; font-size: 12px; z-index: 20; pointer-events: none; }
         .top-left-status { top: 10px; left: 10px; } 
         .top-right-status { top: 10px; right: 10px; text-align: right; }
         .bottom-center-angle { bottom: 12px; left: 50%; transform: translateX(-50%); background: rgba(22, 163, 74, 0.85); font-size: 16px; font-weight: 700; white-space: nowrap; border-radius: 30px; padding: 6px 16px; display: none; }
 
-        /* КНОПКИ (TOUCH-FRIENDLY СТАНДАРТ) */
+        /* КНОПКИ УПРАВЛЕНИЯ */
         .control-panel-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
         .btn-action { height: 48px; border: none; border-radius: 8px; font-weight: 600; font-size: 13px; text-transform: uppercase; cursor: pointer; text-align: center; display: flex; align-items: center; justify-content: center; }
         .btn-set-zero { background-color: var(--forest-green); color: #FFF; }
@@ -149,12 +146,11 @@
         .btn-lock-measure { grid-column: span 2; background-color: #E0E0E0; color: #888; cursor: not-allowed; }
         .btn-lock-measure.ready-to-fire { background-color: var(--forest-green); color: #FFF; cursor: pointer; box-shadow: 0 4px 10px rgba(45, 90, 39, 0.15); }
 
-        /* ТАБЛИЦЫ И ЖУРНАЛ */
         .measurements-log-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         .measurements-log-table th, .measurements-log-table td { padding: 8px; font-size: 13px; border-bottom: 1px solid var(--border-color); text-align: left; }
         .measurements-log-table th { font-weight: 700; text-transform: uppercase; font-size: 11px; color: var(--forest-green); }
 
-        /* МОДУЛИ PRO ДЛЯ ЭКРАНОВ СМАРТФОНОВ */
+        /* МОДУЛИ PRO */
         .calibration-box { display: flex; align-items: center; gap: 5px; font-size: 11px; font-family: monospace; color: #FFF; margin-top: 4px; pointer-events: auto; }
         .cal-input { width: 40px; background: #111827; border: 1px solid #4B5563; color: #10B981; text-align: center; border-radius: 4px; font-weight: bold; font-size: 12px; height: 20px; }
         .map-card { grid-column: span 1; display: flex; flex-direction: column; align-items: center; }
@@ -176,7 +172,6 @@
 </head>
 <body>
 
-    <!-- ЭКРАН СИСТЕМЫ ЗАЩИТЫ ЛИЦЕНЗИИ -->
     <div id="activation-screen">
         <div class="license-box">
             <h2 style="margin:0 0 8px; font-size:18px; color:#FFF;">Буссоль таксатора</h2>
@@ -198,6 +193,15 @@
         </div>
     </div>
 
+    <div id="theme-popup" class="theme-popup-overlay" onclick="closeThemePopup(event)">
+        <div class="theme-popup-box">
+            <div class="theme-popup-title">Выбор темы оформления</div>
+            <button class="theme-option-btn" onclick="setAppTheme('light')">☀️ Светлая тема</button>
+            <button class="theme-option-btn" onclick="setAppTheme('dark')">🌙 Тёмная тема</button>
+            <button class="btn-close-popup" onclick="document.getElementById('theme-popup').style.display='none'">Отмена</button>
+        </div>
+    </div>
+
     <header class="glass-header">
         <a href="index.html" class="logo-container">
             <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
@@ -206,14 +210,13 @@
         <div class="header-seo-text">Электронная буссоль • Геодезия выдела • Отвод лесосек</div>
         <div class="header-right">
             <a href="index.html" class="btn-back">← На главную</a>
-            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+            <button class="btn-theme-trigger" onclick="document.getElementById('theme-popup').style.display='flex'">Тема</button>
         </div>
     </header>
 
     <main class="container">
         <div class="grid-layout">
             
-            <!-- БЛОК ВИЗИРА И КАМЕРЫ -->
             <div class="card">
                 <h2>Визирная рамка буссоли</h2>
                 <div class="subtitle">Наведите вертикальную нить на веху. Замер доступен только по зеленому уровню.</div>
@@ -242,7 +245,6 @@
                 </div>
             </div>
 
-            <!-- БЛОК ЖУРНАЛА И ИНСТРУКЦИИ -->
             <div class="card">
                 <h2>Журнал полевой съемки визиров</h2>
                 <div class="subtitle">Сюда автоматически заносятся зафиксированные румбы линий делянки.</div>
@@ -271,7 +273,6 @@
                 </div>
             </div>
 
-            <!-- БЛОК ЧЕРТЕЖА КАНВАСА -->
             <div class="card map-card">
                 <h2 style="align-self: flex-start;">Текущая геометрия отвода лесосеки (План полигона)</h2>
                 <canvas id="map-canvas"></canvas>
@@ -302,6 +303,35 @@
 <script>
     let currentAzimuth = 0, baseAzimuth = null, isLevel = false, measurementsLog = [];
     let stepCount = 0, stepThreshold = 11.8, lastStepTime = 0;
+
+    // СИСТЕМНЫЙ КЛИЕНТСКИЙ ПОПАП ТЕМЫ
+    function setAppTheme(theme) {
+        const body = document.documentElement;
+        if (theme === 'dark') {
+            body.setAttribute('data-theme', 'dark');
+            localStorage.setItem("busol_theme_mode", "dark");
+        } else {
+            body.removeAttribute('data-theme');
+            localStorage.setItem("busol_theme_mode", "light");
+        }
+        document.getElementById('theme-popup').style.display = 'none';
+        drawPolygon();
+    }
+
+    function initSavedTheme() {
+        const savedTheme = localStorage.getItem("busol_theme_mode");
+        if (savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+        }
+    }
+
+    function closeThemePopup(e) {
+        if(e.target === document.getElementById('theme-popup')) {
+            document.getElementById('theme-popup').style.display = 'none';
+        }
+    }
 
     async function startCamera() {
         const video = document.getElementById('video-preview');
@@ -350,12 +380,18 @@
         } else { document.getElementById('activation-screen').style.display = 'flex'; }
     }
 
+    // ЖЁСТКОЕ ИСПРАВЛЕНИЕ МАТЕМАТИКИ И СИНТАКСИСА КОМПАСА
     function initHardwareModules() {
         if (window.DeviceOrientationEvent) {
             window.addEventListener('deviceorientation', function(event) {
                 let heading = event.webkitCompassHeading || (360 - event.alpha);
+                let rawAzimuth = heading || 0;
+                
                 let calOffset = parseFloat(document.getElementById('geo-cal-offset').value) || 0;
-                currentAzimuth = (heading || 0 + calOffset + 360) % 360;
+                
+                // Исправлена расстановка скобок и математический приоритет операторов JavaScript
+                currentAzimuth = ((rawAzimuth + calOffset) + 360) % 360;
+                
                 document.getElementById('live-azimuth').innerText = `${currentAzimuth.toFixed(1)}°`;
                 let pitch = Math.round(event.beta || 0), roll = Math.round(event.gamma || 0);
                 document.getElementById('live-pitch').innerText = `${pitch}°`;
@@ -407,7 +443,7 @@
     }
 
     function renderLogTable() {
-        const tbody = document.getElementById('log-tbody'); if (measurementsLog.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="color:gray; text-align:center; padding:15px 10px;">Журнал пуст.</td></tr>`; return; }
+        const tbody = document.getElementById('log-tbody'); if (measurementsLog.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="color:gray; text-align:center; padding:20px 10px;">Журнал пуст.</td></tr>`; return; }
         tbody.innerHTML = "";
         measurementsLog.forEach(m => { tbody.innerHTML += `<tr><td><b>Линия №${m.id}</b></td><td><span style="color:var(--forest-green); font-weight:700;">${m.azimuth.toFixed(1)}°</span></td><td>${m.distance} м</td><td><span style="color:gray; font-size:12px;">✔️ Записано</span></td></tr>`; });
     }
@@ -423,22 +459,25 @@
         });
         let scale = Math.min((canvas.width - 40) / ((maxX - minX) || 1), (canvas.height - 40) / ((maxY - minY) || 1)); if (scale > 5) scale = 5;
         let offsetX = (canvas.width / 2) - ((minX + maxX) / 2) * scale, offsetY = (canvas.height / 2) - ((minY + maxY) / 2) * scale;
-        ctx.strokeStyle = '#E5E7EB'; ctx.lineWidth = 1;
+        
+        ctx.strokeStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#25352E' : '#E5E7EB';
+        ctx.lineWidth = 1;
         for(let i=0; i<canvas.width; i+=40) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke(); }
         for(let j=0; j<canvas.height; j+=40) { ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(canvas.width, j); ctx.stroke(); }
+        
         ctx.strokeStyle = '#2D5A27'; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(points[0].x * scale + offsetX, points[0].y * scale + offsetY);
         for (let i = 1; i < points.length; i++) { ctx.lineTo(points[i].x * scale + offsetX, points[i].y * scale + offsetY); } ctx.stroke();
         points.forEach((p, idx) => {
             let px = p.x * scale + offsetX, py = p.y * scale + offsetY; ctx.fillStyle = idx === 0 ? '#DC2626' : '#16A34A';
-            ctx.beginPath(); ctx.arc(px, py, 4, 0, 2 * Math.PI); ctx.fill(); ctx.fillStyle = '#333'; ctx.font = 'bold 11px Inter'; ctx.fillText(idx === 0 ? "Старт" : "Т-" + idx, px + 6, py - 4);
+            ctx.beginPath(); ctx.arc(px, py, 4, 0, 2 * Math.PI); ctx.fill(); 
+            ctx.fillStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#FFF' : '#333';
+            ctx.font = 'bold 11px Inter'; ctx.fillText(idx === 0 ? "Старт" : "Т-" + idx, px + 6, py - 4);
         });
     }
 
     function clearLog() { measurementsLog = []; renderLogTable(); drawPolygon(); }
-    function toggleTheme() { const body = document.documentElement; body.getAttribute('data-theme') === 'dark' ? body.removeAttribute('data-theme') : body.setAttribute('data-theme', 'dark'); drawPolygon(); }
     window.addEventListener('resize', drawPolygon);
-    document.getElementById('themeBtn').addEventListener('click', toggleTheme);
-    document.addEventListener('DOMContentLoaded', () => { checkLicenseStatus(); drawPolygon(); });
+    document.addEventListener('DOMContentLoaded', () => { initSavedTheme(); checkLicenseStatus(); drawPolygon(); });
 </script>
 </body>
 </html>
