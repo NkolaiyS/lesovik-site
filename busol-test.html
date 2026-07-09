@@ -155,6 +155,17 @@
         .measurements-log-table th { font-weight: 700; text-transform: uppercase; font-size: 11px; color: var(--forest-green); letter-spacing: 0.5px; }
         .btn-clear-log { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600; }
 
+        /* СТИЛИ ДЛЯ ИНПУТОВ И ВЫБОРА ЗАМЕРА */
+        .input-dist { width: 70px; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--card-bg); color: var(--text-graphite); font-weight: bold; }
+        .select-mode { padding: 5px; font-size: 12px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--card-bg); color: var(--text-graphite); }
+        .step-settings { margin-top: 10px; font-size: 12px; display: flex; gap: 10px; align-items: center; opacity: 0.9; }
+
+        /* ИНТЕРФЕЙС ГЕОМЕТРИИ И ХОЛСТА */
+        .canvas-container { position: relative; width: 100%; background: #FFFFFF; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-top: 15px; display: flex; flex-direction: column; align-items: center; padding: 10px; }
+        #polygon-canvas { background: #FdfFfd; border-radius: 6px; width: 100%; max-width: 450px; aspect-ratio: 1; border: 1px dashed rgba(0,0,0,0.1); }
+        [data-theme="dark"] #polygon-canvas { background: #151e1b; border: 1px dashed rgba(255,255,255,0.1); }
+        .area-badge { font-size: 16px; font-weight: 700; color: var(--forest-green); margin-top: 10px; text-align: center; background: rgba(45, 90, 39, 0.1); padding: 6px 15px; border-radius: 20px; }
+
         /* СЕО ТЕКСТ */
         .seo-info-section { margin-top: 40px; padding-top: 30px; border-top: 2px solid var(--border-color); color: var(--text-graphite); opacity: 0.85; }
         .seo-info-section h2 { font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 22px; margin-bottom: 15px; }
@@ -217,7 +228,7 @@
                 <div class="control-panel-buttons">
                     <button class="btn-action btn-set-zero" onclick="setZeroDirection()">🔒 Фиксировать 0°</button>
                     <button class="btn-action btn-reset-zero" onclick="resetZeroDirection()">Сбросить</button>
-                    <button id="btn-capture" class="btn-action btn-lock-measure" onclick="captureMeasurement()" disabled>Поймайте уровеньльного горизонта</button>
+                    <button id="btn-capture" class="btn-action btn-lock-measure" onclick="captureMeasurement()" disabled>Поймайте уровень горизонта</button>
                 </div>
             </div>
 
@@ -225,14 +236,14 @@
                 <h2>Журнал полевой съемки визиров</h2>
                 <div class="subtitle">Сюда автоматически заносятся зафиксированные румбы линий делянки.</div>
                 
-                <div style="max-height: 380px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-paper);">
+                <div style="max-height: 280px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-paper);">
                     <table class="measurements-log-table">
                         <thead>
                             <tr>
                                 <th>№ Линии</th>
                                 <th>Азимут</th>
-                                <th>Угол повор.</th>
-                                <th><button class="btn-clear-log" onclick="clearLog()">Очистить</button></th>
+                                <th>Длина (м)</th>
+                                <th>Тип замера</th>
                             </tr>
                         </thead>
                         <tbody id="log-tbody">
@@ -240,11 +251,23 @@
                         </tbody>
                     </table>
                 </div>
+
+                <div class="step-settings">
+                    <label>Длина шага таксатора (м): </label>
+                    <input type="number" id="step-length" class="input-dist" value="0.75" step="0.05" style="width: 60px;" onchange="updateStepLength()">
+                    <button class="btn-clear-log" style="padding: 2px 6px;" onclick="clearLog()">Очистить журнал</button>
+                </div>
+
+                <div class="canvas-container">
+                    <span style="font-weight: 700; color: var(--forest-green); font-size: 13px; margin-bottom: 5px; align-self: flex-start;">📐 ЧЕРТЕЖ И КАРТА ОТВОДА:</span>
+                    <canvas id="polygon-canvas" width="400" height="400"></canvas>
+                    <div id="area-display" class="area-badge">Площадь: 0.0000 га</div>
+                </div>
                 
-                <div style="margin-top: 20px; background: rgba(45, 90, 39, 0.04); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <div style="margin-top: 15px; background: rgba(45, 90, 39, 0.04); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
                     <span style="font-weight: 700; color: var(--forest-green); display: block; font-size: 13px; margin-bottom: 5px;">⚠️ ТАКСАТОРУ НА ЗАМЕТКУ:</span>
                     <span style="font-size: 12px; line-height: 1.5; display: block; opacity: 0.9;">
-                        Перед началом съемок в густом подросте обязательно откалибруйте датчик компаса в телефоне, покрутив его в воздухе по траектории восьмерки. Убедитесь, что чехол смартфона не имеет магнитных защелок.
+                        Перед началом съемок в густом подросте обязательно откалибруйте датчик компаса в телефоне, покрутив его в воздухе по траектории восьмерки. Убедитесь, что чехол смартфона не имеет магнитных защелок. При использовании шагомера держите телефон стабильно перед собой.
                     </span>
                 </div>
             </div>
@@ -262,7 +285,7 @@
             </ul>
 
             <h3>Инструкция по работе с оптическим онлайн-визиром</h3>
-            <p>В отличие от классической металлической буссоли БГ-1, требующей жесткой установки штатива,电子 буссоль «Лесовик» использует метод вертикального проецирования вешек на матрицу камеры. Таксатор удерживает устройство вертикально перед собой. Встроенный датчик-магнитометр непрерывно считывает углы курса, а акселерометр отслеживает пространственные наклоны по осям Pitch и Roll.</p>
+            <p>В отличие от классической металлической буссоли БГ-1, требующей жесткой установки штатива, электронная буссоль «Лесовик» использует метод вертикального проецирования вешек на матрицу камеры. Таксатор удерживает устройство вертикально перед собой. Встроенный датчик-магнитометр непрерывно считывает углы курса, а акселерометр отслеживает пространственные наклоны по осям Pitch и Roll.</p>
             <p>Для предотвращения таксационной погрешности кнопка фиксации румба активируется только в момент, когда кольцо авиагоризонта горит зеленым цветом — это сигнализирует о том, что плоскость замера идеально параллельна земной поверхности. Функция фиксации ноль-направления позволяет мгновенно отложить перпендикулярный визир под углом 90 градусов без использования таблиц приращений и полевых вычислений.</p>
         </section>
     </main>
@@ -300,6 +323,11 @@
     let baseAzimuth = null;
     let isLevel = false;
     let measurementsLog = [];
+    
+    // Переменные для шагомера
+    let stepLength = 0.75; 
+    let stepCountTotal = 0;
+    let activePedometerIndex = null;
 
     function toggleTheme() {
         const body = document.documentElement;
@@ -308,6 +336,7 @@
         } else {
             body.setAttribute('data-theme', 'dark');
         }
+        drawPolygon();
     }
 
     // ИНИЦИАЛИЗАЦИЯ ПОТОКА КАМЕРЫ НА ЭКРАН
@@ -315,12 +344,11 @@
         const video = document.getElementById('video-preview');
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { exact: "environment" } }, // Задняя камера
+                video: { facingMode: { exact: "environment" } }, 
                 audio: false
             });
             video.srcObject = stream;
         } catch (err) {
-            // Если нет задней камеры (на ПК), берем любую доступную
             navigator.mediaDevices.getUserMedia({ video: true, audio: false })
                 .then(stream => video.srcObject = stream)
                 .catch(e => console.error("Камера заблокирована", e));
@@ -329,25 +357,21 @@
 
     // ОБРАБОТКА ДАТЧИКОВ КОМПАСА И ГИРОСКОПА СМАРТФОНА
     function handleOrientation(event) {
-        // Стабилизация курса для Android (используем абсолютное направление, если доступно)
         let heading = event.webkitCompassHeading || (event.absolute === true ? event.alpha : (360 - event.alpha));
         if (!heading) heading = 0;
         
-        // Коррекция для инвертированных значений на некоторых прошивках
         if (heading < 0) heading += 360;
         if (heading >= 360) heading -= 360;
         
         currentAzimuth = heading;
         document.getElementById('live-azimuth').innerText = `${currentAzimuth.toFixed(1)}°`;
 
-        // Забираем углы наклона корпуса телефона
-        let pitch = Math.round(event.beta || 0); // Наклон вперед-назад
-        let roll = Math.round(event.gamma || 0);  // Наклон влево-вправо
+        let pitch = Math.round(event.beta || 0); 
+        let roll = Math.round(event.gamma || 0);  
 
         document.getElementById('live-pitch').innerText = `${pitch}°`;
         document.getElementById('live-roll').innerText = `${roll}°`;
 
-        // Логика вычисления угла поворота от зафиксированной базы
         const badge = document.getElementById('angle-turn-badge');
         if (baseAzimuth !== null) {
             let turnAngle = currentAzimuth - baseAzimuth;
@@ -358,11 +382,9 @@
             badge.style.display = 'none';
         }
 
-        // ЭТАЛОННАЯ ИНЖЕНЕРНАЯ ПРОВЕРКА УРОВНЯ ГОРИЗОНТА
         const gyroRing = document.getElementById('gyro-ring');
         const btnCapture = document.getElementById('btn-capture');
 
-        // Универсальная формула проверки вертикальности (допуск завала по осям)
         const isPitchOk = Math.abs(pitch - 90) <= 5 || Math.abs(pitch - 0) <= 5 || Math.abs(pitch + 90) <= 5;
         const isRollOk = Math.abs(roll) <= 4 || Math.abs(roll - 180) <= 4 || Math.abs(roll + 180) <= 4;
 
@@ -383,7 +405,6 @@
 
     function initOrientationSensors() {
         if (window.DeviceOrientationEvent) {
-            // Для Android используем абсолютное событие для точного компаса
             if ('ondeviceorientationabsolute' in window) {
                 window.addEventListener('deviceorientationabsolute', handleOrientation, true);
             } else {
@@ -391,6 +412,59 @@
             }
         } else {
             alert("Ваш смартфон не поддерживает аппаратные гироскопы и компасы!");
+        }
+        initPedometer();
+    }
+
+    // ИНИЦИАЛИЗАЦИЯ ИНТЕРФЕЙСА ДАТЧИКА ШАГОВ (АКСЕЛЕРОМЕТРА)
+    function initPedometer() {
+        if (window.DeviceMotionEvent) {
+            let lastAmount = 0;
+            let lastUpdate = 0;
+            window.addEventListener('devicemotion', (e) => {
+                let acc = e.accelerationIncludingGravity;
+                if(!acc) return;
+                
+                let currentTime = Date.now();
+                if ((currentTime - lastUpdate) > 100) {
+                    lastUpdate = currentTime;
+                    let speed = Math.sqrt(acc.x*acc.x + acc.y*acc.y + acc.z*acc.z);
+                    if (speed > 11.5 && (currentTime - lastAmount) > 400) {
+                        lastAmount = currentTime;
+                        onStepDetected();
+                    }
+                }
+            });
+        }
+    }
+
+    function onStepDetected() {
+        if (activePedometerIndex !== null) {
+            let rowIdx = measurementsLog.findIndex(m => m.id === activePedometerIndex);
+            if (rowIdx !== -1 && measurementsLog[rowIdx].mode === 'steps') {
+                measurementsLog[rowIdx].steps += 1;
+                measurementsLog[rowIdx].distance = parseFloat((measurementsLog[rowIdx].steps * stepLength).toFixed(1));
+                
+                let inputEl = document.getElementById(`dist-${activePedometerIndex}`);
+                if (inputEl) inputEl.value = measurementsLog[rowIdx].distance;
+                
+                drawPolygon();
+            }
+        }
+    }
+
+    function updateStepLength() {
+        let val = parseFloat(document.getElementById('step-length').value);
+        if(!isNaN(val) && val > 0) {
+            stepLength = val;
+            measurementsLog.forEach(m => {
+                if (m.mode === 'steps') {
+                    m.distance = parseFloat((m.steps * stepLength).toFixed(1));
+                    let inputEl = document.getElementById(`dist-${m.id}`);
+                    if (inputEl) inputEl.value = m.distance;
+                }
+            });
+            drawPolygon();
         }
     }
 
@@ -408,21 +482,48 @@
     function captureMeasurement() {
         if (!isLevel) return;
 
-        let turnAngleStr = "—";
-        if (baseAzimuth !== null) {
-            let turnAngle = currentAzimuth - baseAzimuth;
-            if (turnAngle < 0) turnAngle += 360;
-            turnAngleStr = `${turnAngle.toFixed(1)}°`;
-        }
-
         const newMeasurement = {
             id: measurementsLog.length + 1,
-            azimuth: `${currentAzimuth.toFixed(1)}°`,
-            turn: turnAngleStr
+            azimuth: parseFloat(currentAzimuth.toFixed(1)),
+            distance: 20.0, // Значение по умолчанию для старта
+            mode: 'manual',
+            steps: 0
         };
+
+        // Если предыдущая линия считала шаги, останавливаем её
+        if (activePedometerIndex !== null) {
+            activePedometerIndex = null;
+        }
 
         measurementsLog.push(newMeasurement);
         renderLogTable();
+        drawPolygon();
+    }
+
+    function changeLineDistance(id, value) {
+        let idx = measurementsLog.findIndex(m => m.id === id);
+        if(idx !== -1) {
+            measurementsLog[idx].distance = parseFloat(value) || 0;
+            drawPolygon();
+        }
+    }
+
+    function changeLineMode(id, mode) {
+        let idx = measurementsLog.findIndex(m => m.id === id);
+        if(idx !== -1) {
+            measurementsLog[idx].mode = mode;
+            if (mode === 'steps') {
+                // Делаем линию активной для записи шагов телефона
+                activePedometerIndex = id;
+                measurementsLog[idx].steps = 0;
+                measurementsLog[idx].distance = 0;
+                let inputEl = document.getElementById(`dist-${id}`);
+                if (inputEl) inputEl.value = 0;
+            } else {
+                if (activePedometerIndex === id) activePedometerIndex = null;
+            }
+            drawPolygon();
+        }
     }
 
     function renderLogTable() {
@@ -434,27 +535,148 @@
 
         tbody.innerHTML = "";
         measurementsLog.forEach(m => {
+            let isManualSelected = m.mode === 'manual' ? 'selected' : '';
+            let isStepsSelected = m.mode === 'steps' ? 'selected' : '';
+            
             tbody.innerHTML += `
                 <tr>
-                    <td><b>Линия №${m.id}</b></td>
-                    <td><span style="color:var(--forest-green); font-weight:700;">${m.azimuth}</span></td>
-                    <td>${m.turn}</td>
-                    <td><span style="color:gray; font-size:12px;">✔️ Записано</span></td>
+                    <td><b>№${m.id} (${m.azimuth}°)</b></td>
+                    <td><span style="color:var(--forest-green); font-weight:700;">${m.azimuth}°</span></td>
+                    <td>
+                        <input type="number" id="dist-${m.id}" class="input-dist" value="${m.distance}" step="0.5" oninput="changeLineDistance(${m.id}, this.value)">
+                    </td>
+                    <td>
+                        <select class="select-mode" onchange="changeLineMode(${m.id}, this.value)">
+                            <option value="manual" ${isManualSelected}>Вручную</option>
+                            <option value="steps" ${isStepsSelected}>Шагомер</option>
+                        </select>
+                    </td>
                 </tr>
             `;
         });
     }
 
+    // ВЫЧИСЛЕНИЕ КООРДИНАТ И ОТРИСОВКА ПОЛИГОНА ДЕЛЯНКИ (GEOMETRY ENGINE)
+    function drawPolygon() {
+        const canvas = document.getElementById('polygon-canvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        ctx.clearRect(0, 0, width, height);
+
+        if (measurementsLog.length === 0) {
+            document.getElementById('area-display').innerText = "Площадь: 0.0000 га";
+            return;
+        }
+
+        let points = [{ x: 0, y: 0 }];
+        let currentX = 0;
+        let currentY = 0;
+
+        // Переводим азимуты и расстояния в плоские координаты X и Y
+        measurementsLog.forEach(m => {
+            let angleRad = (m.azimuth * Math.PI) / 180;
+            // В геодезии/таксации 0 градусов — это Север (вверх по Y), расчет по часовой
+            currentX += m.distance * Math.sin(angleRad);
+            currentY += m.distance * Math.cos(angleRad);
+            points.push({ x: currentX, y: currentY });
+        });
+
+        // Нахождение границ (Bounding Box) для масштабирования контура под холст
+        let minX = Math.min(...points.map(p => p.x));
+        let maxX = Math.max(...points.map(p => p.x));
+        let minY = Math.min(...points.map(p => p.y));
+        let maxY = Math.max(...points.map(p => p.y));
+
+        let polyWidth = maxX - minX;
+        let polyHeight = maxY - minY;
+        
+        let maxDim = Math.max(polyWidth, polyHeight, 1);
+        let padding = 40; 
+        let scale = (width - padding * 2) / maxDim;
+
+        // Функция трансформации мировых координат в экранные пиксели холста
+        function toPixel(pt) {
+            return {
+                x: padding + (pt.x - minX) * scale,
+                y: height - (padding + (pt.y - minY) * scale) // Инверсия Y для Canvas
+            };
+        }
+
+        // Отрисовка сетки
+        ctx.strokeStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
+        ctx.lineWidth = 1;
+        for(let i = 0; i < width; i += 40) {
+            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke();
+        }
+
+        // Отрисовка линий полигона лесосеки
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#2D5A27';
+        if (document.documentElement.getAttribute('data-theme') === 'dark') ctx.strokeStyle = '#8FBC8F';
+
+        for (let i = 0; i < points.length - 1; i++) {
+            let p1 = toPixel(points[i]);
+            let p2 = toPixel(points[i+1]);
+
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+
+            // Подпись расстояния по центру линии стороны отвода
+            let midX = (p1.x + p2.x) / 2;
+            let midY = (p1.y + p2.y) / 2;
+            ctx.font = "bold 11px Inter, sans-serif";
+            ctx.fillStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#FFF' : '#333';
+            ctx.fillText(`${measurementsLog[i].distance} м`, midX + 6, midY - 6);
+        }
+
+        // Маркировка точек (вершин углов делянки)
+        points.forEach((p, idx) => {
+            let pix = toPixel(p);
+            ctx.beginPath();
+            ctx.arc(pix.x, pix.y, idx === 0 ? 6 : 4, 0, 2 * Math.PI);
+            ctx.fillStyle = idx === 0 ? '#DC2626' : '#16A34A'; // Старт — красный
+            ctx.fill();
+        });
+
+        // Расчет площади по формуле Гаусса (координатный метод)
+        let area = 0;
+        let j = points.length - 1;
+        for (let i = 0; i < points.length; i++) {
+            area += (points[j].x + points[i].x) * (points[j].y - points[i].y);
+            j = i;
+        }
+        area = Math.abs(area / 2);
+        let areaHa = area / 10000; // Перевод кв.м в гектары
+
+        // Текст площади в центре чертежа
+        let centerX = padding + ((maxX + minX) / 2 - minX) * scale;
+        let centerY = height - (padding + ((maxY + minY) / 2 - minY) * scale);
+        
+        ctx.font = "bold 14px Merriweather, serif";
+        ctx.fillStyle = "#2D5A27";
+        if (document.documentElement.getAttribute('data-theme') === 'dark') ctx.fillStyle = '#8FBC8F';
+        ctx.textAlign = "center";
+        ctx.fillText(`${areaHa.toFixed(4)} га`, centerX, centerY);
+
+        document.getElementById('area-display').innerText = `Площадь: ${areaHa.toFixed(4)} га (${Math.round(area)} м²)`;
+    }
+
     function clearLog() {
-        if (confirm("Очистить текущий журнал полевой съемки?")) {
+        if (confirm("Очистить текущий журнал полевой съемки и сбросить карту отвода?")) {
             measurementsLog = [];
+            activePedometerIndex = null;
             renderLogTable();
+            drawPolygon();
         }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
         startCamera();
-        // Запрашиваем официальные права на датчики iOS 13+ / Android
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
             document.body.addEventListener('click', function initOnFirstTouch() {
                 DeviceOrientationEvent.requestPermission()
@@ -467,6 +689,7 @@
         } else {
             initOrientationSensors();
         }
+        drawPolygon();
     });
 </script>
 </body>
