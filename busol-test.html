@@ -60,7 +60,7 @@
             <h2 style="margin:0 0 10px; font-size:20px; color:#FFF;">Буссоль таксатора</h2>
             <p style="font-size:13px; color:#9CA3AF; margin:0 0 15px;">Программа не активирована на этом устройстве.</p>
             <div style="font-size:12px; text-align:left; color:#9CA3AF;">ID устройства для Андрея:</div>
-            <div id="device-id-display" class="crypto-id">Ожидание...</div>
+            <div id="device-id-display" class="crypto-id">Генерация...</div>
             <input type="text" id="license-key-input" class="license-input" placeholder="Введите ключ активации">
             <button class="btn-activate" onclick="validateLicenseKey()">Активировать программу</button>
             <div id="error-msg" style="color:#EF4444; font-size:12px; margin-top:10px; display:none;">Неверный ключ активации!</div>
@@ -125,40 +125,17 @@
 
     async function startCamera() {
         const video = document.getElementById('video-preview');
-        const options = { audio: false, video: { facingMode: "environment" } };
         try {
-            const stream = await navigator.mediaDevices.getUserMedia(options);
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } }, audio: false });
             video.srcObject = stream;
         } catch (err) {
-            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-                .then(stream => { video.srcObject = stream; })
-                .catch(e => console.error(e));
+            navigator.mediaDevices.getUserMedia({ video: true, audio: false }).then(stream => video.srcObject = stream).catch(e => console.error(e));
         }
     }
 
     function generateDeviceID() {
-        let savedID = localStorage.getItem("busol_hardware_token");
-        if (savedID) return savedID;
-
-        let str = navigator.userAgent + (screen.width || 360) + (screen.height || 640);
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            hash = ((hash << 5) - hash) + str.charCodeAt(i);
-            hash |= 0;
-        }
-        
-        let cryptoTail = "";
-        try {
-            let arr = new Uint16Array(1);
-            window.crypto.getRandomValues(arr);
-            cryptoTail = "-" + (arr[0] % 999);
-        } catch(e) {
-            cryptoTail = "-" + Math.floor(Math.random() * 999);
-        }
-
-        let newID = "TAX-" + Math.abs(hash).toString().substring(0, 4) + cryptoTail;
-        localStorage.setItem("busol_hardware_token", newID);
-        return newID;
+        let seed = (screen.width * screen.height) + (navigator.hardwareConcurrency || 4);
+        return "TAX-" + Math.abs(seed).toString().substring(0,4) + "-" + (seed % 999);
     }
 
     function validateLicenseKey() {
@@ -168,12 +145,12 @@
         
         let expectedKey = "KEY-" + myID.replace("TAX-", "") + "-PRO";
 
-        if (key === expectedKey) {
+        // Мастер-ключи для тестов
+        if (key === expectedKey || key === "365-DAYS-PREMIUM-WOOD" || key === "180-DAYS-PRO-FOREST" || key === "999-YEARS-INFINITE-TAXATOR") {
             localStorage.setItem("busol_expired_date", Date.now() + 365*24*60*60*1000);
             localStorage.setItem("busol_activated_status", "true");
             document.getElementById('activation-screen').style.display = 'none';
             startCamera();
-            initOrientationSensors();
         } else {
             error.style.display = 'block';
         }
@@ -189,15 +166,12 @@
     }
 
     function checkLicenseStatus() {
-        const id = generateDeviceID();
-        document.getElementById('device-id-display').innerText = id;
-        
         if (localStorage.getItem("busol_activated_status") === "true") {
-            document.getElementById('activation-screen').style.display = 'none';
+            document.getElementById('activation-screen').style.display = 'none'; 
             startCamera();
-            initOrientationSensors();
         } else {
             document.getElementById('activation-screen').style.display = 'flex';
+            document.getElementById('device-id-display').innerText = generateDeviceID();
         }
     }
 
@@ -281,7 +255,7 @@
     function clearLog() { measurementsLog = []; renderLogTable(); drawPolygon(); }
     window.addEventListener('resize', drawPolygon);
     document.getElementById('themeBtn').addEventListener('click', toggleTheme);
-    document.addEventListener('DOMContentLoaded', () => { checkLicenseStatus(); drawPolygon(); });
+    document.addEventListener('DOMContentLoaded', () => { checkLicenseStatus(); initOrientationSensors(); drawPolygon(); });
 </script>
 </body>
 </html>
