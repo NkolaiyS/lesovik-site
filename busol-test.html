@@ -111,13 +111,11 @@
         
         .btn-instruction { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
         .btn-instruction:hover { background: var(--forest-green); color: #FFF; }
-        [data-theme="dark"] .btn-instruction:hover { background: var(--forest-light); color: #111; }
 
         .btn-calibration { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
         .btn-calibration:hover { background: var(--danger); color: #FFF; }
 
         .theme-toggle { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; min-height: 36px; }
-        .theme-toggle:hover { background-color: var(--forest-green); color: var(--bg-paper); }
 
         main { flex: 1; }
         .container { max-width: 1000px; margin: 75px auto 30px; padding: 0 10px; }
@@ -128,6 +126,13 @@
         .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 4px 4px 0px rgba(0,0,0,0.02); }
         h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 18px; margin-bottom: 5px; }
         .subtitle { font-size: 11px; color: var(--text-graphite); opacity: 0.6; margin-bottom: 15px; }
+
+        /* БЛОК ПЕРЕКЛЮЧЕНИЯ РЕЖИМОВ */
+        .mode-switcher-container { display: flex; width: 100%; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-bottom: 12px; background: var(--bg-paper); }
+        .mode-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; background: transparent; border: none; color: var(--text-graphite); font-weight: 600; font-size: 12px; cursor: pointer; transition: 0.2s; }
+        .mode-tab.active-mode { background: var(--forest-green); color: #FFFFFF; }
+        [data-theme="dark"] .mode-tab.active-mode { background: var(--forest-light); color: #111111; }
+        .btn-help-circle { background: rgba(0,0,0,0.1); border: none; width: 18px; height: 16px; border-radius: 50%; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; color: inherit; padding: 0; }
 
         /* ИНТЕРФЕЙС ВИЗУАЛЬНОЙ БУССОЛИ */
         .camera-viewport-wrapper { position: relative; width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid var(--border-color); }
@@ -153,9 +158,9 @@
         .btn-set-zero { background-color: var(--forest-green); color: #FFF; }
         .btn-reset-zero { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-graphite); }
         .btn-lock-measure { grid-column: span 2; background-color: #E0E0E0; color: #888; cursor: not-allowed; font-size: 14px; }
-        .btn-lock-measure.ready-to-fire { background-color: var(--forest-green); color: #FFF; cursor: pointer; }
+        .btn-lock-measure.ready-to-fire { background-color: var(--forest-green); color: #FFF; cursor: pointer; box-shadow: 0 4px 10px rgba(45, 90, 39, 0.2); }
 
-        /* ТАБЛИЦА ЖУРНАЛА С ФИКСИРОВАННЫМИ КОЛОНКАМИ */
+        /* ТАБЛИЦА ЖУРНАЛА */
         .measurements-log-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
         .measurements-log-table th, .measurements-log-table td { padding: 6px 4px; font-size: 12px; border-bottom: 1px solid var(--border-color); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .measurements-log-table th { font-weight: 700; text-transform: uppercase; font-size: 10px; color: var(--forest-green); }
@@ -176,7 +181,7 @@
         [data-theme="dark"] #polygon-canvas { background: #151e1b; border: 1px dashed rgba(255,255,255,0.1); }
         .area-badge { font-size: 14px; font-weight: 700; color: var(--forest-green); margin-top: 8px; text-align: center; background: rgba(45, 90, 39, 0.1); padding: 5px 12px; border-radius: 20px; }
 
-        /* МОДАЛЬНЫЕ ОКНА */
+        /* МОДАЛЬНЫЕ ОКНА И ПОПАПЫ ОПЦИЙ */
         .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--overlay-bg); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 12px; }
         .popup-window { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; max-width: 540px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 18px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); position: relative; }
         .popup-close { position: absolute; top: 12px; right: 12px; background: transparent; border: none; color: var(--text-graphite); font-size: 22px; cursor: pointer; opacity: 0.7; }
@@ -220,6 +225,7 @@
         </div>
     </header>
 
+    <!-- ПОПАП МОДАЛЬНОЕ ОКНО ОБЩЕЙ ИНСТРУКЦИИ -->
     <div id="instruction-popup" class="popup-overlay" onclick="closeInstructionOuter(event)">
         <div class="popup-window">
             <button class="popup-close" onclick="closeInstruction()">&times;</button>
@@ -232,12 +238,41 @@
                 <li><strong>Измерение расстояния:</strong> Измерьте расстояние до следующего столба. Вы можете ввести метры <strong>Вручную</strong> в появившееся поле или переключить режим на <strong>Шагомер</strong>. Если выбран шагомер — идите к вехе спокойным шагом, удерживая телефон перед собой, устройство пересчитает шаги в метры.</li>
                 <li><strong>Построение полигона:</strong> Перейдите на вторую точку, наведите визир на третью веху, поймайте зеленый уровень и снова зафиксируйте. Повторяйте процедуру по всему периметру.</li>
                 <li><strong>Контур и Расчет:</strong> На интерактивном чертеже ниже журнала будет сразу выстраиваться точный контур Вашей лесосеки с длинами сторон. В центре полигона автоматически рассчитается чистая площадь выдела в гектарах ($га$). Для прямоугольной делянки следите, чтобы углы поворота были близки к $90^\circ$.</li>
-                <li><strong>🔒 Использование фиксации 0°:</strong> Опция предназначена для точной разбивки перпендикулярных визиров под $90^\circ$ без математических расчетов в уме. Встаньте на точку угла поворота делянки, направьте перекрестие визира назад (вдоль линии, которую только что прошли), и нажмите кнопку <em>«Фиксировать 0°»</em>. На экране зафиксируется базовая линия, а на плашке отобразится «ПОВОРОТ: 0°». Начните плавно поворачиваться всем корпусом в сторону новой просеки. Когда значение на зеленом табло станет строго <strong>`90.0°`</strong> или <strong>`270.0°`</strong>, плоскость камеры будет направлена идеально по перпендикуляру. Дайте команду помощнику ставить угловой столб.</li>
+                <li><strong>🔒 Использование фиксации 0°:</strong> Опция предназначена для точной разбивки перпендикулярных визиров под $90^\circ$ без математических расчетов в уме. Встаньте на точку угла поворота делянки, направьте перекрестие визира назад (вдоль линии, которую только что прошли), и нажмите кнопку <em>«Фиксировать 0°»</em>. На экране зафиксируется базовая линия, а на плашке отобразится «ПОВОРОТ: 0°». Начните плавно поворачиваться всем корпусом в сторону новой просеки. Когда значение на зеленом табло станет строго <strong>`90.0°`</strong> или <strong>`270.0°`</strong>, Вы будете смотреть ровно по перпендикуляру. Дайте команду помощнику ставить угловой столб.</li>
             </ol>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closeInstruction()">Понятно, к замеру</button>
         </div>
     </div>
 
+    <!-- ПОПАП: ДЕТАЛИ МАГНИТНОГО РЕЖИМА -->
+    <div id="mag-info-popup" class="popup-overlay" onclick="closePopupOuter('mag-info-popup', event)">
+        <div class="popup-window">
+            <button class="popup-close" onclick="closePopup('mag-info-popup')">&times;</button>
+            <h3>Магнитный режим (Запись азимутов)</h3>
+            <ul class="instruction-steps">
+                <li><strong>Принцип работы:</strong> Прибор считывает горизонтальный угол направления стороны света непосредственно с магнитометра устройства от $0^\circ$ до $360^\circ$.</li>
+                <li><strong>Специфика железа:</strong> Требует обязательной калибровки «восьмеркой» перед стартом. Идеально и без сбоев работает на <strong>iPhone (Safari)</strong> и флагманских Android, имеющих встроенную компенсацию наклона осей.</li>
+                <li><strong>Полевой журнал:</strong> Каждая зафиксированная точка заносится в таблицу со своим абсолютным круговым азимутом, чертеж Canvas строится от направления Севера.</li>
+            </ul>
+            <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closePopup('mag-info-popup')">Понятно</button>
+        </div>
+    </div>
+
+    <!-- ПОПАП: ДЕТАЛИ РЕЖИМА ТЕОДОЛИТА -->
+    <div id="theo-info-popup" class="popup-overlay" onclick="closePopupOuter('theo-info-popup', event)">
+        <div class="popup-window">
+            <button class="popup-close" onclick="closePopup('theo-info-popup')">&times;</button>
+            <h3>Режим Теодолита (Внутренние углы)</h3>
+            <ul class="instruction-steps">
+                <li><strong>Защита от залипания Android:</strong> Если компас Вашего телефона капризничает, зависает в вертикальном положении или выдает искажения до $90^\circ$ — переключитесь в этот режим. Магнитный компас полностью отключается.</li>
+                <li><strong>Работа по гироскопу:</strong> Расчет углов поворота переносится на высокоточный аппаратный гироскоп. Ему безразличны ЛЭП, залежи руды и завалы корпуса. Углы считаются со снайперской точностью.</li>
+                <li><strong>Порядок действий:</strong> Встаньте на точку угла делянки, наведите перекрестие назад на прошлую веху и нажмите <strong>«Фиксировать 0°»</strong>. Затем развернитесь на новый столб. На плашке загорится чистый внутренний угол поворота делянки. Жмите фиксацию — в журнал запишется именно этот угол.</li>
+            </ul>
+            <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closePopup('theo-info-popup')">Понятно</button>
+        </div>
+    </div>
+
+    <!-- ПОПАП МОДАЛЬНОЕ ОКНО КАЛИБРОВКИ -->
     <div id="calibration-popup" class="popup-overlay" onclick="closeCalibrationOuter(event)">
         <div class="popup-window">
             <button class="popup-close" onclick="closeCalibration()">&times;</button>
@@ -272,6 +307,18 @@
                 <h2>Визирная рамка буссоли</h2>
                 <div class="subtitle">Наведите вертикальную нить на веху. Замер доступен только по зеленому уровню.</div>
                 
+                <!-- НОВЫЙ ИНТЕРФЕЙСНЫЙ ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМОВ С ИНДИВИДУАЛЬНЫМИ ПОПАПАМИ ПРАВИЛ (?) -->
+                <div class="mode-switcher-container">
+                    <button id="mode-mag" class="mode-tab active-mode" onclick="switchSystemMode('magnetic')">
+                        Магнитный (Азимуты)
+                        <span class="btn-help-circle" onclick="openPopup('mag-info-popup', event)">?</span>
+                    </button>
+                    <button id="mode-theo" class="mode-tab" onclick="switchSystemMode('theodolite')">
+                        Теодолит (Углы)
+                        <span class="btn-help-circle" onclick="openPopup('theo-info-popup', event)">?</span>
+                    </button>
+                </div>
+
                 <div class="camera-viewport-wrapper">
                     <div class="visir-line"></div>
                     <div class="visir-center-dot"></div>
@@ -279,7 +326,7 @@
                     <div id="gyro-ring" class="horizon-gyro-scope"></div>
                     
                     <div class="overlay-data-box top-left-status">
-                        АЗИМУТ: <span id="live-azimuth" style="color:#8FBC8F; font-weight:bold;">0.0°</span><br>
+                        <span id="label-live-mode">АЗИМУТ:</span> <span id="live-azimuth" style="color:#8FBC8F; font-weight:bold;">0.0°</span><br>
                         УГОЛ X: <span id="live-pitch">0°</span>
                     </div>
                     <div class="overlay-data-box top-right-status">
@@ -311,7 +358,7 @@
                         <thead>
                             <tr>
                                 <th>Линия</th>
-                                <th>Азимут</th>
+                                <th id="th-mode-label">Азимут</th>
                                 <th>Длина, м</th>
                                 <th>Тип</th>
                                 <th>Удал.</th>
@@ -369,7 +416,7 @@
                     <rect x="10.5" y="20" width="3" height="4"/>
                 </svg>
                 <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 16px;">Лесовик</div>
-                <div style="font-size: 13px; margin-top: 5px; opacity: 0.8;">Цифровой инструмент таксатора. База знаний, калькуляторы и профильные статьи для специалистов леса.</div>
+                <div style="font-size: 12px; margin-top: 5px; opacity: 0.8;">Цифровой инструмент таксатора. База знаний, калькуляторы и профильные статьи для специалистов леса.</div>
             </div>
             <div class="footer-column">
                 <h4>Правовая информация</h4>
@@ -399,25 +446,34 @@
     let stepLength = 0.75; 
     let activePedometerIndex = null;
 
+    // Глобальная переменная текущего режима работы
+    let currentSystemMode = 'magnetic'; // 'magnetic' или 'theodolite'
+
     // Локальные переменные системы жесткой калибровки
     let isCalibrating = false;
-    let calibSectors = { q1: false, q2: false, q3: false, q4: false }; // Проверка 360 градусов
-    let calibTiltOk = false; // Проверка наклонов по осям X/Y
+    let calibSectors = { q1: false, q2: false, q3: false, q4: false }; 
+    let calibTiltOk = false; 
 
     // СОХРАНЕНИЕ ДАННЫХ В LOCALSTORAGE
     function saveToLocalStorage() {
         localStorage.setItem('lesovik_measurements', JSON.stringify(measurementsLog));
         localStorage.setItem('lesovik_step_length', stepLength);
+        localStorage.setItem('lesovik_system_mode', currentSystemMode);
     }
 
     // ЗАГРУЗКА ДАННЫХ ИЗ LOCALSTORAGE ПРИ СТАРТЕ
     function loadFromLocalStorage() {
         const savedLog = localStorage.getItem('lesovik_measurements');
         const savedStep = localStorage.getItem('lesovik_step_length');
+        const savedMode = localStorage.getItem('lesovik_system_mode');
         
         if (savedStep) {
             stepLength = parseFloat(savedStep);
             document.getElementById('step-length').value = stepLength;
+        }
+        if (savedMode) {
+            currentSystemMode = savedMode;
+            applyModeUI();
         }
         if (savedLog) {
             measurementsLog = JSON.parse(savedLog);
@@ -426,19 +482,32 @@
         }
     }
 
-    // Управление модальным окном (Инструкция)
+    // УПРАВЛЕНИЕ ПОПАПАМИ РЕЖИМОВ (?) И ИНСТРУКЦИЙ
+    function openPopup(id, event) {
+        if(event) event.stopPropagation(); // Предотвращаем клик по самой вкладке
+        document.getElementById(id).style.display = 'flex';
+    }
+
+    function closePopup(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+
+    function closePopupOuter(id, event) {
+        if (event.target.id === id) {
+            closePopup(id);
+        }
+    }
+
     function openInstruction() {
-        document.getElementById('instruction-popup').style.display = 'flex';
+        openPopup('instruction-popup');
     }
 
     function closeInstruction() {
-        document.getElementById('instruction-popup').style.display = 'none';
+        closePopup('instruction-popup');
     }
 
     function closeInstructionOuter(event) {
-        if (event.target.id === 'instruction-popup') {
-            closeInstruction();
-        }
+        closePopupOuter('instruction-popup', event);
     }
 
     // Управление модальным окном (Калибровка)
@@ -455,6 +524,40 @@
     function closeCalibrationOuter(event) {
         if (event.target.id === 'calibration-popup') {
             closeCalibration();
+        }
+    }
+
+    // ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ РАБОТЫ (ИНЖЕНЕРНОЕ ЯДРО)
+    function switchSystemMode(mode) {
+        if (measurementsLog.length > 0) {
+            if (!confirm("Внимание! При смене режима текущий журнал полевой съемки будет очищен. Продолжить?")) {
+                return;
+            }
+        }
+        measurementsLog = [];
+        baseAzimuth = null;
+        activePedometerIndex = null;
+        currentSystemMode = mode;
+        
+        applyModeUI();
+        resetZeroDirection();
+        renderLogTable();
+        saveToLocalStorage();
+        drawPolygon();
+    }
+
+    function applyModeUI() {
+        document.getElementById('mode-mag').classList.remove('active-mode');
+        document.getElementById('mode-theo').classList.remove('active-mode');
+        
+        if (currentSystemMode === 'magnetic') {
+            document.getElementById('mode-mag').classList.add('active-mode');
+            document.getElementById('label-live-mode').innerText = "АЗИМУТ:";
+            document.getElementById('th-mode-label').innerText = "Азимут";
+        } else {
+            document.getElementById('mode-theo').classList.add('active-mode');
+            document.getElementById('label-live-mode').innerText = "ВН. УГОЛ:";
+            document.getElementById('th-mode-label').innerText = "Вн. угол";
         }
     }
 
@@ -476,14 +579,12 @@
         document.getElementById('btn-start-calib').innerText = "Идет замер...";
         document.getElementById('calib-status').innerText = "Выполняйте объемные петли в воздухе!";
         
-        // Жесткий таймер на 12 секунд
         setTimeout(() => {
             if (isCalibrating) {
                 isCalibrating = false;
                 document.getElementById('btn-start-calib').disabled = false;
                 document.getElementById('btn-start-calib').innerText = "Повторить";
                 
-                // Честная проверка: пройдены ли все 4 сектора круга и были ли наклоны
                 const isCircleOk = calibSectors.q1 && calibSectors.q2 && calibSectors.q3 && calibSectors.q4;
                 
                 if (isCircleOk && calibTiltOk) {
@@ -509,7 +610,6 @@
         drawPolygon();
     }
 
-    // ИНИЦИАЛИЗАЦИЯ ПОТОКА КАМЕРЫ НА ЭКРАН
     async function startCamera() {
         const video = document.getElementById('video-preview');
         try {
@@ -525,7 +625,7 @@
         }
     }
 
-    // ОБРАБОТКА ДАТЧИКОВ КОМПАСА И ГИРОСКОПА СМАРТФОНА
+    // ОБРАБОТКА ДАТЧИКОВ УСТРОЙСТВА
     function handleOrientation(event) {
         let heading = event.webkitCompassHeading || (event.absolute === true ? event.alpha : (360 - event.alpha));
         if (!heading) heading = 0;
@@ -534,7 +634,6 @@
         if (heading >= 360) heading -= 360;
         
         currentAzimuth = heading;
-        document.getElementById('live-azimuth').innerText = `${currentAzimuth.toFixed(1)}°`;
 
         let pitch = Math.round(event.beta || 0); 
         let roll = Math.round(event.gamma || 0);  
@@ -542,35 +641,48 @@
         document.getElementById('live-pitch').innerText = `${pitch}°`;
         document.getElementById('live-roll').innerText = `${roll}°`;
 
-        // Строгий сбор секторов вращения при калибровке
+        // Живой замер углов для шкалы калибровки
         if (isCalibrating) {
             if (currentAzimuth >= 0 && currentAzimuth < 90) calibSectors.q1 = true;
             if (currentAzimuth >= 90 && currentAzimuth < 180) calibSectors.q2 = true;
             if (currentAzimuth >= 180 && currentAzimuth < 270) calibSectors.q3 = true;
             if (currentAzimuth >= 270 && currentAzimuth <= 360) calibSectors.q4 = true;
-            
-            // Проверка ухода осей за пределы плоскости
             if (Math.abs(pitch) > 25 || Math.abs(roll) > 25) calibTiltOk = true;
             
-            // Вычисление честного прогресса шкалы
             let score = 0;
             if(calibSectors.q1) score += 20;
             if(calibSectors.q2) score += 20;
             if(calibSectors.q3) score += 20;
             if(calibSectors.q4) score += 20;
             if(calibTiltOk) score += 15;
-            
             document.getElementById('calib-bar').style.width = `${score}%`;
         }
 
+        // Динамический вывод на экран в зависимости от выбранной вкладки
         const badge = document.getElementById('angle-turn-badge');
-        if (baseAzimuth !== null) {
-            let turnAngle = currentAzimuth - baseAzimuth;
-            if (turnAngle < 0) turnAngle += 360;
-            badge.innerText = `ПОВОРОТ: ${turnAngle.toFixed(1)}°`;
-            badge.style.display = 'block';
+        
+        if (currentSystemMode === 'magnetic') {
+            document.getElementById('live-azimuth').innerText = `${currentAzimuth.toFixed(1)}°`;
+            if (baseAzimuth !== null) {
+                let turnAngle = currentAzimuth - baseAzimuth;
+                if (turnAngle < 0) turnAngle += 360;
+                badge.innerText = `ПОВОРОТ: ${turnAngle.toFixed(1)}°`;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
         } else {
-            badge.style.display = 'none';
+            // В режиме теодолита плашка поворота становится основным источником замера угла
+            if (baseAzimuth !== null) {
+                let turnAngle = currentAzimuth - baseAzimuth;
+                if (turnAngle < 0) turnAngle += 360;
+                document.getElementById('live-azimuth').innerText = `${turnAngle.toFixed(1)}°`;
+                badge.innerText = `ПОВОРОТ: ${turnAngle.toFixed(1)}°`;
+                badge.style.display = 'block';
+            } else {
+                document.getElementById('live-azimuth').innerText = `0.0°`;
+                badge.style.display = 'none';
+            }
         }
 
         const gyroRing = document.getElementById('gyro-ring');
@@ -583,7 +695,7 @@
             isLevel = true;
             gyroRing.classList.add('level-perfect');
             btnCapture.classList.add('ready-to-fire');
-            btnCapture.innerText = "➕ Зафиксировать румб в журнал";
+            btnCapture.innerText = currentSystemMode === 'magnetic' ? "➕ Зафиксировать румб в журнал" : "➕ Зафиксировать угол в журнал";
             btnCapture.disabled = false;
         } else {
             isLevel = false;
@@ -604,11 +716,69 @@
         } else {
             alert("Ваш смартфон не поддерживает аппаратные гироскопы и компасы!");
         }
+        initPedometer();
+    }
+
+    // ИНИЦИАЛИЗАЦИЯ ДАТЧИКА ШАГОВ (АКСЕЛЕРОМЕТРА) С ДВОЙНЫМ ЗАПРОСОМ ДЛЯ IOS
+    function initPedometer() {
+        if (window.DeviceMotionEvent) {
+            let lastAmount = 0;
+            let lastUpdate = 0;
+            window.addEventListener('devicemotion', (e) => {
+                let acc = e.accelerationIncludingGravity;
+                if(!acc) return;
+                
+                let currentTime = Date.now();
+                if ((currentTime - lastUpdate) > 100) {
+                    lastUpdate = currentTime;
+                    let speed = Math.sqrt(acc.x*acc.x + acc.y*acc.y + acc.z*acc.z);
+                    if (speed > 11.5 && (currentTime - lastAmount) > 400) {
+                        lastAmount = currentTime;
+                        onStepDetected();
+                    }
+                }
+            });
+        }
+    }
+
+    function onStepDetected() {
+        if (activePedometerIndex !== null) {
+            let rowIdx = measurementsLog.findIndex(m => m.id === activePedometerIndex);
+            if (rowIdx !== -1 && measurementsLog[rowIdx].mode === 'steps') {
+                measurementsLog[rowIdx].steps += 1;
+                measurementsLog[rowIdx].distance = parseFloat((measurementsLog[rowIdx].steps * stepLength).toFixed(1));
+                
+                let inputEl = document.getElementById(`dist-${activePedometerIndex}`);
+                if (inputEl) inputEl.value = measurementsLog[rowIdx].distance;
+                
+                let badgeEl = document.getElementById(`step-badge-${activePedometerIndex}`);
+                if (badgeEl) badgeEl.innerText = `👣 ${measurementsLog[rowIdx].steps}`;
+                
+                saveToLocalStorage();
+                drawPolygon();
+            }
+        }
+    }
+
+    function updateStepLength() {
+        let val = parseFloat(document.getElementById('step-length').value);
+        if(!isNaN(val) && val > 0) {
+            stepLength = val;
+            measurementsLog.forEach(m => {
+                if (m.mode === 'steps') {
+                    m.distance = parseFloat((m.steps * stepLength).toFixed(1));
+                    let inputEl = document.getElementById(`dist-${m.id}`);
+                    if (inputEl) inputEl.value = m.distance;
+                }
+            });
+            saveToLocalStorage();
+            drawPolygon();
+        }
     }
 
     function setZeroDirection() {
         baseAzimuth = currentAzimuth;
-        document.getElementById('base-azimuth').innerText = `${baseAzimuth.toFixed(1)}°`;
+        document.getElementById('base-azimuth').innerText = currentSystemMode === 'magnetic' ? `${baseAzimuth.toFixed(1)}°` : `УСТАНОВЛЕН`;
     }
 
     function resetZeroDirection() {
@@ -620,12 +790,29 @@
     function captureMeasurement() {
         if (!isLevel) return;
 
+        let valueToRecord = 0;
+        
+        if (currentSystemMode === 'magnetic') {
+            valueToRecord = parseFloat(currentAzimuth.toFixed(1));
+        } else {
+            // В режиме теодолита записываем относительный угол поворота от нуля
+            if (baseAzimuth !== null) {
+                let turnAngle = currentAzimuth - baseAzimuth;
+                if (turnAngle < 0) turnAngle += 360;
+                valueToRecord = parseFloat(turnAngle.toFixed(1));
+            } else {
+                alert("Ошибка! Перед фиксацией угла в режиме теодолита обязательно отбейте ноль кнопкой «Фиксировать 0°» на веху!");
+                return;
+            }
+        }
+
         const newMeasurement = {
             id: measurementsLog.length + 1,
-            azimuth: parseFloat(currentAzimuth.toFixed(1)),
+            azimuth: valueToRecord, // Сюда ложится либо азимут, либо внутренний угол
             distance: 20.0, 
             mode: 'manual',
-            steps: 0
+            steps: 0,
+            systemMode: currentSystemMode // Запоминаем, в каком режиме снята грань
         };
 
         if (activePedometerIndex !== null) {
@@ -660,8 +847,23 @@
             } else {
                 if (activePedometerIndex === id) activePedometerIndex = null;
             }
+            renderLogTable();
             saveToLocalStorage();
             drawPolygon();
+        }
+    }
+
+    function deleteMeasurement(id) {
+        if (confirm(`Удалить линию №${id}?`)) {
+            let idx = measurementsLog.findIndex(m => m.id === id);
+            if (idx !== -1) {
+                if (activePedometerIndex === id) activePedometerIndex = null;
+                measurementsLog.splice(idx, 1);
+                measurementsLog.forEach((m, index) => { m.id = index + 1; });
+                renderLogTable();
+                saveToLocalStorage();
+                drawPolygon();
+            }
         }
     }
 
@@ -676,26 +878,34 @@
         measurementsLog.forEach(m => {
             let isManualSelected = m.mode === 'manual' ? 'selected' : '';
             let isStepsSelected = m.mode === 'steps' ? 'selected' : '';
+            let stepIndicator = (activePedometerIndex === m.id && m.mode === 'steps') ? `<span id="step-badge-${m.id}" style="color:var(--success); font-weight:bold; font-size:10px; display:block; margin-top:2px;">👣 ${m.steps}</span>` : '';
             
+            // Подписываем единицы измерения в зависимости от режима строки
+            let unitSign = m.systemMode === 'theodolite' ? '° (угол)' : '°';
+
             tbody.innerHTML += `
                 <tr>
-                    <td><b>№${m.id} (${m.azimuth}°)</b></td>
-                    <td><span style="color:var(--forest-green); font-weight:700;">${m.azimuth}°</span></td>
+                    <td><b>№${m.id}</b></td>
+                    <td><span style="color:var(--forest-green); font-weight:700;">${m.azimuth}${unitSign}</span></td>
                     <td>
                         <input type="number" id="dist-${m.id}" class="input-dist" value="${m.distance}" step="0.5" oninput="changeLineDistance(${m.id}, this.value)">
                     </td>
                     <td>
                         <select class="select-mode" onchange="changeLineMode(${m.id}, this.value)">
-                            <option value="manual" ${isManualSelected}>Вручную</option>
-                            <option value="steps" ${isStepsSelected}>Шагомер</option>
+                            <option value="manual" ${isManualSelected}>Ручной</option>
+                            <option value="steps" ${isStepsSelected}>Шаги</option>
                         </select>
+                        ${stepIndicator}
+                    </td>
+                    <td>
+                        <button class="btn-delete-row" onclick="deleteMeasurement(${m.id})">❌</button>
                     </td>
                 </tr>
             `;
         });
     }
 
-    // ВЫЧИСЛЕНИЕ КООРДИНАТ И ОТРИСОВКА ПОЛИГОНА ДЕЛЯНКИ
+    // ГЕОДЕЗИЧЕСКИЙ ДВИЖОК ОТРИСОВКИ КОНТУРА ПО АЗИМУТАМ И ВНУТРЕННИМ УГЛАМ
     function drawPolygon() {
         const canvas = document.getElementById('polygon-canvas');
         const ctx = canvas.getContext('2d');
@@ -712,9 +922,19 @@
         let points = [{ x: 0, y: 0 }];
         let currentX = 0;
         let currentY = 0;
+        let calculatedAzimuth = 0; // Сквозной рабочий азимут хода
 
-        measurementsLog.forEach(m => {
-            let angleRad = (m.azimuth * Math.PI) / 180;
+        measurementsLog.forEach((m, idx) => {
+            if (m.systemMode === 'magnetic' || idx === 0) {
+                // В магнитном режиме или для стартовой грани берем чистый угол меридиана
+                calculatedAzimuth = m.azimuth;
+            } else {
+                // В режиме теодолита вычисляем направление по формуле приращения углов хода
+                // Азимут следующей линии = Предыдущий азимут + 180 - Внутренний угол поворота
+                calculatedAzimuth = calculatedAzimuth + (180 - m.azimuth);
+            }
+
+            let angleRad = (calculatedAzimuth * Math.PI) / 180;
             currentX += m.distance * Math.sin(angleRad);
             currentY += m.distance * Math.cos(angleRad);
             points.push({ x: currentX, y: currentY });
@@ -795,23 +1015,25 @@
         document.getElementById('area-display').innerText = `Площадь: ${areaHa.toFixed(4)} га (${Math.round(area)} м²)`;
     }
 
-    function clearLog() {
-        if (confirm("Очистить журнал полевой съемки?")) {
-            measurementsLog = [];
-            activePedometerIndex = null;
-            localStorage.removeItem('lesovik_measurements');
-            renderLogTable();
-            drawPolygon();
-        }
-    }
-
     document.addEventListener('DOMContentLoaded', () => {
         startCamera();
+        
+        // ДВОЙНОЙ СИНХРОННЫЙ ЗАПРОС ПРАВ НА ГИРОСКОП + АКСЕЛЕРОМЕТР (ШАГОМЕР) ДЛЯ IOS
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
             document.body.addEventListener('click', function initOnFirstTouch() {
                 DeviceOrientationEvent.requestPermission()
                     .then(permissionState => {
-                        if (permissionState === 'granted') { initOrientationSensors(); }
+                        if (permissionState === 'granted') {
+                            if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                                DeviceMotionEvent.requestPermission()
+                                    .then(motionState => {
+                                        if (motionState === 'granted') { initOrientationSensors(); }
+                                    })
+                                    .catch(console.error);
+                            } else {
+                                initOrientationSensors();
+                            }
+                        }
                     })
                     .catch(console.error);
                 document.body.removeEventListener('click', initOnFirstTouch);
@@ -819,7 +1041,7 @@
         } else {
             initOrientationSensors();
         }
-        drawPolygon();
+        loadFromLocalStorage();
     });
 </script>
 </body>
