@@ -110,9 +110,12 @@
         .btn-back { display: inline-flex; align-items: center; background: transparent; color: var(--forest-green); border: 1px solid var(--forest-green); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; transition: 0.2s; font-size: 13px; min-height: 38px; }
         .btn-back:hover { background: var(--forest-green); color: var(--bg-paper); }
         
-        .btn-instruction { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.2s; grid-column: span 2; text-align: center; }
+        .btn-instruction { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.2s; text-align: center; }
         .btn-instruction:hover { background: var(--forest-green); color: #FFF; }
         [data-theme="dark"] .btn-instruction:hover { background: var(--forest-light); color: #111; }
+
+        .btn-calibration { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.2s; text-align: center; }
+        .btn-calibration:hover { background: var(--danger); color: #FFF; }
 
         .theme-toggle { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; transition: all 0.2s; min-height: 38px; }
         .theme-toggle:hover { background-color: var(--forest-green); color: var(--bg-paper); }
@@ -160,9 +163,11 @@
 
         /* ЖУРНАЛ КАТАЛОГА ЗАМЕРОВ ДЕЛЯНКИ */
         .measurements-log-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .measurements-log-table th, .measurements-log-table td { padding: 10px; font-size: 14px; border-bottom: 1px solid var(--border-color); text-align: left; }
+        .measurements-log-table th, .measurements-log-table td { padding: 10px; font-size: 14px; border-bottom: 1px solid var(--border-color); text-align: left; vertical-align: middle; }
         .measurements-log-table th { font-weight: 700; text-transform: uppercase; font-size: 11px; color: var(--forest-green); letter-spacing: 0.5px; }
         .btn-clear-log { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600; }
+        .btn-delete-row { background: transparent; border: none; color: var(--danger); font-size: 16px; cursor: pointer; padding: 4px 8px; font-weight: bold; }
+        .btn-delete-row:hover { transform: scale(1.2); }
 
         .input-dist { width: 70px; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--card-bg); color: var(--text-graphite); font-weight: bold; }
         .select-mode { padding: 5px; font-size: 12px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--card-bg); color: var(--text-graphite); }
@@ -174,7 +179,7 @@
         [data-theme="dark"] #polygon-canvas { background: #151e1b; border: 1px dashed rgba(255,255,255,0.1); }
         .area-badge { font-size: 16px; font-weight: 700; color: var(--forest-green); margin-top: 10px; text-align: center; background: rgba(45, 90, 39, 0.1); padding: 6px 15px; border-radius: 20px; }
 
-        /* СТИЛИ ДЛЯ ПОПАПА ИНСТРУКЦИИ */
+        /* СТИЛИ ДЛЯ ПОПАПА ИНСТРУКЦИИ И КАЛИБРОВКИ */
         .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--overlay-bg); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
         .popup-window { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; max-width: 600px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); position: relative; }
         .popup-close { position: absolute; top: 15px; right: 15px; background: transparent; border: none; color: var(--text-graphite); font-size: 24px; cursor: pointer; line-height: 1; opacity: 0.7; }
@@ -184,6 +189,12 @@
         .instruction-steps li { margin-bottom: 12px; }
         .instruction-steps strong { color: var(--forest-green); }
         [data-theme="dark"] .instruction-steps strong { color: var(--forest-light); }
+
+        /* ЭЛЕМЕНТЫ ЖИВОЙ КАЛИБРОВКИ */
+        .calib-box { margin: 15px 0; background: rgba(0,0,0,0.02); border: 1px dashed var(--border-color); padding: 15px; border-radius: 8px; text-align: center; }
+        .calib-progress-bar { width: 100%; background: #E0E0E0; height: 20px; border-radius: 10px; overflow: hidden; margin-top: 10px; position: relative; }
+        .calib-progress-fill { width: 0%; background: var(--success); height: 100%; transition: width 0.1s linear; }
+        .calib-status-text { font-weight: bold; margin-top: 10px; font-size: 14px; }
 
         /* СЕО ТЕКСТ */
         .seo-info-section { margin-top: 40px; padding-top: 30px; border-top: 2px solid var(--border-color); color: var(--text-graphite); opacity: 0.85; }
@@ -224,13 +235,40 @@
             <ol class="instruction-steps">
                 <li><strong>Подготовка прибора:</strong> Встаньте на первую точку делянки (затеску). Сделайте телефоном в воздухе движение по траектории «восьмерки» для калибровки магнитного компаса.</li>
                 <li><strong>Первый визир (Старт):</strong> Наведите вертикальную нить экрана на веху или ориентир следующего угла делянки. Держите телефон вертикально перед собой.</li>
-                <li><strong>Поимка уровня:</strong> Дождитесь, пока centralное кольцо авиагоризонта окрасится в <strong>зеленый цвет</strong>. Это значит, что телефон выровнен идеально параллельно земле, исключая погрешность завала.</li>
+                <li><strong>Поимка уровня:</strong> Дождитесь, пока центральное кольцо авиагоризонта окрасится в <strong>зеленый цвет</strong>. Это значит, что телефон выровнен идеально параллельно земле, исключая погрешность завала.</li>
                 <li><strong>Фиксация линии:</strong> Нажмите появившуюся кнопку <em>«Зафиксировать румб в журнал»</em>. В журнале автоматически появится <strong>Линия №1</strong> с текущим магнитным азимутом.</li>
                 <li><strong>Измерение расстояния:</strong> Измерьте расстояние до следующего столба. Вы можете ввести метры <strong>Вручную</strong> в появившееся поле или переключить режим на <strong>Шагомер</strong>. Если выбран шагомер — идите к вехе спокойным шагом, удерживая телефон перед собой, устройство пересчитает шаги в метры.</li>
                 <li><strong>Построение полигона:</strong> Перейдите на вторую точку, наведите визир на третью веху, поймайте зеленый уровень и снова зафиксируйте. Повторяйте процедуру по всему периметру.</li>
                 <li><strong>Контур и Расчет:</strong> На интерактивном чертеже ниже журнала будет сразу выстраиваться точный контур Вашей лесосеки с длинами сторон. В центре полигона автоматически рассчитается чистая площадь выдела в гектарах ($га$). Для прямоугольной делянки следите, чтобы углы поворота были близки к $90^\circ$.</li>
             </ol>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closeInstruction()">Понятно, к замеру</button>
+        </div>
+    </div>
+
+    <div id="calibration-popup" class="popup-overlay" onclick="closeCalibrationOuter(event)">
+        <div class="popup-window">
+            <button class="popup-close" onclick="closeCalibration()">&times;</button>
+            <h3>Помощник калибровки магнитометра</h3>
+            
+            <div class="calib-box">
+                <span style="font-size: 13px; font-weight: bold; display: block;">ШКАЛА НАПРАВЛЕНИЙ СЕНСОРА:</span>
+                <div class="calib-progress-bar">
+                    <div id="calib-bar" class="calib-progress-fill"></div>
+                </div>
+                <div id="calib-status" class="calib-status-text" style="color: var(--text-graphite);">Ожидание движений... Описывайте «восьмерку»</div>
+            </div>
+
+            <h4 style="margin-top: 15px; font-family: 'Merriweather', serif; color: var(--forest-green);">Инструкция проведения калибровки в поле:</h4>
+            <ul class="instruction-steps" style="font-size: 13px; line-height: 1.5;">
+                <li><strong>Как водить устройство:</strong> Нажмите кнопку «Начать калибровку» ниже. Возьмите смартфон в руку и начните непрерывно выписывать в воздухе объемную фигуру знака бесконечности или «восьмерки».</li>
+                <li><strong>Положение осей:</strong> В процессе движения плавно разворачивайте кисть руки. Смартфон должен попеременно менять наклоны относительно горизонта и плоскости земли (смотреть экраном вверх, на Вас, в сторону). Это позволит стереть налипшие магнитные шумы железа.</li>
+                <li><strong>Положение при замере:</strong> При непосредственной таксации и съемке визиров удерживайте устройство строго <strong>вертикально перед собой</strong>, сопрягая вертикальную нить визира с вехой.</li>
+                <li><strong>⚠️ КРИТИЧЕСКИ ВАЖНО:</strong> Перед запуском буссоли обязательно <strong>заблокируйте автоповорот экрана</strong> в системной шторке Вашего смартфона (зафиксируйте портретный режим). Иначе при наклонах страница обновится, и полевой журнал обнулится. Убедитесь, что чехол телефона лишен магнитных защелок.</li>
+            </ul>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button id="btn-start-calib" class="btn-action btn-set-zero" style="flex: 1;" onclick="startLiveCalibration()">Начать калибровку</button>
+                <button class="btn-action btn-reset-zero" style="flex: 1;" onclick="closeCalibration()">Закрыть</button>
+            </div>
         </div>
     </div>
 
@@ -267,6 +305,7 @@
                     <button id="btn-capture" class="btn-action btn-lock-measure" onclick="captureMeasurement()" disabled>Поймайте уровень горизонта</button>
                     
                     <button class="btn-instruction" onclick="openInstruction()">Инструкция для таксатора</button>
+                    <button class="btn-calibration" onclick="openCalibration()">Калибровка магнитометра</button>
                 </div>
             </div>
 
@@ -282,10 +321,11 @@
                                 <th>Азимут</th>
                                 <th>Длина (м)</th>
                                 <th>Тип замера</th>
+                                <th>Удалить</th>
                             </tr>
                         </thead>
                         <tbody id="log-tbody">
-                            <tr><td colspan="4" style="color:gray; text-align:center; padding:20px 10px;">Журнал пуст. Наведите визир и зафиксируйте точку.</td></tr>
+                            <tr><td colspan="5" style="color:gray; text-align:center; padding:20px 10px;">Журнал пуст. Наведите визир и зафиксируйте точку.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -367,7 +407,34 @@
     let stepCountTotal = 0;
     let activePedometerIndex = null;
 
-    // Управление модальным окном (Попап)
+    // Локальные переменные системы калибровки
+    let calibProgress = 0;
+    let isCalibrating = false;
+    let uniqueAnglesCollected = new Set();
+
+    // СОХРАНЕНИЕ ДАННЫХ В LOCALSTORAGE
+    function saveToLocalStorage() {
+        localStorage.setItem('lesovik_measurements', JSON.stringify(measurementsLog));
+        localStorage.setItem('lesovik_step_length', stepLength);
+    }
+
+    // ЗАГРУЗКА ДАННЫХ ИЗ LOCALSTORAGE ПРИ СТАРТЕ
+    function loadFromLocalStorage() {
+        const savedLog = localStorage.getItem('lesovik_measurements');
+        const savedStep = localStorage.getItem('lesovik_step_length');
+        
+        if (savedStep) {
+            stepLength = parseFloat(savedStep);
+            document.getElementById('step-length').value = stepLength;
+        }
+        if (savedLog) {
+            measurementsLog = JSON.parse(savedLog);
+            renderLogTable();
+            drawPolygon();
+        }
+    }
+
+    // Управление модальным окном (Инструкция)
     function openInstruction() {
         document.getElementById('instruction-popup').style.display = 'flex';
     }
@@ -382,9 +449,63 @@
         }
     }
 
+    // Управление модальным окном (Калибровка)
+    function openCalibration() {
+        document.getElementById('calibration-popup').style.display = 'flex';
+        resetCalibUI();
+    }
+
+    function closeCalibration() {
+        document.getElementById('calibration-popup').style.display = 'none';
+        isCalibrating = false;
+    }
+
+    function closeCalibrationOuter(event) {
+        if (event.target.id === 'calibration-popup') {
+            closeCalibration();
+        }
+    }
+
+    function resetCalibUI() {
+        calibProgress = 0;
+        isCalibrating = false;
+        uniqueAnglesCollected.clear();
+        document.getElementById('calib-bar').style.width = '0%';
+        document.getElementById('calib-status').innerText = "Ожидание движений... Описывайте «восьмерку»";
+        document.getElementById('calib-status').style.color = 'var(--text-graphite)';
+        document.getElementById('btn-start-calib').disabled = false;
+        document.getElementById('btn-start-calib').innerText = "Начать калибровку";
+    }
+
+    function startLiveCalibration() {
+        resetCalibUI();
+        isCalibrating = true;
+        document.getElementById('btn-start-calib').disabled = true;
+        document.getElementById('btn-start-calib').innerText = "Процесс калибровки...";
+        document.getElementById('calib-status').innerText = "Выполняйте объемные петли в воздухе!";
+        
+        setTimeout(() => {
+            if (isCalibrating) {
+                isCalibrating = false;
+                document.getElementById('btn-start-calib').disabled = false;
+                document.getElementById('btn-start-calib').innerText = "Повторить";
+                
+                if (uniqueAnglesCollected.size >= 18) {
+                    document.getElementById('calib-bar').style.width = '100%';
+                    document.getElementById('calib-status').innerText = "✔️ Ваша буссоль успешно откалибрована!";
+                    document.getElementById('calib-status').style.color = 'var(--success)';
+                } else {
+                    document.getElementById('calib-status').innerText = "❌ Буссоль не прошла калибровку, внимательно прочтите инструкцию.";
+                    document.getElementById('calib-status').style.color = 'var(--danger)';
+                }
+            }
+        }, 12000);
+    }
+
     function toggleTheme() {
         const body = document.documentElement;
         if (body.getAttribute('data-theme') === 'dark') {
+            body.removeAttribute('removeAttribute', 'data-theme');
             body.removeAttribute('data-theme');
         } else {
             body.setAttribute('data-theme', 'dark');
@@ -424,6 +545,13 @@
 
         document.getElementById('live-pitch').innerText = `${pitch}°`;
         document.getElementById('live-roll').innerText = `${roll}°`;
+
+        if (isCalibrating) {
+            let key = `${Math.floor(pitch/10)}_${Math.floor(roll/10)}_${Math.floor(currentAzimuth/20)}`;
+            uniqueAnglesCollected.add(key);
+            let fillPercent = Math.min((uniqueAnglesCollected.size / 20) * 100, 95);
+            document.getElementById('calib-bar').style.width = `${fillPercent}%`;
+        }
 
         const badge = document.getElementById('angle-turn-badge');
         if (baseAzimuth !== null) {
@@ -469,6 +597,60 @@
         initPedometer();
     }
 
+    // ИНИЦИАЛИЗАЦИЯ ИНТЕРФЕЙСА ДАТЧИКА ШАГОВ (АКСЕЛЕРОМЕТРА)
+    function initPedometer() {
+        if (window.DeviceMotionEvent) {
+            let lastAmount = 0;
+            let lastUpdate = 0;
+            window.addEventListener('devicemotion', (e) => {
+                let acc = e.accelerationIncludingGravity;
+                if(!acc) return;
+                
+                let currentTime = Date.now();
+                if ((currentTime - lastUpdate) > 100) {
+                    lastUpdate = currentTime;
+                    let speed = Math.sqrt(acc.x*acc.x + acc.y*acc.y + acc.z*acc.z);
+                    if (speed > 11.5 && (currentTime - lastAmount) > 400) {
+                        lastAmount = currentTime;
+                        onStepDetected();
+                    }
+                }
+            });
+        }
+    }
+
+    function onStepDetected() {
+        if (activePedometerIndex !== null) {
+            let rowIdx = measurementsLog.findIndex(m => m.id === activePedometerIndex);
+            if (rowIdx !== -1 && measurementsLog[rowIdx].mode === 'steps') {
+                measurementsLog[rowIdx].steps += 1;
+                measurementsLog[rowIdx].distance = parseFloat((measurementsLog[rowIdx].steps * stepLength).toFixed(1));
+                
+                let inputEl = document.getElementById(`dist-${activePedometerIndex}`);
+                if (inputEl) inputEl.value = measurementsLog[rowIdx].distance;
+                
+                saveToLocalStorage();
+                drawPolygon();
+            }
+        }
+    }
+
+    function updateStepLength() {
+        let val = parseFloat(document.getElementById('step-length').value);
+        if(!isNaN(val) && val > 0) {
+            stepLength = val;
+            measurementsLog.forEach(m => {
+                if (m.mode === 'steps') {
+                    m.distance = parseFloat((m.steps * stepLength).toFixed(1));
+                    let inputEl = document.getElementById(`dist-${m.id}`);
+                    if (inputEl) inputEl.value = m.distance;
+                }
+            });
+            saveToLocalStorage();
+            drawPolygon();
+        }
+    }
+
     function setZeroDirection() {
         baseAzimuth = currentAzimuth;
         document.getElementById('base-azimuth').innerText = `${baseAzimuth.toFixed(1)}°`;
@@ -497,6 +679,7 @@
 
         measurementsLog.push(newMeasurement);
         renderLogTable();
+        saveToLocalStorage();
         drawPolygon();
     }
 
@@ -504,6 +687,7 @@
         let idx = measurementsLog.findIndex(m => m.id === id);
         if(idx !== -1) {
             measurementsLog[idx].distance = parseFloat(value) || 0;
+            saveToLocalStorage();
             drawPolygon();
         }
     }
@@ -521,14 +705,36 @@
             } else {
                 if (activePedometerIndex === id) activePedometerIndex = null;
             }
+            saveToLocalStorage();
             drawPolygon();
+        }
+    }
+
+    // НОВАЯ ФУНКЦИЯ: УДАЛЕНИЕ СЛУЧАЙНОЙ/КОНКРЕТНОЙ ЛИНИИ ЗАМЕРА С ПЕРЕРАСЧЕТОМ ПОЛИГОНА
+    function deleteMeasurement(id) {
+        if (confirm(`Удалить линию №${id} из журнала полевой съемки?`)) {
+            let idx = measurementsLog.findIndex(m => m.id === id);
+            if (idx !== -1) {
+                if (activePedometerIndex === id) activePedometerIndex = null;
+                
+                measurementsLog.splice(idx, 1);
+                
+                // Перерасчет сквозных ID для оставшихся линий
+                measurementsLog.forEach((m, index) => {
+                    m.id = index + 1;
+                });
+                
+                renderLogTable();
+                saveToLocalStorage();
+                drawPolygon();
+            }
         }
     }
 
     function renderLogTable() {
         const tbody = document.getElementById('log-tbody');
         if (measurementsLog.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="color:gray; text-align:center; padding:20px 10px;">Журнал пуст. Наведите визир и зафиксируйте точку.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" style="color:gray; text-align:center; padding:20px 10px;">Журнал пуст. Наведите визир и зафиксируйте точку.</td></tr>`;
             return;
         }
 
@@ -539,7 +745,7 @@
             
             tbody.innerHTML += `
                 <tr>
-                    <td><b>№${m.id} (${m.azimuth}°)</b></td>
+                    <td><b>№${m.id}</b></td>
                     <td><span style="color:var(--forest-green); font-weight:700;">${m.azimuth}°</span></td>
                     <td>
                         <input type="number" id="dist-${m.id}" class="input-dist" value="${m.distance}" step="0.5" oninput="changeLineDistance(${m.id}, this.value)">
@@ -549,6 +755,9 @@
                             <option value="manual" ${isManualSelected}>Вручную</option>
                             <option value="steps" ${isStepsSelected}>Шагомер</option>
                         </select>
+                    </td>
+                    <td>
+                        <button class="btn-delete-row" onclick="deleteMeasurement(${m.id})">❌</button>
                     </td>
                 </tr>
             `;
@@ -659,6 +868,7 @@
         if (confirm("Очистить текущий журнал полевой съемки и сбросить карту отвода?")) {
             measurementsLog = [];
             activePedometerIndex = null;
+            localStorage.removeItem('lesovik_measurements');
             renderLogTable();
             drawPolygon();
         }
@@ -678,7 +888,8 @@
         } else {
             initOrientationSensors();
         }
-        drawPolygon();
+        // Восстановление данных таксатора при загрузке страницы
+        loadFromLocalStorage();
     });
 </script>
 </body>
