@@ -203,7 +203,7 @@
         .footer-column h4 { font-family: 'Merriweather', serif; color: #E0E0E0; font-size: 15px; margin-top: 0; margin-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 8px; }
         .footer-bottom { text-align: center; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.05); font-size: 11px; opacity: 0.6; }
 
-        @media (max-width: 600px) { .glass-header { padding: 10px 12px; } .container { padding: 10px; margin-top: 70px; } .card { padding: 12px; margin-bottom: 12px; } }
+        @media (max-width: 600px) { .glass-header { padding: 10px 12px; } .container { padding: 15px; margin-top: 70px; } .card { padding: 12px; margin-bottom: 12px; } }
     </style>
 </head>
 <body>
@@ -232,7 +232,7 @@
                 <li><strong>Измерение расстояния:</strong> Измерьте расстояние до следующего столба. Вы можете ввести метры <strong>Вручную</strong> в появившееся поле или переключить режим на <strong>Шагомер</strong>. Если выбран шагомер — идите к вехе спокойным шагом, удерживая телефон перед собой, устройство пересчитает шаги в метры.</li>
                 <li><strong>Построение полигона:</strong> Перейдите на вторую точку, наведите визир на третью веху, поймайте зеленый уровень и снова зафиксируйте. Повторяйте процедуру по всему периметру.</li>
                 <li><strong>Контур и Расчет:</strong> На интерактивном чертеже ниже журнала будет сразу выстраиваться точный контур Вашей лесосеки с длинами сторон. В центре полигона автоматически рассчитается чистая площадь выдела в гектарах ($га$). Для прямоугольной делянки следите, чтобы углы поворота были близки к $90^\circ$.</li>
-                <li><strong>🔒 Использование фиксации 0°:</strong> Нужна для отбивки строго перпендикулярных визиров под $90^\circ$ без вычислений азимутов в уме. Наведите перекрестие назад вдоль уже пройденной линии и нажмите <em>«Фиксировать 0°»</em>. На плашке появится «ПОВОРОТ: 0°». Начните разворачиваться корпусом в сторону нового направления. Когда значение на плашке станет ровно <strong>`90.0°`</strong> или <strong>`270.0°`</strong>, Вы будете смотреть ровно по перпендикуляру. Дайте команду помощнику ставить угловой столб.</li>
+                <li><strong>🔒 Использование фиксации 0°:</strong> Нужна для отбивки строго перпендикулярных визиров под $90^\circ$ без вычислений азимутов в уме. Наведите перекрестие назад вдоль уже пройденной линии и нажмите <em>«Фиксаровать 0°»</em>. На плашке появится «ПОВОРОТ: 0°». Начните разворачиваться корпусом в сторону нового направления. Когда значение на плашке станет ровно <strong>`90.0°`</strong> или <strong>`270.0°`</strong>, Вы будете смотреть ровно по перпендикуляру. Дайте команду помощнику ставить угловой столб.</li>
             </ol>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closeInstruction()">Понятно, к замеру</button>
         </div>
@@ -368,7 +368,7 @@
                     <path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/>
                     <rect x="10.5" y="20" width="3" height="4"/>
                 </svg>
-                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 18px;">Лесовик</div>
+                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 16px;">Лесовик</div>
                 <div style="font-size: 13px; margin-top: 5px; opacity: 0.8;">Цифровой инструмент таксатора. База знаний, калькуляторы и профильные статьи для специалистов леса.</div>
             </div>
             <div class="footer-column">
@@ -401,8 +401,8 @@
 
     // Локальные переменные системы жесткой калибровки
     let isCalibrating = false;
-    let calibSectors = { q1: false, q2: false, q3: false, q4: false }; // Проверка 360 градусов
-    let calibTiltOk = false; // Проверка наклонов по осям X/Y
+    let calibSectors = { q1: false, q2: false, q3: false, q4: false }; 
+    let calibTiltOk = false; 
 
     // СОХРАНЕНИЕ ДАННЫХ В LOCALSTORAGE
     function saveToLocalStorage() {
@@ -426,7 +426,6 @@
         }
     }
 
-    // Управление модальным окном (Инструкция)
     function openInstruction() {
         document.getElementById('instruction-popup').style.display = 'flex';
     }
@@ -441,7 +440,6 @@
         }
     }
 
-    // Управление модальным окном (Калибровка)
     function openCalibration() {
         document.getElementById('calibration-popup').style.display = 'flex';
         resetCalibUI();
@@ -507,7 +505,6 @@
         drawPolygon();
     }
 
-    // ИНИЦИАЛИЗАЦИЯ ПОТОКА КАМЕРЫ НА ЭКРАН
     async function startCamera() {
         const video = document.getElementById('video-preview');
         try {
@@ -523,18 +520,26 @@
         }
     }
 
-    // ОБРАБОТКА ДАТЧИКОВ КОМПАСА И ГИРОСКОПА СМАРТФОНА
+    // ВНЕДРЕНИЕ ИНЖЕНЕРНОЙ 3D-МАТРИЦЫ ПЕРЕСЧЕТА КУРСА (БЕЗ ШАРНИРНОГО ЗАМКА)
     function handleOrientation(event) {
         let heading = event.webkitCompassHeading;
         
-        // Принудительное исправление нормализации азимута для Android в вертикальном положении
+        let pitch = Math.round(event.beta || 0); 
+        let roll = Math.round(event.gamma || 0);  
+
+        // Если у нас Android (Chrome), где webkitCompassHeading нет, выпрямляем оси через тригонометрию матрицы вращения
         if (heading === undefined || heading === null) {
-            heading = 360 - event.alpha;
-            let pitchCheck = Math.abs(event.beta || 0);
-            // Если экран вертикален, пересчитываем комбинацию осей, исключая зажатие до 90 градусов
-            if (pitchCheck > 65 && pitchCheck < 115) {
-                heading = event.alpha;
-            }
+            let alphaRad = ((event.alpha || 0) * Math.PI) / 180;
+            let betaRad = (pitch * Math.PI) / 180;
+            let gammaRad = (roll * Math.PI) / 180;
+
+            // Компоненты матрицы направляющих косинусов магнитного вектора
+            let r12 = -Math.sin(alphaRad) * Math.cos(gammaRad) - Math.cos(alphaRad) * Math.sin(betaRad) * Math.sin(gammaRad);
+            let r22 = Math.cos(alphaRad) * Math.cos(gammaRad) - Math.sin(alphaRad) * Math.sin(betaRad) * Math.sin(gammaRad);
+
+            // Вычисляем стабильный сквозной азимут под любым углом удержания экрана перед собой
+            let calculatedHeading = Math.atan2(-r12, r22) * (180 / Math.PI);
+            heading = calculatedHeading < 0 ? (calculatedHeading + 360) : calculatedHeading;
         }
         
         if (heading < 0) heading += 360;
@@ -542,10 +547,6 @@
         
         currentAzimuth = heading;
         document.getElementById('live-azimuth').innerText = `${currentAzimuth.toFixed(1)}°`;
-
-        let pitch = Math.round(event.beta || 0); 
-        let roll = Math.round(event.gamma || 0);  
-
         document.getElementById('live-pitch').innerText = `${pitch}°`;
         document.getElementById('live-roll').innerText = `${roll}°`;
 
@@ -578,8 +579,9 @@
         const gyroRing = document.getElementById('gyro-ring');
         const btnCapture = document.getElementById('btn-capture');
 
-        const isPitchOk = Math.abs(pitch - 90) <= 5 || Math.abs(pitch - 0) <= 5 || Math.abs(pitch + 90) <= 5;
-        const isRollOk = Math.abs(roll) <= 4 || Math.abs(roll - 180) <= 4 || Math.abs(roll + 180) <= 4;
+        // Универсальная формула горизонта для вертикального визирования
+        const isPitchOk = Math.abs(pitch - 90) <= 6 || Math.abs(pitch - 0) <= 6 || Math.abs(pitch + 90) <= 6;
+        const isRollOk = Math.abs(roll) <= 5 || Math.abs(roll - 180) <= 5 || Math.abs(roll + 180) <= 5;
 
         if (isPitchOk && isRollOk) {
             isLevel = true;
@@ -609,7 +611,6 @@
         initPedometer();
     }
 
-    // ИНИЦИАЛИЗАЦИЯ ИНТЕРФЕЙСА ДАТЧИКА ШАГОВ (АКСЕЛЕРОМЕТРА)
     function initPedometer() {
         if (window.DeviceMotionEvent) {
             let lastAmount = 0;
@@ -641,7 +642,6 @@
                 let inputEl = document.getElementById(`dist-${activePedometerIndex}`);
                 if (inputEl) inputEl.value = measurementsLog[rowIdx].distance;
                 
-                // Живой апдейт текстового статуса в таблице
                 let badgeEl = document.getElementById(`step-badge-${activePedometerIndex}`);
                 if (badgeEl) badgeEl.innerText = `👣 ${measurementsLog[rowIdx].steps}`;
                 
@@ -681,7 +681,6 @@
     function captureMeasurement() {
         if (!isLevel) return;
 
-        // При создании новой линии шагомер с предыдущей автоматически фиксируется, а не сбрасывается в null до выбора режима
         const newMeasurement = {
             id: measurementsLog.length + 1,
             azimuth: parseFloat(currentAzimuth.toFixed(1)),
@@ -689,6 +688,10 @@
             mode: 'manual',
             steps: 0
         };
+
+        if (activePedometerIndex !== null) {
+            activePedometerIndex = null;
+        }
 
         measurementsLog.push(newMeasurement);
         renderLogTable();
@@ -718,7 +721,7 @@
             } else {
                 if (activePedometerIndex === id) activePedometerIndex = null;
             }
-            renderLogTable(); // Перерисовываем таблицу для включения живых индикаторов шагов
+            renderLogTable();
             saveToLocalStorage();
             drawPolygon();
         }
@@ -749,8 +752,6 @@
         measurementsLog.forEach(m => {
             let isManualSelected = m.mode === 'manual' ? 'selected' : '';
             let isStepsSelected = m.mode === 'steps' ? 'selected' : '';
-            
-            // Динамический маркер активности шагомера в ячейке таблицы
             let stepIndicator = (activePedometerIndex === m.id && m.mode === 'steps') ? `<span id="step-badge-${m.id}" style="color:var(--success); font-weight:bold; font-size:10px; display:block; margin-top:2px;">👣 ${m.steps}</span>` : '';
             
             tbody.innerHTML += `
@@ -775,7 +776,6 @@
         });
     }
 
-    // ВЫЧИСЛЕНИЕ КООРДИНАТ И ОТРИСОВКА ПОЛИГОНА ДЕЛЯНКИ
     function drawPolygon() {
         const canvas = document.getElementById('polygon-canvas');
         const ctx = canvas.getContext('2d');
@@ -888,14 +888,11 @@
     document.addEventListener('DOMContentLoaded', () => {
         startCamera();
         
-        // ОДНОВРЕМЕННЫЙ ПРИНУДИТЕЛЬНЫЙ ЗАПРОС ВСЕЙ ГРУППЫ ПРАВ НА ДАТЧИКИ И ШАГОМЕР ДЛЯ IOS
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
             document.body.addEventListener('click', function initOnFirstTouch() {
-                // Запрашиваем ориентацию (компас)
                 DeviceOrientationEvent.requestPermission()
                     .then(permissionState => {
                         if (permissionState === 'granted') {
-                            // Следом запрашиваем акселерометр (шагомер) для iOS
                             if (typeof DeviceMotionEvent.requestPermission === 'function') {
                                 DeviceMotionEvent.requestPermission()
                                     .then(motionState => {
