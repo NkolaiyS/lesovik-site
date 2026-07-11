@@ -237,6 +237,8 @@
 </head>
 <body>
 
+    <div id="reading-progress"></div>
+
     <header class="glass-header">
         <a href="index.html" class="logo-container">
             <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
@@ -282,7 +284,7 @@
                         <span class="btn-info-trigger" onclick="openBaseInfo(event)">?</span>
                     </button>
                     <button class="btn-action btn-reset-zero" onclick="resetZeroDirection()">Сбросить</button>
-                    <button id="btn-capture" class="btn-action btn-lock-measure" onclick="captureMeasurement()" disabled>Поймайте уровень獲得 горизонта</button>
+                    <button id="btn-capture" class="btn-action btn-lock-measure" onclick="captureMeasurement()" disabled>Поймайте уровень горизонта</button>
                     
                     <button class="btn-action btn-reset-zero" style="border: 1px solid var(--forest-green); color: var(--forest-green);" onclick="openCalibrationModal()">🧭 Калибровка</button>
                     <button class="btn-action btn-reset-zero" style="border: 1px solid var(--forest-green); color: var(--forest-green);" onclick="openInstructionModal()">📖 Инструкция</button>
@@ -353,10 +355,9 @@
             <button class="modal-close-btn" onclick="closeModal('instruction-modal')">✕</button>
             <h3 class="modal-title">📖 Инструкция таксатора</h3>
             <div class="modal-desc">
-                <p><b>Шаг 1.</b> Убедитесь в отсутствии магнитных помех (чехлы, металл). <b>Внимание владельцам Android:</b> из-за особенностей датчиков платформы всегда ориентируйтесь на показатель «Поворот» (внутренние углы полигона)!</p>
-                <p><b>Шаг 2.</b> Наведите прицел на начальную веху и нажмите кнопку <b>«Фиксировать 0°»</b>.</p>
-                <p><b>Шаг 3.</b> Перемещайте визир к следующей точке. Прибор позволяет свободно поворачиваться как <b>влево</b>, так и <b>вправо</b> — внутренний угол автоматически рассчитается в диапазоне от 0° до 360°.</p>
-                <p><b>Шаг 4.</b> Выровняйте телефон, чтобы кольцо стало зеленым, и зафиксируйте румб в журнал полевой съемки.</p>
+                <p><b>Основной метод («Зафиксировать румб»):</b> Это базовый продукт буссоли. Наведите вертикальную нить визира на веху, поймайте зеленый уровень горизонта и зафиксируйте румб. В журнал запишется чистый абсолютный магнитный азимут ходовой линии относительно Севера.</p>
+                <p><b>Альтернативный метод («Фиксация 0°»):</b> Это ваш спасательный круг на случай высокой погрешности магнитометра или его некорректной работы. Если в лесу присутствуют сильные магнитные аномалии, близкие залежи руды, или если съемка ведется на телефон под управлением Android (где датчик «абсолютного севера» часто сбоит и выдает случайное направление), использовать чистый азимут опасно — полигон делянки попросту не закроется.</p>
+                <p>В таких условиях наведите визир на начальную веху, нажмите <b>«Фиксировать 0°»</b>, а затем поворачивайтесь к следующей точке (прибор поддерживает свободное вращение как <b>влево</b>, так и <b>вправо</b>). Кнопка «Зафиксировать румб» запишет в журнал точный внутренний угол поворота делянки в диапазоне от 0° до 360°, полностью защищенный от магнитных помех.</p>
                 <div class="control-panel-buttons" style="margin-top:20px;">
                     <button class="btn-action btn-set-zero" onclick="closeModal('instruction-modal')">К замеру</button>
                     <button class="btn-action btn-reset-zero" onclick="openCalibrationFromInstruction()">Калибровка</button>
@@ -390,8 +391,8 @@
             <button class="modal-close-btn" onclick="closeModal('base-info-modal')">✕</button>
             <h3 class="modal-title">Что такое Фиксация 0°?</h3>
             <div class="modal-desc">
-                <p>Эта функция задает текущее направление смартфона как <b>базовую линию (нулевой меридиан)</b> для расчета внутренних углов лесосеки.</p>
-                <p>При отводе делянок и визировании вы можете разворачиваться с устройством в любую сторону — как <b>влево</b>, так и <b>вправо</b>. Буссоль будет непрерывно вычислять точный угол поворота смежной стороны полигона от вашей базы, исключая общие аппаратные погрешности геомагнитного поля.</p>
+                <p>Эта функция — <b>спасательный круг для таксатора</b> на случай некорректной работы магнитометра или высокой погрешности. Если на делянке есть сильные магнитные аномалии, залежи руды, или замер производится на устройстве Android, где датчик абсолютного севера часто сбоит, использовать обычный азимут («Зафиксировать румб») становится опасно, так как полигон не закроется.</p>
+                <p>Нажатие этой кнопки задает текущее положение как базовый 0°. Вы можете разворачиваться в любую сторону — как <b>влево</b>, так и <b>вправо</b>. Последующее нажатие кнопки «Зафиксировать румб» занесет в журнал точный внутренний угол поворота линии (от 0° до 360°), полностью изолированный от геомагнитных девиаций.</p>
                 <button class="btn-action btn-set-zero" style="width:100%; margin-top:15px;" onclick="closeModal('base-info-modal')">Понятно</button>
             </div>
         </div>
@@ -431,7 +432,7 @@
     let isLevel = false;
     let measurementsLog = [];
     
-    // Переменные для калибровки
+    // Переменные калибровки
     let calibrationProgress = 0;
     let isCalibrating = false;
     let lastAlpha = null, lastBeta = null, lastGamma = null;
@@ -476,7 +477,6 @@
         const actionsBox = document.getElementById('calib-actions');
         actionsBox.innerHTML = '<button class="btn-action btn-reset-zero" style="grid-column:span 2; width:100%;" onclick="stopCalibrationAndClose()">Прервать</button>';
         
-        // Таймаут проверки калибровки (10 секунд на движения)
         calibrationTimer = setTimeout(() => {
             endCalibrationCheck();
         }, 10000);
@@ -537,17 +537,15 @@
 
     // ОБРАБОТКА ДАТЧИКОВ КОМПАСА И ГИРОСКОПА СМАРТФОНА
     function initOrientationSensors() {
-        // Проверка поддержки абсолютной ориентации (для корректного азимута на Android)
         const sensorEvent = ('ondeviceorientationabsolute' in window) ? 'deviceorientationabsolute' : 'deviceorientation';
 
         window.addEventListener(sensorEvent, function(event) {
-            // Кроссплатформенный замер магнитного курса
             let heading = event.webkitCompassHeading;
             if (heading === undefined) {
                 if (event.absolute === true || event.absolute === undefined) {
                     heading = 360 - event.alpha;
                 } else {
-                    heading = 360 - event.alpha; // Фоллбэк
+                    heading = 360 - event.alpha;
                 }
             }
             if (!heading) heading = 0;
@@ -555,17 +553,15 @@
             currentAzimuth = heading;
             document.getElementById('live-azimuth').innerText = `${currentAzimuth.toFixed(1)}°`;
 
-            // Углы наклона корпуса смартфона
             let pitch = Math.round(event.beta || 0); 
             let roll = Math.round(event.gamma || 0);  
 
             document.getElementById('live-pitch').innerText = `${pitch}°`;
             document.getElementById('live-roll').innerText = `${roll}°`;
 
-            // Накопление данных при калибровке на основе дельты движения датчиков
             if (isCalibrating && lastAlpha !== null) {
                 let delta = Math.abs(event.alpha - lastAlpha) + Math.abs(event.beta - lastBeta) + Math.abs(event.gamma - lastGamma);
-                if (delta > 2 && delta < 60) { // Игнорируем шумы и прыжки датчиков
+                if (delta > 2 && delta < 60) {
                     calibrationProgress += delta * 0.18;
                     if (calibrationProgress >= 100) {
                         calibrationProgress = 100;
@@ -578,7 +574,6 @@
             }
             lastAlpha = event.alpha; lastBeta = event.beta; lastGamma = event.gamma;
 
-            // Вычисление относительного угла поворота от зафиксированной базы в любую сторону (0-360)
             const badge = document.getElementById('angle-turn-badge');
             if (baseAzimuth !== null) {
                 let turnAngle = currentAzimuth - baseAzimuth;
@@ -589,7 +584,6 @@
                 badge.style.display = 'none';
             }
 
-            // ПРОВЕРКА УРОВНЯ ГОРИЗОНТА (Допуск мастера леса — всего 4-5 градусов завала)
             const gyroRing = document.getElementById('gyro-ring');
             const btnCapture = document.getElementById('btn-capture');
 
@@ -669,7 +663,6 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         startCamera();
-        // Запрос прав на датчики устройств iOS 13+ / Android
         if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
             document.body.addEventListener('click', function initOnFirstTouch() {
                 DeviceOrientationEvent.requestPermission()
