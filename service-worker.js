@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lesovik-pro-v3';
+const CACHE_NAME = 'lesovik-pro-v4';
 
 // Полный список всех страниц, инструментов и калькуляторов сайта "Лесовик"
 const ASSETS = [
