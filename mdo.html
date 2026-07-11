@@ -44,6 +44,44 @@
     <meta name="geo.region" content="RU-KO">
     <meta name="geo.placename" content="Сыктывкар">
 
+    <script>window.yaContextCb=window.yaContextCb||[]</script>
+    <script src="https://yandex.ru/ads/system/context.js" async></script>
+
+    <script>
+        // Полноэкранный блок Touch
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-2",
+                "type": "fullscreen",
+                "platform": "touch"
+            })
+        });
+        // FloorAd Touch
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-1",
+                "type": "floorAd",
+                "platform": "touch"
+            })
+        });
+        // Полноэкранный блок Desktop
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-3",
+                "type": "fullscreen",
+                "platform": "desktop"
+            })
+        });
+        // FloorAd Desktop
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-4",
+                "type": "floorAd",
+                "platform": "desktop"
+            })
+        });
+    </script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
@@ -102,7 +140,7 @@
         .theme-toggle-btn {
             background: transparent; border: 1px solid var(--border-light); color: var(--text-main);
             padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;
-            display: flex; align-items: center; gap: 6px; transition: 0.2s;
+            display: flex; align-items: center; gap: 6px; transition: 0.2s; width: auto; height: 40px; text-transform: uppercase;
         }
         .theme-toggle-btn:hover { background-color: var(--input-bg); border-color: var(--primary-forest); }
 
@@ -134,7 +172,7 @@
 
         .field-peruchet-section-title { font-size: 14px; font-weight: 700; color: var(--primary-forest); text-transform: uppercase; letter-spacing: 0.5px; margin: 35px 0 15px 0; padding-bottom: 6px; border-bottom: 2px solid var(--border-light); }
         .species-peruchet-block { background: var(--input-bg); border-radius: 10px; padding: 20px; margin-bottom: 25px; border: 1px solid var(--border-light); position: relative; animation: slideDown 0.25s ease-out; }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @media (from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); })
         
         .species-title-badge { font-size: 15px; font-weight: 700; color: var(--primary-forest); margin-bottom: 15px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
         .btn-delete-species { background: transparent; color: var(--fire-accent); border: 1px solid var(--border-light); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s; margin-left: auto; }
@@ -159,6 +197,9 @@
         .row-species { background-color: rgba(59, 102, 52, 0.06); font-weight: 700; color: var(--primary-forest); }
         .row-total-group { background-color: var(--input-bg); font-weight: 600; }
         .row-grand-final { background-color: #2c3e29; color: white; font-weight: 700; font-size: 15px; }
+
+        /* Ограничение бесконечной ленты РСЯ по высоте */
+        .yandex-rtb-feed-container { max-height: 500px; overflow-y: auto; border: 1px solid var(--border-light); border-radius: 12px; margin-top: 25px; margin-bottom: 25px; padding: 10px; background: var(--bg-card); }
     </style>
 </head>
 <body>
@@ -169,7 +210,7 @@
         <span>Лесовик</span>
     </a>
     <div class="theme-container">
-        <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeBtn">Ночная тема 🌙</button>
+        <button class="theme-toggle-btn" id="themeBtn">Тема</button>
     </div>
 </div>
 
@@ -180,7 +221,6 @@
         <h1 class="page-title">Инженерный таксационный калькулятор МДО</h1>
         <p class="page-subtitle">Профессиональная материально-денежная оценка выдела. Поштучный ввод фактических данных в <b>штуках деревьев</b>. Индивидуальные разряды высот элементов леса и **прямой ввод ставок платы** за категории крупности по прейскуранту региона.</p>
 
-        <!-- ОПТИМИЗИРОВАННЫЙ БЛОК ГЛОБАЛЬНЫХ ПАРАМЕТРОВ ЛЕСОСЕКИ -->
         <div class="grid-inputs">
             <div class="form-group">
                 <label>Лесорастительный район / Субъект РФ</label>
@@ -224,6 +264,19 @@
         <div id="peruchet-dynamic-container"></div>
 
         <button class="btn-calc" onclick="runMDO()">Выполнить ведомость МДО выдела</button>
+
+        <div class="yandex-rtb-feed-container">
+            <div id="yandex_rtb_R-A-19250236-5"></div>
+            <script>
+            window.yaContextCb.push(() => {
+                Ya.Context.AdvManager.render({
+                    "blockId": "R-A-19250236-5",
+                    "renderTo": "yandex_rtb_R-A-19250236-5",
+                    "type": "feed"
+                })
+            })
+            </script>
+        </div>
 
         <div class="table-responsive-wrapper" id="table-wrapper">
             <table id="mdo-table-result" class="result-table">
@@ -271,7 +324,7 @@
         vologda: {
             coniferous: { "Ia": [0.45, 0.43, 0.12], "I": [0.40, 0.46, 0.14], "II": [0.30, 0.50, 0.20], "III": [0.20, 0.50, 0.30], "IV": [0.14, 0.46, 0.40], "V": [0.06, 0.44, 0.50] },
             deciduous:  { "Ia": [0.26, 0.52, 0.22], "I": [0.22, 0.53, 0.25], "II": [0.14, 0.54, 0.32], "III": [0.06, 0.50, 0.44], "IV": [0.03, 0.42, 0.55], "V": [0.00, 0.36, 0.64] },
-            defectFactor: { osina: 0.16, bereza: 0.07 }
+            defectFactor: { osina: 0.16, border: 0.07 }
         },
         siberia: {
             coniferous: { "Ia": [0.46, 0.42, 0.12], "I": [0.42, 0.44, 0.14], "II": [0.32, 0.48, 0.20], "III": [0.22, 0.48, 0.30], "IV": [0.15, 0.45, 0.40], "V": [0.06, 0.40, 0.54] },
@@ -548,6 +601,16 @@
 
         wrapper.style.display = 'block';
     }
+
+    function toggleTheme() {
+        const body = document.documentElement;
+        if (body.getAttribute('data-theme') === 'dark') {
+            body.removeAttribute('data-theme');
+        } else {
+            body.setAttribute('data-theme', 'dark');
+        }
+    }
+    document.getElementById('themeBtn').addEventListener('click', toggleTheme);
 
     document.addEventListener('DOMContentLoaded', () => {
         addSpeciesBlock();
