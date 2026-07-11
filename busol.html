@@ -99,6 +99,8 @@
             --footer-bg: #2C3531;
             --danger: #DC2626;
             --success: #16A34A;
+            --overlay-bg: rgba(0, 0, 0, 0.5);
+            --warning-alert: #F59E0B;
         }
 
         [data-theme="dark"] {
@@ -151,6 +153,16 @@
             transition: all 0.2s; width: auto; height: 40px; text-transform: uppercase;
         }
         .theme-toggle:hover { background-color: var(--forest-green); color: var(--bg-paper); }
+
+        /* БЛОК ПЕРЕКЛЮЧЕНИЯ РЕЖИМОВ */
+        .mode-switcher-container { display: flex; width: 100%; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-bottom: 12px; background: var(--bg-paper); }
+        .mode-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; background: transparent; border: none; color: var(--text-graphite); font-weight: 600; font-size: 12px; cursor: pointer; transition: 0.2s; }
+        .mode-tab.active-mode { background: var(--forest-green); color: #FFFFFF; }
+        [data-theme="dark"] .mode-tab.active-mode { background: var(--forest-light); color: #111111; }
+        .btn-help-circle { background: rgba(0,0,0,0.1); border: none; width: 18px; height: 16px; border-radius: 50%; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; color: inherit; padding: 0; }
+
+        /* ИНТЕЛЛЕКТУАЛЬНЫЙ АЛЕРТ-БОКС ЗАЛИПАНИЯ */
+        .sensor-stuck-alert-box { display: none; background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning-alert); color: #B45309; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; margin-bottom: 12px; text-align: justify; line-height: 1.4; }
 
         main { flex: 1; }
         .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
@@ -237,8 +249,6 @@
 </head>
 <body>
 
-    <div id="reading-progress"></div>
-
     <header class="glass-header">
         <a href="index.html" class="logo-container">
             <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
@@ -258,6 +268,23 @@
                 <h2>Визирная рамка буссоли</h2>
                 <div class="subtitle">Наведите вертикальную нить на веху. Замер доступен только по зеленому уровню.</div>
                 
+                <!-- ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМОВ (МАГНИТНЫЙ / ТЕОДОЛИТ) -->
+                <div class="mode-switcher-container">
+                    <button id="mode-mag" class="mode-tab active-mode" onclick="switchLiteMode('magnetic')">
+                        Магнитный (Азимуты)
+                        <span class="btn-help-circle" onclick="openModal('base-info-modal')">?</span>
+                    </button>
+                    <button id="mode-theo" class="mode-tab" onclick="switchLiteMode('theodolite')">
+                        Теодолит (Углы)
+                        <span class="btn-help-circle" onclick="openInstructionModal()">?</span>
+                    </button>
+                </div>
+
+                <!-- ИНТЕЛЛЕКТУАЛЬНЫЙ АЛЕРТ О ЗАКЛИНИВАНИИ КОМПАСА -->
+                <div id="sensor-stuck-alert" class="sensor-stuck-alert-box">
+                    ⚠️ <strong>Внимание:</strong> Обнаружено аппаратное заклинивание компаса! Электронный магнитометр заблокирован в вертикальном положении. Для получения точного замера углов переключитесь в режим <strong>«Теодолит (Углы)»</strong>.
+                </div>
+
                 <div class="camera-viewport-wrapper">
                     <div class="visir-line"></div>
                     <div class="visir-center-dot"></div>
@@ -265,7 +292,7 @@
                     <div id="gyro-ring" class="horizon-gyro-scope"></div>
                     
                     <div class="overlay-data-box top-left-status">
-                        АЗИМУТ: <span id="live-azimuth" style="color:#8FBC8F; font-weight:bold;">0.0°</span><br>
+                        <span id="label-live-mode">АЗИМУТ:</span> <span id="live-azimuth" style="color:#8FBC8F; font-weight:bold;">0.0°</span><br>
                         УГОЛ X: <span id="live-pitch">0°</span>
                     </div>
                     <div class="overlay-data-box top-right-status">
@@ -300,7 +327,7 @@
                         <thead>
                             <tr>
                                 <th>№ Линии</th>
-                                <th>Азимут</th>
+                                <th id="th-mode-label">Азимут</th>
                                 <th>Угол повор.</th>
                                 <th><button class="btn-clear-log" onclick="clearLog()">Очистить</button></th>
                             </tr>
@@ -320,6 +347,7 @@
             </div>
         </div>
 
+        <!-- СЕТКА РЕКЛАМЫ РСЯ -->
         <div class="yandex-rtb-feed-wrapper">
             <div id="yandex_rtb_R-A-19250236-5"></div>
             <script>
@@ -350,14 +378,15 @@
         </section>
     </main>
 
+    <!-- МОДАЛЬНОЕ ОКНО ИНСТРУКЦИИ С ОБНОВЛЕННЫМИ ПУНКТАМИ -->
     <div id="instruction-modal" class="modal-overlay">
         <div class="modal-box">
             <button class="modal-close-btn" onclick="closeModal('instruction-modal')">✕</button>
             <h3 class="modal-title">📖 Инструкция таксатора</h3>
             <div class="modal-desc">
                 <p><b>Основной метод («Зафиксировать румб»):</b> Это базовый продукт буссоли. Наведите вертикальную нить визира на веху, поймайте зеленый уровень горизонта и зафиксируйте румб. В журнал запишется чистый абсолютный магнитный азимут ходовой линии относительно Севера.</p>
-                <p><b>Альтернативный метод («Фиксация 0°»):</b> Это ваш спасательный круг на случай высокой погрешности магнитометра или его некорректной работы. Если в лесу присутствуют сильные магнитные аномалии, близкие залежи руды, или если съемка ведется на телефон под управлением Android (где датчик «абсолютного севера» часто сбоит и выдает случайное направление), использовать чистый азимут опасно — полигон делянки попросту не закроется.</p>
-                <p>В таких условиях наведите визир на начальную веху, нажмите <b>«Фиксировать 0°»</b>, а затем поворачивайтесь к следующей точке (прибор поддерживает свободное вращение как <b>влево</b>, так и <b>вправо</b>). Кнопка «Зафиксировать румб» запишет в журнал точный внутренний угол поворота делянки в диапазоне от 0° до 360°, полностью защищенный от магнитных помех.</p>
+                <p><b>Альтернативный метод («Фиксация 0°»):</b> Это ваш спасательный круг на случай высокой погрешности магнитометра или его некорректной работы. Если в лесу присутствуют сильные магнитные аномалии, близкие залежи руды, или если съемка ведется на телефон под управлением Android (где датчик «абсолютного севера» часто сбоит в вертикальном положении), использовать чистый азимут опасно.</p>
+                <p>В таких условиях переключитесь в режим <b>Теодолита</b>, наведите визир на начальную веху, нажмите <b>«Фиксировать 0°»</b>, а затем поворачивайтесь к следующей точке. Кнопка «Зафиксировать румб» запишет в журнал точный внутренний угол поворота делянки в диапазоне от 0° до 360°, полностью защищенный от магнитных помех.</p>
                 <div class="control-panel-buttons" style="margin-top:20px;">
                     <button class="btn-action btn-set-zero" onclick="closeModal('instruction-modal')">К замеру</button>
                     <button class="btn-action btn-reset-zero" onclick="openCalibrationFromInstruction()">Калибровка</button>
@@ -366,6 +395,7 @@
         </div>
     </div>
 
+    <!-- МОДАЛЬНОЕ ОКНО КАЛИБРОВКИ С ОФИЦИАЛЬНЫМИ ПРЕДУПРЕЖДЕНИЯМИ -->
     <div id="calibration-modal" class="modal-overlay">
         <div class="modal-box">
             <button class="modal-close-btn" onclick="stopCalibrationAndClose()">✕</button>
@@ -380,8 +410,11 @@
                     <span id="calib-status-text" class="calibration-status-text">Ожидание движений... (0%)</span>
                 </div>
 
-                <div class="control-panel-buttons" id="calib-actions">
-                    </div>
+                <p style="font-size: 11px; color: var(--text-graphite); opacity: 0.8; text-align: justify; border-top: 1px dashed var(--border-color); padding-top: 8px;">
+                    ⚠️ <strong>ВНИМАНИЕ ДЛЯ ANDROID-УСТРОЙСТВ:</strong> Если при вертикальном удержании смартфона компас зависает или выдает ложные цифры — это физическое аппаратное ограничение сенсора Вашей модели. В таком случае закройте калибровку и перейдите в режим <strong>«Теодолит (Углы)»</strong>, работающий по снайперскому гироскопу.
+                </p>
+
+                <div class="control-panel-buttons" id="calib-actions"></div>
             </div>
         </div>
     </div>
@@ -391,46 +424,32 @@
             <button class="modal-close-btn" onclick="closeModal('base-info-modal')">✕</button>
             <h3 class="modal-title">Что такое Фиксация 0°?</h3>
             <div class="modal-desc">
-                <p>Эта функция — <b>спасательный круг для таксатора</b> на случай некорректной работы магнитометра или высокой погрешности. Если на делянке есть сильные магнитные аномалии, залежи руды, или замер производится на устройстве Android, где датчик абсолютного севера часто сбоит, использовать обычный азимут («Зафиксировать румб») становится опасно, так как полигон не закроется.</p>
+                <p>Эта функция — <b>辅助 инструмент для таксатора</b> на случай некорректной работы магнитометра или высокой погрешности. Если на делянке есть сильные магнитные аномалии, залежи руды, или замер производится на устройстве Android, где датчик абсолютного севера часто сбоит в вертикальном положении, использовать обычный азимут становится небезопасно.</p>
                 <p>Нажатие этой кнопки задает текущее положение как базовый 0°. Вы можете разворачиваться в любую сторону — как <b>влево</b>, так и <b>вправо</b>. Последующее нажатие кнопки «Зафиксировать румб» занесет в журнал точный внутренний угол поворота линии (от 0° до 360°), полностью изолированный от геомагнитных девиаций.</p>
                 <button class="btn-action btn-set-zero" style="width:100%; margin-top:15px;" onclick="closeModal('base-info-modal')">Понятно</button>
             </div>
         </div>
     </div>
 
-    <footer>
-        <div class="footer-content">
-            <div class="footer-column">
-                <svg class="footer-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/>
-                    <rect x="10.5" y="20" width="3" height="4"/>
-                </svg>
-                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 18px;">Лесовик</div>
-                <div style="font-size: 13px; margin-top: 5px; opacity: 0.8;">Цифровой инструмент таксатора. База знаний, калькуляторы и профильные статьи для специалистов леса.</div>
-            </div>
-            <div class="footer-column">
-                <h4>Правовая информация</h4>
-                <a href="index.html?page=policy" style="color:#8FBC8F; text-decoration:none; display:block; margin-bottom:10px;">Политика конфиденциальности</a>
-                <a href="index.html?page=offer" style="color:#8FBC8F; text-decoration:none; display:block;">Договор-оферта</a>
-            </div>
-            <div class="footer-column">
-                <h4>Контакты</h4>
-                <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; text-decoration:none;">✉️ folgoal@gmail.com</a>
-                <div style="font-size: 12px; margin-top: 15px; opacity: 0.6;">
-                    * Цифровая буссоль предназначена для визирования и экспресс-оценки геометрии лесосек на таксационных пробах.
-                </div>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            &copy; 2026 Создано для профессионалов леса. Все права защищены.
-        </div>
-    </footer>
+    <div id="mag-info-popup" style="display:none;"></div>
+    <div id="theo-info-popup" style="display:none;"></div>
 
 <script>
+    // Математический Low-Pass фильтр для гашения дрожания рук таксатора
+    let smoothedAzimuth = 0;
+    let isFirstData = true;
+    const filterFactor = 0.2; 
+
+    // Переменные фонового анализа заклинивания Android-чипов
+    let lastRawAlpha = 0;
+    let totalGyroDelta = 0;
+    let lastHeadingCheck = 0;
+
     let currentAzimuth = 0;
     let baseAzimuth = null;
     let isLevel = false;
     let measurementsLog = [];
+    let currentSystemMode = 'magnetic'; 
     
     // Переменные калибровки
     let calibrationProgress = 0;
@@ -438,7 +457,6 @@
     let lastAlpha = null, lastBeta = null, lastGamma = null;
     let calibrationTimer = null;
 
-    // Стабильная логика переключения темы оформления
     function toggleTheme() {
         const body = document.documentElement;
         if (body.getAttribute('data-theme') === 'dark') {
@@ -449,7 +467,6 @@
     }
     document.getElementById('themeBtn').addEventListener('click', toggleTheme);
 
-    // ПОПАП МЕНЕДЖМЕНТ
     function openModal(id) {
         document.getElementById(id).style.display = 'flex';
     }
@@ -467,7 +484,25 @@
         openCalibrationModal();
     }
 
-    // ЛОГИКА ИНТЕРАКТИВНОЙ КАЛИБРОВКИ
+    // РЕЖИМНЫЙ МЕНЕДЖМЕНТ ДЛЯ LITE ВЕРСИИ
+    function switchLiteMode(mode) {
+        currentSystemMode = mode;
+        document.getElementById('mode-mag').classList.remove('active-mode');
+        document.getElementById('mode-theo').classList.remove('active-mode');
+        
+        if (currentSystemMode === 'magnetic') {
+            document.getElementById('mode-mag').classList.add('active-mode');
+            document.getElementById('label-live-mode').innerText = "АЗИМУТ:";
+            document.getElementById('th-mode-label').innerText = "Азимут";
+        } else {
+            document.getElementById('mode-theo').classList.add('active-mode');
+            document.getElementById('label-live-mode').innerText = "ВН. УГОЛ:";
+            document.getElementById('th-mode-label').innerText = "Вн. угол";
+            document.getElementById('sensor-stuck-alert').style.display = 'none';
+        }
+        resetZeroDirection();
+    }
+
     function openCalibrationModal() {
         openModal('calibration-modal');
         resetCalibrationState();
@@ -519,7 +554,6 @@
         closeModal('calibration-modal');
     }
 
-    // ИНИЦИАЛИЗАЦИЯ ПОТОКА КАМЕРЫ НА ЭКРАН
     async function startCamera() {
         const video = document.getElementById('video-preview');
         try {
@@ -535,23 +569,52 @@
         }
     }
 
-    // ОБРАБОТКА ДАТЧИКОВ КОМПАСА И ГИРОСКОПА СМАРТФОНА
     function initOrientationSensors() {
         const sensorEvent = ('ondeviceorientationabsolute' in window) ? 'deviceorientationabsolute' : 'deviceorientation';
 
         window.addEventListener(sensorEvent, function(event) {
             let heading = event.webkitCompassHeading;
             if (heading === undefined) {
-                if (event.absolute === true || event.absolute === undefined) {
-                    heading = 360 - event.alpha;
-                } else {
-                    heading = 360 - event.alpha;
-                }
+                heading = 360 - event.alpha;
             }
             if (!heading) heading = 0;
             
-            currentAzimuth = heading;
-            document.getElementById('live-azimuth').innerText = `${currentAzimuth.toFixed(1)}°`;
+            // ИНТЕЛЛЕКТУАЛЬНЫЙ СЛЕДЯЩИЙ МОДУЛЬ ЗАКЛИНИВАНИЯ (ДЛЯ ANDROID LITE)
+            let currentRawAlpha = event.alpha || 0;
+            let checkTime = Date.now();
+            if (checkTime - lastHeadingCheck > 500) {
+                if (lastRawAlpha !== 0 && currentSystemMode === 'magnetic') {
+                    let aDelta = Math.abs(currentRawAlpha - lastRawAlpha);
+                    if (aDelta > 180) aDelta = 360 - aDelta;
+                    let hDelta = Math.abs(heading - lastHeadingCheck);
+                    
+                    totalGyroDelta += aDelta;
+                    if (totalGyroDelta > 15) {
+                        if (hDelta < 2 && aDelta > 5) {
+                            document.getElementById('sensor-stuck-alert').style.display = 'block';
+                        } else {
+                            document.getElementById('sensor-stuck-alert').style.display = 'none';
+                            totalGyroDelta = 0;
+                        }
+                    }
+                }
+                lastRawAlpha = currentRawAlpha;
+                lastHeadingCheck = heading;
+            }
+
+            // ПРИМЕНЕНИЕ LOW-PASS ФИЛЬТРА ДЛЯ ПОЛНОГО ГАШЕНИЯ ДРОЖАНИЯ ЦИФР
+            if (isFirstData) {
+                smoothedAzimuth = heading;
+                isFirstData = false;
+            } else {
+                let diff = heading - smoothedAzimuth;
+                if (diff > 180) diff -= 360;
+                if (diff < -180) diff += 360;
+                smoothedAzimuth += filterFactor * diff;
+                smoothedAzimuth = (smoothedAzimuth % 360 + 360) % 360;
+            }
+
+            currentAzimuth = smoothedAzimuth;
 
             let pitch = Math.round(event.beta || 0); 
             let roll = Math.round(event.gamma || 0);  
@@ -575,23 +638,43 @@
             lastAlpha = event.alpha; lastBeta = event.beta; lastGamma = event.gamma;
 
             const badge = document.getElementById('angle-turn-badge');
-            if (baseAzimuth !== null) {
-                let turnAngle = currentAzimuth - baseAzimuth;
-                if (turnAngle < 0) turnAngle += 360;
-                badge.innerText = `ПОВОРОТ: ${turnAngle.toFixed(1)}°`;
-                badge.style.display = 'block';
+            
+            // Настройка отображения данных в зависимости от режима вкладки
+            if (currentSystemMode === 'magnetic') {
+                document.getElementById('live-azimuth').innerText = `${currentAzimuth.toFixed(1)}°`;
+                if (baseAzimuth !== null) {
+                    let turnAngle = currentAzimuth - baseAzimuth;
+                    if (turnAngle < 0) turnAngle += 360;
+                    badge.innerText = `ПОВОРОТ: ${turnAngle.toFixed(1)}°`;
+                    badge.style.display = 'block';
+                } else {
+                    badge.style.display = 'none';
+                }
             } else {
-                badge.style.display = 'none';
+                if (baseAzimuth !== null) {
+                    let turnAngle = currentAzimuth - baseAzimuth;
+                    if (turnAngle < 0) turnAngle += 360;
+                    document.getElementById('live-azimuth').innerText = `${turnAngle.toFixed(1)}°`;
+                    badge.innerText = `ПОВОРОТ: ${turnAngle.toFixed(1)}°`;
+                    badge.style.display = 'block';
+                } else {
+                    document.getElementById('live-azimuth').innerText = `0.0°`;
+                    badge.style.display = 'none';
+                }
             }
 
             const gyroRing = document.getElementById('gyro-ring');
             const btnCapture = document.getElementById('btn-capture');
 
-            if (Math.abs(pitch - 90) <= 5 && Math.abs(roll) <= 4) {
+            // Универсальная формула горизонта для стабильного вертикального визирования
+            const isPitchOk = Math.abs(pitch - 90) <= 5 || Math.abs(pitch - 0) <= 5 || Math.abs(pitch + 90) <= 5;
+            const isRollOk = Math.abs(roll) <= 4 || Math.abs(roll - 180) <= 4 || Math.abs(roll + 180) <= 4;
+
+            if (isPitchOk && isRollOk) {
                 isLevel = true;
                 gyroRing.classList.add('level-perfect');
                 btnCapture.classList.add('ready-to-fire');
-                btnCapture.innerText = "➕ Зафиксировать румб в журнал";
+                btnCapture.innerText = currentSystemMode === 'magnetic' ? "➕ Зафиксировать румб в журнал" : "➕ Зафиксировать угол в журнал";
                 btnCapture.disabled = false;
             } else {
                 isLevel = false;
@@ -605,7 +688,7 @@
 
     function setZeroDirection() {
         baseAzimuth = currentAzimuth;
-        document.getElementById('base-azimuth').innerText = `${baseAzimuth.toFixed(1)}°`;
+        document.getElementById('base-azimuth').innerText = currentSystemMode === 'magnetic' ? `${baseAzimuth.toFixed(1)}°` : `УСТАНОВЛЕН`;
     }
 
     function resetZeroDirection() {
@@ -617,17 +700,32 @@
     function captureMeasurement() {
         if (!isLevel) return;
 
-        let turnAngleStr = "—";
-        if (baseAzimuth !== null) {
-            let turnAngle = currentAzimuth - baseAzimuth;
-            if (turnAngle < 0) turnAngle += 360;
-            turnAngleStr = `${turnAngle.toFixed(1)}°`;
+        let recordedAngle = "";
+        let recordedTurn = "—";
+        
+        if (currentSystemMode === 'magnetic') {
+            recordedAngle = `${currentAzimuth.toFixed(1)}°`;
+            if (baseAzimuth !== null) {
+                let turnAngle = currentAzimuth - baseAzimuth;
+                if (turnAngle < 0) turnAngle += 360;
+                recordedTurn = `${turnAngle.toFixed(1)}°`;
+            }
+        } else {
+            if (baseAzimuth !== null) {
+                let turnAngle = currentAzimuth - baseAzimuth;
+                if (turnAngle < 0) turnAngle += 360;
+                recordedAngle = `${turnAngle.toFixed(1)}° (угол)`;
+                recordedTurn = "Установлен";
+            } else {
+                alert("Ошибка! В режиме теодолита перед записью угла обязательно обнулите направление кнопкой «Фиксировать 0°»!");
+                return;
+            }
         }
 
         const newMeasurement = {
             id: measurementsLog.length + 1,
-            azimuth: `${currentAzimuth.toFixed(1)}°`,
-            turn: turnAngleStr
+            azimuth: recordedAngle,
+            turn: recordedTurn
         };
 
         measurementsLog.push(newMeasurement);
@@ -663,11 +761,23 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         startCamera();
+        
+        // КАСКАДНЫЙ ЗАПРОС ОДНОВРЕМЕННЫХ ПРАВ НА КОМПАС И АКСЕЛЕРОМЕТР (ДЛЯ IOS СТАБИЛЬНОСТИ)
         if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
             document.body.addEventListener('click', function initOnFirstTouch() {
                 DeviceOrientationEvent.requestPermission()
                     .then(permissionState => {
-                        if (permissionState === 'granted') { initOrientationSensors(); }
+                        if (permissionState === 'granted') {
+                            if (window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission === 'function') {
+                                DeviceMotionEvent.requestPermission()
+                                    .then(motionState => {
+                                        if (motionState === 'granted') { initOrientationSensors(); }
+                                    })
+                                    .catch(console.error);
+                            } else {
+                                initOrientationSensors();
+                            }
+                        }
                     })
                     .catch(console.error);
                 document.body.removeEventListener('click', initOnFirstTouch);
