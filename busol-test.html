@@ -62,6 +62,7 @@
             --danger: #DC2626;
             --success: #16A34A;
             --overlay-bg: rgba(0, 0, 0, 0.5);
+            --warning-alert: #F59E0B;
         }
 
         [data-theme="dark"] {
@@ -116,7 +117,6 @@
         .btn-calibration:hover { background: var(--danger); color: #FFF; }
 
         .theme-toggle { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; min-height: 36px; }
-        .theme-toggle:hover { background-color: var(--forest-green); color: var(--bg-paper); }
 
         main { flex: 1; }
         .container { max-width: 1000px; margin: 75px auto 30px; padding: 0 10px; }
@@ -125,7 +125,7 @@
         @media (min-width: 850px) { .grid-layout { grid-template-columns: 1.1fr 1fr; gap: 25px; } }
 
         .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 4px 4px 0px rgba(0,0,0,0.02); }
-        h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 18px; margin-bottom: 5px; }
+        .card h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 18px; margin-bottom: 5px; }
         .subtitle { font-size: 11px; color: var(--text-graphite); opacity: 0.6; margin-bottom: 15px; }
 
         /* БЛОК ПЕРЕКЛЮЧЕНИЯ РЕЖИМОВ */
@@ -141,6 +141,10 @@
         .zoom-slider-wrapper input[type="range"] { flex: 1; accent-color: var(--forest-green); }
         .traverse-direction-wrapper { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px dashed var(--border-color); padding-top: 8px; }
         .select-traverse { padding: 4px; border-radius: 4px; font-size: 12px; background: var(--card-bg); color: var(--text-graphite); border: 1px solid var(--border-color); font-weight: 600; }
+
+        /* ДИНАМИЧЕСКИЙ ГЕО-АЛЕРТ ДЛЯ АНДРОИДА ПРИ ЗАЛИПАНИИ СЕНСОРА */
+        .sensor-stuck-alert-box { display: none; background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning-alert); color: #B45309; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; margin-bottom: 10px; text-align: justify; line-height: 1.4; animation: pulseGlow 2s infinite; }
+        @keyframes pulseGlow { 0% { opacity: 0.9; } 50% { opacity: 1; border-color: rgba(245, 158, 11, 0.5); } 100% { opacity: 0.9; } }
 
         /* ИНТЕРФЕЙС ВИЗУАЛЬНОЙ БУССОЛИ */
         .camera-viewport-wrapper { position: relative; width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid var(--border-color); }
@@ -166,7 +170,7 @@
         .btn-set-zero { background-color: var(--forest-green); color: #FFF; }
         .btn-reset-zero { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-graphite); }
         .btn-lock-measure { grid-column: span 2; background-color: #E0E0E0; color: #888; cursor: not-allowed; font-size: 14px; }
-        .btn-lock-measure.ready-to-fire { background-color: var(--forest-green); color: #FFF; cursor: pointer; box-shadow: 0 4px 10px rgba(45, 90, 39, 0.2); }
+        .btn-lock-measure.ready-to-fire { background-color: var(--forest-green); color: #FFF; cursor: pointer; }
 
         /* МОБИЛЬНАЯ АДАПТАЦИЯ ТАБЛИЦЫ ЖУРНАЛА */
         .measurements-log-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
@@ -295,9 +299,9 @@
                 <li><strong>Как водить устройство:</strong> Нажмите кнопку «Начать калибровку» ниже. Возьмите смартфон в руку и начните непрерывно выписывать в воздухе объемную фигуру знака бесконечности или «восьмерки».</li>
                 <li><strong>Положение осей:</strong> В процессе движения плавно разворачивайте кисть руки. Смартфон должен попеременно менять наклоны относительно горизонта и плоскости земли (смотреть экраном вверх, на Вас, в сторону). Это позволит стереть налипшие магнитные шумы железа.</li>
                 <li><strong>Положение при замере:</strong> При непосредственной таксации и съемке визиров удерживайте устройство строго <strong>вертикально перед собой</strong>, сопрягая вертикальную нить визира с вехой.</li>
-                <li><strong>⚠️ КРИТИЧЕСКИ ВАЖНО ДЛЯ ANDROID:</strong> Если при вертикальном удержании смартфона показания магнитного азимута намертво зависают или искажаются — это физическое аппаратное ограничение компаса Вашей модели. В таком случае **не рекомендуется проводить замеры в Магнитном режиме**. Закройте это окно и переключитесь во вкладку **«Теодолит (Углы)»**. Данный режим полностью отключает компас и производит расчет по гироскопу, обеспечивая аптечную точность на абсолютно любом смартфоне.</li>
+                <li><strong>⚠️ КРИТИЧЕСКИ ВАЖНО ДЛЯ ANDROID:</strong> Если при вертикальном удержании смартфона показания магнитного азимута намертво зависают или искажаются — это физическое аппаратное ограничение компаса Вашей модели. В таком случае **не рекомендуется проводить замеры в Магнитном режиме**. Закройте это окно и переключитесь во вкладку **«Теодолит (Углы)»**. Данный режим полностью отключает компас и производит расчет по гироскому, обеспечивая аптечную точность на абсолютно любом смартфоне.</li>
                 <li><strong>🔎 РАБОТА НА ДИСТАНЦИЯХ СВЫШЕ 8 МЕТРОВ:</strong> Широкоугольная оптика телефонов визуально отдаляет объекты. На расстояниях от 8 до 15 метров используйте встроенный ползунок цифрового зума над рамкой камеры. Также рекомендуется помечать вершины полевых вешек яркой сигнальной или флуоресцентной лентой для фиксации визира.</li>
-                <li><strong>⚠️ ОБЩЕЕ ПРАВИЛО:</strong> Перед запуском съемок обязательно <strong>заблокируйте автоповорот экрана</strong> в системной шторке Вашего смартфона (зафиксируйте портретный режим). Убедитесь, что чехол телефона лишень магнитных защелок.</li>
+                <li><strong>⚠️ ОБЩЕЕ ПРАВИЛО:</strong> Перед запуском съемок обязательно <strong>заблокируйте автоповорот экрана</strong> в системной шторке Вашего смартфона (зафиксируйте портретный режим). Убедитесь, что чехол телефона лишен магнитных защелок.</li>
             </ul>
             <div style="display: flex; gap: 10px; margin-top: 15px;">
                 <button id="btn-start-calib" class="btn-action btn-set-zero" style="flex: 1;" onclick="startLiveCalibration()">Начать калибровку</button>
@@ -322,6 +326,10 @@
                         Теодолит (Углы)
                         <span class="btn-help-circle" onclick="openPopup('theo-info-popup', event)">?</span>
                     </button>
+                </div>
+
+                <div id="sensor-stuck-alert" class="sensor-stuck-alert-box">
+                    ⚠️ <strong>Внимание:</strong> Обнаружено аппаратное заклинивание компаса! Электронный магнитометр заблокирован в вертикальном положении. Для получения аптечной точности замера делянки переключитесь в режим <strong>«Теодолит (Углы)»</strong>.
                 </div>
 
                 <div class="optic-control-box">
@@ -456,6 +464,17 @@
     </footer>
 
 <script>
+    // Переменные программных фильтров сглаживания рук Low-Pass Filter
+    let smoothedAzimuth = 0;
+    let isFirstData = true;
+    const filterFactor = 0.2; // Сила сглаживания (чем меньше, тем монолитнее стрелка)
+
+    // Переменные для интеллектуального UI-помощника заклинивания
+    let lastRawAlpha = 0;
+    let totalGyroDelta = 0;
+    let totalMagDelta = 0;
+    let lastHeadingCheck = 0;
+
     let currentAzimuth = 0;
     let baseAzimuth = null;
     let isLevel = false;
@@ -466,13 +485,13 @@
     let activePedometerIndex = null;
 
     // Глобальная переменная текущего режима работы и направления хода
-    let currentSystemMode = 'magnetic'; // 'magnetic' или 'theodolite'
-    let currentTraverseDirection = 'clockwise'; // 'clockwise' или 'counter-clockwise'
+    let currentSystemMode = 'magnetic'; 
+    let currentTraverseDirection = 'clockwise'; 
 
     // Локальные переменные системы жесткой калибровки
     let isCalibrating = false;
-    let calibSectors = { q1: false, q2: false, q3: false, q4: false }; // Проверка 360 градусов
-    let calibTiltOk = false; // Проверка наклонов по осям X/Y
+    let calibSectors = { q1: false, q2: false, q3: false, q4: false }; 
+    let calibTiltOk = false; 
 
     // СОХРАНЕНИЕ ДАННЫХ В LOCALSTORAGE
     function saveToLocalStorage() {
@@ -527,7 +546,7 @@
 
     // УПРАВЛЕНИЕ ПОПАПАМИ РЕЖИМОВ (?) И ИНСТРУКЦИЙ
     function openPopup(id, event) {
-        if(event) event.stopPropagation(); // Предотвращаем клик по самой вкладке
+        if(event) event.stopPropagation(); 
         document.getElementById(id).style.display = 'flex';
     }
 
@@ -553,7 +572,6 @@
         closePopupOuter('instruction-popup', event);
     }
 
-    // Управление модальным окном (Калибровка)
     function openCalibration() {
         document.getElementById('calibration-popup').style.display = 'flex';
         resetCalibUI();
@@ -570,7 +588,6 @@
         }
     }
 
-    // ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ РАБОТЫ (ИНЖЕНЕРНОЕ ЯДРО)
     function switchSystemMode(mode) {
         if (measurementsLog.length > 0) {
             if (!confirm("Внимание! При смене режима текущий журнал полевой съемки будет очищен. Продолжить?")) {
@@ -601,6 +618,7 @@
             document.getElementById('mode-theo').classList.add('active-mode');
             document.getElementById('label-live-mode').innerText = "ВН. УГОЛ:";
             document.getElementById('th-mode-label').innerText = "Вн. угол";
+            document.getElementById('sensor-stuck-alert').style.display = 'none'; // Скрываем алерт при переходе в теодолит
         }
     }
 
@@ -675,8 +693,49 @@
         
         if (heading < 0) heading += 360;
         if (heading >= 360) heading -= 360;
+
+        // ИНТЕРФЕЙСНЫЙ ПОМОЩНИК АНАЛИЗА ЗАКЛИНИВАНИЯ ДАТЧИКА (ДЛЯ ANDROID)
+        let currentRawAlpha = event.alpha || 0;
+        let currentTime = Date.now();
         
-        currentAzimuth = heading;
+        if (currentTime - lastHeadingCheck > 400) {
+            if (lastRawAlpha !== 0 && currentSystemMode === 'magnetic') {
+                let alphaDelta = Math.abs(currentRawAlpha - lastRawAlpha);
+                if (alphaDelta > 180) alphaDelta = 360 - alphaDelta;
+                
+                let headingDelta = Math.abs(heading - lastHeadingCheck); 
+                // Накапливаем дельту чистого гироскопа против дельты компаса
+                totalGyroDelta += alphaDelta;
+                
+                // Проверяем: если таксатор развернул корпус (>15°), а стрелка залипла (<2°)
+                if (totalGyroDelta > 15) {
+                    if (headingDelta < 2 && alphaDelta > 5) {
+                        document.getElementById('sensor-stuck-alert').style.display = 'block';
+                    } else {
+                        // Если датчик ожил — прячем алерт
+                        document.getElementById('sensor-stuck-alert').style.display = 'none';
+                        totalGyroDelta = 0;
+                    }
+                }
+            }
+            lastRawAlpha = currentRawAlpha;
+            lastHeadingCheck = heading;
+        }
+
+        // РЕАЛИЗАЦИЯ ИНЖЕНЕРНОГО LOW-PASS ФИЛЬТРА ДЛЯ СГЛАЖИВАНИЯ ДРОЖАНИЯ РУК ТАКСАТОРОВ
+        if (isFirstData) {
+            smoothedAzimuth = heading;
+            isFirstData = false;
+        } else {
+            let diff = heading - smoothedAzimuth;
+            // Корректировка разрыва круга перехода через 360/0 градусов
+            if (diff > 180) diff -= 360;
+            if (diff < -180) diff += 360;
+            smoothedAzimuth += filterFactor * diff;
+            smoothedAzimuth = (smoothedAzimuth % 360 + 360) % 360;
+        }
+        
+        currentAzimuth = smoothedAzimuth;
 
         let pitch = Math.round(event.beta || 0); 
         let roll = Math.round(event.gamma || 0);  
@@ -754,7 +813,7 @@
                 window.addEventListener('deviceorientation', handleOrientation, true);
             }
         } else {
-            alert("Ваш smartphone не поддерживает аппаратные гироскопы и компасы!");
+            alert("Ваш смартфон не поддерживает аппаратные гироскопы и компасы!");
         }
         initPedometer();
     }
@@ -939,7 +998,7 @@
         });
     }
 
-    // КРИСТАЛЬНЫЙ ГЕОДЕЗИЧЕСКИЙ ДВИЖОК CANVAS С СЕЛЕКТОРОМ НАПРАВЛЕНИЯ ОБХОДА (БЕЗ АВТОМАТИЧЕСКИХ УГАДЫВАНИЙ)
+    // КРИСТАЛЬНЫЙ ГЕОДЕЗИЧЕСКИЙ ДВИЖОК CANVAS С СЕЛЕКТОРОМ НАПРАВЛЕНИЯ ОБХОДА
     function drawPolygon() {
         const canvas = document.getElementById('polygon-canvas');
         const ctx = canvas.getContext('2d');
@@ -960,10 +1019,8 @@
 
         measurementsLog.forEach((m, idx) => {
             if (m.systemMode === 'magnetic' || idx === 0) {
-                // В магнитном режиме или для первой линии всегда берем абсолютный угол меридиана
                 calculatedAzimuth = m.azimuth;
             } else {
-                // Строгая тригонометрия теодолитного хода на основе явного выбора пользователя в UI
                 if (currentTraverseDirection === 'counter-clockwise') {
                     // Формула для ЛЕВЫХ внутренних углов хода (обход против часовой стрелки)
                     calculatedAzimuth = calculatedAzimuth + m.azimuth - 180;
@@ -973,7 +1030,6 @@
                 }
             }
 
-            // Математическое приведение азимута к диапазону полного круга [0; 360)
             calculatedAzimuth = (calculatedAzimuth % 360 + 360) % 360;
 
             let angleRad = (calculatedAzimuth * Math.PI) / 180;
@@ -1057,20 +1113,9 @@
         document.getElementById('area-display').innerText = `Площадь: ${areaHa.toFixed(4)} га (${Math.round(area)} м²)`;
     }
 
-    function clearLog() {
-        if (confirm("Очистить журнал полевой съемки?")) {
-            measurementsLog = [];
-            activePedometerIndex = null;
-            localStorage.removeItem('lesovik_measurements');
-            renderLogTable();
-            drawPolygon();
-        }
-    }
-
     document.addEventListener('DOMContentLoaded', () => {
         startCamera();
         
-        // СИНХРОННЫЙ МУЛЬТИЗАПРОС ПРАВ НА ДАТЧИКИ ДЛЯ ЧЕСТНОЙ РАБОТЫ ШАГОМЕРА И КОМПАСА В SAFARI НА IPHONE
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
             document.body.addEventListener('click', function initOnFirstTouch() {
                 DeviceOrientationEvent.requestPermission()
