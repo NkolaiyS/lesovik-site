@@ -172,18 +172,18 @@
         .btn-lock-measure { grid-column: span 2; background-color: #E0E0E0; color: #888; cursor: not-allowed; font-size: 14px; }
         .btn-lock-measure.ready-to-fire { background-color: var(--forest-green); color: #FFF; cursor: pointer; }
 
-        /* ЖУРНАЛ КАТАЛОГА ЗАМЕРОВ ДЕЛЯНКИ */
+        /* МОБИЛЬНАЯ АДАПТАЦИЯ ТАБЛИЦЫ ЖУРНАЛА */
         .measurements-log-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
         .measurements-log-table th, .measurements-log-table td { padding: 6px 2px; font-size: 11px; border-bottom: 1px solid var(--border-color); text-align: center; overflow: hidden; }
         .measurements-log-table th { font-weight: 700; text-transform: uppercase; font-size: 9px; color: var(--forest-green); }
         
-        /* Расширенная адаптивная разметка под полнотомер */
-        .measurements-log-table th:nth-child(1), .measurements-log-table td:nth-child(1) { width: 8%; }  /* № */
-        .measurements-log-table th:nth-child(2), .measurements-log-table td:nth-child(2) { width: 15%; } /* Магн */
-        .measurements-log-table th:nth-child(3), .measurements-log-table td:nth-child(3) { width: 15%; } /* Внутр */
-        .measurements-log-table th:nth-child(4), .measurements-log-table td:nth-child(4) { width: 16%; } /* Длина */
-        .measurements-log-table th:nth-child(5), .measurements-log-table td:nth-child(5) { width: 36%; } /* Полнотомер Биттерлиха */
-        .measurements-log-table th:nth-child(6), .measurements-log-table td:nth-child(6) { width: 10%; } /* Удал */
+        /* Расширенная разметка под полнотомер */
+        .measurements-log-table th:nth-child(1), .measurements-log-table td:nth-child(1) { width: 8%; }  
+        .measurements-log-table th:nth-child(2), .measurements-log-table td:nth-child(2) { width: 15%; } 
+        .measurements-log-table th:nth-child(3), .measurements-log-table td:nth-child(3) { width: 15%; } 
+        .measurements-log-table th:nth-child(4), .measurements-log-table td:nth-child(4) { width: 16%; } 
+        .measurements-log-table th:nth-child(5), .measurements-log-table td:nth-child(5) { width: 36%; } 
+        .measurements-log-table th:nth-child(6), .measurements-log-table td:nth-child(6) { width: 10%; } 
 
         /* СТИЛИ ПЛЮСИКОВ/МИНУСИКОВ ПОЛНОТОМЕРА */
         .bitterlich-cell-wrapper { display: flex; flex-direction: column; gap: 4px; background: rgba(0,0,0,0.02); padding: 4px; border-radius: 6px; }
@@ -403,6 +403,13 @@
                 <div class="calib-progress-bar"><div id="calib-bar" class="calib-progress-fill"></div></div>
                 <div id="calib-status" class="calib-status-text">Ожидание...</div>
             </div>
+            
+            <div style="margin: 10px 0; border-top: 1px dashed var(--border-color); padding-top: 10px; text-align: left; font-size: 12px;">
+                <label for="declination-input" style="font-weight: 600; color: var(--forest-green);">🧭 Магнитное склонение региона (градусы):</label>
+                <input type="number" id="declination-input" class="input-dist" value="0.0" step="0.1" style="width: 65px; margin-top: 4px; display: block;">
+                <span style="font-size: 10px; color: gray; display: block; margin-top: 2px; line-height: 1.3;">Поправка автоматически прибавляется к магнитному азимуту линии для вывода истинного географического румба. По ГОСТу допуск угла — 30'.</span>
+            </div>
+
             <div style="display: flex; gap: 10px; margin-top: 15px;">
                 <button id="btn-start-calib" class="btn-action btn-set-zero" style="flex: 1;">Начать</button>
                 <button id="btn-close-calib-inner" class="btn-action btn-reset-zero" style="flex: 1;">Закрыть</button>
@@ -433,10 +440,11 @@
         currentTraverseDirection: 'clockwise', 
         isCalibrating: false,
         calibSectors: { q1: false, q2: false, q3: false, q4: false }, 
-        calibTiltOk: false
+        calibTiltOk: false,
+        magneticDeclination: 0.0 // Переменная хранения поправки склонения
     };
 
-    // ОБЪЕКТ ССЫЛОК НА DOM ЭЛЕМЕНТЫ (ГЛОБАЛЬНО ЗАФИКСИРОВАН)
+    // ОБЪЕКТ ССЫЛОК НА DOM ЭЛЕМЕНТЫ
     let DOM = {};
 
     function initDomCache() {
@@ -452,12 +460,13 @@
             labelLiveMode: document.getElementById('label-live-mode'),
             logTbody: document.getElementById('log-tbody'),
             areaDisplay: document.getElementById('area-display'),
-            stockDisplay: document.getElementById('stock-display'), // Добавлено окно полнотомера
+            stockDisplay: document.getElementById('stock-display'), 
             stepLengthInput: document.getElementById('step-length'),
             videoPreview: document.getElementById('video-preview'),
             calibBar: document.getElementById('calib-bar'),
             calibStatus: document.getElementById('calib-status'),
-            btnStartCalib: document.getElementById('btn-start-calib')
+            btnStartCalib: document.getElementById('btn-start-calib'),
+            declinationInput: document.getElementById('declination-input')
         };
     }
 
@@ -466,6 +475,7 @@
         localStorage.setItem('lesovik_step_length', AppState.stepLength);
         localStorage.setItem('lesovik_system_mode', AppState.currentSystemMode);
         localStorage.setItem('lesovik_traverse_direction', AppState.currentTraverseDirection);
+        localStorage.setItem('lesovik_magnetic_declination', AppState.magneticDeclination);
     }
 
     function loadFromLocalStorage() {
@@ -473,10 +483,15 @@
         const savedStep = localStorage.getItem('lesovik_step_length');
         const savedMode = localStorage.getItem('lesovik_system_mode');
         const savedDir = localStorage.getItem('lesovik_traverse_direction');
+        const savedDecl = localStorage.getItem('lesovik_magnetic_declination');
         
         if (savedStep && DOM.stepLengthInput) {
             AppState.stepLength = parseFloat(savedStep);
             DOM.stepLengthInput.value = AppState.stepLength;
+        }
+        if (savedDecl && DOM.declinationInput) {
+            AppState.magneticDeclination = parseFloat(savedDecl);
+            DOM.declinationInput.value = AppState.magneticDeclination;
         }
         if (savedMode) {
             AppState.currentSystemMode = savedMode;
@@ -646,7 +661,9 @@
             AppState.smoothedAzimuth = (AppState.smoothedAzimuth % 360 + 360) % 360;
         }
         
-        AppState.currentAzimuth = AppState.smoothedAzimuth;
+        // Автоматически применяем поправку склонения региона к живому азимуту
+        let trueHeading = (AppState.smoothedAzimuth + AppState.magneticDeclination % 360 + 360) % 360;
+        AppState.currentAzimuth = trueHeading;
 
         let pitch = Math.round(event.beta || 0); 
         let roll = Math.round(event.gamma || 0);  
@@ -708,6 +725,14 @@
             if(DOM.btnCapture) DOM.btnCapture.classList.remove('ready-to-fire');
             if(DOM.btnCapture) DOM.btnCapture.innerText = "Поймайте уровень горизонта";
             if(DOM.btnCapture) DOM.btnCapture.disabled = true;
+        }
+    }
+
+    function updateDeclinationValue() {
+        if(DOM.declinationInput) {
+            AppState.magneticDeclination = parseFloat(DOM.declinationInput.value) || 0.0;
+            saveToLocalStorage();
+            drawPolygon();
         }
     }
 
@@ -824,7 +849,6 @@
             mode: 'manual',
             steps: 0,
             systemMode: AppState.currentSystemMode,
-            // Инициализация таксационных счетчиков полнотомера Биттерлиха
             pine: 0,
             spruce: 0,
             birch: 0
@@ -882,18 +906,16 @@
         }
     };
 
-    // ДИНАМИЧЕСКОЕ ИЗМЕНЕНИЕ СЧЕТЧИКОВ ПОЛНОТОМЕРА БИТТЕРЛИХА С ПЕРЕРАСЧЕТОМ
     window.adjustTaxationCount = function(id, species, delta) {
         let idx = AppState.measurementsLog.findIndex(m => m.id === id);
         if (idx !== -1) {
             AppState.measurementsLog[idx][species] = Math.max(0, AppState.measurementsLog[idx][species] + delta);
             saveToLocalStorage();
             renderLogTable();
-            calculateTotalStock(); // Пересчитываем суммарную полноту G
+            calculateTotalStock(); 
         }
     };
 
-    // РАСЧЕТ СУММЫ ПЛОЩАДЕЙ ПОПЕРЕЧНЫХ СЕЧЕНИЙ СТВОЛОВ (G) НА ГЕКТАР
     function calculateTotalStock() {
         let totalTrees = 0;
         AppState.measurementsLog.forEach(m => {
@@ -902,7 +924,6 @@
         
         let avgG = 0;
         if (AppState.measurementsLog.length > 0) {
-            // Среднее значение полноты по точкам замера (коэффициент полнотомера = 1)
             avgG = totalTrees / AppState.measurementsLog.length;
         }
         
@@ -911,6 +932,7 @@
         }
     }
 
+    // ИСПРАВЛЕННЫЙ ВЫСОКОПРОИЗВОДИТЕЛЬНЫЙ ГЕНЕРАТОР (Опечатка с AppState.mode устранена)
     function renderLogTable() {
         if(!DOM.logTbody) return;
         if (AppState.measurementsLog.length === 0) {
@@ -922,12 +944,13 @@
         AppState.measurementsLog.forEach(m => {
             let isManualSelected = m.mode === 'manual' ? 'selected' : '';
             let isStepsSelected = m.mode === 'steps' ? 'selected' : '';
-            let stepIndicator = (AppState.activePedometerIndex === m.id && AppState.mode === 'steps') ? `<span id="step-badge-${m.id}">👣 ${m.steps}</span>` : '';
+            
+            // Фикс: Проверка типа строки теперь опирается строго на свойства текущего элемента массива "m.mode"
+            let stepIndicator = (AppState.activePedometerIndex === m.id && m.mode === 'steps') ? `<span id="step-badge-${m.id}" style="color:var(--success); font-weight:bold; font-size:10px; display:block; margin-top:2px;">👣 ${m.steps}</span>` : '';
             
             let magCell = m.azimuth !== "—" ? `<span style="color:var(--forest-green); font-weight:700;">${m.azimuth}°</span>` : `<span>—</span>`;
             let theoCell = m.theoAngle !== "—" ? `<span style="color:#2563EB; font-weight:700;">${m.theoAngle}°</span>` : `<span>—</span>`;
 
-            // Шаблон блока кнопок-плюсиков полнотомера
             let bitterlichWidget = `
                 <div class="bitterlich-cell-wrapper">
                     <div class="bitterlich-row-item">
@@ -974,7 +997,7 @@
             `;
         });
         DOM.logTbody.innerHTML = htmlBuffer;
-        calculateTotalStock(); // Синхронизируем общую таксационную полноту
+        calculateTotalStock(); 
     }
 
     function drawPolygon() {
@@ -1099,6 +1122,7 @@
         document.getElementById('camera-zoom-range').addEventListener('input', (e) => applyDigitalZoom(e.target.value));
         document.getElementById('traverse-select-direction').addEventListener('change', (e) => changeTraverseDirection(e.target.value));
         if(DOM.stepLengthInput) DOM.stepLengthInput.addEventListener('change', updateStepLength);
+        if(DOM.declinationInput) DOM.declinationInput.addEventListener('input', updateDeclinationValue);
         
         document.getElementById('btn-set-zero-main').addEventListener('click', setZeroDirection);
         document.getElementById('btn-reset-zero-main').addEventListener('click', resetZeroDirection);
