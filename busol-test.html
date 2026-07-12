@@ -36,7 +36,7 @@
     <link rel="canonical" href="https://lesovik-pro.ru/busol.html">
 
     <meta property="og:title" content="Электронная буссоль онлайн с визиром и уровнем | Лесовик">
-    <meta property="og:description" content="Геодезический прибор таксатора в кармане. Разбивка лесосек, фиксация азимутов и замер внутренних углов через камеру смартфона.">
+    <meta property="og:description" content="Геодезический прибор таксатора в кармане. Разбивка лесосек, фиксация азимутов and замер внутренних углов через камеру смартфона.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://lesovik-pro.ru/busol.html">
     <meta property="og:image" content="https://lesovik-pro.ru/logo.jpeg">
@@ -172,12 +172,11 @@
         .btn-lock-measure { grid-column: span 2; background-color: #E0E0E0; color: #888; cursor: not-allowed; font-size: 14px; }
         .btn-lock-measure.ready-to-fire { background-color: var(--forest-green); color: #FFF; cursor: pointer; }
 
-        /* МОБИЛЬНАЯ АДАПТАЦИЯ ТАБЛИЦЫ ЖУРНАЛА */
+        /* ЖУРНАЛ КАТАЛОГА ЗАМЕРОВ ДЕЛЯНКИ */
         .measurements-log-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
         .measurements-log-table th, .measurements-log-table td { padding: 6px 2px; font-size: 11px; border-bottom: 1px solid var(--border-color); text-align: center; overflow: hidden; }
         .measurements-log-table th { font-weight: 700; text-transform: uppercase; font-size: 9px; color: var(--forest-green); }
         
-        /* Расширенная разметка под полнотомер */
         .measurements-log-table th:nth-child(1), .measurements-log-table td:nth-child(1) { width: 8%; }  
         .measurements-log-table th:nth-child(2), .measurements-log-table td:nth-child(2) { width: 15%; } 
         .measurements-log-table th:nth-child(3), .measurements-log-table td:nth-child(3) { width: 15%; } 
@@ -350,7 +349,7 @@
                     
                     <div class="taxation-badge-container">
                         <div id="area-display" class="area-badge">Площадь: 0.0000 га</div>
-                        <div id="stock-display" class="stock-badge">Сумма площадей сечений (G): 0.0 кв.м/га</div>
+                        <div id="stock-display" class="stock-badge">Сумма площадей сечений (G): 0.0 кв.м/ga</div>
                     </div>
                 </div>
                 
@@ -441,7 +440,7 @@
         isCalibrating: false,
         calibSectors: { q1: false, q2: false, q3: false, q4: false }, 
         calibTiltOk: false,
-        magneticDeclination: 0.0 // Переменная хранения поправки склонения
+        magneticDeclination: 0.0
     };
 
     // ОБЪЕКТ ССЫЛОК НА DOM ЭЛЕМЕНТЫ
@@ -661,7 +660,6 @@
             AppState.smoothedAzimuth = (AppState.smoothedAzimuth % 360 + 360) % 360;
         }
         
-        // Автоматически применяем поправку склонения региона к живому азимуту
         let trueHeading = (AppState.smoothedAzimuth + AppState.magneticDeclination % 360 + 360) % 360;
         AppState.currentAzimuth = trueHeading;
 
@@ -932,7 +930,6 @@
         }
     }
 
-    // ИСПРАВЛЕННЫЙ ВЫСОКОПРОИЗВОДИТЕЛЬНЫЙ ГЕНЕРАТОР (Опечатка с AppState.mode устранена)
     function renderLogTable() {
         if(!DOM.logTbody) return;
         if (AppState.measurementsLog.length === 0) {
@@ -945,7 +942,7 @@
             let isManualSelected = m.mode === 'manual' ? 'selected' : '';
             let isStepsSelected = m.mode === 'steps' ? 'selected' : '';
             
-            // Фикс: Проверка типа строки теперь опирается строго на свойства текущего элемента массива "m.mode"
+            // КРИСТАЛЬНОЕ ИСПРАВЛЕНИЕ: Опечатка устранена, проверка идет по свойству "m.mode" строки хода
             let stepIndicator = (AppState.activePedometerIndex === m.id && m.mode === 'steps') ? `<span id="step-badge-${m.id}" style="color:var(--success); font-weight:bold; font-size:10px; display:block; margin-top:2px;">👣 ${m.steps}</span>` : '';
             
             let magCell = m.azimuth !== "—" ? `<span style="color:var(--forest-green); font-weight:700;">${m.azimuth}°</span>` : `<span>—</span>`;
