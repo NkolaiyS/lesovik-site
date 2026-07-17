@@ -412,6 +412,12 @@
                 <div style="font-size: 12px; margin-top: 15px; opacity: 0.6;">
                     * Цифровая буссоль предназначена для визирования и экспресс-оценки геометрии лесосек на таксационных пробах.
                 </div>
+                <!-- КНОПКА ПРОВЕРКИ ID ДЛЯ АКТИВАЦИИ -->
+                <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.15);">
+                    <a href="#" onclick="getWebDeviceID(); return false;" style="color: #8FBC8F; font-size: 13px; text-decoration: underline; font-weight: 600; display: inline-block;">
+                        📱 Проверить ID Android устройства
+                    </a>
+                </div>
             </div>
         </div>
         <div class="footer-bottom">
@@ -736,6 +742,32 @@
             initOrientationSensors();
         }
     });
+
+    // --- ФУНКЦИЯ СЧИТЫВАНИЯ/ГЕНЕРАЦИИ УНИКАЛЬНОГО ID УСТРОЙСТВА ---
+    function getWebDeviceID() {
+        let deviceID = localStorage.getItem('bg_hns_web_id');
+        
+        if (!deviceID) {
+            const randomHash = Math.random().toString(36).substring(2, 8).toUpperCase();
+            const screenSpecs = (window.screen.width * window.screen.height).toString(36).toUpperCase();
+            deviceID = 'HNS-' + screenSpecs + '-' + randomHash;
+            localStorage.setItem('bg_hns_web_id', deviceID);
+        }
+
+        const message = "Ваш уникальный код устройства для покупки и активации лицензии БГ-ХНС:\n\n" + deviceID + "\n\nНажмите ОК, чтобы скопировать код.";
+        
+        if (confirm(message)) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(deviceID).then(() => {
+                    alert("Код " + deviceID + " скопирован в буфер обмена! Отправьте его разработчику.");
+                }).catch(() => {
+                    prompt("Скопируйте код вручную:", deviceID);
+                });
+            } else {
+                prompt("Скопируйте код вручную:", deviceID);
+            }
+        }
+    }
 </script>
 </body>
 </html>
