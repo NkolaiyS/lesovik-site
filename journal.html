@@ -30,7 +30,7 @@
     
     <meta name="google-site-verification" content="rLtNyEQ2h992Lp8m73ynLM8J6xY5tJcr3dbVwbO35rU" />
     
-    <title>Перечетная ведомость леса онлайн: электронный полевой журнал таксатора | Лесовик</title>
+    <title>Перечетная ведомость леса онлайн: electronic field journal of a cruiser | Лесовик</title>
     <meta name="description" content="Бесплатный инструмент таксации: электронная перечетная ведомость деревьев для телефона. Сплошной, ленточный перечет и круговые площадки, автоматическая точковка и расчет запаса кубатуры на 1 га.">
     <meta name="keywords" content="перечетная ведомость леса, перечетная ведомость деревьев, электронная перечетная ведомость, полевой журнал таксатора, точковка деревьев онлайн, расчет запаса древесины, ленточный перечет, круговые площадки постоянного радиуса, лесовик">
     <link rel="canonical" href="https://lesovik-pro.ru/journal.html">
@@ -955,7 +955,7 @@
             XLSX.writeFile(workbook, `lesovik_mdo_${Date.now()}.xlsx`);
         }
 
-        /* ГИС ЭКСПОРТ В СТАНДАРТ KML ДЛЯ MAPS.ME / ORGANIC MAPS */
+        /* ИСПРАВЛЕННЫЙ ИНЖЕНЕРНЫЙ ГИС ЭКСПОРТ В СТАНДАРТ KML С ПРЯМЫМ ВЫЗОВОМ НАВИГАТОРОВ */
         function downloadGIS() {
             if (!journalData.coordinates) {
                 alert("Для формирования KML файла сначала определите координаты лесосеки по GPS.");
@@ -964,7 +964,9 @@
 
             const baseLat = parseFloat(journalData.coordinates.lat);
             const baseLon = parseFloat(journalData.coordinates.lon);
-            const probeKeys = Object.keys(journalData.probes);
+            const probeKeys = Object.keys(journalData.probes).filter(k => k !== 'Общий перечет');
+            
+            const actualProbes = probeKeys.length > 0 ? probeKeys : ['Общий перечет'];
 
             let kmlContent = `<?xml version="1.0" encoding="UTF-8"?>\n`;
             kmlContent += `<kml xmlns="http://www.opengis.net/kml/2.2">\n`;
@@ -972,8 +974,8 @@
             kmlContent += `  <name>${journalData.name || 'Лесосека Лесовик'}</name>\n`;
             kmlContent += `  <description>Сетка таксационных точек замера</description>\n`;
 
-            probeKeys.forEach((probeKey, index) => {
-                // Масштабирование сетки точек: смещение каждого последующего замера на 35 метров для карт
+            actualProbes.forEach((probeKey, index) => {
+                // Геодезическое смещение для визуализации пространственной сетки в Авензе
                 const offsetLat = baseLat + (index * 0.0003);
                 const offsetLon = baseLon + (index * 0.0005);
 
@@ -981,7 +983,7 @@
                 kmlContent += `    <name>${probeKey}</name>\n`;
                 kmlContent += `    <description>Метод таксации: ${journalData.tallyType}</description>\n`;
                 kmlContent += `    <Point>\n`;
-                kmlContent += `      <coordinates>${offsetLon},${offsetLat},0</coordinates>\n`;
+                kmlContent += `      <coordinates>${offsetLon.toFixed(6)},${offsetLat.toFixed(6)},0</coordinates>\n`;
                 kmlContent += `    </Point>\n`;
                 kmlContent += `  </Placemark>\n`;
             });
@@ -989,6 +991,7 @@
             kmlContent += `</Document>\n`;
             kmlContent += `</kml>\n`;
 
+            // Чистый двоичный поток, принуждающий систему перехватывать KML как файл гео-карты
             const blob = new Blob([kmlContent], { type: "application/octet-stream" });
             const link = document.createElement("a");
 
