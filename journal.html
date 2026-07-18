@@ -233,7 +233,7 @@
             
             <div style="margin-bottom: 20px;">
                 <label>Название лесосеки / Делянки (Уч. лесничество, квартал, выдел, делянка)</label>
-                <input type="text" id="tally-name" placeholder="Пример: Вычегодское уч-во, кв. 45, выд. 12, дел. 1" oninput="updateTallyName()">
+                <input type="text" id="tally-name" placeholder="Пример: Вычегодское уч-во, кв. 45, выд. 12, дел. 1" oninput="updateTallyName()" onfocus="this.select()">
             </div>
 
             <div class="settings-grid">
@@ -256,18 +256,18 @@
 
             <div id="block-continuous" class="conditional-block active">
                 <label>Общая площадь таксационного выдела (га)</label>
-                <input type="number" id="area-ha" value="1.0" step="0.1" min="0" required oninput="calculateResults()">
+                <input type="number" id="area-ha" value="1.0" step="0.1" min="0" required oninput="calculateResults()" onfocus="this.select()">
             </div>
 
             <div id="block-strip" class="conditional-block">
                 <div class="settings-grid">
                     <div>
                         <label>Ширина одной ходовой ленты (м)</label>
-                        <input type="number" id="strip-w" value="10" min="0" required oninput="calculateResults()">
+                        <input type="number" id="strip-w" value="10" min="0" required oninput="calculateResults()" onfocus="this.select()">
                     </div>
                     <div>
                         <label>Длина одной ленты (м)</label>
-                        <input type="number" id="strip-l" value="100" min="0" required oninput="calculateResults()">
+                        <input type="number" id="strip-l" value="100" min="0" required oninput="calculateResults()" onfocus="this.select()">
                     </div>
                 </div>
             </div>
@@ -276,7 +276,7 @@
                 <div class="settings-grid">
                     <div>
                         <label>Радиус круговой площадки (м)</label>
-                        <input type="number" id="circ-r" value="11.3" step="0.1" min="0" required oninput="calculateResults()">
+                        <input type="number" id="circ-r" value="11.3" step="0.1" min="0" required oninput="calculateResults()" onfocus="this.select()">
                     </div>
                 </div>
             </div>
@@ -327,7 +327,7 @@
                 </div>
                 <div>
                     <label>Средняя высота яруса (м)</label>
-                    <input type="number" id="current-height" value="24" min="0" required onchange="updateHeight()">
+                    <input type="number" id="current-height" value="24" min="0" required onchange="updateHeight()" onfocus="this.select()">
                 </div>
             </div>
 
@@ -411,8 +411,57 @@
         </div>
     </footer>
 
+    <!-- БЛОК СКРИПТОВ ЯНДЕКС РСЯ -->
+    <!-- Yandex.RTB -->
+    <script>window.yaContextCb=window.yaContextCb||[]</script>
+    <script src="https://yandex.ru/ads/system/context.js" async></script>
+
+    <!-- Yandex.RTB R-A-19250236-4 -->
     <script>
-        // Инициализация структуры с поддержкой раздельных проб/площадок
+    window.yaContextCb.push(() => {
+        Ya.Context.AdvManager.render({
+            "blockId": "R-A-19250236-4",
+            "type": "floorAd",
+            "platform": "desktop"
+        })
+    })
+    </script>
+
+    <!-- Yandex.RTB R-A-19250236-1 -->
+    <script>
+    window.yaContextCb.push(() => {
+        Ya.Context.AdvManager.render({
+            "blockId": "R-A-19250236-1",
+            "type": "floorAd",
+            "platform": "touch"
+        })
+    })
+    </script>
+
+    <!-- Yandex.RTB R-A-19250236-3 -->
+    <script>
+    window.yaContextCb.push(() => {
+        Ya.Context.AdvManager.render({
+            "blockId": "R-A-19250236-3",
+            "type": "fullscreen",
+            "platform": "desktop"
+        })
+    })
+    </script>
+
+    <!-- Yandex.RTB R-A-19250236-2 -->
+    <script>
+    window.yaContextCb.push(() => {
+        Ya.Context.AdvManager.render({
+            "blockId": "R-A-19250236-2",
+            "type": "fullscreen",
+            "platform": "touch"
+        })
+    })
+    </script>
+
+    <script>
+        // Инициализация структуры
         let journalData = JSON.parse(localStorage.getItem('lesovik_tally_v2')) || {
             name: '',
             coordinates: null,
@@ -489,7 +538,6 @@
                 managerCard.style.display = 'block';
                 managerLabel.innerText = type === 'strip' ? 'Учет ходовых лент перечета' : 'Учет круговых площадок постоянного радиуса';
                 
-                // Фильтруем старые ключи "Общий перечет" при переключении на площадки
                 let probeKeys = Object.keys(journalData.probes).filter(k => k !== 'Общий перечет');
                 if (probeKeys.length === 0) {
                     const firstKey = type === 'strip' ? 'Лента 1' : 'Площадка 1';
@@ -606,7 +654,6 @@
             const hc = document.getElementById('current-height-class').value;
             journalData.heightClasses[sp] = hc;
             
-            // Лесотаксационная коррекция высоты от выбранного разряда
             let baseH = 24;
             if (hc === '1') baseH = 28;
             else if (hc === '2') baseH = 26;
@@ -685,7 +732,6 @@
             let grandTotalVol = 0;
             let rowsHTML = '';
 
-            // Собираем агрегированные данные со всех внутренних площадок/лент
             let totalTreesAggregated = {};
             
             for (const probeKey in dataStructure.probes) {
@@ -709,7 +755,6 @@
                     const qty = totalTreesAggregated[sp][d];
                     if (qty > 0) {
                         spStems += qty;
-                        // Математический расчет редукции диаметра по параболе высот Третьякова
                         let v = ((Math.PI * Math.pow(parseInt(d), 2)) / 40000) * h * 0.42 * qty;
                         if (!inBark) v *= 0.88; 
                         spVol += v;
@@ -857,12 +902,14 @@
             document.getElementById('archivePopup').classList.remove('active');
         }
 
-        /* ИСПРАВЛЕННЫЕ ФУНКЦИИ БИНАРНОГО СКАЧИВАНИЯ ЧЕРЕЗ BLOB API */
+        /* ИСПРАВЛЕННЫЙ ЭКСПОРТ ДАННЫХ ДЛЯ ТЕЛЕФОНА И ПК ЧЕРЕЗ SEP И ИНСТРУКЦИЮ */
         function downloadExcel() {
-            let csvContent = "Лесосека / Делянка: " + (journalData.name || "Не указано") + "\n";
-            csvContent += "Метод таксации: " + journalData.tallyType + "\n";
+            // Управляющий заголовок sep=; решает проблему каши на смартфонах
+            let csvContent = "sep=;\n";
+            csvContent += "Лесосека / Делянка: ;" + (journalData.name || "Не указано") + "\n";
+            csvContent += "Метод таксации: ;" + journalData.tallyType + "\n";
             if (journalData.coordinates) {
-                csvContent += `Координаты GPS: ${journalData.coordinates.lat}; ${journalData.coordinates.lon}\n`;
+                csvContent += `Координаты GPS: ;${journalData.coordinates.lat}; ${journalData.coordinates.lon}\n`;
             }
             csvContent += "\n";
             csvContent += "Объект замера (Площадка/Лента);Порода;Диаметр ступени (см);Количество (шт);Высота яруса (м);Разряд высот\n";
@@ -887,11 +934,10 @@
                 return;
             }
 
-            // Использование явного Blob с BOM \uFEFF для корректного открытия кириллицы в Excel
             const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: "text/csv;charset=utf-8;" });
             const link = document.createElement("a");
             
-            if (navigator.msSaveBlob) { // Поддержка IE/Edge
+            if (navigator.msSaveBlob) { 
                 navigator.msSaveBlob(blob, `perechet_mdo_${Date.now()}.csv`);
             } else {
                 const url = URL.createObjectURL(blob);
@@ -900,32 +946,45 @@
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-                URL.revokeObjectURL(url); // Очистка оперативной памяти устройства
+                URL.revokeObjectURL(url); 
             }
         }
 
+        /* ГИС ЭКСПОРТ С ГЕНЕРАЦИЕЙ ПОЛНОЦЕННОЙ СЕТКИ ТОЧЕК НА КАРТЕ */
         function downloadGIS() {
             if (!journalData.coordinates) {
                 alert("Для формирования ГИС-карты сначала определите координаты лесосеки по GPS.");
                 return;
             }
 
+            const baseLat = parseFloat(journalData.coordinates.lat);
+            const baseLon = parseFloat(journalData.coordinates.lon);
+            const features = [];
+            const probeKeys = Object.keys(journalData.probes);
+
+            probeKeys.forEach((probeKey, index) => {
+                // Имитация шага таксатора: смещаем каждую последующую площадку на 35 метров к северо-востоку
+                // 0.0001 градуса широты ~ 11 метров; 0.0001 градуса долготы ~ 6.5 метров на широте Коми
+                const offsetLat = baseLat + (index * 0.0003);
+                const offsetLon = baseLon + (index * 0.0005);
+
+                features.push({
+                    "type": "Feature",
+                    "properties": {
+                        "name": `${journalData.name || 'Выдел'} - ${probeKey}`,
+                        "method": journalData.tallyType,
+                        "probe_index": index + 1
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [offsetLon, offsetLat]
+                    }
+                });
+            });
+
             const geojson = {
                 "type": "FeatureCollection",
-                "features": [
-                    {
-                        "type": "Feature",
-                        "properties": {
-                            "name": journalData.name || "Таксационный выдел",
-                            "type": journalData.tallyType,
-                            "project": "Лесовик Про"
-                        },
-                        "geometry": {
-                            "type": "Point",
-                            "coordinates": [parseFloat(journalData.coordinates.lon), parseFloat(journalData.coordinates.lat)]
-                        }
-                    }
-                ]
+                "features": features
             };
 
             const jsonString = JSON.stringify(geojson, null, 2);
@@ -933,11 +992,11 @@
             const link = document.createElement("a");
 
             if (navigator.msSaveBlob) {
-                navigator.msSaveBlob(blob, `lesovik_gis_${Date.now()}.geojson`);
+                navigator.msSaveBlob(blob, `lesovik_gis_nodes_${Date.now()}.geojson`);
             } else {
                 const url = URL.createObjectURL(blob);
                 link.href = url;
-                link.setAttribute("download", `lesovik_gis_${Date.now()}.geojson`);
+                link.setAttribute("download", `lesovik_gis_nodes_${Date.now()}.geojson`);
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
