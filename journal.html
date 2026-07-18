@@ -227,7 +227,6 @@
         <div class="card" id="mainParamsCard">
             <h2>Параметры инвентаризации лесосеки</h2>
             
-            <!-- Поле названия делянки -->
             <div class="full-width-field">
                 <label>Название лесосеки / Делянки</label>
                 <input type="text" id="site-name" value="Участок №1" oninput="updateSiteName()" onfocus="this.select()">
@@ -282,7 +281,6 @@
                 </div>
             </div>
 
-            <!-- Захват спутниковых координат GPS -->
             <div class="geo-btn-container">
                 <button class="btn-geo" onclick="captureGPSCoords()">📍 Определить координаты делянки (GPS)</button>
                 <div class="geo-status" id="geoCoordsStatus">Координаты не зафиксированы</div>
@@ -315,10 +313,9 @@
 
         <div class="card">
             <h2>Сводная перечетная ведомость (В пересчете на 1 га)</h2>
-            <!-- Защищенный контейнер скролла для итоговой динамической таблицы -->
             <div class="table-responsive-container" id="summary-container"></div>
             <p style="font-size: 11px; color: gray; margin-top: 15px; line-height: 1.4;">
-                * Масштабирование запаса на полный гектар производится автоматически через коэффициент редукции площади пробы. Объем вычисляется по формуле цилиндра с видовым числом ствола древостоя ($f=0.42$).
+                * Масштабирование запаса на полный гектар производится автоматически через коэффициент редукции площади пробы. Объем вычисляется по формуле цилиндра с видовым числом ствола древостоя (f = 0.42).
             </p>
         </div>
 
@@ -328,7 +325,6 @@
             <script>(MRGtag = window.MRGtag || []).push({})</script>
         </div>
 
-        <!-- КНОПКИ УПРАВЛЕНИЯ В СТОЛБЕЦ -->
         <div class="action-buttons-stack">
             <button class="btn-stack-action excel" onclick="downloadCSVReport()">Скачать отчет в Excel (CSV)</button>
             <button class="btn-stack-action gis" onclick="downloadGeoJSONMap()">Скачать карту для ГИС (.geojson)</button>
@@ -336,7 +332,6 @@
             <button class="btn-stack-action clear" onclick="clearData()">Очистить текущую ведомость</button>
         </div>
 
-        <!-- БЛОК АВТОНОМНОГО АРХИВА -->
         <div class="card" style="margin-top: 24px;" id="localArchiveCard">
             <h2>Архив сохраненных делянок (Автономный)</h2>
             <div class="archive-list" id="archiveContainer">
@@ -394,16 +389,17 @@
     <div id="yandex_rtb_floor"></div>
     <script>
         window.yaContextCb.push(() => {
-            Ya.Context.AdvManager.render({
-                blockId: "R-A-2008430-floor",
-                renderTo: "yandex_rtb_floor",
-                type: "floorAd"
-            })
-        })
+            try {
+                Ya.Context.AdvManager.render({
+                    blockId: "R-A-2008430-floor",
+                    renderTo: "yandex_rtb_floor",
+                    type: "floorAd"
+                });
+            } catch(e) { console.log("Реклама FloorAd заблокирована или настраивается"); }
+        });
     </script>
 
     <script>
-        // Инициализация расширенной структуры объекта таксационных данных
         let journalData = JSON.parse(localStorage.getItem('lesovik_tally')) || {
             siteName: 'Участок №1',
             tallyType: 'continuous',
@@ -423,13 +419,15 @@
 
         const diameters = [8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64];
 
-        // ПОЛНОЭКРАННАЯ РЕКЛАМА РСЯ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
+        // ПОЛНОЭКРАННАЯ РЕКЛАМА РСЯ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ (ЗАЩИЩЕННЫЙ ВЫЗОВ)
         window.yaContextCb.push(() => {
-            Ya.Context.AdvManager.render({
-                blockId: "R-A-2008430-interstitial",
-                type: "interstitial"
-            })
-        })
+            try {
+                Ya.Context.AdvManager.render({
+                    blockId: "R-A-2008430-interstitial",
+                    type: "interstitial"
+                });
+            } catch(e) { console.log("Реклама Interstitial заблокирована или настраивается"); }
+        });
 
         function toggleTheme() {
             const body = document.documentElement;
@@ -480,7 +478,6 @@
             return area > 0 ? area : 1.0;
         }
 
-        // МОДУЛЬ GPS НАВИГАЦИИ
         function captureGPSCoords() {
             const statusEl = document.getElementById('geoCoordsStatus');
             statusEl.innerText = "Поиск спутников GPS. Пожалуйста, подождите...";
@@ -492,8 +489,6 @@
                         journalData.longitude = position.coords.longitude;
                         statusEl.innerText = `Успешно: Ш ${journalData.latitude.toFixed(5)}°, Д ${journalData.longitude.toFixed(5)}°`;
                         saveData();
-                        
-                        // Автоматический плавный переход экрана к результату замера
                         document.getElementById('geoCoordsStatus').scrollIntoView({ behavior: 'smooth' });
                     },
                     (error) => {
@@ -563,7 +558,6 @@
             localStorage.setItem('lesovik_tally', JSON.stringify(journalData));
         }
 
-        // ДИНАМИЧЕСКОЕ ПОСТРОЕНИЕ ИТОГОВОЙ ТАБЛИЦЫ ПЕРЕЧЕТА
         function calculateResults() {
             const area = getProbeArea();
             const barkSelect = document.getElementById('tally-bark').value;
@@ -627,7 +621,6 @@
             }
         }
 
-        // ЭКСПОРТ В EXCEL (SCV)
         function downloadCSVReport() {
             let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
             csvContent += `Отчет таксации лесосеки: ${journalData.siteName}\r\n`;
@@ -660,7 +653,6 @@
             document.body.removeChild(link);
         }
 
-        // ЭКСПОРТ В GEOJSON
         function downloadGeoJSONMap() {
             if (!journalData.latitude || !journalData.longitude) {
                 alert("Сначала зафиксируйте GPS-координаты вашей лесосеки кнопкой в параметрах!");
@@ -702,7 +694,6 @@
             document.body.removeChild(downloadAnchor);
         }
 
-        // ЛОКАЛЬНЫЙ АРХИВ
         function archiveCurrentSite() {
             let archive = JSON.parse(localStorage.getItem('lesovik_archive')) || [];
             
@@ -773,8 +764,6 @@
 
                 toggleAreaInputs();
                 renderGrid();
-                
-                // Плавный скролл экрана к началу параметров загруженной делянки
                 document.getElementById('mainParamsCard').scrollIntoView({ behavior: 'smooth' });
             }
         }
@@ -800,7 +789,6 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Восстановление значений при перезагрузке
             document.getElementById('site-name').value = journalData.siteName || 'Участок №1';
             document.getElementById('tally-type').value = journalData.tallyType || 'continuous';
             document.getElementById('tally-bark').value = journalData.tallyBark || 'no';
