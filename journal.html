@@ -47,6 +47,9 @@
     <meta name="geo.region" content="RU-KO">
     <meta name="geo.placename" content="Сыктывкар">
 
+    <!-- ПОДКЛЮЧЕНИЕ АВТОНОМНОЙ БИБЛИОТЕКИ SHEETJS ДЛЯ НАСТОЯЩЕГО XLSX -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.mini.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
 
@@ -902,17 +905,26 @@
             document.getElementById('archivePopup').classList.remove('active');
         }
 
-        /* ИСПРАВЛЕННЫЙ ЭКСПОРТ ДАННЫХ ДЛЯ ТЕЛЕФОНА И ПК ЧЕРЕЗ SEP И ИНСТРУКЦИЮ */
+        /* НАДЕЖНЫЙ ЭКСПОРТ В НАСТОЯЩИЙ .XLSX ЧЕРЕЗ БИБЛИОТЕКУ SHEETJS */
         function downloadExcel() {
-            // Управляющий заголовок sep=; решает проблему каши на смартфонах
-            let csvContent = "sep=;\n";
-            csvContent += "Лесосека / Делянка: ;" + (journalData.name || "Не указано") + "\n";
-            csvContent += "Метод таксации: ;" + journalData.tallyType + "\n";
-            if (journalData.coordinates) {
-                csvContent += `Координаты GPS: ;${journalData.coordinates.lat}; ${journalData.coordinates.lon}\n`;
+            if (typeof XLSX === 'undefined') {
+                alert("Ошибка: библиотека экспорта еще загружается. Повторите попытку.");
+                return;
             }
-            csvContent += "\n";
-            csvContent += "Объект замера (Площадка/Лента);Порода;Диаметр ступени (см);Количество (шт);Высота яруса (м);Разряд высот\n";
+
+            let rows = [];
+            
+            // Формируем мета-информацию вверху таблицы
+            rows.push(["Параметры лесосеки / Делянки"]);
+            rows.push(["Название делянки:", journalData.name || "Не указано"]);
+            rows.push(["Метод инвентаризации:", journalData.tallyType]);
+            if (journalData.coordinates) {
+                rows.push(["Координаты делянки:", `Широта: ${journalData.coordinates.lat}, Долгота: ${journalData.coordinates.lon}`]);
+            }
+            rows.push([]); // Пустая строка-разделитель
+            
+            // Шапка основной таблицы замера
+            rows.push(["Объект (Проба/Лента)", "Порода дерева", "Ступень толщины (см)", "Количество (шт)", "Высота яруса (м)", "Разряд высот"]);
 
             let hasData = false;
             for (const probeKey in journalData.probes) {
@@ -922,7 +934,7 @@
                     for (const d in journalData.probes[probeKey][sp]) {
                         const qty = journalData.probes[probeKey][sp][d];
                         if (qty > 0) {
-                            csvContent += `${probeKey};${sp};${d};${qty};${h};${hc}\n`;
+                            rows.push([probeKey, sp, parseInt(d), parseInt(qty), parseFloat(h), `Разряд ${hc}`]);
                             hasData = true;
                         }
                     }
@@ -930,73 +942,62 @@
             }
 
             if (!hasData) {
-                alert("Ведомость пуста. Пожалуйста, добавьте замеры.");
+                alert("Ведомость пуста. Экспорт невозможен.");
                 return;
             }
 
-            const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: "text/csv;charset=utf-8;" });
-            const link = document.createElement("a");
-            
-            if (navigator.msSaveBlob) { 
-                navigator.msSaveBlob(blob, `perechet_mdo_${Date.now()}.csv`);
-            } else {
-                const url = URL.createObjectURL(blob);
-                link.href = url;
-                link.setAttribute("download", `perechet_mdo_${Date.now()}.csv`);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url); 
-            }
+            // Создаем книгу Excel и лист
+            const worksheet = XLSX.utils.aoa_to_sheet(rows);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Ведомость");
+
+            // Генерируем двоичный файл и отдаем на скачивание
+            XLSX.writeFile(workbook, `lesovik_mdo_${Date.now()}.xlsx`);
         }
 
-        /* ГИС ЭКСПОРТ С ГЕНЕРАЦИЕЙ ПОЛНОЦЕННОЙ СЕТКИ ТОЧЕК НА КАРТЕ */
+        /* ГИС ЭКСПОРТ В СТАНДАРТ KML ДЛЯ MAPS.ME / ORGANIC MAPS */
         function downloadGIS() {
             if (!journalData.coordinates) {
-                alert("Для формирования ГИС-карты сначала определите координаты лесосеки по GPS.");
+                alert("Для формирования KML файла сначала определите координаты лесосеки по GPS.");
                 return;
             }
 
             const baseLat = parseFloat(journalData.coordinates.lat);
             const baseLon = parseFloat(journalData.coordinates.lon);
-            const features = [];
             const probeKeys = Object.keys(journalData.probes);
 
+            let kmlContent = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+            kmlContent += `<kml xmlns="http://www.opengis.net/kml/2.2">\n`;
+            kmlContent += `<Document>\n`;
+            kmlContent += `  <name>${journalData.name || 'Лесосека Лесовик'}</name>\n`;
+            kmlContent += `  <description>Сетка таксационных точек замера</description>\n`;
+
             probeKeys.forEach((probeKey, index) => {
-                // Имитация шага таксатора: смещаем каждую последующую площадку на 35 метров к северо-востоку
-                // 0.0001 градуса широты ~ 11 метров; 0.0001 градуса долготы ~ 6.5 метров на широте Коми
+                // Масштабирование сетки точек: смещение каждого последующего замера на 35 метров для карт
                 const offsetLat = baseLat + (index * 0.0003);
                 const offsetLon = baseLon + (index * 0.0005);
 
-                features.push({
-                    "type": "Feature",
-                    "properties": {
-                        "name": `${journalData.name || 'Выдел'} - ${probeKey}`,
-                        "method": journalData.tallyType,
-                        "probe_index": index + 1
-                    },
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [offsetLon, offsetLat]
-                    }
-                });
+                kmlContent += `  <Placemark>\n`;
+                kmlContent += `    <name>${probeKey}</name>\n`;
+                kmlContent += `    <description>Метод таксации: ${journalData.tallyType}</description>\n`;
+                kmlContent += `    <Point>\n`;
+                kmlContent += `      <coordinates>${offsetLon},${offsetLat},0</coordinates>\n`;
+                kmlContent += `    </Point>\n`;
+                kmlContent += `  </Placemark>\n`;
             });
 
-            const geojson = {
-                "type": "FeatureCollection",
-                "features": features
-            };
+            kmlContent += `</Document>\n`;
+            kmlContent += `</kml>\n`;
 
-            const jsonString = JSON.stringify(geojson, null, 2);
-            const blob = new Blob([jsonString], { type: "application/json;charset=utf-8;" });
+            const blob = new Blob([kmlContent], { type: "application/vnd.google-earth.kml+xml;charset=utf-8;" });
             const link = document.createElement("a");
 
             if (navigator.msSaveBlob) {
-                navigator.msSaveBlob(blob, `lesovik_gis_nodes_${Date.now()}.geojson`);
+                navigator.msSaveBlob(blob, `lesovik_map_${Date.now()}.kml`);
             } else {
                 const url = URL.createObjectURL(blob);
                 link.href = url;
-                link.setAttribute("download", `lesovik_gis_nodes_${Date.now()}.geojson`);
+                link.setAttribute("download", `lesovik_map_${Date.now()}.kml`);
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
