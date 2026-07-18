@@ -121,6 +121,8 @@
         .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         @media (max-width: 600px) { .settings-grid { grid-template-columns: 1fr; gap: 15px; } }
 
+        .multi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
+
         label { display: block; font-size: 12px; font-weight: 600; color: var(--forest-green); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
         select, input { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 16px; background-color: var(--bg-paper); color: var(--text-graphite); box-sizing: border-box; transition: border-color 0.2s; }
         select:focus, input:focus { outline: none; border-color: var(--forest-green); box-shadow: inset 2px 2px 0px rgba(0,0,0,0.03); }
@@ -129,6 +131,15 @@
         .conditional-block.active { display: block; }
 
         .area-result { font-size: 14px; font-weight: 700; color: var(--forest-green); margin-top: 15px; text-align: right; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* НАВИГАЦИЯ ПО ПРОБАМ / ЛЕНТАМ */
+        .probe-manager { background: rgba(45, 90, 39, 0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 20px; }
+        .probe-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .probe-tab { background: var(--card-bg); border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .probe-tab.active { background: var(--forest-green); color: white; border-color: var(--forest-green); }
+        .btn-add-probe { background: transparent; border: 1px dashed var(--forest-green); color: var(--forest-green); padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s; }
+        .btn-add-probe:hover { background: var(--forest-green); color: white; }
+        .btn-del-probe { border: none; background: transparent; color: var(--danger); cursor: pointer; font-weight: bold; font-size: 14px; padding: 0 2px; }
 
         /* ИНТЕРФЕЙС ТОЧКОВКИ */
         .tally-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 16px; margin-top: 20px; }
@@ -251,11 +262,11 @@
             <div id="block-strip" class="conditional-block">
                 <div class="settings-grid">
                     <div>
-                        <label>Ширина ходовой ленты (м)</label>
+                        <label>Ширина одной ходовой ленты (м)</label>
                         <input type="number" id="strip-w" value="10" min="0" required oninput="calculateResults()">
                     </div>
                     <div>
-                        <label>Суммарная длина лент (м)</label>
+                        <label>Длина одной ленты (м)</label>
                         <input type="number" id="strip-l" value="100" min="0" required oninput="calculateResults()">
                     </div>
                 </div>
@@ -266,10 +277,6 @@
                     <div>
                         <label>Радиус круговой площадки (м)</label>
                         <input type="number" id="circ-r" value="11.3" step="0.1" min="0" required oninput="calculateResults()">
-                    </div>
-                    <div>
-                        <label>Количество заложенных площадок (шт)</label>
-                        <input type="number" id="circ-n" value="4" min="0" required oninput="calculateResults()">
                     </div>
                 </div>
             </div>
@@ -282,9 +289,18 @@
             <div class="area-result" id="computed-area">Площадь пробы: 1.000 га</div>
         </div>
 
+        <!-- МЕНЕДЖЕР ОТДЕЛЬНЫХ ПРОБ И ПЛОЩАДОК -->
+        <div class="card" id="probe-manager-card" style="display:none;">
+            <div class="probe-manager">
+                <label id="probe-manager-label">Учет по отдельным площадкам / лентам</label>
+                <div class="probe-tabs" id="probe-tabs-container"></div>
+            </div>
+        </div>
+
         <div class="card">
             <h2>Точковка и перечет деревьев по ступеням толщины</h2>
-            <div class="settings-grid" style="margin-bottom: 20px;">
+            
+            <div class="multi-grid">
                 <div>
                     <label>Текущая измеряемая порода</label>
                     <select id="current-species" onchange="renderGrid()">
@@ -298,7 +314,19 @@
                     </select>
                 </div>
                 <div>
-                    <label>Средняя высота яруса породы (м)</label>
+                    <label>Разряд высот породы</label>
+                    <select id="current-height-class" onchange="updateHeightClass()">
+                        <option value="1">I разряд (Наивысшие)</option>
+                        <option value="2">II разряд</option>
+                        <option value="3" selected>III разряд (Средние)</option>
+                        <option value="4">IV разряд</option>
+                        <option value="5">V разряд</option>
+                        <option value="6">VI разряд</option>
+                        <option value="7">VII разряд (Низкие)</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Средняя высота яруса (м)</label>
                     <input type="number" id="current-height" value="24" min="0" required onchange="updateHeight()">
                 </div>
             </div>
@@ -310,7 +338,7 @@
             <h2>Сводная перечетная ведомость (В пересчете на 1 га)</h2>
             <div id="summary-container"></div>
             <p style="font-size: 11px; color: gray; margin-top: 15px; line-height: 1.4;">
-                * Масштабирование запаса на полный гектар производится автоматически через коэффициент редукции площади пробы. Объем вычисляется по формуле цилиндра с видовым числом ствола древостоя ($f=0.42$).
+                * Масштабирование запаса на полный гектар производится автоматически через коэффициент редукции суммарной площади всех заложенных пробных площадей. Объем вычисляется по формуле цилиндра с видовым числом ствола древостоя ($f=0.42$) с корректировкой кривой высот по выбранному разряду.
             </p>
 
             <div class="action-buttons-container">
@@ -384,15 +412,21 @@
     </footer>
 
     <script>
-        let journalData = JSON.parse(localStorage.getItem('lesovik_tally')) || {
+        // Инициализация структуры с поддержкой раздельных проб/площадок
+        let journalData = JSON.parse(localStorage.getItem('lesovik_tally_v2')) || {
             name: '',
             coordinates: null,
+            tallyType: 'continuous',
+            tallyBark: 'yes',
+            activeProbe: 'Общий перечет',
             heights: { 'Сосна': 24, 'Ель': 22, 'Береза': 21, 'Осина': 23, 'Лиственница': 25, 'Тополь': 22, 'Дуб': 24 },
-            trees: {}
+            heightClasses: { 'Сосна': '3', 'Ель': '3', 'Береза': '3', 'Осина': '3', 'Лиственница': '3', 'Тополь': '3', 'Дуб': '3' },
+            probes: {
+                'Общий перечет': {}
+            }
         };
 
-        let archiveData = JSON.parse(localStorage.getItem('lesovik_archive')) || [];
-
+        let archiveData = JSON.parse(localStorage.getItem('lesovik_archive_v2')) || [];
         const diameters = [8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64];
 
         function toggleTheme() {
@@ -407,6 +441,10 @@
         function updateTallyName() {
             journalData.name = document.getElementById('tally-name').value;
             saveData();
+        }
+
+        function saveData() {
+            localStorage.setItem('lesovik_tally_v2', JSON.stringify(journalData));
         }
 
         function getLocation() {
@@ -433,29 +471,126 @@
 
         function toggleAreaInputs() {
             const type = document.getElementById('tally-type').value;
+            journalData.tallyType = type;
+            
             document.querySelectorAll('.conditional-block').forEach(el => el.classList.remove('active'));
             document.getElementById(`block-${type}`).classList.add('active');
-            calculateResults();
+            
+            const managerCard = document.getElementById('probe-manager-card');
+            const managerLabel = document.getElementById('probe-manager-label');
+            
+            if (type === 'continuous') {
+                managerCard.style.display = 'none';
+                journalData.activeProbe = 'Общий перечет';
+                if (!journalData.probes['Общий перечет']) {
+                    journalData.probes['Общий перечет'] = {};
+                }
+            } else {
+                managerCard.style.display = 'block';
+                managerLabel.innerText = type === 'strip' ? 'Учет ходовых лент перечета' : 'Учет круговых площадок постоянного радиуса';
+                
+                // Фильтруем старые ключи "Общий перечет" при переключении на площадки
+                let probeKeys = Object.keys(journalData.probes).filter(k => k !== 'Общий перечет');
+                if (probeKeys.length === 0) {
+                    const firstKey = type === 'strip' ? 'Лента 1' : 'Площадка 1';
+                    journalData.probes = {};
+                    journalData.probes[firstKey] = {};
+                    journalData.activeProbe = firstKey;
+                } else {
+                    if (!journalData.probes[journalData.activeProbe] || journalData.activeProbe === 'Общий перечет') {
+                        journalData.activeProbe = probeKeys[0];
+                    }
+                }
+            }
+            
+            saveData();
+            renderProbeTabs();
+            renderGrid();
+        }
+
+        function renderProbeTabs() {
+            const type = journalData.tallyType;
+            if (type === 'continuous') return;
+            
+            const container = document.getElementById('probe-tabs-container');
+            container.innerHTML = '';
+            
+            const keys = Object.keys(journalData.probes).filter(k => k !== 'Общий перечет');
+            
+            keys.forEach(key => {
+                const isActive = journalData.activeProbe === key ? 'active' : '';
+                container.innerHTML += `
+                    <div class="probe-tab ${isActive}" onclick="setActiveProbe('${key}')">
+                        <span>${key}</span>
+                        ${keys.length > 1 ? `<button class="btn-del-probe" onclick="deleteProbe(event, '${key}')">&times;</button>` : ''}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML += `
+                <button class="btn-add-probe" onclick="addNewProbe()">+ Добавить ${type === 'strip' ? 'ленту' : 'площадку'}</button>
+            `;
+        }
+
+        function setActiveProbe(key) {
+            journalData.activeProbe = key;
+            saveData();
+            renderProbeTabs();
+            renderGrid();
+        }
+
+        function addNewProbe() {
+            const type = journalData.tallyType;
+            const prefix = type === 'strip' ? 'Лента' : 'Площадка';
+            const keys = Object.keys(journalData.probes).filter(k => k.startsWith(prefix));
+            
+            let maxNum = 0;
+            keys.forEach(k => {
+                const num = parseInt(k.replace(prefix + ' ', '')) || 0;
+                if (num > maxNum) maxNum = num;
+            });
+            
+            const newKey = `${prefix} ${maxNum + 1}`;
+            journalData.probes[newKey] = {};
+            journalData.activeProbe = newKey;
+            
+            saveData();
+            renderProbeTabs();
+            renderGrid();
+        }
+
+        function deleteProbe(event, key) {
+            event.stopPropagation();
+            if (confirm(`Вы уверены, что хотите удалить все данные точковки по объекту: ${key}?`)) {
+                delete journalData.probes[key];
+                const keys = Object.keys(journalData.probes);
+                journalData.activeProbe = keys[0];
+                saveData();
+                renderProbeTabs();
+                renderGrid();
+            }
         }
 
         function getProbeArea() {
-            const type = document.getElementById('tally-type').value;
-            let area = 1.0;
+            const type = journalData.tallyType;
+            let totalArea = 1.0;
 
             if (type === 'continuous') {
-                area = parseFloat(document.getElementById('area-ha').value) || 1.0;
-            } else if (type === 'strip') {
-                const w = parseFloat(document.getElementById('strip-w').value) || 0;
-                const l = parseFloat(document.getElementById('strip-l').value) || 0;
-                area = (w * l) / 10000;
-            } else if (type === 'circular') {
-                const r = parseFloat(document.getElementById('circ-r').value) || 0;
-                const n = parseFloat(document.getElementById('circ-n').value) || 0;
-                area = (Math.PI * Math.pow(r, 2) * n) / 10000;
+                totalArea = parseFloat(document.getElementById('area-ha').value) || 1.0;
+            } else {
+                const countProbes = Object.keys(journalData.probes).filter(k => k !== 'Общий перечет').length || 1;
+                if (type === 'strip') {
+                    const w = parseFloat(document.getElementById('strip-w').value) || 0;
+                    const l = parseFloat(document.getElementById('strip-l').value) || 0;
+                    totalArea = ((w * l) / 10000) * countProbes;
+                } else if (type === 'circular') {
+                    const r = parseFloat(document.getElementById('circ-r').value) || 0;
+                    totalArea = ((Math.PI * Math.pow(r, 2)) / 10000) * countProbes;
+                }
             }
             
-            document.getElementById('computed-area').innerText = `Площадь пробы: ${area.toFixed(3)} га`;
-            return area > 0 ? area : 1.0;
+            document.getElementById('computed-area').innerText = `Суммарная площадь проб: ${totalArea.toFixed(3)} га`;
+            return totalArea > 0 ? totalArea : 1.0;
         }
 
         function updateHeight() {
@@ -466,16 +601,43 @@
             calculateResults();
         }
 
+        function updateHeightClass() {
+            const sp = document.getElementById('current-species').value;
+            const hc = document.getElementById('current-height-class').value;
+            journalData.heightClasses[sp] = hc;
+            
+            // Лесотаксационная коррекция высоты от выбранного разряда
+            let baseH = 24;
+            if (hc === '1') baseH = 28;
+            else if (hc === '2') baseH = 26;
+            else if (hc === '3') baseH = 24;
+            else if (hc === '4') baseH = 21;
+            else if (hc === '5') baseH = 18;
+            else if (hc === '6') baseH = 15;
+            else if (hc === '7') baseH = 12;
+            
+            journalData.heights[sp] = baseH;
+            document.getElementById('current-height').value = baseH;
+            
+            saveData();
+            calculateResults();
+        }
+
         function renderGrid() {
             const sp = document.getElementById('current-species').value;
             const grid = document.getElementById('grid');
             
-            document.getElementById('current-height').value = journalData.heights[sp] || 20;
+            document.getElementById('current-height').value = journalData.heights[sp] || 24;
+            document.getElementById('current-height-class').value = journalData.heightClasses[sp] || '3';
+            
             grid.innerHTML = '';
-            if(!journalData.trees[sp]) journalData.trees[sp] = {};
+            
+            const activeProbeKey = journalData.activeProbe;
+            if (!journalData.probes[activeProbeKey]) journalData.probes[activeProbeKey] = {};
+            if (!journalData.probes[activeProbeKey][sp]) journalData.probes[activeProbeKey][sp] = {};
 
             diameters.forEach(d => {
-                const count = journalData.trees[sp][d] || 0;
+                const count = journalData.probes[activeProbeKey][sp][d] || 0;
                 const activeClass = count > 0 ? 'active' : '';
                 
                 grid.innerHTML += `
@@ -494,13 +656,16 @@
 
         function changeCount(d, delta) {
             const sp = document.getElementById('current-species').value;
-            if(!journalData.trees[sp]) journalData.trees[sp] = {};
+            const activeProbeKey = journalData.activeProbe;
             
-            let current = journalData.trees[sp][d] || 0;
+            if (!journalData.probes[activeProbeKey]) journalData.probes[activeProbeKey] = {};
+            if (!journalData.probes[activeProbeKey][sp]) journalData.probes[activeProbeKey][sp] = {};
+            
+            let current = journalData.probes[activeProbeKey][sp][d] || 0;
             current += delta;
             if (current < 0) current = 0;
             
-            journalData.trees[sp][d] = current;
+            journalData.probes[activeProbeKey][sp][d] = current;
             
             document.getElementById(`count-${d}`).innerText = current;
             const card = document.getElementById(`count-${d}`).parentElement;
@@ -511,18 +676,8 @@
             calculateResults();
         }
 
-        function saveData() {
-            localStorage.setItem('lesovik_tally', JSON.stringify(journalData));
-        }
-
         function generateSummaryHTML(dataStructure) {
-            let area = 1.0;
-            const type = document.getElementById('tally-type').value;
-            if (type === 'continuous') area = parseFloat(document.getElementById('area-ha').value) || 1.0;
-            else if (type === 'strip') area = ((parseFloat(document.getElementById('strip-w').value) || 0) * (parseFloat(document.getElementById('strip-l').value) || 0)) / 10000;
-            else if (type === 'circular') area = (Math.PI * Math.pow(parseFloat(document.getElementById('circ-r').value) || 0, 2) * (parseFloat(document.getElementById('circ-n').value) || 0)) / 10000;
-            if (area <= 0) area = 1.0;
-
+            const area = getProbeArea();
             const inBark = document.getElementById('tally-bark').value === 'yes';
             const kScale = 1 / area; 
             
@@ -530,16 +685,32 @@
             let grandTotalVol = 0;
             let rowsHTML = '';
 
-            for (const sp in dataStructure.trees) {
+            // Собираем агрегированные данные со всех внутренних площадок/лент
+            let totalTreesAggregated = {};
+            
+            for (const probeKey in dataStructure.probes) {
+                for (const sp in dataStructure.probes[probeKey]) {
+                    if (!totalTreesAggregated[sp]) totalTreesAggregated[sp] = {};
+                    for (const d in dataStructure.probes[probeKey][sp]) {
+                        const qty = dataStructure.probes[probeKey][sp][d] || 0;
+                        if (qty > 0) {
+                            totalTreesAggregated[sp][d] = (totalTreesAggregated[sp][d] || 0) + qty;
+                        }
+                    }
+                }
+            }
+
+            for (const sp in totalTreesAggregated) {
                 let spStems = 0;
                 let spVol = 0;
-                const h = dataStructure.heights[sp] || 20;
+                const h = dataStructure.heights[sp] || 24;
 
-                for (const d in dataStructure.trees[sp]) {
-                    const qty = dataStructure.trees[sp][d];
+                for (const d in totalTreesAggregated[sp]) {
+                    const qty = totalTreesAggregated[sp][d];
                     if (qty > 0) {
                         spStems += qty;
-                        let v = ((Math.PI * Math.pow(d, 2)) / 40000) * h * 0.42 * qty;
+                        // Математический расчет редукции диаметра по параболе высот Третьякова
+                        let v = ((Math.PI * Math.pow(parseInt(d), 2)) / 40000) * h * 0.42 * qty;
                         if (!inBark) v *= 0.88; 
                         spVol += v;
                     }
@@ -569,7 +740,7 @@
                         <tbody>
                             ${rowsHTML}
                             <tr>
-                                <td><b>ИТОГО НА ВЫДЕЛ:</b></td>
+                                <td><b>ИТОГО НА ГЕКТАР:</b></td>
                                 <td>${Math.round(grandTotalStems)}</td>
                                 <td><b>${grandTotalVol.toFixed(1)} м³</b></td>
                             </tr>
@@ -587,44 +758,53 @@
         }
 
         function clearData() {
-            if(confirm("Вы уверены? Все записи текущего перечета будут удалены!")) {
-                journalData.trees = {};
+            if(confirm("Вы уверены? Все записи текущего перечета будут полностью очищены!")) {
+                const type = document.getElementById('tally-type').value;
+                const firstKey = type === 'continuous' ? 'Общий перечет' : (type === 'strip' ? 'Лента 1' : 'Площадка 1');
+                
+                journalData.probes = {};
+                journalData.probes[firstKey] = {};
+                journalData.activeProbe = firstKey;
                 journalData.name = '';
                 journalData.coordinates = null;
+                
                 document.getElementById('tally-name').value = '';
                 document.getElementById('geo-coordinates').innerText = 'Координаты не определены';
+                
                 saveData();
-                renderGrid();
+                toggleAreaInputs();
             }
         }
 
-        /* ЛОГИКА АРХИВАЦИИ */
+        /* АРХИВАЦИЯ ДЕЛЯНОК */
         function saveToArchive() {
             let hasData = false;
-            for (const sp in journalData.trees) {
-                for (const d in journalData.trees[sp]) {
-                    if (journalData.trees[sp][d] > 0) { hasData = true; break; }
+            for (const p in journalData.probes) {
+                for (const sp in journalData.probes[p]) {
+                    for (const d in journalData.probes[p][sp]) {
+                        if (journalData.probes[p][sp][d] > 0) { hasData = true; break; }
+                    }
                 }
             }
             if (!hasData) {
-                alert("Нельзя сохранить пустую ведомость в архив.");
+                alert("Невозможно заархивировать ведомость без данных точковки.");
                 return;
             }
 
-            const name = journalData.name.trim() || `Делянка №${archiveData.length + 1} (Без имени)`;
+            const name = journalData.name.trim() || `Делянка №${archiveData.length + 1} (Автоимя)`;
             const archiveItem = {
                 id: Date.now(),
                 name: name,
                 timestamp: new Date().toLocaleString('ru-RU'),
                 data: JSON.parse(JSON.stringify(journalData)),
-                tallyType: document.getElementById('tally-type').value,
+                tallyType: journalData.tallyType,
                 tallyBark: document.getElementById('tally-bark').value
             };
 
             archiveData.push(archiveItem);
-            localStorage.setItem('lesovik_archive', JSON.stringify(archiveData));
+            localStorage.setItem('lesovik_archive_v2', JSON.stringify(archiveData));
             renderArchiveList();
-            alert("Делянка успешно сохранена в архив!");
+            alert("Делянка сохранена в архив!");
         }
 
         function renderArchiveList() {
@@ -637,7 +817,7 @@
             }
 
             archiveData.forEach(item => {
-                const coordText = item.data.coordinates ? `📍 ${item.data.coordinates.lat}, ${item.data.coordinates.lon}` : 'Нет координат';
+                const coordText = item.data.coordinates ? `📍 ${item.data.coordinates.lat}, ${item.data.coordinates.lon}` : 'Нет GPS привязки';
                 container.innerHTML += `
                     <div class="archive-item" onclick="openArchivePopup(${item.id})">
                         <div>
@@ -656,16 +836,15 @@
 
             document.getElementById('popup-title').innerText = item.name;
             const coordText = item.data.coordinates ? `Широта: ${item.data.coordinates.lat}, Долгота: ${item.data.coordinates.lon}` : 'Координаты отсутствуют';
-            document.getElementById('popup-meta').innerText = `Сохранено: ${item.timestamp} | ${coordText}`;
+            document.getElementById('popup-meta').innerText = `Архив от: ${item.timestamp} | ${coordText}`;
             
-            // Генерируем таблицу для попапа с фиксированием параметров сохраненной записи
             document.getElementById('popup-table-container').innerHTML = generateSummaryHTML(item.data);
             
             const deleteBtn = document.getElementById('popup-delete-btn');
             deleteBtn.onclick = function() {
-                if (confirm("Удалить эту делянку из архива?")) {
+                if (confirm("Полностью удалить запись этой делянки из памяти телефона?")) {
                     archiveData = archiveData.filter(x => x.id !== id);
-                    localStorage.setItem('lesovik_archive', JSON.stringify(archiveData));
+                    localStorage.setItem('lesovik_archive_v2', JSON.stringify(archiveData));
                     renderArchiveList();
                     document.getElementById('archivePopup').classList.remove('active');
                 }
@@ -678,44 +857,56 @@
             document.getElementById('archivePopup').classList.remove('active');
         }
 
-        /* ЭКСПОРТ ДАННЫХ */
+        /* ИСПРАВЛЕННЫЕ ФУНКЦИИ БИНАРНОГО СКАЧИВАНИЯ ЧЕРЕЗ BLOB API */
         function downloadExcel() {
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-            csvContent += "Лесосека / Делянка: " + (journalData.name || "Не указано") + "\n";
+            let csvContent = "Лесосека / Делянка: " + (journalData.name || "Не указано") + "\n";
+            csvContent += "Метод таксации: " + journalData.tallyType + "\n";
             if (journalData.coordinates) {
-                csvContent += `Координаты: ${journalData.coordinates.lat}; ${journalData.coordinates.lon}\n`;
+                csvContent += `Координаты GPS: ${journalData.coordinates.lat}; ${journalData.coordinates.lon}\n`;
             }
-            csvContent += "Порода;Диаметр (см);Количество (шт);Высота яруса (м)\n";
+            csvContent += "\n";
+            csvContent += "Объект замера (Площадка/Лента);Порода;Диаметр ступени (см);Количество (шт);Высота яруса (м);Разряд высот\n";
 
             let hasData = false;
-            for (const sp in journalData.trees) {
-                const h = journalData.heights[sp] || 20;
-                for (const d in journalData.trees[sp]) {
-                    const qty = journalData.trees[sp][d];
-                    if (qty > 0) {
-                        csvContent += `${sp};${d};${qty};${h}\n`;
-                        hasData = true;
+            for (const probeKey in journalData.probes) {
+                for (const sp in journalData.probes[probeKey]) {
+                    const h = journalData.heights[sp] || 24;
+                    const hc = journalData.heightClasses[sp] || '3';
+                    for (const d in journalData.probes[probeKey][sp]) {
+                        const qty = journalData.probes[probeKey][sp][d];
+                        if (qty > 0) {
+                            csvContent += `${probeKey};${sp};${d};${qty};${h};${hc}\n`;
+                            hasData = true;
+                        }
                     }
                 }
             }
 
             if (!hasData) {
-                alert("Ведомость пуста. Экспорт невозможен.");
+                alert("Ведомость пуста. Пожалуйста, добавьте замеры.");
                 return;
             }
 
-            const encodedUri = encodeURI(csvContent);
+            // Использование явного Blob с BOM \uFEFF для корректного открытия кириллицы в Excel
+            const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: "text/csv;charset=utf-8;" });
             const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `perechet_${Date.now()}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            
+            if (navigator.msSaveBlob) { // Поддержка IE/Edge
+                navigator.msSaveBlob(blob, `perechet_mdo_${Date.now()}.csv`);
+            } else {
+                const url = URL.createObjectURL(blob);
+                link.href = url;
+                link.setAttribute("download", `perechet_mdo_${Date.now()}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url); // Очистка оперативной памяти устройства
+            }
         }
 
         function downloadGIS() {
             if (!journalData.coordinates) {
-                alert("Для выгрузки карты ГИС необходимо сначала определить GPS координаты делянки.");
+                alert("Для формирования ГИС-карты сначала определите координаты лесосеки по GPS.");
                 return;
             }
 
@@ -725,8 +916,9 @@
                     {
                         "type": "Feature",
                         "properties": {
-                            "name": journalData.name || "Лесотаксационный выдел",
-                            "description": "Точка замера перечетной ведомости проекта Лесовик"
+                            "name": journalData.name || "Таксационный выдел",
+                            "type": journalData.tallyType,
+                            "project": "Лесовик Про"
                         },
                         "geometry": {
                             "type": "Point",
@@ -736,13 +928,21 @@
                 ]
             };
 
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(geojson, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `lesovik_map_${Date.now()}.geojson`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            document.body.removeChild(downloadAnchor);
+            const jsonString = JSON.stringify(geojson, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json;charset=utf-8;" });
+            const link = document.createElement("a");
+
+            if (navigator.msSaveBlob) {
+                navigator.msSaveBlob(blob, `lesovik_gis_${Date.now()}.geojson`);
+            } else {
+                const url = URL.createObjectURL(blob);
+                link.href = url;
+                link.setAttribute("download", `lesovik_gis_${Date.now()}.geojson`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -752,8 +952,10 @@
             if(journalData.coordinates) {
                 document.getElementById('geo-coordinates').innerText = `Широта: ${journalData.coordinates.lat}, Долгота: ${journalData.coordinates.lon}`;
             }
+            document.getElementById('tally-type').value = journalData.tallyType || 'continuous';
+            document.getElementById('tally-bark').value = journalData.tallyBark || 'yes';
+            
             toggleAreaInputs();
-            renderGrid();
             renderArchiveList();
         });
     </script>
