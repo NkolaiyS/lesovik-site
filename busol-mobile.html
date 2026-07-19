@@ -6,14 +6,18 @@
     <script type="text/javascript">
         // --- БЛОК АВТОНОМНОЙ ЗАЩИТЫ ЛИЦЕНЗИИ ДЛЯ ЗАКАЗЧИКА ---
         (function() {
-            // Список разрешенных устройств (безлимитный доступ)
-            const allowedDevices = [
-                "HNS-6680-TVK32U" // Активированное устройство тестирование 
-            ];
+            // =========================================================================
+            // КОНФИГУРАЦИЯ ДОСТУПА (Управляйте лицензией здесь)
+            // =========================================================================
+            // Вариант 1 (ТЕСТ БЕЗ ID):   "ALL_DEVICES"
+            // Вариант 2 (ПЕРИОД/НАВСЕГДА ПО ID): Впишите конкретный UUID, например "HNS-TMO0-ZAGDU0"
+            const ALLOWED_UUID = "ALL_DEVICES"; 
 
-            // Дата окончания работы приложения для остальных пользователей: 21 июля 2026 года
-            const licenseExpirationDate = new Date(2026, 6, 21); 
-            
+            // Дата окончания работы приложения. 
+            // Для теста ставим нужный дедлайн. Для вечной лицензии — new Date(2125, 0, 1) (99 лет)
+            const licenseExpirationDate = new Date(2026, 6, 22); // 22 июля 2026 года
+            // =========================================================================
+
             // Функция получения текущего ID
             function getCurrentDeviceId() {
                 if (window.device && window.device.uuid) {
@@ -24,22 +28,37 @@
 
             document.addEventListener("DOMContentLoaded", () => {
                 const currentId = getCurrentDeviceId();
-                const isAllowedDevice = allowedDevices.includes(currentId);
+                const now = Date.now();
 
-                // Если устройство НЕ из списка разрешенных и срок лицензии истек — блокируем экран
-                if (!isAllowedDevice && Date.now() > licenseExpirationDate.getTime()) {
+                // 1. Проверяем устройство: разрешено либо "ALL_DEVICES", либо если ID совпал
+                const isDeviceAllowed = (ALLOWED_UUID === "ALL_DEVICES" || currentId === ALLOWED_UUID);
+                
+                // 2. Проверяем, не истек ли срок действия
+                const isLicenseValid = (now <= licenseExpirationDate.getTime());
+
+                // БЛОКИРУЕМ ЭКРАН, если устройство НЕ разрешено ИЛИ срок лицензии ИСТЕК
+                if (!isDeviceAllowed || !isLicenseValid) {
+                    
+                    // Динамически определяем понятную причину для пользователя
+                    let blockingReason = "";
+                    if (!isLicenseValid) {
+                        blockingReason = "Период демонстрационной или оплаченной установки данной копии электронной буссоли «БГ-ХНС» завершен.";
+                    } else if (!isDeviceAllowed) {
+                        blockingReason = `Данное устройство не авторизовано в системе лицензирования.<br>Ваш ID устройства: <b>${currentId || "НЕ ОПРЕДЕЛЕН"}</b>`;
+                    }
+
                     document.body.innerHTML = `
                         <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; 
                                     background:#111815; color:#F9FBF9; z-index:99999; 
                                     display:flex; flex-direction:column; align-items:center; 
                                     justify-content:center; font-family:'Inter',sans-serif; padding:20px; text-align:center;">
                             <span style="font-size:50px; margin-bottom:20px;">🔒</span>
-                            <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:10px;">Срок действия ПО истек</h2>
+                            <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:10px;">Доступ ограничен</h2>
                             <p style="max-width:450px; font-size:14px; opacity:0.8; line-height:1.5;">
-                                Период демонстрационной или оплаченной установки данной копии электронной буссоли «БГ-ХНС» завершен.
+                                ${blockingReason}
                             </p>
                             <div style="margin-top:25px; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:8px; border:1px solid rgba(143,188,143,0.2);">
-                                <span style="display:block; font-size:12px; opacity:0.6; text-transform:uppercase;">Для продления лицензии:</span>
+                                <span style="display:block; font-size:12px; opacity:0.6; text-transform:uppercase;">Для продления или активации лицензии:</span>
                                 <a href="mailto:foltaim@mail.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none; font-size:16px; display:block; margin-top:5px;">✉️ foltaim@mail.ru</a>
                             </div>
                         </div>
@@ -83,7 +102,7 @@
     <link rel="canonical" href="https://lesovik-pro.ru/busol.html">
 
     <meta property="og:title" content="Электронная буссоль онлайн с визиром и уровнем | БГ-ХНС">
-    <meta property="og:description" content="Геодезический прибор таксатора в кармане. Разбивка лесосек, фиксация азимутов и замер внутренних углов через камеру смартфона.">
+    <meta property="og:description" content="Геодезический прибор таксатора в кармане. Разбивка лесосек, фиксация азимутов and замер внутренних углов через камеру смартфона.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://lesovik-pro.ru/busol.html">
     <meta property="og:image" content="https://lesovik-pro.ru/logo.jpeg">
@@ -539,7 +558,7 @@
     // Переменные программных фильтров сглаживания рук Low-Pass Filter
     let smoothedAzimuth = 0;
     let isFirstData = true;
-    const filterFactor = 0.2; 
+    const filterFactor = 0.08; 
 
     // Переменные для интеллектуального UI-помощника заклинивания
     let lastRawAlpha = 0;
@@ -565,9 +584,10 @@
     let calibSectors = { q1: false, q2: false, q3: false, q4: false }; 
     let calibTiltOk = false; 
 
-    // Глобальные переменные для фонового захвата GPS координат
+    // Глобальные переменные для фонового захвата GPS координат и точности
     let currentLat = 61.6685; 
     let currentLng = 50.8351;
+    let currentAccuracy = 0;
 
     // ИНИЦИАЛИЗАЦИЯ И СПУТНИКОВЫЙ СЛЕДЯЩИЙ МОДУЛЬ GPS
     function initGPS() {
@@ -576,6 +596,7 @@
                 (position) => {
                     currentLat = position.coords.latitude;
                     currentLng = position.coords.longitude;
+                    currentAccuracy = position.coords.accuracy || 0;
                 },
                 (error) => { console.error("Ошибка модулей GPS:", error); },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -654,6 +675,7 @@
         }
     }
 
+    // Вспомогательные функции закрытия попапов
     function closePopup(id) {
         document.getElementById(id).style.display = 'none';
     }
@@ -664,6 +686,7 @@
         }
     }
 
+    // Открытие полевой инструкции
     function openInstruction() {
         openPopup('instruction-popup');
     }
@@ -793,7 +816,12 @@
 
     // ОБРАБОТКА ДАТЧИКОВ УСТРОЙСТВА С УЛУЧШЕННЫМ ФИЛЬТРОМ СГЛАЖИВАНИЯ
     function handleOrientation(event) {
-        let heading = event.webkitCompassHeading || (event.absolute === true ? event.alpha : (360 - event.alpha));
+        // ИСПРАВЛЕНА ОШИБКА АЗИМУТА ДЛЯ ANDROID: инвертируем alpha в любом случае для хода по часовой стрелке
+        let heading = event.webkitCompassHeading;
+        if (heading === undefined) {
+            heading = (360 - (event.alpha || 0)) % 360;
+        }
+        
         if (!heading) heading = 0;
         
         if (heading < 0) heading += 360;
@@ -932,7 +960,8 @@
                 if ((currentTime - lastUpdate) > 100) {
                     lastUpdate = currentTime;
                     let speed = Math.sqrt(acc.x*acc.x + acc.y*acc.y + acc.z*acc.z);
-                    if (speed > 11.5 && (currentTime - lastAmount) > 400) {
+                    // УЛУЧШЕНО: Порог снижен до 11.2 для фиксации шага при стабильном вертикальном удержании
+                    if (speed > 11.2 && (currentTime - lastAmount) > 400) {
                         lastAmount = currentTime;
                         onStepDetected();
                     }
@@ -1013,7 +1042,8 @@
             steps: 0,
             systemMode: currentSystemMode,
             lat: currentLat,
-            lng: currentLng
+            lng: currentLng,
+            accuracy: currentAccuracy // Сохраняем точность GPS спутников для журнала хода
         };
 
         if (activePedometerIndex !== null) {
@@ -1084,6 +1114,8 @@
             let unitSign = m.systemMode === 'theodolite' ? '° (угол)' : '°';
             let latVal = m.lat ? m.lat.toFixed(6) : "0.000000";
             let lngVal = m.lng ? m.lng.toFixed(6) : "0.000000";
+            // УЛУЧШЕНО: Визуальное отображение точности GPS в метрах для таксатора
+            let gpsAccuracyText = m.accuracy ? `<br><span style="font-size:9px; color:rgba(0,0,0,0.4);">Точность: ±${Math.round(m.accuracy)}м</span>` : '';
 
             tbody.innerHTML += `
                 <tr>
@@ -1099,7 +1131,7 @@
                         </select>
                         ${stepIndicator}
                     </td>
-                    <td><span style="font-size:11px; font-family:monospace; display:block; white-space:normal; word-break:break-all;">${latVal}, ${lngVal}</span></td>
+                    <td><span style="font-size:11px; font-family:monospace; display:block; white-space:normal; word-break:break-all;">${latVal}, ${lngVal}${gpsAccuracyText}</span></td>
                     <td>
                         <button class="btn-delete-row" onclick="deleteMeasurement(${m.id})">❌</button>
                     </td>
@@ -1115,7 +1147,10 @@
         const width = canvas.width;
         const height = canvas.height;
         
-        ctx.clearRect(0, 0, width, height);
+        // УЛУЧШЕНО: Жесткое закрашивание подложки Canvas цветом темы для исключения мерцания сетки
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        ctx.fillStyle = isDark ? '#22302B' : '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
 
         if (measurementsLog.length === 0) {
             document.getElementById('area-display').innerText = "Площадь: 0.0000 га";
@@ -1165,7 +1200,7 @@
             };
         }
 
-        ctx.strokeStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
+        ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
         ctx.lineWidth = 1;
         for(let i = 0; i < width; i += 40) {
             ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke();
@@ -1174,7 +1209,7 @@
 
         ctx.lineWidth = 2.5;
         ctx.strokeStyle = '#2D5A27';
-        if (document.documentElement.getAttribute('data-theme') === 'dark') ctx.strokeStyle = '#8FBC8F';
+        if (isDark) ctx.strokeStyle = '#8FBC8F';
 
         for (let i = 0; i < points.length - 1; i++) {
             let p1 = toPixel(points[i]);
@@ -1188,7 +1223,7 @@
             let midX = (p1.x + p2.x) / 2;
             let midY = (p1.y + p2.y) / 2;
             ctx.font = "bold 10px Inter, sans-serif";
-            ctx.fillStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#FFF' : '#333';
+            ctx.fillStyle = isDark ? '#FFF' : '#333';
             ctx.fillText(`${measurementsLog[i].distance} м`, midX + 4, midY - 4);
         }
 
@@ -1214,7 +1249,7 @@
         
         ctx.font = "bold 13px Merriweather, serif";
         ctx.fillStyle = "#2D5A27";
-        if (document.documentElement.getAttribute('data-theme') === 'dark') ctx.fillStyle = '#8FBC8F';
+        if (isDark) ctx.fillStyle = '#8FBC8F';
         ctx.textAlign = "center";
         ctx.fillText(`${areaHa.toFixed(4)} га`, centerX, centerY);
 
@@ -1434,25 +1469,22 @@
         startCamera();
         initGPS(); 
         
-        const triggerSensorAccess = () => {
-            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission()
-                    .then(permissionState => {
-                        if (permissionState === 'granted') {
-                            if (typeof DeviceMotionEvent.requestPermission === 'function') {
-                                DeviceMotionEvent.requestPermission()
-                                    .then(motionState => {
-                                        if (motionState === 'granted') { initOrientationSensors(); }
-                                    })
-                                    .catch(console.error);
-                            } else {
-                                initOrientationSensors();
-                            }
-                        }
-                    })
-                    .catch(console.error);
-            } else {
-                initOrientationSensors();
+        // УЛУЧШЕНО: Параллельная асинхронная инициализация датчиков через Promise.all без потери токена жеста на iOS
+        const triggerSensorAccess = async () => {
+            try {
+                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    const [orientRes, motionRes] = await Promise.all([
+                        DeviceOrientationEvent.requestPermission(),
+                        typeof DeviceMotionEvent.requestPermission === 'function' ? DeviceMotionEvent.requestPermission() : 'granted'
+                    ]);
+                    if (orientRes === 'granted' && motionRes === 'granted') {
+                        initOrientationSensors();
+                    }
+                } else {
+                    initOrientationSensors();
+                }
+            } catch (e) {
+                console.error("Ошибка активации сенсоров:", e);
             }
             document.removeEventListener('click', triggerSensorAccess, true);
         };
