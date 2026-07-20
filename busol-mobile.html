@@ -4,7 +4,7 @@
     <script type="text/javascript" src="cordova.js"></script>
 
     <script type="text/javascript">
-        // --- БЛОК АВТОНОМНОЙ ЗАЩИТЫ ЛИЦЕНЗИИ ДЛЯ ЗАКАЗЧИКА ---
+        // --- БЛОК АВТОНОМНОЙ ЗА ЗАЩИТЫ ЛИЦЕНЗИИ ДЛЯ ЗАКАЗЧИКА ---
         (function() {
             const ALLOWED_UUID = "ALL_DEVICES"; 
             const licenseExpirationDate = new Date(2125, 0, 1); // Безлимитная вечная лицензия для масштабирования
@@ -209,6 +209,71 @@
         .camera-viewport-wrapper { position: relative; width: 100%; max-width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid var(--border-color); box-sizing: border-box; }
         #video-preview { width: 100%; height: 100%; object-fit: cover; transform-origin: center center; transition: transform 0.1s ease-out; }
         
+        /* ИНТЕРФЕЙС ГРАФИЧЕСКОГО ДИСКОВОГО ЛИМБА ДЛЯ ХОДА ПО ЛАДОНИ */
+        .digital-compass-disk-container {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #111815;
+            z-index: 80;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+        .compass-dial-face {
+            position: relative;
+            width: 80%;
+            aspect-ratio: 1;
+            border: 6px double var(--forest-green);
+            border-radius: 50%;
+            background: #1E2723;
+            transition: transform 0.05s linear;
+        }
+        .compass-cardinal-letter {
+            position: absolute;
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: 16px;
+            color: #F9FBF9;
+        }
+        .letter-north { top: 6px; left: 50%; transform: translateX(-50%); color: var(--danger); }
+        .letter-south { bottom: 6px; left: 50%; transform: translateX(-50%); }
+        .letter-west { left: 8px; top: 50%; transform: translateY(-50%); }
+        .letter-east { right: 8px; top: 50%; transform: translateY(-50%); }
+        
+        .compass-center-bubble-level {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 44px; height: 44px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.3);
+        }
+        .compass-bubble-dot {
+            position: absolute;
+            width: 12px; height: 12px;
+            background: #16A34A;
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.05s ease-out;
+        }
+        .compass-device-sight-line {
+            position: absolute;
+            top: 0; left: 50%;
+            width: 2px; height: 40px;
+            background: var(--success);
+            transform: translateX(-50%);
+        }
+        .compass-device-sight-line::after {
+            content: '▲';
+            position: absolute;
+            bottom: -12px; left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px; color: var(--success);
+        }
+
         .visir-line { position: absolute; top: 0; left: 50%; width: 2px; height: 100%; background: rgba(255,255,255,0.4); transform: translateX(-50%); z-index: 10; pointer-events: none; }
         .visir-center-dot { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; background: transparent; border: 2px solid #FFF; border-radius: 50%; transform: translate(-50%, -50%); z-index: 11; pointer-events: none; }
 
@@ -299,13 +364,10 @@
             <button class="popup-close" onclick="closeInstruction()">&times;</button>
             <h3>Полевая инструкция по отводу лесосеки</h3>
             <ol class="instruction-steps">
-                <li><strong>Подготовка прибора:</strong> Встаньте на первую точку делянки (затеску). Заблокируйте автоповорот экрана смартфона. В Магнитном режиме сделайте телефоном в воздухе «восьмерку» для калибровки сенсора.</li>
-                <li><strong>Первый визир (Старт):</strong> Наведите вертикальную нить экрана на веху следующего угла делянки. Держите telephone стабильно и строго вертикально перед собой.</li>
-                <li><strong>Поимка уровня:</strong> Дождитесь, пока центральное кольцо авиагоризонта окрасится в <strong>зеленый цвет</strong>. Это исключает таксационную погрешность от завала осей.</li>
-                <li><strong>Фиксация линии:</strong> Нажмите активировавшуюся кнопку <em>«Зафиксировать румб в журнал»</em>. В полевом журнале автоматически появится строка с текущим углом и GPS-координатами.</li>
-                <li><strong>Измерение расстояния:</strong> Измерьте расстояние до следующего столба. Вы можете ввести метры <strong>Вручную</strong> в таблице или переключить режим строки на <strong>Шаги</strong>. При выборе шагов — идите к вехе спокойным шагом, удерживая телефон перед собой; устройство само пересчитает шаги в метры.</li>
-                <li><strong>Построение полигона:</strong> Перейдите на вторую точку. Если вы работаете в режиме <strong>Теодолита</strong>, сначала наведите визир <strong>назад</strong> на пройденный столб и нажмите <em>«Фиксировать 0°»</em>. Затем развернитесь вперед на третью веху, поймайте зеленый уровень и зафиксируйте угол. Повторяйте процедуру по всему периметру.</li>
-                <li><strong>Контур и Расчет:</strong> На интерактивном чертеже ниже журнала будет выстраиваться контур лесосеки, ориентированный по сторонам света. В центре полигона автоматически рассчитается чистая площадь выдела в гектарах (га).</li>
+                <li><strong>Оптический визир (Вертикально):</strong> Работает во вкладке «Магнитный режим». Наведите вертикальную нить экрана на веху угла делянки, удерживая телефон вертикально перед собой. Дождитесь зеленого уровня авиагоризонта и зафиксируйте румб в журнал.</li>
+                <li><strong>Электронная буссоль (Горизонтально):</strong> Работает во вкладке «Буссоль (Лимб)». Положите телефон горизонтально на ладонь. Совместите верхний торец устройства (указатель sight-line) с направлением на веху. Добейтесь, чтобы зеленый пузырек уровня зашел строго в центр круглой мишени, после чего фиксируйте азимут линии.</li>
+                <li><strong>Корректировка привязки:</strong> Если вы начали ход с квартального столба, вы можете сразу зафиксировать первую линию, а затем вручную в таблице журнала откорректировать ее стартовый магнитный азимут (например, вбить 127 градусов). Программа автоматически развернет весь последующий чертеж и карту по сторонам света.</li>
+                <li><strong>Расчет площади:</strong> По мере добавления линий на интерактивном чертеже выстраивается замкнутый контур делянки с подписями всех номеров линий, и автоматически вычисляется чистая площадь выдела в гектарах (га).</li>
             </ol>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closeInstruction()">Понятно, к замеру</button>
         </div>
@@ -314,11 +376,10 @@
     <div id="mag-info-popup" class="popup-overlay" onclick="closePopupOuter('mag-info-popup', event)">
         <div class="popup-window">
             <button class="popup-close" onclick="closePopup('mag-info-popup')">&times;</button>
-            <h3>Магнитный режим (Запись азимутов)</h3>
+            <h3>Магнитный режим (Вертикальный визир)</h3>
             <ul class="instruction-steps">
-                <li><strong>Принцип работы:</strong> Прибор считывает горизонтальный угол направления стороны света непосредственно с магнитометра устройства от 0 до 360 градусов.</li>
-                <li><strong>Роль кнопки Фиксации 0°:</strong> В данном режиме фиксация нуля служит исключительно в качестве <strong>вспомогательного экранного табло</strong>. Она помогает таксатору на месте поймать ровный перпендикуляр в 90° или разворот визира на 180° для корректировки движения бригады. При фиксации грани в полевой журнал вносится <strong>абсолютный магнитный азимут линии от Севера</strong>.</li>
-                <li><strong>Специфика железа:</strong> Требует калибровки «восьмеркой» перед стартом. Идеально работает на устройствах iPhone и премиум-Android, поддерживающих пространственную компенсацию наклона осей.</li>
+                <li><strong>Съемка камерой:</strong> Предназначена для прямой видимости объектов. Телефон удерживается вертикально перед глазами таксатора.</li>
+                <li><strong>Фиксация базиса:</strong> Кнопка Фиксации 0 градусов служит вспомогательным инструментом для отслеживания взаимных разворотов линий и перпендикуляров на дисплее.</li>
             </ul>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closePopup('mag-info-popup')">Понятно</button>
         </div>
@@ -327,11 +388,10 @@
     <div id="theo-info-popup" class="popup-overlay" onclick="closePopupOuter('theo-info-popup', event)">
         <div class="popup-window">
             <button class="popup-close" onclick="closePopup('theo-info-popup')">&times;</button>
-            <h3>Режим Теодолита (Внутренние углы)</h3>
+            <h3>Горизонтальная дисковая буссоль</h3>
             <ul class="instruction-steps">
-                <li><strong>Защита от залипания Android:</strong> Разработан специально для устройств, у которых датчик компаса теряет точность или зависает при вертикальном удержании экрана. Магнитный компас полностью отключается.</li>
-                <li><strong>Работа по гироскопу:</strong> Расчет хода полностью переносится на высокоточный аппаратный гироскоп, невосприимчивый к пространственным наклонам и геомагнитным девиациям леса.</li>
-                <li><strong>Критически важный порядок замера:</strong> В отличие от магнитного режима, здесь кнопка <strong>«Фиксировать 0°» является обязательным технологическим шагом перед каждой новой линией</strong>. Встаньте на угол поворота делянки, наведите перекрестие визира назад на пройденный столб и нажмите «Фиксировать 0°» (зажмите базу). Затем развернитесь вперед на следующую веху — на зеленой плашке отобразится честный внутренний угол поворота делянки. При фиксации именно этот угол записывается в журнал хода, а Canvas выстраивает замкнутую тригонометрическую модель.</li>
+                <li><strong>Работа по ладони:</strong> Полное аппаратное дублирование механической буссоли БГ-1. Телефон лежит горизонтально, исключая любые наклоны и скрещивания осей гироскопа.</li>
+                <li><strong>Пузырьковый уровень:</strong> В центре диска расположен круглый уровень. Удерживайте устройство так, чтобы пузырек находился строго по центру для обеспечения стопроцентной точности съемок.</li>
             </ul>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closePopup('theo-info-popup')">Понятно</button>
         </div>
@@ -354,10 +414,7 @@
             <ul class="instruction-steps" style="font-size: 13px; line-height: 1.5;">
                 <li><strong>Как воводить устройство:</strong> Нажмите кнопку «Начать калибровку» ниже. Возьмите смартфон в руку и начните непрерывно выписывать в воздухе объемную фигуру знака бесконечности или «восьмерки».</li>
                 <li><strong>Положение осей:</strong> В процессе движения плавно разворачивайте кисть руки. Смартфон должен попеременно менять наклоны относительно горизонта и плоскости земли (смотреть экраном вверх, на Вас, в сторону). Это позволит стереть налипшие магнитные шумы железа.</li>
-                <li><strong>Положение при замере:</strong> При непосредственной таксации и съемке визиров удерживайте устройство строго <strong>вертикально перед собой</strong>, сопрягая вертикальную нить визира с вехой.</li>
-                <li><strong>⚠️ КРИТИЧЕСКИ ВАЖНО ДЛЯ ANDROID:</strong> Если при вертикальном удержании смартфона показания магнитного азимута намертво зависают или искажаются — это физическое аппаратное ограничение компаса Вашей модели. В таком случае **не рекомендуется проводить замеры в Магнитном режиме**. Закройте это окно и переключитесь во вкладку **«Теодолит (Углы)»**. Данный режим полностью отключает компас и производит расчет по гироскопу, обеспечивая аптечную точность на абсолютно любом смартфоне.</li>
-                <li><strong>🔎 РАБОТА НА ДИСТАНЦИЯХ СВЫШЕ 8 МЕТРОВ:</strong> Широкоугольная оптика телефонов визуально отдаляет объекты. На расстояниях от 8 до 15 метров используйте встроенный ползунок цифрового зума над рамкой камеры. Также рекомендуется помечать вершины полевых вешек яркой сигнальной или флуоресцентной лентой для фиксации визира.</li>
-                <li><strong>⚠️ ОБЩЕЕ ПРАВИЛО:</strong> Перед запуском съемок обязательно <strong>заблокируйте автоповорот экрана</strong> в системной шторке Вашего смартфона (зафиксируйте портретный режим). Убедитесь, что чехол телефона лишен магнитных защелок.</li>
+                <li><strong>⚠️ ВАЖНОЕ ПОЛОЖЕНИЕ:</strong> Для получения максимальной стабильности во вкладке кругового лимба всегда держите телефон строго горизонтально экраном вверх, ориентируя верхний торец корпуса на целевой деляночный столб.</li>
             </ul>
             <div style="display: flex; gap: 10px; margin-top: 15px;">
                 <button id="btn-start-calib" class="btn-action btn-set-zero" style="flex: 1;" onclick="startLiveCalibration()">Начать калибровку</button>
@@ -392,16 +449,16 @@
                 
                 <div class="mode-switcher-container">
                     <button id="mode-mag" class="mode-tab active-mode" onclick="switchSystemMode('magnetic')">
-                        Магнитный (Азимуты)
+                        Магнитный (Вертикально)
                         <span class="btn-help-circle" onclick="openPopup('mag-info-popup', event)">?</span>
                     </button>
                     <button id="mode-theo" class="mode-tab" onclick="switchSystemMode('theodolite')">
-                        Теодолит (Углы)
+                        Буссоль (Лимб)
                         <span class="btn-help-circle" onclick="openPopup('theo-info-popup', event)">?</span>
                     </button>
                 </div>
 
-                <div class="optic-control-box">
+                <div class="optic-control-box" id="optic-zoom-panel">
                     <div class="zoom-slider-wrapper">
                         <label for="camera-zoom-range">🔎 Увеличение (Зум): <span id="zoom-value-label">1.0</span>x</label>
                         <input type="range" id="camera-zoom-range" min="1.0" max="4.0" step="0.1" value="1.0" oninput="applyDigitalZoom(this.value)">
@@ -416,8 +473,23 @@
                 </div>
 
                 <div class="camera-viewport-wrapper">
-                    <div class="visir-line"></div>
-                    <div class="visir-center-dot"></div>
+                    <!-- ОКНО ЦИФРОВОГО КРУГОВОГО ЛИМБА (МЕХАНИЧЕСКАЯ БУССОЛЬ НА ЭКРАНЕ) -->
+                    <div id="digital-compass-disk" class="digital-compass-disk-container">
+                        <div class="compass-device-sight-line"></div>
+                        <div id="compass-dial" class="compass-dial-face">
+                            <div class="compass-cardinal-letter letter-north">С</div>
+                            <div class="compass-cardinal-letter letter-south">Ю</div>
+                            <div class="compass-cardinal-letter letter-west">З</div>
+                            <div class="compass-cardinal-letter letter-east">В</div>
+                            
+                            <div class="compass-center-bubble-level">
+                                <div id="compass-bubble" class="compass-bubble-dot"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="visir-line" id="v-line-element"></div>
+                    <div class="visir-center-dot" id="v-dot-element"></div>
                     
                     <div id="gyro-ring" class="horizon-gyro-scope"></div>
                     
@@ -433,15 +505,15 @@
                     <div id="angle-turn-badge" class="overlay-data-box bottom-center-angle">ПОВОРОТ: 0.0°</div>
 
                     <div id="sensor-stuck-alert" class="sensor-stuck-alert-box">
-                        ⚠️ Аппаратное заклинивание компаса! Для точности переключитесь в режим «Теодолит (Углы)».
+                        ⚠️ Аппаратное заклинивание компаса! Для точности переключитесь в режим «Буссоль (Лимб)».
                     </div>
 
                     <video id="video-preview" autoplay playsinline muted></video>
                 </div>
 
                 <div class="control-panel-buttons">
-                    <button class="btn-action btn-set-zero" onclick="setZeroDirection()">🔒 Фиксировать 0°</button>
-                    <button class="btn-action btn-reset-zero" onclick="resetZeroDirection()">Сбросить</button>
+                    <button class="btn-action btn-set-zero" id="btn-lock-zero" onclick="setZeroDirection()">🔒 Фиксировать 0°</button>
+                    <button class="btn-action btn-reset-zero" id="btn-clear-zero" onclick="resetZeroDirection()">Сбросить</button>
                     <button id="btn-capture" class="btn-action btn-lock-measure" onclick="captureMeasurement()" disabled>Поймайте уровень horizon</button>
                     
                     <button class="btn-instruction" onclick="openInstruction()">Инструкция для таксатора</button>
@@ -451,14 +523,14 @@
 
             <div class="card">
                 <h2>Журнал полевой съемки визиров</h2>
-                <div class="subtitle">Сюда автоматически заносятся зафиксированные румбы линий делянки.</div>
+                <div class="subtitle">Сюда автоматически заносятся зафиксированные румбы линий делянки. Любое значение можно изменить вручную.</div>
                 
                 <div class="log-table-wrapper">
                     <table class="measurements-log-table">
                         <thead>
                             <tr>
                                 <th>Линия</th>
-                                <th id="th-mode-label">Азимут</th>
+                                <th id="th-mode-label">Азимут / Угол</th>
                                 <th>Длина, м</th>
                                 <th>Тип</th>
                                 <th>Координаты (WGS-84)</th>
@@ -486,7 +558,7 @@
                 <div style="margin-top: 15px; background: rgba(45, 90, 39, 0.04); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
                     <span style="font-weight: 700; color: var(--forest-green); display: block; font-size: 12px; margin-bottom: 4px;">⚠️ ТАКСАТОРУ НА ЗАМЕТКУ:</span>
                     <span style="font-size: 11px; line-height: 1.4; display: block; opacity: 0.9;">
-                        Перед началом съемок в густом подросте обязательно откалибруйте датчик компаса в провели по траектории восьмерки. Убедитесь, что чехол смартфона не имеет магнитных защелок. При использовании шагомера держите телефон стабильно перед собой.
+                        При работе во вкладке «Буссоль (Лимб)» удерживайте смартфон строго горизонтально перед собой на уровне груди, контролируя пузырьковый датчик в центре лимба. 
                     </span>
                 </div>
             </div>
@@ -495,17 +567,6 @@
         <section class="seo-info-section">
             <h2>Отвод лесосек и измерение углов электронной буссолью</h2>
             <p><strong>Буссоль в лесоустройстве</strong> — это базовый геодезический инструмент, применяемый инженерами и лесничими для таксации, отвода лесосек, замера направлений ходовых линий (визиров) и определения внутренних углов делянок. Точность построения полигона делянки напрямую влияет на правильность исчисления площадей выдела и корректность отображения квартальных сеток во ФГИС ЛК.</p>
-            
-            <h3>Как правильно вести перечет и геодезическую съемку лесосек:</h3>
-            <ul>
-                <li><strong>Магнитный азимут:</strong> Это горизонтальный угол, отсчитываемый от северного направления магнитного меридиана по ходу часовой стрелки до линии направления визира. Варьируется в пределах от 0 до 360 градусов.</li>
-                <li><strong>Румб линии:</strong> Острый угол, измеряемый от ближайшего направления меридиана (северного или южного) до заданной линии. Используется для составления полевых абрисов.</li>
-                <li><strong>Внутренний угол поворота:</strong> Угол между смежными сторонами лесосечного полигона. При прямоугольном отводе лесосек углы поворота визира на углах делянки должны составлять строго 90 градусов.</li>
-            </ul>
-
-            <h3>Инструкция по работе с оптическим онлайн-визиром</h3>
-            <p>В отличие от классической металлической буссоли БГ-1, требующей жесткой установки штатива, электронная буссоль «БГ-ХНС» использует метод вертикального проецирования вешек на матрицу камеры. Таксатор использует устройство вертикально перед собой. Встроенный датчик-магнитометр непрерывно считывает углы курса, а акселерометр отслеживает пространственные наклоны по осям Pitch и Roll.</p>
-            <p>Для предотвращения таксационной погрешности кнопка фиксации румба активируется только в момент, когда кольцо авиагоризонта горит зеленым цветом — это сигнализирует о том, что плоскость замера идеально параллельна земной поверхности. Функция фиксации ноль-направления позволяет мгновенно отложить перпендикулярный визир под углом 90 градусов без использования таблиц приращений и полевых вычислений.</p>
         </section>
     </main>
 
@@ -530,9 +591,6 @@
                 <div style="font-weight: 600; margin-bottom: 4px;">ИП Худяков Николай Сергеевич</div>
                 <div style="font-size: 11px; opacity: 0.7; margin-bottom: 8px;">ИНН: 11180157622</div>
                 <a href="mailto:foltaim@mail.ru" style="color:#8FBC8F; text-decoration:none; display:block; font-weight:bold; margin-bottom:10px;">✉️ foltaim@mail.ru</a>
-                <div style="font-size: 12px; opacity: 0.6;">
-                    * Цифровая буссоль предназначена для визирования и экспресс-оценки геометрии лесосек на таксационных пробах.
-                </div>
             </div>
         </div>
         <div class="footer-bottom">
@@ -541,12 +599,10 @@
     </footer>
 
 <script>
-    // Переменные программных фильтров сглаживания рук Low-Pass Filter
     let smoothedAzimuth = 0;
     let isFirstData = true;
     const filterFactor = 0.08; 
 
-    // Переменные для интеллектуального UI-помощника заклинивания
     let lastRawAlpha = 0;
     let totalGyroDelta = 0;
     let lastHeadingValue = 0; 
@@ -557,25 +613,20 @@
     let isLevel = false;
     let measurementsLog = [];
     
-    // Переменные для шагомера
     let stepLength = 0.75; 
     let activePedometerIndex = null;
 
-    // Глобальная переменная текущего режима работы и направления хода
     let currentSystemMode = 'magnetic'; 
     let currentTraverseDirection = 'clockwise'; 
 
-    // Локальные переменные системы жесткой калибровки
     let isCalibrating = false;
     let calibSectors = { q1: false, q2: false, q3: false, q4: false }; 
     let calibTiltOk = false; 
 
-    // Глобальные переменные для фонового захвата GPS координат и точности
     let currentLat = 61.6685; 
     let currentLng = 50.8351;
     let currentAccuracy = 0;
 
-    // ИНИЦИАЛИЗАЦИЯ И СПУТНИКОВЫЙ СЛЕДЯЩИЙ МОДУЛЬ GPS
     function initGPS() {
         if (navigator.geolocation) {
             navigator.geolocation.watchPosition(
@@ -590,7 +641,6 @@
         }
     }
 
-    // СОХРАНЕНИЕ ДАННЫХ В LOCALSTORAGE
     function saveToLocalStorage() {
         localStorage.setItem('lesovik_measurements', JSON.stringify(measurementsLog));
         localStorage.setItem('lesovik_step_length', stepLength);
@@ -598,7 +648,6 @@
         localStorage.setItem('lesovik_traverse_direction', currentTraverseDirection);
     }
 
-    // ЗАГРУЗКА ДАННЫХ ИЗ LOCALSTORAGE ПРИ СТАРТЕ
     function loadFromLocalStorage() {
         const savedLog = localStorage.getItem('lesovik_measurements');
         const savedStep = localStorage.getItem('lesovik_step_length');
@@ -625,7 +674,6 @@
         updateArchiveSelect();
     }
 
-    // РАБОТА С ЦИФРОВЫМ УВЕЛИЧЕНИЕМ (ZOOM) КАМЕРЫ ДЛЯ ДИСТАНЦИЙ 15 МЕТРОВ
     function applyDigitalZoom(val) {
         const zoomValue = parseFloat(val).toFixed(1);
         document.getElementById('zoom-value-label').innerText = zoomValue;
@@ -635,20 +683,17 @@
         }
     }
 
-    // ИЗМЕНЕНИЕ НАПРАВЛЕНИЯ ОБХОДА ИЗ ИНТЕРФЕЙСА
     function changeTraverseDirection(val) {
         currentTraverseDirection = val;
         saveToLocalStorage();
         drawPolygon();
     }
 
-    // УПРАВЛЕНИЕ ПОПАПАМИ РЕЖИМОВ (?) И ИНСТРУКЦИЙ
     function openPopup(id, event) {
         if(event) event.stopPropagation(); 
         document.getElementById(id).style.display = 'flex';
     }
 
-    // Очистка журнала полевых измерений
     function clearLog() {
         if (confirm("Вы уверены, что хотите полностью очистить журнал съемок делянки?")) {
             measurementsLog = [];
@@ -661,7 +706,6 @@
         }
     }
 
-    // Вспомогательные функции закрытия попапов
     function closePopup(id) {
         document.getElementById(id).style.display = 'none';
     }
@@ -718,19 +762,47 @@
         drawPolygon();
     }
 
+    // ИСПРАВЛЕНО: Интеграция дискового лимба и переключение видимости камеры
     function applyModeUI() {
         document.getElementById('mode-mag').classList.remove('active-mode');
         document.getElementById('mode-theo').classList.remove('active-mode');
         
+        const compassDisk = document.getElementById('digital-compass-disk');
+        const videoPreview = document.getElementById('video-preview');
+        const vLine = document.getElementById('v-line-element');
+        const vDot = document.getElementById('v-dot-element');
+        const gyroRing = document.getElementById('gyro-ring');
+        const zoomPanel = document.getElementById('optic-zoom-panel');
+        const btnLockZero = document.getElementById('btn-lock-zero');
+        const btnClearZero = document.getElementById('btn-clear-zero');
+
         if (currentSystemMode === 'magnetic') {
             document.getElementById('mode-mag').classList.add('active-mode');
             document.getElementById('label-live-mode').innerText = "АЗИМУТ:";
-            document.getElementById('th-mode-label').innerText = "Азимут";
+            document.getElementById('th-mode-label').innerText = "Азимут / Угол";
+            
+            compassDisk.style.display = 'none';
+            videoPreview.style.display = 'block';
+            vLine.style.display = 'block';
+            vDot.style.display = 'block';
+            gyroRing.style.display = 'block';
+            zoomPanel.style.style = 'block';
+            btnLockZero.style.display = 'block';
+            btnClearZero.style.display = 'block';
         } else {
             document.getElementById('mode-theo').classList.add('active-mode'); 
-            document.getElementById('label-live-mode').innerText = "ВН. УГОЛ:";
-            document.getElementById('th-mode-label').innerText = "Вн. угол";
+            document.getElementById('label-live-mode').innerText = "БУССОЛЬ:";
+            document.getElementById('th-mode-label').innerText = "Азимут / Угол";
             document.getElementById('sensor-stuck-alert').style.display = 'none'; 
+
+            compassDisk.style.display = 'flex';
+            videoPreview.style.display = 'none';
+            vLine.style.display = 'none';
+            vDot.style.display = 'none';
+            gyroRing.style.display = 'none';
+            zoomPanel.style.display = 'none';
+            btnLockZero.style.display = 'none';
+            btnClearZero.style.display = 'none';
         }
     }
 
@@ -882,36 +954,58 @@
                 badge.style.display = 'none';
             }
         } else {
-            if (baseAzimuth !== null) {
-                let turnAngle = currentAzimuth - baseAzimuth;
-                if (turnAngle < 0) turnAngle += 360;
-                document.getElementById('live-azimuth').innerText = `${turnAngle.toFixed(1)}°`;
-                badge.innerText = `ПОВОРОТ: ${turnAngle.toFixed(1)}°`;
-                badge.style.display = 'block';
-            } else {
-                document.getElementById('live-azimuth').innerText = `0.0°`;
-                badge.style.display = 'none';
+            // В РЕЖИМЕ ГОРИЗОНТАЛЬНОГО ЛИМБА ВРАЩАЕМ КРУГЛУЮ ШКАЛУ ОТНОСИТЕЛЬНО СЕВЕРА
+            document.getElementById('live-azimuth').innerText = `${currentAzimuth.toFixed(1)}°`;
+            badge.style.display = 'none';
+            
+            const dial = document.getElementById('compass-dial');
+            if (dial) {
+                dial.style.transform = `rotate(${-currentAzimuth}deg)`;
+            }
+
+            // Математика физического пузырькового уровня по осям X и Y
+            const bubble = document.getElementById('compass-bubble');
+            if (bubble) {
+                let moveX = Math.max(-20, Math.min(20, roll));
+                let moveY = Math.max(-20, Math.min(20, pitch));
+                bubble.style.left = `calc(50% + ${moveX}px)`;
+                bubble.style.top = `calc(50% + ${moveY}px)`;
             }
         }
 
-        const gyroRing = document.getElementById('gyro-ring');
         const btnCapture = document.getElementById('btn-capture');
 
-        const isPitchOk = Math.abs(pitch - 90) <= 5 || Math.abs(pitch - 0) <= 5 || Math.abs(pitch + 90) <= 5;
-        const isRollOk = Math.abs(roll) <= 4 || Math.abs(roll - 180) <= 4 || Math.abs(roll + 180) <= 4;
-
-        if (isPitchOk && isRollOk) {
-            isLevel = true;
-            gyroRing.classList.add('level-perfect');
-            btnCapture.classList.add('ready-to-fire');
-            btnCapture.innerText = currentSystemMode === 'magnetic' ? "➕ Зафиксировать румб в журнал" : "➕ Зафиксировать угол в журнал";
-            btnCapture.disabled = false;
+        if (currentSystemMode === 'magnetic') {
+            const isPitchOk = Math.abs(pitch - 90) <= 5 || Math.abs(pitch - 0) <= 5 || Math.abs(pitch + 90) <= 5;
+            const isRollOk = Math.abs(roll) <= 4 || Math.abs(roll - 180) <= 4 || Math.abs(roll + 180) <= 4;
+            
+            if (isPitchOk && isRollOk) {
+                isLevel = true;
+                document.getElementById('gyro-ring').classList.add('level-perfect');
+                btnCapture.classList.add('ready-to-fire');
+                btnCapture.innerText = "➕ Зафиксировать румб в журнал";
+                btnCapture.disabled = false;
+            } else {
+                isLevel = false;
+                document.getElementById('gyro-ring').classList.remove('level-perfect');
+                btnCapture.classList.remove('ready-to-fire');
+                btnCapture.innerText = "Поймайте уровень horizon";
+                btnCapture.disabled = true;
+            }
         } else {
-            isLevel = false;
-            gyroRing.classList.remove('level-perfect');
-            btnCapture.classList.remove('ready-to-fire');
-            btnCapture.innerText = "Поймайте уровень horizon";
-            btnCapture.disabled = true;
+            // ДЛЯ ГОРИЗОНТАЛЬНОЙ БУССОЛИ: Условие идеального уровня — телефон плашмя на ладони (погрешность до 4 градусов)
+            const isHorizontal = Math.abs(pitch) <= 4 && Math.abs(roll) <= 4;
+            if (isHorizontal) {
+                isLevel = true;
+                btnCapture.classList.add('ready-to-fire');
+                btnCapture.innerText = "➕ Зафиксировать азимут в журнал";
+                btnCapture.disabled = false;
+            } else {
+                isLevel = false;
+                btnCapture.classList.remove('ready-to-fire');
+                btnCapture.innerText = "Поймайте пузырек уровня";
+                btnCapture.disabled = true;
+            }
         }
     }
 
@@ -987,7 +1081,7 @@
 
     function setZeroDirection() {
         baseAzimuth = currentAzimuth;
-        document.getElementById('base-azimuth').innerText = currentSystemMode === 'magnetic' ? `${baseAzimuth.toFixed(1)}°` : `УСТАНОВЛЕН`;
+        document.getElementById('base-azimuth').innerText = `${baseAzimuth.toFixed(1)}°`;
     }
 
     function resetZeroDirection() {
@@ -999,20 +1093,7 @@
     function captureMeasurement() {
         if (!isLevel) return;
 
-        let valueToRecord = 0;
-        
-        if (currentSystemMode === 'magnetic') {
-            valueToRecord = parseFloat(currentAzimuth.toFixed(1));
-        } else {
-            if (baseAzimuth !== null) {
-                let turnAngle = currentAzimuth - baseAzimuth;
-                if (turnAngle < 0) turnAngle += 360;
-                valueToRecord = parseFloat(turnAngle.toFixed(1));
-            } else {
-                alert("Ошибка! Перед фиксацией угла в режиме теодолита обязательно отбейте ноль кнопкой «Фиксировать 0°» на веху!");
-                return;
-            }
-        }
+        let valueToRecord = parseFloat(currentAzimuth.toFixed(1));
 
         const newMeasurement = {
             id: measurementsLog.length + 1,
@@ -1036,7 +1117,6 @@
         drawPolygon();
     }
 
-    // ДОБАВЛЕНО: Возможность вручную менять зафиксированный угол/азимут для корректировки хода и векторов
     function changeLineAzimuth(id, value) {
         let idx = measurementsLog.findIndex(m => m.id === id);
         if(idx !== -1) {
@@ -1091,7 +1171,6 @@
         }
     }
 
-    // ИСПРАВЛЕНО: Ячейка Азимута/Угла переведена на тип <input> для ручного ввода привязок вектора
     function renderLogTable() {
         const tbody = document.getElementById('log-tbody');
         if (measurementsLog.length === 0) {
@@ -1134,7 +1213,7 @@
         });
     }
 
-    // ИСПРАВЛЕНО: Добавлен вывод меток "№ 1 лин.", "№ 2 лин." строго по центру каждого вектора полигона
+    // ИСПРАВЛЕНО: Безупречное тригонометрическое построение по чистым азимутам с метками линий
     function drawPolygon() {
         const canvas = document.getElementById('polygon-canvas');
         const ctx = canvas.getContext('2d');
@@ -1163,22 +1242,9 @@
         let points = [{ x: 0, y: 0 }];
         let currentX = 0;
         let currentY = 0;
-        let calculatedAzimuth = 0; 
 
-        measurementsLog.forEach((m, idx) => {
-            if (m.systemMode === 'magnetic' || idx === 0) {
-                calculatedAzimuth = m.azimuth;
-            } else {
-                if (currentTraverseDirection === 'counter-clockwise') {
-                    calculatedAzimuth = calculatedAzimuth + m.azimuth - 180;
-                } else {
-                    calculatedAzimuth = calculatedAzimuth + (180 - m.azimuth);
-                }
-            }
-
-            calculatedAzimuth = (calculatedAzimuth % 360 + 360) % 360;
-
-            let angleRad = (calculatedAzimuth * Math.PI) / 180;
+        measurementsLog.forEach((m) => {
+            let angleRad = (m.azimuth * Math.PI) / 180;
             currentX += m.distance * Math.sin(angleRad);
             currentY += m.distance * Math.cos(angleRad);
             points.push({ x: currentX, y: currentY });
@@ -1217,15 +1283,12 @@
             ctx.lineTo(p2.x, p2.y);
             ctx.stroke();
 
-            // Вычисление центральной точки вектора для нанесения подписи
             let midX = (p1.x + p2.x) / 2;
             let midY = (p1.y + p2.y) / 2;
             
             ctx.font = "bold 10px Inter, sans-serif";
             ctx.fillStyle = isDark ? '#FFFFFF' : '#111111';
             ctx.textAlign = "center";
-            
-            // Отрисовка подписи: Номер линии и её протяженность в метрах
             ctx.fillText(`№ ${measurementsLog[i].id} лин. (${measurementsLog[i].distance} м)`, midX, midY - 5);
         }
 
@@ -1336,7 +1399,7 @@
             
             applyModeUI();
             if (baseAzimuth !== null) {
-                document.getElementById('base-azimuth').innerText = currentSystemMode === 'magnetic' ? `${baseAzimuth.toFixed(1)}°` : `УСТАНОВЛЕН`;
+                document.getElementById('base-azimuth').innerText = `${baseAzimuth.toFixed(1)}°`;
             } else {
                 document.getElementById('base-azimuth').innerText = `НЕТ`;
             }
@@ -1351,10 +1414,7 @@
     function exportArchiveToCSV() {
         const localData = localStorage.getItem('bg_hns_projects_archive');
         let dataToExport = [];
-        
-        if (localData) {
-            dataToExport = JSON.parse(localData);
-        }
+        if (localData) dataToExport = JSON.parse(localData);
         
         if (dataToExport.length === 0 && measurementsLog.length > 0) {
             dataToExport.push({
@@ -1408,20 +1468,8 @@
         let polygonCoords = [];
         polygonCoords.push(`${lng.toFixed(6)},${lat.toFixed(6)},0`);
         
-        let calculatedAzimuth = 0;
-        measurementsLog.forEach((m, idx) => {
-            if (m.systemMode === 'magnetic' || idx === 0) {
-                calculatedAzimuth = m.azimuth;
-            } else {
-                if (currentTraverseDirection === 'counter-clockwise') {
-                    calculatedAzimuth = calculatedAzimuth + m.azimuth - 180;
-                } else {
-                    calculatedAzimuth = calculatedAzimuth + (180 - m.azimuth);
-                }
-            }
-            calculatedAzimuth = (calculatedAzimuth % 360 + 360) % 360;
-            let angleRad = (calculatedAzimuth * Math.PI) / 180;
-            
+        measurementsLog.forEach((m) => {
+            let angleRad = (m.azimuth * Math.PI) / 180;
             let dX = m.distance * Math.sin(angleRad); 
             let dY = m.distance * Math.cos(angleRad); 
             
@@ -1440,24 +1488,12 @@
         kml += polygonCoords.join("\n") + "\n";
         kml += `</coordinates>\n</LinearRing>\n</outerBoundaryIs>\n</Polygon>\n</Placemark>\n`;
         
-        // Маркеры для столбов
         lat = startLat;
         lng = startLng;
         kml += `<Placemark><name>Столб 1 (Старт)</name><Point><coordinates>${lng.toFixed(6)},${lat.toFixed(6)},0</coordinates></Point></Placemark>\n`;
         
-        calculatedAzimuth = 0;
         measurementsLog.forEach((m, idx) => {
-            if (m.systemMode === 'magnetic' || idx === 0) {
-                calculatedAzimuth = m.azimuth;
-            } else {
-                if (currentTraverseDirection === 'counter-clockwise') {
-                    calculatedAzimuth = calculatedAzimuth + m.azimuth - 180;
-                } else {
-                    calculatedAzimuth = calculatedAzimuth + (180 - m.azimuth);
-                }
-            }
-            calculatedAzimuth = (calculatedAzimuth % 360 + 360) % 360;
-            let angleRad = (calculatedAzimuth * Math.PI) / 180;
+            let angleRad = (m.azimuth * Math.PI) / 180;
             let dX = m.distance * Math.sin(angleRad);
             let dY = m.distance * Math.cos(angleRad);
             lat += dY / 111111;
