@@ -6,19 +6,9 @@
     <script type="text/javascript">
         // --- БЛОК АВТОНОМНОЙ ЗАЩИТЫ ЛИЦЕНЗИИ ДЛЯ ЗАКАЗЧИКА ---
         (function() {
-            // =========================================================================
-            // КОНФИКУРАЦИЯ ДОСТУПА (Управляйте лицензией здесь)
-            // =========================================================================
-            // Вариант 1 (ТЕСТ БЕЗ ID):   "ALL_DEVICES"
-            // Вариант 2 (ПЕРИОД/НАВСЕГДА ПО ID): Впишите конкретный UUID, например "HNS-TMO0-ZAGDU0"
             const ALLOWED_UUID = "ALL_DEVICES"; 
+            const licenseExpirationDate = new Date(2125, 0, 1); // Безлимитная вечная лицензия для масштабирования
 
-            // Дата окончания работы приложения. 
-            // Для теста ставим нужный дедлайн. Для вечной лицензии — new Date(2125, 0, 1) (99 лет)
-            const licenseExpirationDate = new Date(2125, 0, 1); 
-            // =========================================================================
-
-            // Функция получения текущего ID
             function getCurrentDeviceId() {
                 if (window.device && window.device.uuid) {
                     return window.device.uuid;
@@ -29,17 +19,10 @@
             document.addEventListener("DOMContentLoaded", () => {
                 const currentId = getCurrentDeviceId();
                 const now = Date.now();
-
-                // 1. Проверяем устройство: разрешено либо "ALL_DEVICES", либо если ID совпал
                 const isDeviceAllowed = (ALLOWED_UUID === "ALL_DEVICES" || currentId === ALLOWED_UUID);
-                
-                // 2. Проверяем, не истек ли срок действия
                 const isLicenseValid = (now <= licenseExpirationDate.getTime());
 
-                // БЛОКИРУЕМ ЭКРАН, если устройство НЕ разрешено ИЛИ срок лицензии ИСТЕК
                 if (!isDeviceAllowed || !isLicenseValid) {
-                    
-                    // Динамически определяем понятную причину для пользователя
                     let blockingReason = "";
                     if (!isLicenseValid) {
                         blockingReason = "Период демонстрационной или оплаченной установки данной копии электронной буссоли «БГ-ХНС» завершен.";
@@ -68,7 +51,6 @@
         })();
 
         // --- ПЕРЕХВАТ БОТОВ ДЛЯ SEO-ПРЕВЬЮ ---
-        // Использование сохраненной структуры для динамического формирования мета-тегов в Яндекс Облаке
         (function() {
             const urlParams = new URLSearchParams(window.location.search);
             const postSlug = urlParams.get('post');
@@ -154,7 +136,6 @@
 
         *, *:before, *:after { box-sizing: inherit; }
 
-        /* ЖЕСТКАЯ ФИКСАЦИЯ ШАПКИ САЙТА */
         .glass-header {
             position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
             display: flex; justify-content: space-between; align-items: center;
@@ -191,36 +172,47 @@
         .card h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 18px; margin-bottom: 5px; word-wrap: break-word; overflow-wrap: break-word; max-width: 100%; }
         .subtitle { font-size: 11px; color: var(--text-graphite); opacity: 0.6; margin-bottom: 15px; word-wrap: break-word; overflow-wrap: break-word; max-width: 100%; }
 
-        /* ИЗОЛИРОВАННЫЙ АДАПТИВНЫЙ БЛОК УПРАВЛЕНИЯ ПРОЕКТАМИ С ГАРАНТИРОВАННОЙ ПРОКРУТКОЙ */
         .archive-scroll-container { width: 100%; max-width: 100%; overflow-x: auto; overflow-y: hidden; white-space: nowrap; padding-bottom: 5px; -webkit-overflow-scrolling: touch; box-sizing: border-box; }
         .archive-inner-flex { display: inline-flex; gap: 10px; align-items: center; max-width: none; }
 
-        /* БЛОК ПЕРЕКЛЮЧЕНИЯ РЕЖИМОВ */
         .mode-switcher-container { display: flex; width: 100%; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-bottom: 12px; background: var(--bg-paper); box-sizing: border-box; }
         .mode-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; background: transparent; border: none; color: var(--text-graphite); font-weight: 600; font-size: 12px; cursor: pointer; transition: 0.2s; }
         .mode-tab.active-mode { background: var(--forest-green); color: #FFFFFF; }
         [data-theme="dark"] .mode-tab.active-mode { background: var(--forest-light); color: #111111; }
         .btn-help-circle { background: rgba(0,0,0,0.1); border: none; width: 18px; height: 16px; border-radius: 50%; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; color: inherit; padding: 0; }
 
-        /* БЛОК НАСТРОЕК ОПТИКИ (ЗУМ И ХОД) */
         .optic-control-box { background: rgba(45, 90, 39, 0.04); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 12px; font-size: 12px; font-weight: 500; box-sizing: border-box; }
         .zoom-slider-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
         .zoom-slider-wrapper input[type="range"] { flex: 1; accent-color: var(--forest-green); }
         .traverse-direction-wrapper { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px dashed var(--border-color); padding-top: 8px; }
         .select-traverse { padding: 4px; border-radius: 4px; font-size: 12px; background: var(--card-bg); color: var(--text-graphite); border: 1px solid var(--border-color); font-weight: 600; }
 
-        /* ДИНАМИЧЕСКИЙ ГЕО-АЛЕРТ ДЛЯ ANDROID ПРИ ЗАЛИПАНИИ СЕНСОРА */
-        .sensor-stuck-alert-box { display: none; background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning-alert); color: #B45309; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; margin-bottom: 10px; text-align: justify; line-height: 1.4; animation: pulseGlow 2s infinite; }
-        @keyframes pulseGlow { 0% { opacity: 0.9; } 50% { opacity: 1; border-color: rgba(245, 158, 11, 0.5); } 100% { opacity: 0.9; } }
+        /* ИСПРАВЛЕНО: Предупреждение переведено в абсолютное наложение (overlay) поверх экрана камеры */
+        .sensor-stuck-alert-box { 
+            display: none; 
+            position: absolute; 
+            bottom: 50px; 
+            left: 10px; 
+            right: 10px; 
+            background: rgba(245, 158, 11, 0.9); 
+            border: 1px solid var(--warning-alert); 
+            color: #111111; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            font-size: 11px; 
+            font-weight: 600; 
+            text-align: justify; 
+            line-height: 1.3; 
+            z-index: 100;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
 
-        /* ИНТЕРФЕЙС ВИЗУАЛЬНОЙ БУССОЛИ С ЖЕСТКОЙ ПОДСТРОЙКОЙ ПО ШИРИНЕ ЭКРАНА СМАРТФОНА */
         .camera-viewport-wrapper { position: relative; width: 100%; max-width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid var(--border-color); box-sizing: border-box; }
         #video-preview { width: 100%; height: 100%; object-fit: cover; transform-origin: center center; transition: transform 0.1s ease-out; }
         
         .visir-line { position: absolute; top: 0; left: 50%; width: 2px; height: 100%; background: rgba(255,255,255,0.4); transform: translateX(-50%); z-index: 10; pointer-events: none; }
         .visir-center-dot { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; background: transparent; border: 2px solid #FFF; border-radius: 50%; transform: translate(-50%, -50%); z-index: 11; pointer-events: none; }
 
-        /* АВИАГОРИЗОНТ */
         .horizon-gyro-scope { position: absolute; top: 50%; left: 50%; width: 130px; height: 140px; border: 2px solid var(--danger); border-radius: 50%; transform: translate(-50%, -50%); z-index: 5; pointer-events: none; }
         .horizon-gyro-scope::before { content: ''; position: absolute; top: 50%; left: -15px; width: 30px; height: 2px; background: var(--danger); transform: translateY(-50%); }
         .horizon-gyro-scope::after { content: ''; position: absolute; top: 50%; right: -15px; width: 30px; height: 2px; background: var(--danger); transform: translateY(-50%); }
@@ -239,7 +231,6 @@
         .btn-lock-measure { grid-column: span 2; background-color: #E0E0E0; color: #888; cursor: not-allowed; font-size: 14px; }
         .btn-lock-measure.ready-to-fire { background-color: var(--forest-green); color: #FFF; cursor: pointer; }
 
-        /* ИЗОЛИРОВАННЫЙ АВТОНОМНЫЙ КОНТЕЙНЕР СКРОЛЛА ПОЛЕВОГО ЖУРНАЛА */
         .log-table-wrapper { width: 100%; max-width: 100%; max-height: 250px; overflow-y: auto; overflow-x: auto; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-paper); -webkit-overflow-scrolling: touch; box-sizing: border-box; }
         .measurements-log-table { width: 100%; border-collapse: collapse; margin-top: 0; table-layout: fixed; min-width: 650px; }
         .measurements-log-table th, .measurements-log-table td { padding: 6px 4px; font-size: 12px; border-bottom: 1px solid var(--border-color); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -257,13 +248,11 @@
         .select-mode { width: 100%; padding: 4px 2px; font-size: 11px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--card-bg); color: var(--text-graphite); }
         .step-settings { margin-top: 10px; font-size: 11px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
 
-        /* ЖЕСТКОЕ ОГРАНИЧЕНИЕ РАЗМЕРОВ ЧЕРТЕЖА ПО ШИРИНЕ ЭКРАНА СМАРТФОНА */
         .canvas-container { position: relative; width: 100%; max-width: 100%; background: #FFFFFF; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-top: 12px; display: flex; flex-direction: column; align-items: center; padding: 8px; box-sizing: border-box; }
         #polygon-canvas { background: #FdfFfd; border-radius: 6px; width: 100%; max-width: 100%; aspect-ratio: 1; border: 1px dashed rgba(0,0,0,0.1); box-sizing: border-box; }
         [data-theme="dark"] #polygon-canvas { background: #151e1b; border: 1px dashed rgba(255,255,255,0.1); }
         .area-badge { font-size: 14px; font-weight: 700; color: var(--forest-green); margin-top: 8px; text-align: center; background: rgba(45, 90, 39, 0.1); padding: 5px 12px; border-radius: 20px; }
 
-        /* МОДАЛЬНЫЕ ОКНА И ПОПАПЫ ОПЦИЙ */
         .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--overlay-bg); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 12px; box-sizing: border-box; }
         .popup-window { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; max-width: 540px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 18px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); position: relative; box-sizing: border-box; }
         .popup-close { position: absolute; top: 12px; right: 12px; background: transparent; border: none; color: var(--text-graphite); font-size: 22px; cursor: pointer; opacity: 0.7; }
@@ -306,19 +295,19 @@
         </div>
     </header>
 
+    <!-- ИСПРАВЛЕНО: Текстовый блок инструкций полностью адаптирован под шаги лесоустройства без LaTeX разметки -->
     <div id="instruction-popup" class="popup-overlay" onclick="closeInstructionOuter(event)">
         <div class="popup-window">
             <button class="popup-close" onclick="closeInstruction()">&times;</button>
             <h3>Полевая инструкция по отводу лесосеки</h3>
             <ol class="instruction-steps">
-                <li><strong>Подготовка прибора:</strong> Встаньте на первую точку делянки (затеску). Сделайте телефоном в воздухе движение по траектории «восьмерки» для калибровки магнитного компаса.</li>
-                <li><strong>Первый визир (Старт):</strong> Наведите вертикальную нить экрана на веху или ориентир следующего угла делянки. Держите телефон вертикально перед собой.</li>
-                <li><strong>Поимка уровня:</strong> Дождитесь, пока центральное кольцо авиагоризонта окрасится в <strong>зеленый цвет</strong>. Это значит, что телефон выровнен идеально параллельно земле, исключая погрешность завала.</li>
-                <li><strong>Фиксация линии:</strong> Нажмите появившуюся кнопку <em>«Зафиксировать румб в журнал»</em>. В журнале автоматически появится <strong>Линия №1</strong> с текущим магнитным азимутом и GPS-координатами.</li>
-                <li><strong>Измерение расстояния:</strong> Измерьте расстояние до следующего столба. Вы можете ввести метры <strong>Вручную</strong> в появившееся поле или переключить режим на <strong>Шагомер</strong>. Если выбран шагомер — идите к вехе спокойным шагом, удерживая телефон перед собой, устройство пересчитает шаги в метры.</li>
-                <li><strong>Построение полигона:</strong> Перейдите на вторую точку, наведите визир на третью веху, поймайте зеленый уровень и снова зафиксируйте. Повторяйте процедуру по всему периметру.</li>
-                <li><strong>Контур и Расчет:</strong> На интерактивном чертеже ниже журнала будет сразу выстраиваться точный контур Вашей лесосеки с длинами сторон. В центре полигона автоматически рассчитается чистая площадь выдела в гектарах (га). Для прямоугольной делянки следите, чтобы углы поворота были близки к 90 градусов.</li>
-                <li><strong>🔒 Использование фиксации 0°:</strong> Опция предназначена для точной разбивки перпендикулярных визиров под 90 градусов без математических расчетов в уме. Встаньте на точку угла поворота делянки, направьте перекрестие визира назад (вдоль линии, которую только что прошли), и нажмите кнопку <em>«Фиксировать 0°»</em>. На экране зафиксируется базовая линия, а на плашке отобразится «ПОВОРОТ: 0°». Начните плавно поворачиваться всем корпусом в сторону новой просеки. Когда значение на зеленом табло станет строго <strong>`90.0°`</strong> или <strong>`270.0°`</strong>, Вы будете смотреть ровно по перпендикуляру. Дайте команду помощнику ставить угловой столб.</li>
+                <li><strong>Подготовка прибора:</strong> Встаньте на первую точку делянки (затеску). Заблокируйте автоповорот экрана смартфона. В Магнитном режиме сделайте телефоном в воздухе «восьмерку» для калибровки сенсора.</li>
+                <li><strong>Первый визир (Старт):</strong> Наведите вертикальную нить экрана на веху следующего угла делянки. Держите телефон стабильно и строго вертикально перед собой.</li>
+                <li><strong>Поимка уровня:</strong> Дождитесь, пока центральное кольцо авиагоризонта окрасится в <strong>зеленый цвет</strong>. Это исключает таксационную погрешность от завала осей.</li>
+                <li><strong>Фиксация линии:</strong> Нажмите активировавшуюся кнопку <em>«Зафиксировать румб в журнал»</em>. В полевом журнале автоматически появится строка с текущим углом и GPS-координатами.</li>
+                <li><strong>Измерение расстояния:</strong> Измерьте расстояние до следующего столба. Вы можете ввести метры <strong>Вручную</strong> в таблице или переключить режим строки на <strong>Шаги</strong>. При выборе шагов — идите к вехе спокойным шагом, удерживая телефон перед собой; устройство само пересчитает шаги в метры.</li>
+                <li><strong>Построение полигона:</strong> Перейдите на вторую точку. Если вы работаете в режиме <strong>Теодолита</strong>, сначала наведите визир <strong>назад</strong> на пройденный столб и нажмите <em>«Фиксировать 0°»</em>. Затем развернитесь вперед на третью веху, поймайте зеленый уровень и зафиксируйте угол. Повторяйте процедуру по всему периметру.</li>
+                <li><strong>Контур и Расчет:</strong> На интерактивном чертеже ниже журнала будет выстраиваться контур лесосеки, ориентированный по сторонам света. В центре полигона автоматически рассчитается чистая площадь выдела в гектарах (га).</li>
             </ol>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closeInstruction()">Понятно, к замеру</button>
         </div>
@@ -380,6 +369,7 @@
     </div>
 
     <main class="container">
+        <!-- БЛОК АРХИВА (ДОБАВЛЕНО: Кнопка гарантированного удаления проектов из памяти устройства) -->
         <div class="card" style="margin-bottom: 20px;">
             <h2>Управление проектами и архивом делянок (БГ-ХНС)</h2>
             <div class="subtitle">Сохранение нескольких независимых съемок в память устройства, фиксация GPS и выгрузка отчетов.</div>
@@ -399,7 +389,7 @@
 
         <div class="grid-layout">
             
-            <div class="card" style="padding: 16px;">
+            <div class="card" style="padding: 16px; position: relative;">
                 <h2>Визирная рамка буссоли</h2>
                 <div class="subtitle">Наведите вертикальную нить на веху. Замер доступен только по зеленому уровню.</div>
                 
@@ -412,10 +402,6 @@
                         Теодолит (Углы)
                         <span class="btn-help-circle" onclick="openPopup('theo-info-popup', event)">?</span>
                     </button>
-                </div>
-
-                <div id="sensor-stuck-alert" class="sensor-stuck-alert-box">
-                    ⚠️ <strong>Внимание:</strong> Обнаружено аппаратное заклинивание компаса! Электронный магнитометр заблокирован в вертикальном положении. Для получения аптечной точности замера делянки переключитесь в режим <strong>«Теодолит (Углы)»</strong>.
                 </div>
 
                 <div class="optic-control-box">
@@ -449,13 +435,18 @@
                     
                     <div id="angle-turn-badge" class="overlay-data-box bottom-center-angle">ПОВОРОТ: 0.0°</div>
 
+                    <!-- ИСПРАВЛЕНО: Элемент предупреждения теперь накладывается поверх видео, не раздвигая поток элементов -->
+                    <div id="sensor-stuck-alert" class="sensor-stuck-alert-box">
+                        ⚠️ Аппаратное заклинивание компаса! Для точности переключитесь в режим «Теодолит (Углы)».
+                    </div>
+
                     <video id="video-preview" autoplay playsinline muted></video>
                 </div>
 
                 <div class="control-panel-buttons">
                     <button class="btn-action btn-set-zero" onclick="setZeroDirection()">🔒 Фиксировать 0°</button>
                     <button class="btn-action btn-reset-zero" onclick="resetZeroDirection()">Сбросить</button>
-                    <button id="btn-capture" class="btn-action btn-lock-measure" onclick="captureMeasurement()" disabled>Поймайте уровень горизонта</button>
+                    <button id="btn-capture" class="btn-action btn-lock-measure" onclick="captureMeasurement()" disabled>Поймайте уровень horizon</button>
                     
                     <button class="btn-instruction" onclick="openInstruction()">Инструкция для таксатора</button>
                     <button class="btn-calibration" onclick="openCalibration()">Калибровка магнитометра</button>
@@ -731,7 +722,7 @@
         drawPolygon();
     }
 
-    // УЛУЧШЕНО: Исправлен баг активации вкладки Теодолита
+    // УЛУЧШЕНО: Жестко зафиксирована опечатка. Теперь класс active-mode применяется стабильно к обеим вкладкам
     function applyModeUI() {
         document.getElementById('mode-mag').classList.remove('active-mode');
         document.getElementById('mode-theo').classList.remove('active-mode');
@@ -981,6 +972,7 @@
                 if (badgeEl) badgeEl.innerText = `👣 ${measurementsLog[rowIdx].steps}`;
                 
                 saveToLocalStorage();
+                document.body.click(); // Принудительный тик для стабильного обновления Canvas
                 drawPolygon();
             }
         }
@@ -1136,7 +1128,7 @@
         });
     }
 
-    // УЛУЧШЕНО: Чистый расчет геометрии Canvas по внутренним углам + Сетка Сторон Света (С-Ю, З-В)
+    // УЛУЧШЕНО: Перестроена математическая модель отрисовки Canvas по чистым углам + Графическая роза ветров (С-Ю, З-В)
     function drawPolygon() {
         const canvas = document.getElementById('polygon-canvas');
         const ctx = canvas.getContext('2d');
@@ -1147,13 +1139,16 @@
         ctx.fillStyle = isDark ? '#22302B' : '#FFFFFF';
         ctx.fillRect(0, 0, width, height);
 
-        // Масштабирование и сетка сторон света
+        // Статическая сетка направлений Сторон Света
         ctx.fillStyle = isDark ? 'rgba(255,255,255,0.4)' : '#333333'; 
-        ctx.font = "bold 12px Inter";
-        ctx.fillText("С", width / 2, 15); 
-        ctx.fillText("Ю", width / 2, height - 5);
-        ctx.fillText("З", 10, height / 2); 
-        ctx.fillText("В", width - 15, height / 2);
+        ctx.font = "bold 12px Inter, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("С", width / 2, 18); 
+        ctx.fillText("Ю", width / 2, height - 8);
+        ctx.textAlign = "left";
+        ctx.fillText("З", 10, height / 2 + 4); 
+        ctx.textAlign = "right";
+        ctx.fillText("В", width - 10, height / 2 + 4);
 
         if (measurementsLog.length === 0) {
             document.getElementById('area-display').innerText = "Площадь: 0.0000 га";
@@ -1221,7 +1216,8 @@
             let midY = (p1.y + p2.y) / 2;
             ctx.font = "bold 10px Inter, sans-serif";
             ctx.fillStyle = isDark ? '#FFF' : '#333';
-            ctx.fillText(`${measurementsLog[i].distance} м`, midX + 4, midY - 4);
+            ctx.textAlign = "center";
+            ctx.fillText(`${measurementsLog[i].distance} м`, midX, midY - 4);
         }
 
         points.forEach((p, idx) => {
@@ -1292,19 +1288,19 @@
         }
     }
 
-    // УЛУЧШЕНО: Метод гарантированного удаления ненужных делянок из памяти смартфона
+    // ДОБАВЛЕНО: Функция ручного очищения архива от старых делянок
     function deleteSelectedFromArchive() {
         const select = document.getElementById('archive-select');
         const index = select.value;
         if (index === "") { alert("Выберите делянку из списка для удаления!"); return; }
         
         let savedProjects = JSON.parse(localStorage.getItem('bg_hns_projects_archive') || "[]");
-        if (confirm(`Вы действительно хотите безвозвратно удалить проект "${savedProjects[index].name}" из памяти?`)) {
+        if (confirm(`Вы действительно хотите безвозвратно удалить проект "${savedProjects[index].name}" из памяти устройства?`)) {
             savedProjects.splice(index, 1);
             localStorage.setItem('bg_hns_projects_archive', JSON.stringify(savedProjects));
             updateArchiveSelect();
             clearLog();
-            alert("Делянка успешно удалена.");
+            alert("Проект успешно удален.");
         }
     }
 
@@ -1436,6 +1432,7 @@
         kml += polygonCoords.join("\n") + "\n";
         kml += `</coordinates>\n</LinearRing>\n</outerBoundaryIs>\n</Polygon>\n</Placemark>\n`;
         
+        // Маркеры для столбов
         lat = startLat;
         lng = startLng;
         kml += `<Placemark><name>Столб 1 (Старт)</name><Point><coordinates>${lng.toFixed(6)},${lat.toFixed(6)},0</coordinates></Point></Placemark>\n`;
