@@ -4,10 +4,10 @@
     <script type="text/javascript" src="cordova.js"></script>
 
     <script type="text/javascript">
-        // --- БЛОК АВТОНОМНОЙ ЗА ЗАЩИТЫ ЛИЦЕНЗИИ ДЛЯ ЗАКАЗЧИКА ---
+        // --- БЛОК АВТОНОМНОЙ ЗАЩИТЫ ЛИЦЕНЗИИ ДЛЯ ЗАКАЗЧИКА ---
         (function() {
             const ALLOWED_UUID = "ALL_DEVICES"; 
-            const licenseExpirationDate = new Date(2125, 0, 1); // Безлимитная вечная лицензия для масштабирования
+            const licenseExpirationDate = new Date(2125, 0, 1);
 
             function getCurrentDeviceId() {
                 if (window.device && window.device.uuid) {
@@ -209,69 +209,75 @@
         .camera-viewport-wrapper { position: relative; width: 100%; max-width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid var(--border-color); box-sizing: border-box; }
         #video-preview { width: 100%; height: 100%; object-fit: cover; transform-origin: center center; transition: transform 0.1s ease-out; }
         
-        /* ИНТЕРФЕЙС ГРАФИЧЕСКОГО ДИСКОВОГО ЛИМБА ДЛЯ ХОДА ПО ЛАДОНИ */
         .digital-compass-disk-container {
             display: none;
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background: #111815;
             z-index: 80;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             box-sizing: border-box;
+            padding: 10px;
         }
-        .compass-dial-face {
-            position: relative;
-            width: 80%;
+        
+        #compass-svg-canvas {
+            width: 82%;
             aspect-ratio: 1;
-            border: 6px double var(--forest-green);
-            border-radius: 50%;
-            background: #1E2723;
             transition: transform 0.05s linear;
         }
-        .compass-cardinal-letter {
+
+        .compass-device-sight-line {
             position: absolute;
-            font-family: 'Inter', sans-serif;
-            font-weight: 900;
-            font-size: 16px;
-            color: #F9FBF9;
+            top: 15px; left: 50%;
+            width: 3px; height: 35px;
+            background: #DC2626;
+            transform: translateX(-50%);
+            z-index: 95;
         }
-        .letter-north { top: 6px; left: 50%; transform: translateX(-50%); color: var(--danger); }
-        .letter-south { bottom: 6px; left: 50%; transform: translateX(-50%); }
-        .letter-west { left: 8px; top: 50%; transform: translateY(-50%); }
-        .letter-east { right: 8px; top: 50%; transform: translateY(-50%); }
-        
+        .compass-device-sight-line::after {
+            content: '▲';
+            position: absolute;
+            bottom: -10px; left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px; color: #DC2626;
+        }
+
         .compass-center-bubble-level {
             position: absolute;
-            top: 50%; left: 50%;
-            width: 44px; height: 44px;
-            border: 2px solid rgba(255,255,255,0.2);
+            top: 45%; left: 50%;
+            width: 46px; height: 46px;
+            border: 2px solid rgba(255,255,255,0.3);
             border-radius: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.4);
+            z-index: 90;
         }
         .compass-bubble-dot {
             position: absolute;
-            width: 12px; height: 12px;
+            width: 14px; height: 14px;
             background: #16A34A;
             border-radius: 50%;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             transition: all 0.05s ease-out;
+            box-shadow: 0 0 8px #16A34A;
         }
-        .compass-device-sight-line {
+
+        .compass-bottom-info-panel {
             position: absolute;
-            top: 0; left: 50%;
-            width: 2px; height: 40px;
-            background: var(--success);
-            transform: translateX(-50%);
-        }
-        .compass-device-sight-line::after {
-            content: '▲';
-            position: absolute;
-            bottom: -12px; left: 50%;
-            transform: translateX(-50%);
-            font-size: 10px; color: var(--success);
+            bottom: 12px; left: 10px; right: 10px;
+            background: rgba(0,0,0,0.75);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #FFF;
+            text-align: center;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 95;
+            line-height: 1.4;
         }
 
         .visir-line { position: absolute; top: 0; left: 50%; width: 2px; height: 100%; background: rgba(255,255,255,0.4); transform: translateX(-50%); z-index: 10; pointer-events: none; }
@@ -296,16 +302,16 @@
         .btn-lock-measure.ready-to-fire { background-color: var(--forest-green); color: #FFF; cursor: pointer; }
 
         .log-table-wrapper { width: 100%; max-width: 100%; max-height: 250px; overflow-y: auto; overflow-x: auto; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-paper); -webkit-overflow-scrolling: touch; box-sizing: border-box; }
-        .measurements-log-table { width: 100%; border-collapse: collapse; margin-top: 0; table-layout: fixed; min-width: 650px; }
+        .measurements-log-table { width: 100%; border-collapse: collapse; margin-top: 0; table-layout: fixed; min-width: 720px; }
         .measurements-log-table th, .measurements-log-table td { padding: 6px 4px; font-size: 12px; border-bottom: 1px solid var(--border-color); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .measurements-log-table th { font-weight: 700; text-transform: uppercase; font-size: 10px; color: var(--forest-green); }
         
-        .measurements-log-table th:nth-child(1), .measurements-log-table td:nth-child(1) { width: 10%; }
-        .measurements-log-table th:nth-child(2), .measurements-log-table td:nth-child(2) { width: 18%; }
-        .measurements-log-table th:nth-child(3), .measurements-log-table td:nth-child(3) { width: 15%; }
+        .measurements-log-table th:nth-child(1), .measurements-log-table td:nth-child(1) { width: 8%; }
+        .measurements-log-table th:nth-child(2), .measurements-log-table td:nth-child(2) { width: 15%; }
+        .measurements-log-table th:nth-child(3), .measurements-log-table td:nth-child(3) { width: 14%; }
         .measurements-log-table th:nth-child(4), .measurements-log-table td:nth-child(4) { width: 12%; }
-        .measurements-log-table th:nth-child(5), .measurements-log-table td:nth-child(5) { width: 35%; }
-        .measurements-log-table th:nth-child(6), .measurements-log-table td:nth-child(6) { width: 10%; }
+        .measurements-log-table th:nth-child(5), .measurements-log-table td:nth-child(5) { width: 43%; }
+        .measurements-log-table th:nth-child(6), .measurements-log-table td:nth-child(6) { width: 8%; }
 
         .btn-delete-row { background: transparent; border: none; color: var(--danger); font-size: 14px; cursor: pointer; font-weight: bold; }
         .input-dist { width: 100%; padding: 5px 3px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--card-bg); color: var(--text-graphite); font-weight: bold; font-size: 12px; text-align: center; }
@@ -365,8 +371,8 @@
             <h3>Полевая инструкция по отводу лесосеки</h3>
             <ol class="instruction-steps">
                 <li><strong>Оптический визир (Вертикально):</strong> Работает во вкладке «Магнитный режим». Наведите вертикальную нить экрана на веху угла делянки, удерживая телефон вертикально перед собой. Дождитесь зеленого уровня авиагоризонта и зафиксируйте румб в журнал.</li>
-                <li><strong>Электронная буссоль (Горизонтально):</strong> Работает во вкладке «Буссоль (Лимб)». Положите телефон горизонтально на ладонь. Совместите верхний торец устройства (указатель sight-line) с направлением на веху. Добейтесь, чтобы зеленый пузырек уровня зашел строго в центр круглой мишени, после чего фиксируйте азимут линии.</li>
-                <li><strong>Корректировка привязки:</strong> Если вы начали ход с квартального столба, вы можете сразу зафиксировать первую линию, а затем вручную в таблице журнала откорректировать ее стартовый магнитный азимут (например, вбить 127 градусов). Программа автоматически развернет весь последующий чертеж и карту по сторонам света.</li>
+                <li><strong>Электронная буссоль (Горизонтально):</strong> Работает во вкладке «Буссоль (Лимб)». Положите телефон горизонтально на ладонь. Совместите верхний торец устройства (красный визир) с вехой. Добейтесь, чтобы зеленый пузырек уровня зашел в центр мишени, и зафиксируйте азимут линии. При прохождении отметок каждые 30 градусов телефон будет давать легкий тактильный щелчок.</li>
+                <li><strong>Формат координат:</strong> Все GPS-координаты фиксируются в точном геодезическом формате градусов, минут и секунд (например, 61°28'48" с.ш., 50°30'06" в.д.) с автоматическим замером высоты над уровнем моря.</li>
                 <li><strong>Расчет площади:</strong> По мере добавления линий на интерактивном чертеже выстраивается замкнутый контур делянки с подписями всех номеров линий, и автоматически вычисляется чистая площадь выдела в гектарах (га).</li>
             </ol>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closeInstruction()">Понятно, к замеру</button>
@@ -391,7 +397,7 @@
             <h3>Горизонтальная дисковая буссоль</h3>
             <ul class="instruction-steps">
                 <li><strong>Работа по ладони:</strong> Полное аппаратное дублирование механической буссоли БГ-1. Телефон лежит горизонтально, исключая любые наклоны и скрещивания осей гироскопа.</li>
-                <li><strong>Пузырьковый уровень:</strong> В центре диска расположен круглый уровень. Удерживайте устройство так, чтобы пузырек находился строго по центру для обеспечения стопроцентной точности съемок.</li>
+                <li><strong>Тактильный отклик и DMS:</strong> Показывает точные градусы, минуты, секунды и высоту над уровнем моря. При вращении корпус откликается мягкими щелчками на главных делениях шкалы.</li>
             </ul>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closePopup('theo-info-popup')">Понятно</button>
         </div>
@@ -473,18 +479,22 @@
                 </div>
 
                 <div class="camera-viewport-wrapper">
-                    <!-- ОКНО ЦИФРОВОГО КРУГОВОГО ЛИМБА (МЕХАНИЧЕСКАЯ БУССОЛЬ НА ЭКРАНЕ) -->
+                    <!-- ОКНО ВЕКТОРНОГО КРУГОВОГО ЛИМБА С ШКАЛОЙ И ВЫСОТОЙ -->
                     <div id="digital-compass-disk" class="digital-compass-disk-container">
                         <div class="compass-device-sight-line"></div>
-                        <div id="compass-dial" class="compass-dial-face">
-                            <div class="compass-cardinal-letter letter-north">С</div>
-                            <div class="compass-cardinal-letter letter-south">Ю</div>
-                            <div class="compass-cardinal-letter letter-west">З</div>
-                            <div class="compass-cardinal-letter letter-east">В</div>
-                            
-                            <div class="compass-center-bubble-level">
-                                <div id="compass-bubble" class="compass-bubble-dot"></div>
-                            </div>
+                        
+                        <svg id="compass-svg-canvas" viewBox="0 0 300 300">
+                            <!-- JS нарисует сюда лимб, риски и цифры -->
+                        </svg>
+
+                        <div class="compass-center-bubble-level">
+                            <div id="compass-bubble" class="compass-bubble-dot"></div>
+                        </div>
+
+                        <div class="compass-bottom-info-panel">
+                            <div id="dms-azimuth-text" style="font-size: 15px; font-weight: bold; color: #8FBC8F; margin-bottom: 2px;">АЗИМУТ: 0° 00' 00"</div>
+                            <div id="dms-coords-text" style="font-size: 10px; opacity: 0.9;">61° 28' 48" с.ш.  50° 30' 06" в.д.</div>
+                            <div id="altitude-text" style="font-size: 10px; color: #8FBC8F;">Высота: 150 м</div>
                         </div>
                     </div>
 
@@ -623,9 +633,39 @@
     let calibSectors = { q1: false, q2: false, q3: false, q4: false }; 
     let calibTiltOk = false; 
 
-    let currentLat = 61.6685; 
-    let currentLng = 50.8351;
+    let currentLat = 61.4800; 
+    let currentLng = 50.5016;
+    let currentAltitude = 150;
     let currentAccuracy = 0;
+
+    let lastVibratedSector = -1; // Переменная контроля тактильных щелчков
+
+    // КОНВЕРТЕР ДЕСЯТИЧНЫХ КООРДИНАТ В ГЕОДЕЗИЧЕСКИЙ ФОРМАТ DMS (Градусы, Минуты, Секунды)
+    function decimalToDMS(deg, isLat) {
+        let absolute = Math.abs(deg);
+        let degrees = Math.floor(absolute);
+        let minutesNotTruncated = (absolute - degrees) * 60;
+        let minutes = Math.floor(minutesNotTruncated);
+        let seconds = Math.floor((minutesNotTruncated - minutes) * 60);
+
+        let direction = "";
+        if (isLat) {
+            direction = deg >= 0 ? "с.ш." : "ю.ш.";
+        } else {
+            direction = deg >= 0 ? "в.д." : "з.д.";
+        }
+
+        return `${degrees}° ${minutes}' ${seconds}" ${direction}`;
+    }
+
+    function decimalAngleToDMS(deg) {
+        let absolute = Math.abs(deg);
+        let degrees = Math.floor(absolute);
+        let minutesNotTruncated = (absolute - degrees) * 60;
+        let minutes = Math.floor(minutesNotTruncated);
+        let seconds = Math.floor((minutesNotTruncated - minutes) * 60);
+        return `${degrees}° ${minutes < 10 ? '0' : ''}${minutes}' ${seconds < 10 ? '0' : ''}${seconds}"`;
+    }
 
     function initGPS() {
         if (navigator.geolocation) {
@@ -633,11 +673,67 @@
                 (position) => {
                     currentLat = position.coords.latitude;
                     currentLng = position.coords.longitude;
+                    currentAltitude = position.coords.altitude ? Math.round(position.coords.altitude) : 150;
                     currentAccuracy = position.coords.accuracy || 0;
                 },
                 (error) => { console.error("Ошибка модулей GPS:", error); },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
+        }
+    }
+
+    function drawCompassDialSVG() {
+        const svg = document.getElementById('compass-svg-canvas');
+        if (!svg) return;
+        svg.innerHTML = '';
+
+        const cx = 150, cy = 150, r = 135;
+
+        // Внешний обод лимба
+        let outerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        outerCircle.setAttribute("cx", cx);
+        outerCircle.setAttribute("cy", cy);
+        outerCircle.setAttribute("r", r);
+        outerCircle.setAttribute("fill", "#1E2723");
+        outerCircle.setAttribute("stroke", "#8FBC8F");
+        outerCircle.setAttribute("stroke-width", "4");
+        svg.appendChild(outerCircle);
+
+        // Риски и цифры каждые 30 градусов
+        for (let i = 0; i < 360; i += 5) {
+            let angleRad = ((i - 90) * Math.PI) / 180;
+            let isMajor = (i % 30 === 0);
+            let tickLen = isMajor ? 14 : 7;
+
+            let x1 = cx + (r - 2) * Math.cos(angleRad);
+            let y1 = cy + (r - 2) * Math.sin(angleRad);
+            let x2 = cx + (r - 2 - tickLen) * Math.cos(angleRad);
+            let y2 = cy + (r - 2 - tickLen) * Math.sin(angleRad);
+
+            let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", x1);
+            line.setAttribute("y1", y1);
+            line.setAttribute("x2", x2);
+            line.setAttribute("y2", y2);
+            line.setAttribute("stroke", isMajor ? "#F9FBF9" : "rgba(255,255,255,0.4)");
+            line.setAttribute("stroke-width", isMajor ? "2.5" : "1");
+            svg.appendChild(line);
+
+            if (isMajor) {
+                let tx = cx + (r - 28) * Math.cos(angleRad);
+                let ty = cy + (r - 28) * Math.sin(angleRad);
+
+                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", tx);
+                text.setAttribute("y", ty + 4);
+                text.setAttribute("fill", i === 0 ? "#DC2626" : "#F9FBF9");
+                text.setAttribute("font-size", "11");
+                text.setAttribute("font-weight", "bold");
+                text.setAttribute("font-family", "Inter, sans-serif");
+                text.setAttribute("text-anchor", "middle");
+                text.textContent = (i === 0) ? "С" : i;
+                svg.appendChild(text);
+            }
         }
     }
 
@@ -762,7 +858,6 @@
         drawPolygon();
     }
 
-    // ИСПРАВЛЕНО: Интеграция дискового лимба и переключение видимости камеры
     function applyModeUI() {
         document.getElementById('mode-mag').classList.remove('active-mode');
         document.getElementById('mode-theo').classList.remove('active-mode');
@@ -786,7 +881,7 @@
             vLine.style.display = 'block';
             vDot.style.display = 'block';
             gyroRing.style.display = 'block';
-            zoomPanel.style.style = 'block';
+            zoomPanel.style.display = 'block';
             btnLockZero.style.display = 'block';
             btnClearZero.style.display = 'block';
         } else {
@@ -803,6 +898,8 @@
             zoomPanel.style.display = 'none';
             btnLockZero.style.display = 'none';
             btnClearZero.style.display = 'none';
+
+            drawCompassDialSVG();
         }
     }
 
@@ -954,16 +1051,30 @@
                 badge.style.display = 'none';
             }
         } else {
-            // В РЕЖИМЕ ГОРИЗОНТАЛЬНОГО ЛИМБА ВРАЩАЕМ КРУГЛУЮ ШКАЛУ ОТНОСИТЕЛЬНО СЕВЕРА
+            // ВРАЩЕНИЕ SVG-ЛИМБА И ВЫВОД ФОРМАТА DMS С ЩЕЛЧКАМИ ВИБРАЦИИ
             document.getElementById('live-azimuth').innerText = `${currentAzimuth.toFixed(1)}°`;
             badge.style.display = 'none';
             
-            const dial = document.getElementById('compass-dial');
-            if (dial) {
-                dial.style.transform = `rotate(${-currentAzimuth}deg)`;
+            const dialSvg = document.getElementById('compass-svg-canvas');
+            if (dialSvg) {
+                dialSvg.style.transform = `rotate(${-currentAzimuth}deg)`;
             }
 
-            // Математика физического пузырькового уровня по осям X и Y
+            // Вывод DMS и высоты над уровнем моря
+            document.getElementById('dms-azimuth-text').innerText = `АЗИМУТ: ${decimalAngleToDMS(currentAzimuth)}`;
+            document.getElementById('dms-coords-text').innerText = `${decimalToDMS(currentLat, true)}  ${decimalToDMS(currentLng, false)}`;
+            document.getElementById('altitude-text').innerText = `Высота: ${currentAltitude} м`;
+
+            // ТАКТИЛЬНЫЙ ОТКЛИК (Вибрационный щелчок каждые 30 градусов)
+            let currentSector = Math.floor((currentAzimuth + 2) / 30);
+            if (currentSector !== lastVibratedSector) {
+                if (navigator.vibrate) {
+                    navigator.vibrate(10); // Короткий импульс вибрации
+                }
+                lastVibratedSector = currentSector;
+            }
+
+            // Авиагоризонт пузырька
             const bubble = document.getElementById('compass-bubble');
             if (bubble) {
                 let moveX = Math.max(-20, Math.min(20, roll));
@@ -993,7 +1104,6 @@
                 btnCapture.disabled = true;
             }
         } else {
-            // ДЛЯ ГОРИЗОНТАЛЬНОЙ БУССОЛИ: Условие идеального уровня — телефон плашмя на ладони (погрешность до 4 градусов)
             const isHorizontal = Math.abs(pitch) <= 4 && Math.abs(roll) <= 4;
             if (isHorizontal) {
                 isLevel = true;
@@ -1104,6 +1214,7 @@
             systemMode: currentSystemMode,
             lat: currentLat,
             lng: currentLng,
+            altitude: currentAltitude,
             accuracy: currentAccuracy
         };
 
@@ -1184,9 +1295,9 @@
             let isStepsSelected = m.mode === 'steps' ? 'selected' : '';
             let stepIndicator = (activePedometerIndex === m.id && m.mode === 'steps') ? `<span id="step-badge-${m.id}" style="color:var(--success); font-weight:bold; font-size:10px; display:block; margin-top:2px;">👣 ${m.steps}</span>` : '';
             
-            let latVal = m.lat ? m.lat.toFixed(6) : "0.000000";
-            let lngVal = m.lng ? m.lng.toFixed(6) : "0.000000";
-            let gpsAccuracyText = m.accuracy ? `<br><span style="font-size:9px; color:rgba(0,0,0,0.4);">Точность: ±${Math.round(m.accuracy)}м</span>` : '';
+            let dmsLat = m.lat ? decimalToDMS(m.lat, true) : "0° 00' 00\" с.ш.";
+            let dmsLng = m.lng ? decimalToDMS(m.lng, false) : "0° 00' 00\" в.д.";
+            let altVal = m.altitude ? `${m.altitude} м` : "150 м";
 
             tbody.innerHTML += `
                 <tr>
@@ -1204,7 +1315,7 @@
                         </select>
                         ${stepIndicator}
                     </td>
-                    <td><span style="font-size:11px; font-family:monospace; display:block; white-space:normal; word-break:break-all;">${latVal}, ${lngVal}${gpsAccuracyText}</span></td>
+                    <td><span style="font-size:10px; font-family:monospace; display:block; white-space:normal; word-break:break-all;">${dmsLat}<br>${dmsLng} (${altVal})</span></td>
                     <td>
                         <button class="btn-delete-row" onclick="deleteMeasurement(${m.id})">❌</button>
                     </td>
@@ -1213,7 +1324,6 @@
         });
     }
 
-    // ИСПРАВЛЕНО: Безупречное тригонометрическое построение по чистым азимутам с метками линий
     function drawPolygon() {
         const canvas = document.getElementById('polygon-canvas');
         const ctx = canvas.getContext('2d');
@@ -1430,14 +1540,15 @@
         }
         
         let csvContent = "\uFEFF"; 
-        csvContent += "Название делянки;Дата сохранения;Линия;Угол/Азимут;Длина (м);Тип ввода;Широта (СШ);Долгота (ВД)\n";
+        csvContent += "Название делянки;Дата сохранения;Линия;Угол/Азимут;Длина (м);Тип ввода;Широта (СШ);Долгота (ВД);Высота (м)\n";
         
         dataToExport.forEach(proj => {
             proj.log.forEach(m => {
-                let latVal = m.lat ? m.lat.toFixed(6) : "0.000000";
-                let lngVal = m.lng ? m.lng.toFixed(6) : "0.000000";
+                let dmsLat = m.lat ? decimalToDMS(m.lat, true) : "0° 00' 00\" с.ш.";
+                let dmsLng = m.lng ? decimalToDMS(m.lng, false) : "0° 00' 00\" в.д.";
+                let altVal = m.altitude || 150;
                 let modeText = m.mode === 'manual' ? "Ручной" : "Шаги";
-                csvContent += `"${proj.name}";"${proj.timestamp}";"№${m.id}";"${m.azimuth}";"${m.distance}";"${modeText}";"${latVal}";"${lngVal}"\n`;
+                csvContent += `"${proj.name}";"${proj.timestamp}";"№${m.id}";"${m.azimuth}";"${m.distance}";"${modeText}";"${dmsLat}";"${dmsLng}";"${altVal}"\n`;
             });
         });
         
