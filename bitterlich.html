@@ -183,20 +183,43 @@
         .btn-geo:hover { background: var(--forest-green); color: white; }
         .geo-display { font-size: 13px; margin-top: 8px; color: var(--text-graphite); opacity: 0.8; font-family: monospace; }
 
-        /* ИНТЕРФЕЙС И КНОПКА AR-КАМЕРЫ */
-        .btn-ar-camera { background: var(--forest-green); color: white; border: none; padding: 12px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 15px; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
+        /* ИНТЕРФЕЙС И КНОПКА AR-КАМЕРЫ С ПОДСКАЗКОЙ (?) */
+        .btn-ar-group { display: inline-flex; align-items: center; gap: 6px; margin-top: 15px; }
+        .btn-ar-camera { background: var(--forest-green); color: white; border: none; padding: 12px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; }
         .btn-ar-camera:hover { opacity: 0.9; }
         
-        .ar-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: black; z-index: 3000; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        .btn-info-circle { background: var(--card-bg); color: var(--forest-green); border: 2px solid var(--forest-green); width: 38px; height: 38px; border-radius: 50%; font-weight: bold; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; user-select: none; }
+        .btn-info-circle:hover { background: var(--forest-green); color: white; }
+
+        /* AR-МОДАЛЬНЫЙ ЭКРАН И ПАНЕЛЬ УПРАВЛЕНИЯ ПОВЕРХ КАМЕРЫ (HUD) */
+        .ar-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: black; z-index: 3000; display: none; flex-direction: column; }
         .ar-modal.active { display: flex; }
         .ar-video-container { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         video#ar-video { width: 100%; height: 100%; object-fit: cover; }
         
-        .ar-overlay-reticle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 2px dashed rgba(255, 255, 255, 0.8); background: rgba(45, 90, 39, 0.2); width: 20%; height: 40%; box-sizing: border-box; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 10px; }
-        .ar-overlay-reticle::before { content: "ВИЗИР 1:50 (K=1.0)"; color: white; font-size: 11px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 4px; }
-        .ar-overlay-reticle::after { content: "Дерево 'В счет' должно быть ШИРЕ рамки"; color: #FFD700; font-size: 10px; text-align: center; background: rgba(0,0,0,0.6); padding: 2px 4px; border-radius: 4px; }
-        .ar-close-btn { position: absolute; top: 20px; right: 20px; background: rgba(220, 38, 38, 0.8); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; z-index: 3001; }
+        /* Сетка-визир */
+        .ar-overlay-reticle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 2px dashed rgba(255, 255, 255, 0.9); background: rgba(45, 90, 39, 0.15); width: var(--reticle-width, 20%); height: 40%; box-sizing: border-box; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 6px; transition: width 0.2s; }
+        .ar-overlay-reticle::before { content: "ВИЗИР БИТТЕРЛИХА (K=1.0)"; color: white; font-size: 10px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 4px; }
 
+        /* Панель управления поверх видеопотока (HUD) */
+        .ar-hud-top { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; gap: 10px; z-index: 3001; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 10px; backdrop-filter: blur(8px); }
+        .ar-hud-top select, .ar-hud-top input { background: #222; color: white; border: 1px solid #555; padding: 8px; font-size: 13px; border-radius: 6px; }
+        
+        .ar-hud-bottom { position: absolute; bottom: 20px; left: 15px; right: 15px; z-index: 3001; background: rgba(0,0,0,0.75); padding: 12px; border-radius: 12px; backdrop-filter: blur(8px); display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        
+        .ar-count-btn-card { display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.1); border-radius: 8px; padding: 6px; }
+        .ar-count-title { font-size: 10px; color: #EEE; text-transform: uppercase; font-weight: bold; margin-bottom: 4px; }
+        .ar-count-val { font-size: 20px; color: white; font-weight: bold; }
+        .ar-btn-row { display: flex; gap: 6px; width: 100%; margin-top: 4px; }
+        .ar-btn { flex: 1; border: none; padding: 8px 0; border-radius: 6px; font-size: 18px; font-weight: bold; color: white; cursor: pointer; }
+        .ar-btn.plus-full { background: var(--success); }
+        .ar-btn.plus-half { background: var(--info); }
+        .ar-btn.plus-miss { background: #6B7280; }
+        .ar-btn.minus { background: var(--danger); }
+
+        .ar-close-btn { background: rgba(220, 38, 38, 0.9); color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
+
+        /* ВСПЛЫВАЮЩИЕ ОКНА (ИНСТРУКЦИЯ И КАЛИБРОВКА) */
         .archive-section { margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 20px; }
         .archive-list { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
         .archive-item { background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
@@ -204,11 +227,14 @@
         .archive-item-title { font-weight: 600; font-size: 14px; }
         .archive-item-meta { font-size: 12px; color: gray; margin-top: 2px; }
 
-        .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; box-sizing: border-box; }
+        .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 4000; padding: 20px; box-sizing: border-box; backdrop-filter: blur(4px); }
         .popup-overlay.active { display: flex; }
-        .popup-content { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; max-width: 600px; width: 100%; padding: 24px; max-height: 80vh; overflow-y: auto; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .popup-content { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; max-width: 600px; width: 100%; padding: 24px; max-height: 85vh; overflow-y: auto; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .popup-close { position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 24px; cursor: pointer; color: var(--text-graphite); }
         .btn-delete-archive { background: var(--danger); border: none; color: white; padding: 10px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; margin-top: 20px; text-transform: uppercase; float: right; }
+
+        .btn-calibrate { background: transparent; border: 2px solid var(--forest-green); color: var(--forest-green); padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; text-transform: uppercase; font-size: 12px; transition: 0.2s; }
+        .btn-calibrate:hover { background: var(--forest-green); color: white; }
 
         .seo-info-section { margin-top: 40px; padding-top: 30px; border-top: 2px solid var(--border-color); color: var(--text-graphite); opacity: 0.85; }
         .seo-info-section h3 { font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 18px; margin-top: 25px; margin-bottom: 10px; }
@@ -234,7 +260,7 @@
             <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
             <h1>Лесовик</h1>
         </a>
-        <div class="header-seo-text">Реласкопия • Таксация по разрядам высот • Лесовик</div>
+        <div class="header-seo-text">Реласкопия • AR-Камера • Лесовик</div>
         <div class="header-right">
             <a href="index.html" class="btn-back">Главная</a>
             <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тема</button>
@@ -273,9 +299,12 @@
                 </div>
             </div>
 
-            <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-                <button class="btn-geo" onclick="getLocation()">📍 Определить координаты GPS</button>
-                <button class="btn-ar-camera" onclick="openARCamera()">📷 Включить AR-визир (Камера)</button>
+            <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                <button class="btn-geo" onclick="getLocation()">📍 Координаты GPS</button>
+                <div class="btn-ar-group">
+                    <button class="btn-ar-camera" onclick="openARCamera()">📷 AR-визир (Камера)</button>
+                    <button class="btn-info-circle" onclick="openHelpModal()" title="Инструкция пользования">?</button>
+                </div>
             </div>
             <div id="geo-coordinates" class="geo-display">Координаты не определены</div>
 
@@ -296,7 +325,7 @@
             <div class="multi-grid">
                 <div>
                     <label>Учитываемая порода</label>
-                    <select id="current-species" onchange="renderGrid()">
+                    <select id="current-species" onchange="syncAndRenderGrid()">
                         <option value="Сосна">Сосна (С)</option>
                         <option value="Ель">Ель (Е)</option>
                         <option value="Береза">Береза (Б)</option>
@@ -343,24 +372,96 @@
         <section class="seo-info-section">
             <h2>Профессиональная лесотаксационная методика: Видовые высоты HF и Разряды высот</h2>
             <p><strong>Метод круговых реласкопических площадок Биттерлиха</strong> в сочетании с нормативными таблицами видовых высот ($HF$) обеспечивает высокую точность учета древесины, необходимую для составления материально-денежной оценки (МДО) лесосек. В отличие от упрощенных схем с постоянным видовым числом $f = 0.42$, данный алгоритм учитывает реальную полноту и географическую изменчивость формы ствола.</p>
-            
-            <h3>Методика определения запаса по нормам Рослесхоза</h3>
-            <ul>
-                <li><strong>Сумма площадей сечений ($G$):</strong> Определяется с помощью полнотомера с раствором $K=1.0$ (или через калиброванный AR-визир) путем суммирования полноучитываемых (1.0) и пограничных (0.5) деревьев.</li>
-                <li><strong>Разряд высоты:</strong> Автоматически определяется по заложенной в систему нормативной матрице на основании соотношения среднего диаметра ($D$) и средней высоты ($H$) древостоя для соответствующей лесотаксационной зоны.</li>
-                <li><strong>Видовая высота ($HF$):</strong> Точный математический коэффициент, равный произведению средней высоты на видовое число ($HF = H \times f$). Берется из стандартных таблиц полнот и запасов.</li>
-            </ul>
         </section>
 
         <div style="height: 40px;"></div>
     </main>
 
-    <!-- МОДАЛЬНЫЙ ЭКРАН AR-КАМЕРЫ -->
+    <!-- ИНТЕРАКТИВНЫЙ МОДАЛЬНЫЙ ЭКРАН AR-КАМЕРЫ С ДУБЛИРУЮЩЕЙ ПАНЕЛЬЮ СЧЕТА -->
     <div class="ar-modal" id="arModal">
-        <button class="ar-close-btn" onclick="closeARCamera()">✕ Закрыть камеру</button>
+        <!-- Верхняя панель ввода параметров -->
+        <div class="ar-hud-top">
+            <select id="ar-species-select" onchange="syncFromARHUD()">
+                <option value="Сосна">Сосна (С)</option>
+                <option value="Ель">Ель (Е)</option>
+                <option value="Береза">Береза (Б)</option>
+                <option value="Осина">Осина (Ос)</option>
+                <option value="Лиственница">Лиственница (Л)</option>
+                <option value="Тополь">Тополь (Тп)</option>
+                <option value="Дуб">Дуб (Д)</option>
+            </select>
+            <input type="number" id="ar-height-input" style="width: 60px;" placeholder="H, м" onchange="syncFromARHUD()">
+            <input type="number" id="ar-diameter-input" style="width: 60px;" placeholder="D, см" onchange="syncFromARHUD()">
+            <button class="ar-close-btn" onclick="closeARCamera()">✕ Выход</button>
+        </div>
+
         <div class="ar-video-container">
             <video id="ar-video" autoplay playsinline></video>
-            <div class="ar-overlay-reticle"></div>
+            <div class="ar-overlay-reticle" id="arReticle"></div>
+        </div>
+
+        <!-- Нижняя панель счетчиков (HUD) -->
+        <div class="ar-hud-bottom">
+            <div class="ar-count-btn-card">
+                <div class="ar-count-title" style="color: #4ADE80;">В счет (1.0)</div>
+                <div class="ar-count-val" id="ar-val-full">0</div>
+                <div class="ar-btn-row">
+                    <button class="ar-btn minus" onclick="changeCount('full', -1)">-</button>
+                    <button class="ar-btn plus-full" onclick="changeCount('full', 1)">+</button>
+                </div>
+            </div>
+            <div class="ar-count-btn-card">
+                <div class="ar-count-title" style="color: #60A5FA;">Полусчет (0.5)</div>
+                <div class="ar-count-val" id="ar-val-half">0</div>
+                <div class="ar-btn-row">
+                    <button class="ar-btn minus" onclick="changeCount('half', -1)">-</button>
+                    <button class="ar-btn plus-half" onclick="changeCount('half', 1)">+</button>
+                </div>
+            </div>
+            <div class="ar-count-btn-card">
+                <div class="ar-count-title" style="color: #9CA3AF;">Пропуск (0.0)</div>
+                <div class="ar-count-val" id="ar-val-miss">0</div>
+                <div class="ar-btn-row">
+                    <button class="ar-btn minus" onclick="changeCount('miss', -1)">-</button>
+                    <button class="ar-btn plus-miss" onclick="changeCount('miss', 1)">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ВСПЛЫВАЮЩЕЕ ОКНО: ИНСТРУКЦИЯ И КАЛИБРОВКА -->
+    <div class="popup-overlay" id="helpPopup" onclick="closeHelpModal(event)">
+        <div class="popup-content" onclick="event.stopPropagation()">
+            <button class="popup-close" onclick="document.getElementById('helpPopup').classList.remove('active')">&times;</button>
+            <h2 style="color: var(--forest-green); margin-bottom: 15px;">Как пользоваться AR-полнотомером</h2>
+            
+            <div style="font-size: 14px; line-height: 1.6; color: var(--text-graphite);">
+                <p><strong>Метод углового визирования Биттерлиха с экрана смартфона:</strong></p>
+                <ol style="padding-left: 20px;">
+                    <li>Встаньте в центр закладываемой реласкопической точки.</li>
+                    <li>Держите телефон вертикально перед собой на комфортном фиксированном расстоянии (около 30–40 см от глаз).</li>
+                    <li>Плавно поворачивайтесь на $360^\circ$, визируя стволы деревьев на высоте груди (1.3 м) через пунктирную рамку на экране.</li>
+                </ol>
+
+                <div style="background: rgba(45, 90, 39, 0.05); padding: 12px; border-radius: 8px; border-left: 4px solid var(--forest-green); margin: 15px 0;">
+                    <p style="margin: 0 0 6px 0;"><strong>Правила учета деревьев:</strong></p>
+                    <ul style="margin: 0; padding-left: 18px;">
+                        <li><strong>В счет (1.0):</strong> Ствол дерева визируется <u>ШИРЕ</u> рамки визира.</li>
+                        <li><strong>Полусчет (0.5):</strong> Края ствола строго совпадают с границами рамки.</li>
+                        <li><strong>Пропуск (0.0):</strong> Ствол дерева <u>УЖЕ</u> визирной рамки.</li>
+                    </ul>
+                </div>
+
+                <h3 style="color: var(--forest-green); font-size: 16px; margin-top: 20px;">Калибровка ширины AR-визира</h3>
+                <p style="font-size: 13px; opacity: 0.9;">Если угол обзора вашей камеры отличается от стандартного, настройте ширину визирной сетки под привычное положение руки:</p>
+                
+                <div style="display: flex; align-items: center; gap: 15px; margin-top: 10px;">
+                    <input type="range" id="reticle-slider" min="10" max="40" value="20" style="flex: 1;" oninput="adjustReticleWidth(this.value)">
+                    <span id="reticle-val" style="font-weight: bold; font-family: monospace;">20%</span>
+                </div>
+            </div>
+
+            <button class="btn-calibrate" onclick="document.getElementById('helpPopup').classList.remove('active')">Понятно, приступить к визированию</button>
         </div>
     </div>
 
@@ -393,9 +494,6 @@
             <div class="footer-column">
                 <h4>Контакты</h4>
                 <a href="mailto:folgoal@gmail.com">✉️ folgoal@gmail.com</a>
-                <div style="font-size: 12px; margin-top: 15px; opacity: 0.6;">
-                    * Профессиональный калькулятор полнотомера разработан для таксации и отвода лесосек.
-                </div>
             </div>
         </div>
         <div class="footer-bottom">
@@ -408,17 +506,8 @@
     <script src="https://yandex.ru/ads/system/context.js" async></script>
 
     <script>
-        window.yaContextCb.push(() => { Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-4", "type": "floorAd", "platform": "desktop" }); });
-        window.yaContextCb.push(() => { Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-1", "type": "floorAd", "platform": "touch" }); });
-        window.yaContextCb.push(() => { Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-3", "type": "fullscreen", "platform": "desktop" }); });
-        window.yaContextCb.push(() => { Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-2", "type": "fullscreen", "platform": "touch" }); });
-    </script>
-
-    <script>
         // --- НОРМАТИВНАЯ БАЗА ТАКСАЦИОННЫХ ТАБЛИЦ (HF И РАЗРЯДЫ ВЫСОТ ДЛЯ РФ) ---
-        // Матрица определения разряда высоты по H (м) и D (см)
         function getHeightClass(height, diameter) {
-            const ratio = height / (diameter / 100); // Отношение высоты к диаметру
             if (height >= 28) return "Iа";
             if (height >= 25) return "I";
             if (height >= 22) return "II";
@@ -427,11 +516,8 @@
             return "V";
         }
 
-        // Матрица видовых высот (HF) в зависимости от породы, высоты и разряда
         function getHF(species, height, heightClass) {
-            // Базовые коэффициенты видовых высот для основных лесообразующих пород РФ (по справочнику Анучина/Захарова)
             let baseFactor = 0.43;
-            
             switch (species) {
                 case 'Сосна': baseFactor = 0.44; break;
                 case 'Ель': baseFactor = 0.45; break;
@@ -443,7 +529,6 @@
                 default: baseFactor = 0.43;
             }
 
-            // Поправка видовой высоты в зависимости от разряда
             let classModifier = 1.0;
             if (heightClass === "Iа") classModifier = 1.04;
             else if (heightClass === "I") classModifier = 1.02;
@@ -456,18 +541,16 @@
             return parseFloat(hf.toFixed(2));
         }
 
-        // Инициализация структуры данных калькулятора Биттерлиха (v3 - Нормативная)
         let journalData = JSON.parse(localStorage.getItem('lesovik_bitterlich_v3')) || {
             name: '',
             region: 'komi',
             coordinates: null,
             bitterlichK: '1.0',
+            reticleWidth: '20',
             activeProbe: 'Точка 1',
             heights: { 'Сосна': 24, 'Ель': 22, 'Береза': 21, 'Осина': 23, 'Лиственница': 25, 'Тополь': 22, 'Дуб': 24 },
             diameters: { 'Сосна': 28, 'Ель': 26, 'Береза': 22, 'Осина': 26, 'Лиственница': 30, 'Тополь': 28, 'Дуб': 32 },
-            probes: {
-                'Точка 1': {}
-            }
+            probes: { 'Точка 1': {} }
         };
 
         let archiveData = JSON.parse(localStorage.getItem('lesovik_bitterlich_archive_v3')) || [];
@@ -480,11 +563,8 @@
 
         function toggleTheme() {
             const body = document.documentElement;
-            if (body.getAttribute('data-theme') === 'dark') {
-                body.removeAttribute('data-theme');
-            } else {
-                body.setAttribute('data-theme', 'dark');
-            }
+            if (body.getAttribute('data-theme') === 'dark') body.removeAttribute('data-theme');
+            else body.setAttribute('data-theme', 'dark');
         }
 
         function updateTallyName() {
@@ -514,9 +594,7 @@
                         display.innerText = `Широта: ${lat}, Долгота: ${lon}`;
                         saveData();
                     },
-                    (error) => {
-                        display.innerText = "Ошибка: не удалось получить координаты GPS";
-                    },
+                    () => { display.innerText = "Ошибка: не удалось получить координаты GPS"; },
                     { enableHighAccuracy: true, timeout: 10000 }
                 );
             } else {
@@ -524,12 +602,20 @@
             }
         }
 
-        // --- МОДУЛЬ AR-КАМЕРЫ ---
+        // --- МОДУЛЬ AR-КАМЕРЫ И HUD ИНТЕРФЕЙСА ---
         let videoStream = null;
         function openARCamera() {
             const modal = document.getElementById('arModal');
             const video = document.getElementById('ar-video');
             
+            // Синхронизация HUD с основным интерфейсом
+            const sp = document.getElementById('current-species').value;
+            document.getElementById('ar-species-select').value = sp;
+            document.getElementById('ar-height-input').value = journalData.heights[sp] || 24;
+            document.getElementById('ar-diameter-input').value = journalData.diameters[sp] || 28;
+            
+            updateARHUDValDisplay();
+
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
                     .then(function(stream) {
@@ -554,6 +640,53 @@
             }
             video.srcObject = null;
             modal.classList.remove('active');
+            renderGrid();
+        }
+
+        function syncFromARHUD() {
+            const sp = document.getElementById('ar-species-select').value;
+            document.getElementById('current-species').value = sp;
+            
+            const h = parseFloat(document.getElementById('ar-height-input').value) || 24;
+            const d = parseFloat(document.getElementById('ar-diameter-input').value) || 28;
+            
+            journalData.heights[sp] = h;
+            journalData.diameters[sp] = d;
+            
+            document.getElementById('current-height').value = h;
+            document.getElementById('current-diameter').value = d;
+            
+            saveData();
+            updateARHUDValDisplay();
+            calculateResults();
+        }
+
+        function updateARHUDValDisplay() {
+            const sp = document.getElementById('ar-species-select').value;
+            const activeProbeKey = journalData.activeProbe;
+            
+            if (!journalData.probes[activeProbeKey]) journalData.probes[activeProbeKey] = {};
+            if (!journalData.probes[activeProbeKey][sp]) journalData.probes[activeProbeKey][sp] = { full: 0, half: 0, miss: 0 };
+            
+            const counts = journalData.probes[activeProbeKey][sp];
+            document.getElementById('ar-val-full').innerText = counts.full || 0;
+            document.getElementById('ar-val-half').innerText = counts.half || 0;
+            document.getElementById('ar-val-miss').innerText = counts.miss || 0;
+        }
+
+        function openHelpModal() {
+            document.getElementById('helpPopup').classList.add('active');
+        }
+
+        function closeHelpModal(e) {
+            document.getElementById('helpPopup').classList.remove('active');
+        }
+
+        function adjustReticleWidth(val) {
+            journalData.reticleWidth = val;
+            document.getElementById('reticle-val').innerText = `${val}%`;
+            document.getElementById('arReticle').style.setProperty('--reticle-width', `${val}%`);
+            saveData();
         }
 
         function renderProbeTabs() {
@@ -561,7 +694,6 @@
             container.innerHTML = '';
             
             const keys = Object.keys(journalData.probes);
-            
             keys.forEach(key => {
                 const isActive = journalData.activeProbe === key ? 'active' : '';
                 container.innerHTML += `
@@ -572,10 +704,7 @@
                 `;
             });
             
-            container.innerHTML += `
-                <button class="btn-add-probe" onclick="addNewProbe()">+ Добавить точку</button>
-            `;
-            
+            container.innerHTML += `<button class="btn-add-probe" onclick="addNewProbe()">+ Добавить точку</button>`;
             document.getElementById('computed-area').innerText = `Количество заложенных точек: ${keys.length}`;
         }
 
@@ -627,6 +756,12 @@
             calculateResults();
         }
 
+        function syncAndRenderGrid() {
+            const sp = document.getElementById('current-species').value;
+            document.getElementById('ar-species-select').value = sp;
+            renderGrid();
+        }
+
         function renderGrid() {
             const sp = document.getElementById('current-species').value;
             const grid = document.getElementById('grid');
@@ -670,12 +805,15 @@
             
             journalData.probes[activeProbeKey][sp][catId] = current;
             
-            document.getElementById(`count-${catId}`).innerText = current;
-            const card = document.getElementById(`count-${catId}`).parentElement;
-            if (current > 0) card.classList.add('has-val');
-            else card.classList.remove('has-val');
+            if (document.getElementById(`count-${catId}`)) {
+                document.getElementById(`count-${catId}`).innerText = current;
+                const card = document.getElementById(`count-${catId}`).parentElement;
+                if (current > 0) card.classList.add('has-val');
+                else card.classList.remove('has-val');
+            }
 
             saveData();
+            updateARHUDValDisplay();
             calculateResults();
         }
 
@@ -685,7 +823,6 @@
             let rowsHTML = '';
             
             let totalAggregated = {};
-            
             for (const pKey in dataStructure.probes) {
                 for (const sp in dataStructure.probes[pKey]) {
                     if (!totalAggregated[sp]) totalAggregated[sp] = { full: 0, half: 0, miss: 0 };
@@ -706,11 +843,8 @@
                 const h = dataStructure.heights[sp] || 24;
                 const d = dataStructure.diameters[sp] || 28;
                 
-                // Расчет разряда высоты и точного HF
                 const hClass = getHeightClass(h, d);
                 const hf = getHF(sp, h, hClass);
-                
-                // Строгий вычет запаса кубатуры
                 const spVol = spG * hf;
 
                 if (spG > 0) {
@@ -843,9 +977,7 @@
             
             const currentK = document.getElementById('bitterlich-k').value;
             document.getElementById('bitterlich-k').value = item.bitterlichK;
-            
             document.getElementById('popup-table-container').innerHTML = generateSummaryHTML(item.data);
-            
             document.getElementById('bitterlich-k').value = currentK;
             
             const deleteBtn = document.getElementById('popup-delete-btn');
@@ -958,6 +1090,12 @@
                 document.getElementById('geo-coordinates').innerText = `Широта: ${journalData.coordinates.lat}, Долгота: ${journalData.coordinates.lon}`;
             }
             document.getElementById('bitterlich-k').value = journalData.bitterlichK || '1.0';
+            
+            if (journalData.reticleWidth) {
+                document.getElementById('reticle-slider').value = journalData.reticleWidth;
+                document.getElementById('reticle-val').innerText = `${journalData.reticleWidth}%`;
+                document.getElementById('arReticle').style.setProperty('--reticle-width', `${journalData.reticleWidth}%`);
+            }
             
             renderProbeTabs();
             renderGrid();
