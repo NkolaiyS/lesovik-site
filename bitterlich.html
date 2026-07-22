@@ -519,6 +519,24 @@
     <script src="https://yandex.ru/ads/system/context.js" async></script>
 
     <script>
+        // --- КОНВЕРТЕР КООРДИНАТ В ГРАДУСЫ, МИНУТЫ И СЕКУНДЫ (DMS) ---
+        function toDMS(coordinate, isLatitude) {
+            const absolute = Math.abs(coordinate);
+            const degrees = Math.floor(absolute);
+            const minutesNotTruncated = (absolute - degrees) * 60;
+            const minutes = Math.floor(minutesNotTruncated);
+            const seconds = ((minutesNotTruncated - minutes) * 60).toFixed(1);
+
+            let direction = "";
+            if (isLatitude) {
+                direction = coordinate >= 0 ? "N" : "S";
+            } else {
+                direction = coordinate >= 0 ? "E" : "W";
+            }
+
+            return `${degrees}°${minutes}'${seconds}"${direction}`;
+        }
+
         // --- НОРМАТИВНАЯ БАЗА ТАКСАЦИОННЫХ ТАБЛИЦ (HF И РАЗРЯДЫ ВЫСОТ ДЛЯ РФ) ---
         function getHeightClass(height, diameter) {
             if (height >= 28) return "Iа";
@@ -601,10 +619,23 @@
                 display.innerText = "Определение локации...";
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
-                        const lat = position.coords.latitude.toFixed(6);
-                        const lon = position.coords.longitude.toFixed(6);
-                        journalData.coordinates = { lat: lat, lon: lon };
-                        display.innerText = `Широта: ${lat}, Долгота: ${lon}`;
+                        const rawLat = position.coords.latitude;
+                        const rawLon = position.coords.longitude;
+                        
+                        const latDec = rawLat.toFixed(6);
+                        const lonDec = rawLon.toFixed(6);
+                        
+                        const dmsLat = toDMS(rawLat, true);
+                        const dmsLon = toDMS(rawLon, false);
+                        
+                        journalData.coordinates = { 
+                            lat: latDec, 
+                            lon: lonDec,
+                            dmsLat: dmsLat,
+                            dmsLon: dmsLon
+                        };
+                        
+                        display.innerText = `📍 ${dmsLat} ${dmsLon} (${latDec}, ${lonDec})`;
                         saveData();
                     },
                     () => { display.innerText = "Ошибка: не удалось получить координаты GPS"; },
@@ -967,7 +998,9 @@
             }
 
             archiveData.forEach(item => {
-                const coordText = item.data.coordinates ? `📍 ${item.data.coordinates.lat}, ${item.data.coordinates.lon}` : 'Без координат';
+                const c = item.data.coordinates;
+                const coordText = c ? (c.dmsLat ? `📍 ${c.dmsLat} ${c.dmsLon}` : `📍 ${c.lat}, ${c.lon}`) : 'Без координат';
+                
                 container.innerHTML += `
                     <div class="archive-item" onclick="openArchivePopup(${item.id})">
                         <div>
@@ -985,7 +1018,8 @@
             if (!item) return;
 
             document.getElementById('popup-title').innerText = item.name;
-            const coordText = item.data.coordinates ? `Широта: ${item.data.coordinates.lat}, Долгота: ${item.data.coordinates.lon}` : 'Координаты отсутствуют';
+            const c = item.data.coordinates;
+            const coordText = c ? (c.dmsLat ? `${c.dmsLat} ${c.dmsLon} (${c.lat}, ${c.lon})` : `Широта: ${c.lat}, Долгота: ${c.lon}`) : 'Координаты отсутствуют';
             document.getElementById('popup-meta').innerText = `Запись от: ${item.timestamp} | К=${item.bitterlichK} | ${coordText}`;
             
             const currentK = document.getElementById('bitterlich-k').value;
@@ -1022,7 +1056,9 @@
             rows.push(["Регион / Норматив:", journalData.region]);
             rows.push(["Коэффициент прибора K:", journalData.bitterlichK]);
             if (journalData.coordinates) {
-                rows.push(["Координаты:", `Широта: ${journalData.coordinates.lat}, Долгота: ${journalData.coordinates.lon}`]);
+                const c = journalData.coordinates;
+                const coordStr = c.dmsLat ? `${c.dmsLat} ${c.dmsLon} (${c.lat}, ${c.lon})` : `Широта: ${c.lat}, Долгота: ${c.lon}`;
+                rows.push(["Координаты:", coordStr]);
             }
             rows.push([]);
             rows.push(["Таксационная точка", "Порода", "В счет (1.0)", "Полусчет (0.5)", "Пропуск (0.0)", "Высота H (м)", "Диаметр D (см)", "Разряд высоты", "Видовая высота HF (м)"]);
@@ -1100,7 +1136,12 @@
             if(journalData.name) document.getElementById('tally-name').value = journalData.name;
             if(journalData.region) document.getElementById('region-select').value = journalData.region;
             if(journalData.coordinates) {
-                document.getElementById('geo-coordinates').innerText = `Широта: ${journalData.coordinates.lat}, Долгота: ${journalData.coordinates.lon}`;
+                const c = journalData.coordinates;
+                if (c.dmsLat && c.dmsLon) {
+                    document.getElementById('geo-coordinates').innerText = `📍 ${c.dmsLat} ${c.dmsLon} (${c.lat}, ${c.lon})`;
+                } else {
+                    document.getElementById('geo-coordinates').innerText = `Широта: ${c.lat}, Долгота: ${c.lon}`;
+                }
             }
             document.getElementById('bitterlich-k').value = journalData.bitterlichK || '1.0';
             
