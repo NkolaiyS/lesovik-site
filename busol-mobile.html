@@ -3,100 +3,122 @@
 <head>
     <script type="text/javascript" src="cordova.js"></script>
 
-<script type="text/javascript">
-    // --- БЛОК ИНДИВИДУАЛЬНОЙ ЗАЩИТЫ ЛИЦЕНЗИЙ (У КАЖДОГО ID СВОЙ СРОК) ---
-    (function() {
-        // РЕЕСТР ЛИЦЕНЗИЙ: "ID_УСТРОЙСТВА": new Date(Год, Месяц[0-11], День)
-        // Напоминание: Месяцы отсчитываются от 0 до 11 (0 - Январь, 6 - Июль, 9 - Октябрь и т.д.)
-        const CLIENT_LICENSES = {
-            // "ALL_DEVICES": new Date(2099, 11, 31),  // Раскомментируйте эту строку, если нужно временно открыть доступ вообще ВСЕМ
-            
-            "HNS-6IYC-RNAYGA": new Date(2199, 9, 22),   // ID Худякова Николая Сергеевича
-            "HNS-3M8-99A0B2": new Date(2027, 6, 22),   // Клиент №2: подписка до 22 июля 2027
-            "4a8e2190-8bbf-11ee": new Date(2125, 0, 1)  // Клиент №3: бессрочно (до 2125 года)
-        };
+    <script type="text/javascript">
+        // --- БЛОК ИНДИВИДУАЛЬНОЙ ЗАЩИТЫ ЛИЦЕНЗИЙ (У КАЖДОГО ID СВОЙ СРОК) ---
+        (function() {
+            // РЕЕСТР ЛИЦЕНЗИЙ: "ID_УСТРОЙСТВА": new Date(Год, Месяц[0-11], День)
+            const CLIENT_LICENSES = {
+                // "ALL_DEVICES": new Date(2099, 11, 31), // Снимите комментарий для временного доступа ВСЕМ
 
-        function getCurrentDeviceId() {
-            if (window.device && window.device.uuid) {
-                return window.device.uuid;
-            }
-            return localStorage.getItem('bg_hns_web_id') || "";
-        }
+                "HNS-6IYC-RNAYGA": new Date(2199, 9, 22),   // ID Худякова Николая Сергеевича
+                "HNS-3M8-99A0B2": new Date(2027, 6, 22),   // Клиент №2: подписка до 22 июля 2027
+                "4a8e2190-8bbf-11ee": new Date(2125, 0, 1)  // Клиент №3: бессрочно (до 2125 года)
+            };
 
-        document.addEventListener("DOMContentLoaded", () => {
-            const currentId = getCurrentDeviceId();
-            const now = Date.now();
-
-            let isDeviceAllowed = false;
-            let isLicenseValid = false;
-            let userExpirationDate = null;
-
-            // 1. Проверяем, включен ли общий доступ "ALL_DEVICES"
-            if (CLIENT_LICENSES.hasOwnProperty("ALL_DEVICES")) {
-                isDeviceAllowed = true;
-                userExpirationDate = CLIENT_LICENSES["ALL_DEVICES"];
-            } 
-            // 2. Если общего доступа нет — проверяем персональный ID
-            else if (currentId && CLIENT_LICENSES.hasOwnProperty(currentId)) {
-                isDeviceAllowed = true;
-                userExpirationDate = CLIENT_LICENSES[currentId];
+            function generateWebDeviceId() {
+                const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                let segment1 = '';
+                let segment2 = '';
+                for (let i = 0; i < 4; i++) segment1 += chars.charAt(Math.floor(Math.random() * chars.length));
+                for (let i = 0; i < 6; i++) segment2 += chars.charAt(Math.floor(Math.random() * chars.length));
+                return `HNS-${segment1}-${segment2}`;
             }
 
-            // Проверяем срок действия полученной даты
-            if (userExpirationDate) {
-                isLicenseValid = (now <= userExpirationDate.getTime());
+            function getCurrentDeviceId() {
+                // 1. Проверяем Cordova (APK/iOS app)
+                if (window.device && window.device.uuid) {
+                    return window.device.uuid;
+                }
+                
+                // 2. Проверяем localStorage для Web/PWA
+                let webId = localStorage.getItem('bg_hns_web_id');
+                if (!webId) {
+                    webId = generateWebDeviceId();
+                    localStorage.setItem('bg_hns_web_id', webId);
+                }
+                return webId;
             }
 
-            // Блокировка экрана при отсутствии ID или истечении срока
-            if (!isDeviceAllowed || !isLicenseValid) {
-                let blockingReason = "";
-                if (!isDeviceAllowed) {
-                    blockingReason = `Данное устройство не авторизовано в системе лицензирования.<br>Ваш ID устройства: <b>${currentId || "НЕ ОПРЕДЕЛЕН"}</b>`;
-                } else if (!isLicenseValid) {
-                    blockingReason = "Период оплаченной установки или подписки данной копии программы «БГ-ХНС» завершен.";
+            function verifyLicense() {
+                const currentId = getCurrentDeviceId();
+                const now = Date.now();
+
+                let isDeviceAllowed = false;
+                let isLicenseValid = false;
+                let userExpirationDate = null;
+
+                // 1. Проверяем общий доступ
+                if (CLIENT_LICENSES.hasOwnProperty("ALL_DEVICES")) {
+                    isDeviceAllowed = true;
+                    userExpirationDate = CLIENT_LICENSES["ALL_DEVICES"];
+                } 
+                // 2. Проверяем персональный ID
+                else if (currentId && CLIENT_LICENSES.hasOwnProperty(currentId)) {
+                    isDeviceAllowed = true;
+                    userExpirationDate = CLIENT_LICENSES[currentId];
                 }
 
-                document.body.innerHTML = `
-                    <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; 
-                                background:#111815; color:#F9FBF9; z-index:99999; 
-                                display:flex; flex-direction:column; align-items:center; 
-                                justify-content:center; font-family:'Inter',sans-serif; padding:20px; text-align:center;">
-                        <span style="font-size:50px; margin-bottom:20px;">🔒</span>
-                        <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:10px;">Доступ ограничен</h2>
-                        <p style="max-width:450px; font-size:14px; opacity:0.8; line-height:1.5;">
-                            ${blockingReason}
-                        </p>
-                        <div style="margin-top:25px; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:8px; border:1px solid rgba(143,188,143,0.2);">
-                            <span style="display:block; font-size:12px; opacity:0.6; text-transform:uppercase;">Для продления или активации лицензии:</span>
-                            <a href="mailto:foltaim@mail.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none; font-size:16px; display:block; margin-top:5px;">✉️ foltaim@mail.ru</a>
+                if (userExpirationDate) {
+                    isLicenseValid = (now <= userExpirationDate.getTime());
+                }
+
+                // Блокировка экрана при отсутствии авторизации
+                if (!isDeviceAllowed || !isLicenseValid) {
+                    let blockingReason = "";
+                    if (!isDeviceAllowed) {
+                        blockingReason = `Данное устройство не авторизовано в системе лицензирования.<br>Ваш ID устройства: <b>${currentId || "НЕ ОПРЕДЕЛЕН"}</b>`;
+                    } else if (!isLicenseValid) {
+                        blockingReason = "Период оплаченной установки или подписки данной копии программы «БГ-ХНС» завершен.";
+                    }
+
+                    document.body.innerHTML = `
+                        <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; 
+                                    background:#111815; color:#F9FBF9; z-index:99999; 
+                                    display:flex; flex-direction:column; align-items:center; 
+                                    justify-content:center; font-family:'Inter',sans-serif; padding:20px; text-align:center;">
+                            <span style="font-size:50px; margin-bottom:20px;">🔒</span>
+                            <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:10px;">Доступ ограничен</h2>
+                            <p style="max-width:450px; font-size:14px; opacity:0.8; line-height:1.5;">
+                                ${blockingReason}
+                            </p>
+                            <div style="margin-top:25px; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:8px; border:1px solid rgba(143,188,143,0.2);">
+                                <span style="display:block; font-size:12px; opacity:0.6; text-transform:uppercase;">Для продления или активации лицензии:</span>
+                                <a href="mailto:foltaim@mail.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none; font-size:16px; display:block; margin-top:5px;">✉️ foltaim@mail.ru</a>
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                }
             }
-        });
-    })();
 
-    // --- ПЕРЕХВАТ БОТОВ ДЛЯ SEO-ПРЕВЬЮ ---
-    (function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const postSlug = urlParams.get('post');
-        const userAgent = (navigator.userAgent || '').toLowerCase();
-        const isBot = /telegrambot|vkshare|facebookexternalhit|twitterbot|slackbot|whatsapp|viber/i.test(userAgent);
-        
-        if (postSlug && isBot) {
-            window.location.href = 'https://functions.yandexcloud.net/d4ecn5ag33dcdd2deivd?post=' + encodeURIComponent(postSlug);
-        }
-    })();
+            // Ждем инициализации Cordova или стандартного DOM
+            if (window.cordova) {
+                document.addEventListener('deviceready', verifyLicense, false);
+            } else {
+                document.addEventListener("DOMContentLoaded", verifyLicense, false);
+            }
+        })();
 
-    // --- ЯНДЕКС МЕТРИКА ---
-    (function(m,e,t,r,i,k,a){
-        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)}; m[i].l=1*new Date();
-        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109130409', 'ym');
+        // --- ПЕРЕХВАТ БОТОВ ДЛЯ SEO-ПРЕВЬЮ ---
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const postSlug = urlParams.get('post');
+            const userAgent = (navigator.userAgent || '').toLowerCase();
+            const isBot = /telegrambot|vkshare|facebookexternalhit|twitterbot|slackbot|whatsapp|viber/i.test(userAgent);
+            
+            if (postSlug && isBot) {
+                window.location.href = 'https://functions.yandexcloud.net/d4ecn5ag33dcdd2deivd?post=' + encodeURIComponent(postSlug);
+            }
+        })();
 
-    ym(109130409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
-</script>
+        // --- ЯНДЕКС МЕТРИКА ---
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)}; m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109130409', 'ym');
+
+        ym(109130409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
     <noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 
     <meta charset="UTF-8">
