@@ -4,33 +4,31 @@
     <script type="text/javascript" src="cordova.js"></script>
 
     <script type="text/javascript">
-        // --- БЛОК ИНДИВИДУАЛЬНОЙ ЗАЩИТЫ ЛИЦЕНЗИЙ (У КАЖДОГО ID СВОЙ СРОК) ---
+        // --- БЛОК АВТОНОМНОЙ ЗАЩИТЫ ЛИЦЕНЗИИ ДЛЯ ЗАКАЗЧИКА ---
         (function() {
-            // РЕЕСТР ЛИЦЕНЗИЙ: "ID_УСТРОЙСТВА": new Date(Год, Месяц[0-11], День)
-            const CLIENT_LICENSES = {
-                // "ALL_DEVICES": new Date(2099, 11, 31), // Снимите комментарий для временного доступа ВСЕМ
+            // Список разрешенных устройств (безлимитный доступ)
+            const allowedDevices = [
+                "HNS-6680-TVK32U",  // Активированное устройство тестирование
+                "HNS-6IYC-RNAYGA"   // ID Худякова Николая Сергеевича
+            ];
 
-                "HNS-6IYC-RNAYGA": new Date(2199, 9, 22),   // ID Худякова Николая Сергеевича
-                "HNS-3M8-99A0B2": new Date(2027, 6, 22),   // Клиент №2: подписка до 22 июля 2027
-                "4a8e2190-8bbf-11ee": new Date(2125, 0, 1)  // Клиент №3: бессрочно (до 2125 года)
-            };
+            // Дата окончания работы приложения для остальных пользователей: 24 июля 2026 года
+            const licenseExpirationDate = new Date(2026, 6, 24); 
 
+            // Генератор безопасного ID для браузера
             function generateWebDeviceId() {
                 const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                let segment1 = '';
-                let segment2 = '';
+                let segment1 = '', segment2 = '';
                 for (let i = 0; i < 4; i++) segment1 += chars.charAt(Math.floor(Math.random() * chars.length));
                 for (let i = 0; i < 6; i++) segment2 += chars.charAt(Math.floor(Math.random() * chars.length));
                 return `HNS-${segment1}-${segment2}`;
             }
 
+            // Функция получения текущего ID (Cordova или LocalStorage)
             function getCurrentDeviceId() {
-                // 1. Проверяем Cordova (APK/iOS app)
                 if (window.device && window.device.uuid) {
                     return window.device.uuid;
                 }
-                
-                // 2. Проверяем localStorage для Web/PWA
                 let webId = localStorage.getItem('bg_hns_web_id');
                 if (!webId) {
                     webId = generateWebDeviceId();
@@ -39,50 +37,25 @@
                 return webId;
             }
 
-            function verifyLicense() {
+            function runLicenseCheck() {
                 const currentId = getCurrentDeviceId();
-                const now = Date.now();
+                const isAllowedDevice = allowedDevices.includes(currentId);
 
-                let isDeviceAllowed = false;
-                let isLicenseValid = false;
-                let userExpirationDate = null;
-
-                // 1. Проверяем общий доступ
-                if (CLIENT_LICENSES.hasOwnProperty("ALL_DEVICES")) {
-                    isDeviceAllowed = true;
-                    userExpirationDate = CLIENT_LICENSES["ALL_DEVICES"];
-                } 
-                // 2. Проверяем персональный ID
-                else if (currentId && CLIENT_LICENSES.hasOwnProperty(currentId)) {
-                    isDeviceAllowed = true;
-                    userExpirationDate = CLIENT_LICENSES[currentId];
-                }
-
-                if (userExpirationDate) {
-                    isLicenseValid = (now <= userExpirationDate.getTime());
-                }
-
-                // Блокировка экрана при отсутствии авторизации
-                if (!isDeviceAllowed || !isLicenseValid) {
-                    let blockingReason = "";
-                    if (!isDeviceAllowed) {
-                        blockingReason = `Данное устройство не авторизовано в системе лицензирования.<br>Ваш ID устройства: <b>${currentId || "НЕ ОПРЕДЕЛЕН"}</b>`;
-                    } else if (!isLicenseValid) {
-                        blockingReason = "Период оплаченной установки или подписки данной копии программы «БГ-ХНС» завершен.";
-                    }
-
+                // Блокируем, только если устройство не в белом списке И дата истекла
+                if (!isAllowedDevice && Date.now() > licenseExpirationDate.getTime()) {
                     document.body.innerHTML = `
                         <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; 
                                     background:#111815; color:#F9FBF9; z-index:99999; 
                                     display:flex; flex-direction:column; align-items:center; 
                                     justify-content:center; font-family:'Inter',sans-serif; padding:20px; text-align:center;">
                             <span style="font-size:50px; margin-bottom:20px;">🔒</span>
-                            <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:10px;">Доступ ограничен</h2>
+                            <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:10px;">Срок действия ПО истек</h2>
                             <p style="max-width:450px; font-size:14px; opacity:0.8; line-height:1.5;">
-                                ${blockingReason}
+                                Период демонстрационной или оплаченной установки данной копии электронной буссоли «БГ-ХНС» завершен.<br>
+                                Ваш ID устройства: <b>${currentId}</b>
                             </p>
                             <div style="margin-top:25px; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:8px; border:1px solid rgba(143,188,143,0.2);">
-                                <span style="display:block; font-size:12px; opacity:0.6; text-transform:uppercase;">Для продления или активации лицензии:</span>
+                                <span style="display:block; font-size:12px; opacity:0.6; text-transform:uppercase;">Для продления лицензии:</span>
                                 <a href="mailto:foltaim@mail.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none; font-size:16px; display:block; margin-top:5px;">✉️ foltaim@mail.ru</a>
                             </div>
                         </div>
@@ -90,12 +63,13 @@
                 }
             }
 
-            // Ждем инициализации Cordova или стандартного DOM
-            if (window.cordova) {
-                document.addEventListener('deviceready', verifyLicense, false);
-            } else {
-                document.addEventListener("DOMContentLoaded", verifyLicense, false);
-            }
+            // Безопасный запуск: проверяем Cordova deviceready, либо падаем на DOMContentLoaded
+            document.addEventListener('deviceready', runLicenseCheck, false);
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(() => {
+                    if (!window.device) runLicenseCheck();
+                }, 500);
+            }, false);
         })();
 
         // --- ПЕРЕХВАТ БОТОВ ДЛЯ SEO-ПРЕВЬЮ ---
@@ -774,7 +748,7 @@
                 <h4>Контакты</h4>
                 <div style="font-weight: 600; margin-bottom: 4px;">ИП Худяков Николай Сергеевич</div>
                 <div style="font-size: 11px; opacity: 0.7; margin-bottom: 8px;">ИНН: 11180157622</div>
-                <a href="mailto:foltaim@mail.ru" style="color:#8FBC8F; text-decoration:none; display:block; font-weight:bold; margin-bottom:10px;">✉️ foltaim@mail.ru</a>
+                <a href="mailto:foltaim@mail.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none; display:block; margin-bottom:10px;">✉️ foltaim@mail.ru</a>
             </div>
         </div>
         <div class="footer-bottom">
