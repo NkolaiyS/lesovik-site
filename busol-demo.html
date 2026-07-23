@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <script type="text/javascript" src="cordova.js"></script>
+
+    <script type="text/javascript">
+    // --- БЛОК АВТОНОМНОЙ ЗАЩИТЫ ЛИЦЕНЗИИ ДЛЯ ЗАКАЗЧИКА (ДЕМО-ВЕРСИЯ) ---
+    (function() {
+        // --- СПИСОК УСТРОЙСТВ С ИНДИВИДУАЛЬНЫМИ СРОКАМИ ЛИЦЕНЗИИ ---
+        const licensedDevices = {
+            "HNS-6680-TVK32U": new Date(2026, 6, 25),  // До 25 июля 2026
+            "HNS-RAL2-45TCN0": new Date(2099, 11, 31), // Бессрочно (Ваш телефон)
+            "HNS-3SBX-TQMJO7": new Date(2026, 11, 31), // До 31 декабря 2026 (Ваш ноутбук)
+            "HNS-5V40-G89K6X": new Date(2026, 6, 25)   // До 25 июля 2026
+        };
+
+        // Общая дата окончания бесплатного периода для ВСЕХ остальных пользователей (21 июля 2026)
+        const defaultLicenseExpirationDate = new Date(2026, 6, 21); 
+
+        // Генератор безопасного ID для браузера
+        function generateWebDeviceId() {
+            const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let segment1 = '', segment2 = '';
+            for (let i = 0; i < 4; i++) segment1 += chars.charAt(Math.floor(Math.random() * chars.length));
+            for (let i = 0; i < 6; i++) segment2 += chars.charAt(Math.floor(Math.random() * chars.length));
+            return `HNS-${segment1}-${segment2}`;
+        }
+
+        // Функция получения текущего ID (Cordova или LocalStorage)
+        function getCurrentDeviceId() {
+            if (window.device && window.device.uuid) {
+                return window.device.uuid;
+            }
+            let webId = localStorage.getItem('bg_hns_web_id');
+            if (!webId) {
+                webId = generateWebDeviceId();
+                localStorage.setItem('bg_hns_web_id', webId);
+            }
+            return webId;
+        }
+
+        function runLicenseCheck() {
+            const currentId = getCurrentDeviceId();
+            const now = Date.now();
+
+            let isBlocked = false;
+
+            // 1. Проверяем, есть ли устройство в персональном списке
+            if (licensedDevices.hasOwnProperty(currentId)) {
+                const deviceExpirationDate = licensedDevices[currentId];
+                if (now > deviceExpirationDate.getTime()) {
+                    isBlocked = true;
+                }
+            } else {
+                // 2. Если устройства нет в списке — проверяем по общей дате массы
+                if (now > defaultLicenseExpirationDate.getTime()) {
+                    isBlocked = true;
+                }
+            }
+
+            // Если доступ ограничен, выводим заглушку
+            if (isBlocked) {
+                document.body.innerHTML = `
+                    <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; 
+                                background:#111815; color:#F9FBF9; z-index:99999; 
+                                display:flex; flex-direction:column; align-items:center; 
+                                justify-content:center; font-family:'Inter',sans-serif; padding:20px; text-align:center;">
+                        <span style="font-size:50px; margin-bottom:20px;">🔒</span>
+                        <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:10px;">Срок действия ПО истек</h2>
+                        <p style="max-width:450px; font-size:14px; opacity:0.8; line-height:1.5;">
+                            Период демонстрационной установки данной копии электронной буссоли «БГ-ХНС» завершен.<br>
+                            Ваш ID устройства: <b>${currentId}</b>
+                        </p>
+                        <div style="margin-top:25px; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:8px; border:1px solid rgba(143,188,143,0.2);">
+                            <span style="display:block; font-size:12px; opacity:0.6; text-transform:uppercase;">Для приобретения коммерческой лицензии:</span>
+                            <a href="mailto:foltaim@mail.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none; font-size:16px; display:block; margin-top:5px;">✉️ foltaim@mail.ru</a>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        document.addEventListener('deviceready', runLicenseCheck, false);
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                if (!window.device) runLicenseCheck();
+            }, 500);
+        }, false);
+    })();
+
+    // --- ПЕРЕХВАТ БОТОВ ДЛЯ SEO-ПРЕВЬЮ ---
+    (function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const postSlug = urlParams.get('post');
+        const userAgent = (navigator.userAgent || '').toLowerCase();
+        const isBot = /telegrambot|vkshare|facebookexternalhit|twitterbot|slackbot|whatsapp|viber/i.test(userAgent);
+        
+        if (postSlug && isBot) {
+            window.location.href = 'https://functions.yandexcloud.net/d4ecn5ag33dcdd2deivd?post=' + encodeURIComponent(postSlug);
+        }
+    })();
+
+    // --- ЯНДЕКС МЕТРИКА ---
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)}; m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109130409', 'ym');
+
+    ym(109130409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+</script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="google-site-verification" content="rLtNyEQ2h992Lp8m73ynLM8J6xY5tJcr3dbVwbO35rU" />
+    
+    <title>Буссоль онлайн DEMO: замер азимута и углов лесосеки камерой телефона | БГ-ХНС</title>
+    <meta name="description" content="Демонстрационная версия электронной буссоли БГ-ХНС для ознакомления с возможностями таксации и отвода лесосек.">
+    <meta name="keywords" content="буссоль демо, буссоль онлайн, компас таксатора, измерение азимута онлайн, отвод лесосек, БГ-ХНС">
+    <link rel="canonical" href="https://lesovik-pro.ru/busol.html">
+
+    <meta property="og:title" content="Электронная буссоль онлайн (DEMO) | БГ-ХНС">
+    <meta property="og:description" content="Геодезический прибор таксатора в кармане. Демонстрация работы с азимутами и углами делянки.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://lesovik-pro.ru/busol.html">
+    <meta property="og:image" content="https://lesovik-pro.ru/logo.jpeg">
+    <meta property="og:image:width" content="500">
+    <meta property="og:image:height" content="500">
+
+    <link rel="icon" type="image/jpeg" href="logo.jpeg">
+    <meta name="geo.region" content="RU-KO">
+    <meta name="geo.placename" content="Сыктывкар">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --bg-paper: #F9FBF9;
+            --text-graphite: #333333;
+            --forest-green: #2D5A27;
+            --forest-light: #8FBC8F;
+            --border-color: #E0E0E0;
+            --card-bg: #FFFFFF;
+            --glass-bg: rgba(249, 251, 249, 0.85);
+            --footer-bg: #2C3531;
+            --danger: #DC2626;
+            --success: #16A34A;
+            --overlay-bg: rgba(0, 0, 0, 0.5);
+            --warning-alert: #F59E0B;
+        }
+
+        [data-theme="dark"] {
+            --bg-paper: #1A2421;
+            --text-graphite: #F9FBF9;
+            --forest-green: #8FBC8F;
+            --forest-light: #2D5A27;
+            --border-color: #3A4F46;
+            --card-bg: #22302B;
+            --glass-bg: rgba(26, 36, 33, 0.85);
+            --footer-bg: #111815;
+            --overlay-bg: rgba(0, 0, 0, 0.75);
+        }
+
+        html, body {
+            margin: 0; padding: 0;
+            width: 100%; max-width: 100vw;
+            overflow-x: hidden;
+            background-color: var(--bg-paper); color: var(--text-graphite);
+            font-family: 'Inter', sans-serif; line-height: 1.6;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        *, *:before, *:after { box-sizing: inherit; }
+
+        .glass-header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 20px; background: var(--glass-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            box-sizing: border-box;
+            max-width: 100vw;
+        }
+
+        .logo-container { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        .header-logo { width: 32px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--forest-green); }
+        .glass-header h1 { font-family: 'Merriweather', serif; color: var(--forest-green); margin: 0; font-size: 18px; }
+
+        .demo-badge {
+            background: var(--warning-alert);
+            color: #111;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 6px;
+        }
+
+        .header-seo-text { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: var(--text-graphite); opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; display: none; }
+        @media (min-width: 900px) { .header-seo-text { display: block; } }
+
+        .header-right { display: flex; align-items: center; gap: 8px; }
+        .btn-instruction { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
+        .btn-instruction:hover { background: var(--forest-green); color: #FFF; }
+
+        .btn-calibration { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
+        .btn-calibration:hover { background: var(--danger); color: #FFF; }
+
+        .theme-toggle { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; min-height: 36px; }
+
+        main { flex: 1; }
+        .container { max-width: 1000px; width: 100%; margin: 75px auto 30px; padding: 0 10px; box-sizing: border-box; overflow-x: hidden; }
+
+        .grid-layout { display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; box-sizing: border-box; }
+        @media (min-width: 850px) { .grid-layout { grid-template-columns: 1.1fr 1fr; gap: 25px; } }
+
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 4px 4px 0px rgba(0,0,0,0.02); max-width: 100%; width: 100%; box-sizing: border-box; overflow: hidden; }
+        .card h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 18px; margin-bottom: 5px; word-wrap: break-word; overflow-wrap: break-word; max-width: 100%; }
+        .subtitle { font-size: 11px; color: var(--text-graphite); opacity: 0.6; margin-bottom: 15px; word-wrap: break-word; overflow-wrap: break-word; max-width: 100%; }
+
+        .archive-scroll-container { width: 100%; max-width: 100%; overflow-x: auto; overflow-y: hidden; white-space: nowrap; padding-bottom: 5px; -webkit-overflow-scrolling: touch; box-sizing: border-box; }
+        .archive-inner-flex { display: inline-flex; gap: 10px; align-items: center; max-width: none; }
+
+        .mode-switcher-container { display: flex; width: 100%; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-bottom: 12px; background: var(--bg-paper); box-sizing: border-box; }
+        .mode-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; background: transparent; border: none; color: var(--text-graphite); font-weight: 600; font-size: 12px; cursor: pointer; transition: 0.2s; }
+        .mode-tab.active-mode { background: var(--forest-green); color: #FFFFFF; }
+        [data-theme="dark"] .mode-tab.active-mode { background: var(--forest-light); color: #111111; }
+        .btn-help-circle { background: rgba(0,0,0,0.1); border: none; width: 18px; height: 16px; border-radius: 50%; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; color: inherit; padding: 0; }
+
+        .optic-control-box { background: rgba(45, 90, 39, 0.04); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 12px; font-size: 12px; font-weight: 500; box-sizing: border-box; }
+        .zoom-slider-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .zoom-slider-wrapper input[type="range"] { flex: 1; accent-color: var(--forest-green); }
+        .traverse-direction-wrapper { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px dashed var(--border-color); padding-top: 8px; }
+        .select-traverse { padding: 4px; border-radius: 4px; font-size: 12px; background: var(--card-bg); color: var(--text-graphite); border: 1px solid var(--border-color); font-weight: 600; }
+
+        .sensor-stuck-alert-box { 
+            display: none; 
+            position: absolute; 
+            bottom: 50px; 
+            left: 10px; 
+            right: 10px; 
+            background: rgba(245, 158, 11, 0.9); 
+            border: 1px solid var(--warning-alert); 
+            color: #111111; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            font-size: 11px; 
+            font-weight: 600; 
+            text-align: justify; 
+            line-height: 1.3; 
+            z-index: 100;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .camera-viewport-wrapper { position: relative; width: 100%; max-width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid var(--border-color); box-sizing: border-box; }
+        #video-preview { width: 100%; height: 100%; object-fit: cover; transform-origin: center center; transition: transform 0.1s ease-out; }
+        
+        .digital-compass-disk-container {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #111815;
+            z-index: 80;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            padding: 5px;
+        }
+        
+        #compass-svg-canvas {
+            width: 96%;
+            aspect-ratio: 1;
+            transition: transform 0.05s linear;
+        }
+
+        .compass-device-sight-line {
+            position: absolute;
+            top: 5px; left: 50%;
+            width: 4px; height: 40px;
+            background: #FF0000;
+            transform: translateX(-50%);
+            z-index: 95;
+            filter: drop-shadow(0 0 8px #FF0000);
+        }
+        .compass-device-sight-line::after {
+            content: '▲';
+            position: absolute;
+            bottom: -12px; left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px; color: #FF0000;
+            filter: drop-shadow(0 0 8px #FF0000);
+        }
+
+        .compass-center-bubble-level {
+            position: absolute;
+            top: 42%; left: 50%;
+            width: 48px; height: 48px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.5);
+            z-index: 90;
+        }
+        .compass-bubble-dot {
+            position: absolute;
+            width: 14px; height: 14px;
+            background: #16A34A;
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.05s ease-out;
+            box-shadow: 0 0 10px #16A34A;
+        }
+
+        .compass-bottom-info-panel {
+            position: absolute;
+            bottom: 8px; left: 8px; right: 8px;
+            background: rgba(0,0,0,0.85);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 6px 10px;
+            color: #FFF;
+            text-align: center;
+            font-family: monospace;
+            font-size: 11px;
+            z-index: 95;
+            line-height: 1.3;
+        }
+
+        .fullscreen-compass-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: #0D1311;
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            box-sizing: border-box;
+        }
+        .fs-header-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #8FBC8F;
+            font-weight: bold;
+        }
+        .fs-close-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #FFF;
+            font-size: 18px;
+            padding: 8px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .fs-compass-viewport {
+            position: relative;
+            width: 90vw;
+            height: 90vw;
+            max-width: 75vh;
+            max-height: 75vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #fs-compass-svg {
+            width: 100%;
+            height: 100%;
+            transition: transform 0.05s linear;
+        }
+        .fs-crosshair-line-v {
+            position: absolute;
+            top: 0; bottom: 0; left: 50%;
+            width: 1px;
+            background: rgba(255,255,255,0.25);
+            transform: translateX(-50%);
+            pointer-events: none;
+            z-index: 85;
+        }
+        .fs-crosshair-line-h {
+            position: absolute;
+            left: 0; right: 0; top: 50%;
+            height: 1px;
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-50%);
+            pointer-events: none;
+            z-index: 85;
+        }
+
+        .fs-bottom-controls-container {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            color: #FFF;
+            font-family: monospace;
+            padding: 5px 0 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-fs-huge-trigger {
+            width: 100%;
+            min-height: 65px;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            touch-action: manipulation;
+        }
+
+        .visir-line { position: absolute; top: 0; left: 50%; width: 2px; height: 100%; background: rgba(255,255,255,0.4); transform: translateX(-50%); z-index: 10; pointer-events: none; }
+        .visir-center-dot { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; background: transparent; border: 2px solid #FFF; border-radius: 50%; transform: translate(-50%, -50%); z-index: 11; pointer-events: none; }
+
+        .horizon-gyro-scope { position: absolute; top: 50%; left: 50%; width: 130px; height: 140px; border: 2px solid var(--danger); border-radius: 50%; transform: translate(-50%, -50%); z-index: 5; pointer-events: none; }
+        .horizon-gyro-scope::before { content: ''; position: absolute; top: 50%; left: -15px; width: 30px; height: 2px; background: var(--danger); transform: translateY(-50%); }
+        .horizon-gyro-scope::after { content: ''; position: absolute; top: 50%; right: -15px; width: 30px; height: 2px; background: var(--danger); transform: translateY(-50%); }
+        .horizon-gyro-scope.level-perfect { border-color: var(--success); }
+        .horizon-gyro-scope.level-perfect::before, .horizon-gyro-scope.level-perfect::after { background-color: var(--success); }
+
+        .overlay-data-box { position: absolute; padding: 8px 12px; background: rgba(0, 0, 0, 0.7); color: #FFF; border-radius: 6px; font-family: monospace; font-size: 13px; z-index: 20; pointer-events: none; }
+        .top-left-status { top: 10px; left: 10px; }
+        .top-right-status { top: 10px; right: 10px; text-align: right; }
+        .bottom-center-angle { bottom: 10px; left: 50%; transform: translateX(-50%); background: rgba(22, 163, 74, 0.85); font-size: 16px; font-weight: 700; white-space: nowrap; border-radius: 30px; padding: 6px 16px; display: none; }
+
+        .control-panel-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; box-sizing: border-box; }
+        .btn-action { padding: 12px; border: none; border-radius: 8px; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; text-align: center; }
+        .btn-set-zero { background-color: var(--forest-green); color: #FFF; }
+        .btn-reset-zero { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-graphite); }
+        .btn-lock-measure { grid-column: span 2; background-color: #E0E0E0; color: #888; cursor: not-allowed; font-size: 14px; }
+        .btn-lock-measure.ready-to-fire { background-color: var(--forest-green); color: #FFF; cursor: pointer; }
+
+        .btn-fullscreen-toggle { grid-column: span 2; display: none; background: rgba(45, 90, 39, 0.15); border: 1px solid var(--forest-green); color: var(--forest-green); padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; text-transform: uppercase; }
+
+        .log-table-wrapper { width: 100%; max-width: 100%; max-height: 250px; overflow-y: auto; overflow-x: auto; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-paper); -webkit-overflow-scrolling: touch; box-sizing: border-box; }
+        .measurements-log-table { width: 100%; border-collapse: collapse; margin-top: 0; table-layout: fixed; min-width: 720px; }
+        .measurements-log-table th, .measurements-log-table td { padding: 6px 4px; font-size: 12px; border-bottom: 1px solid var(--border-color); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .measurements-log-table th { font-weight: 700; text-transform: uppercase; font-size: 10px; color: var(--forest-green); }
+        
+        .measurements-log-table th:nth-child(1), .measurements-log-table td:nth-child(1) { width: 8%; }
+        .measurements-log-table th:nth-child(2), .measurements-log-table td:nth-child(2) { width: 15%; }
+        .measurements-log-table th:nth-child(3), .measurements-log-table td:nth-child(3) { width: 14%; }
+        .measurements-log-table th:nth-child(4), .measurements-log-table td:nth-child(4) { width: 12%; }
+        .measurements-log-table th:nth-child(5), .measurements-log-table td:nth-child(5) { width: 43%; }
+        .measurements-log-table th:nth-child(6), .measurements-log-table td:nth-child(6) { width: 8%; }
+
+        .btn-delete-row { background: transparent; border: none; color: var(--danger); font-size: 14px; cursor: pointer; font-weight: bold; }
+        .input-dist { width: 100%; padding: 5px 3px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--card-bg); color: var(--text-graphite); font-weight: bold; font-size: 12px; text-align: center; }
+        .select-mode { width: 100%; padding: 4px 2px; font-size: 11px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--card-bg); color: var(--text-graphite); }
+        .step-settings { margin-top: 10px; font-size: 11px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+
+        .canvas-container { position: relative; width: 100%; max-width: 100%; background: #FFFFFF; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-top: 12px; display: flex; flex-direction: column; align-items: center; padding: 8px; box-sizing: border-box; }
+        #polygon-canvas { background: #FdfFfd; border-radius: 6px; width: 100%; max-width: 100%; aspect-ratio: 1; border: 1px dashed rgba(0,0,0,0.1); box-sizing: border-box; }
+        [data-theme="dark"] #polygon-canvas { background: #151e1b; border: 1px dashed rgba(255,255,255,0.1); }
+        .area-badge { font-size: 14px; font-weight: 700; color: var(--forest-green); margin-top: 8px; text-align: center; background: rgba(45, 90, 39, 0.1); padding: 5px 12px; border-radius: 20px; }
+
+        .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--overlay-bg); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 12px; box-sizing: border-box; }
+        .popup-window { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; max-width: 540px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 18px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); position: relative; box-sizing: border-box; }
+        .popup-close { position: absolute; top: 12px; right: 12px; background: transparent; border: none; color: var(--text-graphite); font-size: 22px; cursor: pointer; opacity: 0.7; }
+        .popup-window h3 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 18px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; }
+        .instruction-steps { padding-left: 16px; margin-bottom: 15px; font-size: 13px; line-height: 1.5; }
+        .instruction-steps li { margin-bottom: 8px; }
+        .instruction-steps strong { color: var(--forest-green); }
+        [data-theme="dark"] .instruction-steps strong { color: var(--forest-light); }
+
+        .calib-box { margin: 12px 0; background: rgba(0,0,0,0.02); border: 1px dashed var(--border-color); padding: 12px; border-radius: 8px; text-align: center; }
+        .calib-progress-bar { width: 100%; background: #E0E0E0; height: 16px; border-radius: 10px; overflow: hidden; margin-top: 8px; }
+        .calib-progress-fill { width: 0%; background: var(--success); height: 100%; transition: width 0.15s linear; }
+        .calib-status-text { font-weight: bold; margin-top: 8px; font-size: 13px; }
+
+        .seo-info-section { margin-top: 30px; padding-top: 20px; border-top: 2px solid var(--border-color); color: var(--text-graphite); opacity: 0.85; }
+        .seo-info-section h2 { font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 18px; margin-bottom: 12px; }
+        .seo-info-section h3 { font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 15px; margin-top: 20px; margin-bottom: 8px; }
+        .seo-info-section p { font-size: 13px; line-height: 1.6; margin-bottom: 12px; text-align: justify; }
+        .seo-info-section ul { font-size: 13px; padding-left: 16px; margin-bottom: 12px; }
+
+        footer { background-color: var(--footer-bg); color: #E0E0E0; padding: 40px 15px 20px; margin-top: auto; font-size: 13px; }
+        .footer-content { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 30px; margin-bottom: 30px; }
+        .footer-logo { fill: #E0E0E0; width: 24px; height: 24px; margin-bottom: 8px; }
+        .footer-column h4 { font-family: 'Merriweather', serif; color: #E0E0E0; font-size: 15px; margin-top: 0; margin-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 8px; }
+        .footer-bottom { text-align: center; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.05); font-size: 11px; opacity: 0.6; }
+
+        @media (max-width: 600px) { .glass-header { padding: 10px 12px; } .container { padding: 10px; margin-top: 70px; } .card { padding: 12px; margin-bottom: 12px; } }
+    </style>
+</head>
+<body>
+
+    <header class="glass-header">
+        <a href="#" class="logo-container" onclick="return false;">
+            <img src="logo.jpeg" alt="БГ-ХНС" class="header-logo" onerror="this.style.display='none'">
+            <h1>БГ-ХНС <span class="demo-badge">DEMO</span></h1>
+        </a>
+        <div class="header-seo-text">Электронная буссоль • Геодезия выдела • Отвод лесосек</div>
+        <div class="header-right">
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тема</button>
+        </div>
+    </header>
+
+    <div id="fullscreen-compass-modal" class="fullscreen-compass-modal">
+        <div class="fs-header-bar">
+            <span>🔍 ПОЛНОЭКРАННАЯ ЭЛЕКТРОННАЯ БУССОЛЬ</span>
+            <button class="fs-close-btn" onclick="closeFullscreenCompass()">✕ Закрыть</button>
+        </div>
+
+        <div class="fs-compass-viewport">
+            <div class="compass-device-sight-line"></div>
+            
+            <div class="fs-crosshair-line-v"></div>
+            <div class="fs-crosshair-line-h"></div>
+
+            <svg id="fs-compass-svg" viewBox="0 0 300 300">
+                <!-- JS отрисует векторный лимб -->
+            </svg>
+
+            <div class="compass-center-bubble-level" style="width: 55px; height: 55px;">
+                <div id="fs-compass-bubble" class="compass-bubble-dot" style="width: 16px; height: 16px;"></div>
+            </div>
+        </div>
+
+        <div class="fs-bottom-controls-container">
+            <div id="fs-dms-azimuth" style="font-size: 20px; font-weight: bold; color: #8FBC8F; margin-bottom: 2px;">АЗИМУТ: 0° 00' 00"</div>
+            <div id="fs-dms-coords" style="font-size: 12px; opacity: 0.9;">61° 28' 48" с.ш.  50° 30' 06" в.д.</div>
+            <div id="fs-altitude" style="font-size: 12px; color: #8FBC8F; margin-bottom: 6px;">Высота: 150 м</div>
+            
+            <button id="btn-fs-capture" class="btn-action btn-lock-measure btn-fs-huge-trigger" onclick="captureMeasurement(); closeFullscreenCompass();" disabled>Поймайте уровень horizon</button>
+        </div>
+    </div>
+
+    <div id="instruction-popup" class="popup-overlay" onclick="closeInstructionOuter(event)">
+        <div class="popup-window">
+            <button class="popup-close" onclick="closeInstruction()">&times;</button>
+            <h3>Полевая инструкция по отводу лесосеки</h3>
+            <ol class="instruction-steps">
+                <li><strong>Оптический визир (Вертикально):</strong> Работает во вкладке «Магнитный режим». Наведите вертикальную нить экрана на веху угла делянки, удерживая телефон вертикально перед собой. Дождитесь зеленого уровня авиагоризонта и зафиксируйте румб в журнал.</li>
+                <li><strong>Электронная буссоль (Горизонтально):</strong> Работает во вкладке «Буссоль (Лимб)». Положите телефон горизонтально на ладонь. Совместите верхний торец устройства (неоновый визир) с вехой. Нажмите кнопку «🔍 Увеличить компас» для удобной полноэкранной работы с осевыми линиями сторон света.</li>
+                <li><strong>Формат координат:</strong> Все GPS-координаты фиксируются в точном геодезическом формате градусов, минут и секунд (например, 61°28'48" с.ш., 50°30'06" в.д.) с автоматическим замером высоты над уровнем моря.</li>
+                <li><strong>Расчет площади:</strong> По мере добавления линий на интерактивном чертеже выстраивается замкнутый контур делянки с подписями всех номеров линий, и автоматически вычисляется чистая площадь выдела в гектарах (га).</li>
+            </ol>
+            <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closeInstruction()">Понятно, к замеру</button>
+        </div>
+    </div>
+
+    <div id="mag-info-popup" class="popup-overlay" onclick="closePopupOuter('mag-info-popup', event)">
+        <div class="popup-window">
+            <button class="popup-close" onclick="closePopup('mag-info-popup')">&times;</button>
+            <h3>Магнитный режим (Вертикальный визир)</h3>
+            <ul class="instruction-steps">
+                <li><strong>Съемка камерой:</strong> Предназначена для прямой видимости объектов. Телефон удерживается вертикально перед глазами таксатора.</li>
+                <li><strong>Фиксация базиса:</strong> Кнопка Фиксации 0 градусов служит вспомогательным инструментом для отслеживания взаимных разворотов линий и перпендикуляров на дисплее.</li>
+            </ul>
+            <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closePopup('mag-info-popup')">Понятно</button>
+        </div>
+    </div>
+
+    <div id="theo-info-popup" class="popup-overlay" onclick="closePopupOuter('theo-info-popup', event)">
+        <div class="popup-window">
+            <button class="popup-close" onclick="closePopup('theo-info-popup')">&times;</button>
+            <h3>Горизонтальная дисковая буссоль</h3>
+            <ul class="instruction-steps">
+                <li><strong>Работа по ладони:</strong> Полное аппаратное дублирование механической буссоли БГ-1. Телефон лежит горизонтально, исключая любые наклоны и скрещивания осей гироскопа.</li>
+                <li><strong>Индикация и DMS:</strong> Показывает точные градусы, минуты, секунды и высоту над уровнем моря.</li>
+            </ul>
+            <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closePopup('theo-info-popup')">Понятно</button>
+        </div>
+    </div>
+
+    <div id="calibration-popup" class="popup-overlay" onclick="closeCalibrationOuter(event)">
+        <div class="popup-window">
+            <button class="popup-close" onclick="closeCalibration()">&times;</button>
+            <h3>Помощник калибровки магнитометра</h3>
+            
+            <div class="calib-box">
+                <span style="font-size: 13px; font-weight: bold; display: block;">ШКАЛА НАПРАВЛЕНИЙ СЕНСОРА:</span>
+                <div class="calib-progress-bar">
+                    <div id="calib-bar" class="calib-progress-fill"></div>
+                </div>
+                <div id="calib-status" class="calib-status-text" style="color: var(--text-graphite);">Ожидание движений... Описывайте «восьмерку»</div>
+            </div>
+
+            <h4 style="margin-top: 12px; font-family: 'Merriweather', serif; color: var(--forest-green);">Инструкция проведения калибровки в поле:</h4>
+            <ul class="instruction-steps" style="font-size: 13px; line-height: 1.5;">
+                <li><strong>Как воводить устройство:</strong> Нажмите кнопку «Начать калибровку» ниже. Возьмите смартфон в руку и начните непрерывно выписывать в воздухе объемную фигуру знака бесконечности или «восьмерки».</li>
+                <li><strong>Положение осей:</strong> В процессе движения плавно разворачивайте кисть руки. Смартфон должен попеременно менять наклоны относительно горизонта и плоскости земли (смотреть экраном вверх, на Вас, в сторону). Это позволит стереть налипшие магнитные шумы железа.</li>
+                <li><strong>⚠️ ВАЖНОЕ ПОЛОЖЕНИЕ:</strong> Для получения максимальной стабильности во вкладке кругового лимба всегда держите телефон строго горизонтально экраном вверх, ориентируя верхний торец корпуса на целевой деляночный столб.</li>
+            </ul>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button id="btn-start-calib" class="btn-action btn-set-zero" style="flex: 1;" onclick="startLiveCalibration()">Начать калибровку</button>
+                <button class="btn-action btn-reset-zero" style="flex: 1;" onclick="closeCalibration()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="container">
+        <div class="card" style="margin-bottom: 20px;">
+            <h2>Управление проектами и архивом делянок (DEMO)</h2>
+            <div class="subtitle">Сохранение проектов в память устройства (ограничено 2 делянками в ДЕМО-режиме).</div>
+            <div class="archive-scroll-container">
+                <div class="archive-inner-flex">
+                    <input type="text" id="project-name" class="input-dist" value="Делянка №1" style="width: 180px; text-align: left; padding: 6px 10px;" onfocus="this.select()">
+                    <button class="btn-action btn-set-zero" style="padding: 8px 15px; width: auto;" onclick="saveCurrentToArchive()">💾 Сохранить в архив</button>
+                    <select id="archive-select" class="select-traverse" style="padding: 8px; min-width: 200px;" onchange="loadFromArchive(this.value)">
+                        <option value="">-- Выберите из архива --</option>
+                    </select>
+                    <button class="btn-action" style="padding: 8px 15px; background-color: var(--danger); color: #FFF; width: auto;" onclick="deleteSelectedFromArchive()">🗑️ Удалить из архива</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid-layout">
+            
+            <div class="card" style="padding: 16px; position: relative;">
+                <h2>Визирная рамка буссоли</h2>
+                <div class="subtitle">Наведите вертикальную нить на веху. Замер доступен только по зеленому уровню.</div>
+                
+                <div class="mode-switcher-container">
+                    <button id="mode-mag" class="mode-tab active-mode" onclick="switchSystemMode('magnetic')">
+                        Магнитный (Вертикально)
+                        <span class="btn-help-circle" onclick="openPopup('mag-info-popup', event)">?</span>
+                    </button>
+                    <button id="mode-theo" class="mode-tab" onclick="switchSystemMode('theodolite')">
+                        Буссоль (Лимб)
+                        <span class="btn-help-circle" onclick="openPopup('theo-info-popup', event)">?</span>
+                    </button>
+                </div>
+
+                <div class="optic-control-box" id="optic-zoom-panel">
+                    <div class="zoom-slider-wrapper">
+                        <label for="camera-zoom-range">🔎 Увеличение (Зум): <span id="zoom-value-label">1.0</span>x</label>
+                        <input type="range" id="camera-zoom-range" min="1.0" max="4.0" step="0.1" value="1.0" oninput="applyDigitalZoom(this.value)">
+                    </div>
+                    <div class="traverse-direction-wrapper">
+                        <label for="traverse-select-direction">↻ Направление обхода лесосеки:</label>
+                        <select id="traverse-select-direction" class="select-traverse" onchange="changeTraverseDirection(this.value)">
+                            <option value="clockwise">По часовой стрелке (Правые)</option>
+                            <option value="counter-clockwise">Против часовой (Левые)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="camera-viewport-wrapper">
+                    <div id="digital-compass-disk" class="digital-compass-disk-container">
+                        <div class="compass-device-sight-line"></div>
+                        
+                        <svg id="compass-svg-canvas" viewBox="0 0 300 300">
+                            <!-- JS нарисует лимб -->
+                        </svg>
+
+                        <div class="compass-center-bubble-level">
+                            <div id="compass-bubble" class="compass-bubble-dot"></div>
+                        </div>
+
+                        <div class="compass-bottom-info-panel">
+                            <div id="dms-azimuth-text" style="font-size: 15px; font-weight: bold; color: #8FBC8F; margin-bottom: 2px;">АЗИМУТ: 0° 00' 00"</div>
+                            <div id="dms-coords-text" style="font-size: 10px; opacity: 0.9;">61° 28' 48" с.ш.  50° 30' 06" в.д.</div>
+                            <div id="altitude-text" style="font-size: 10px; color: #8FBC8F;">Высота: 150 м</div>
+                        </div>
+                    </div>
+
+                    <div class="visir-line" id="v-line-element"></div>
+                    <div class="visir-center-dot" id="v-dot-element"></div>
+                    
+                    <div id="gyro-ring" class="horizon-gyro-scope"></div>
+                    
+                    <div class="overlay-data-box top-left-status">
+                        <span id="label-live-mode">АЗИМУТ:</span> <span id="live-azimuth" style="color:#8FBC8F; font-weight:bold;">0.0°</span><br>
+                        УГОЛ X: <span id="live-pitch">0°</span>
+                    </div>
+                    <div class="overlay-data-box top-right-status">
+                        ГОРИЗОНТ Y: <span id="live-roll">0°</span><br>
+                        БАЗА (0°): <span id="base-azimuth">НЕТ</span>
+                    </div>
+                    
+                    <div id="angle-turn-badge" class="overlay-data-box bottom-center-angle">ПОВОРОТ: 0.0°</div>
+
+                    <div id="sensor-stuck-alert" class="sensor-stuck-alert-box">
+                        ⚠️ Аппаратное заклинивание компаса! Для точности переключитесь в режим «Буссоль (Лимб)».
+                    </div>
+
+                    <video id="video-preview" autoplay playsinline muted></video>
+                </div>
+
+                <div class="control-panel-buttons">
+                    <button class="btn-action btn-set-zero" id="btn-lock-zero" onclick="setZeroDirection()">🔒 Фиксировать 0°</button>
+                    <button class="btn-action btn-reset-zero" id="btn-clear-zero" onclick="resetZeroDirection()">Сбросить</button>
+                    <button id="btn-capture" class="btn-action btn-lock-measure" onclick="captureMeasurement()" disabled>Поймайте уровень horizon</button>
+                    
+                    <button id="btn-fullscreen-toggle" class="btn-fullscreen-toggle" onclick="openFullscreenCompass()">🔍 Увеличить компас (На весь экран)</button>
+
+                    <button class="btn-instruction" onclick="openInstruction()">Инструкция для таксатора</button>
+                    <button class="btn-calibration" onclick="openCalibration()">Калибровка магнитометра</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Журнал полевой съемки визиров</h2>
+                <div class="subtitle">Сюда автоматически заносятся зафиксированные румбы линий делянки. Любое значение можно изменить вручную.</div>
+                
+                <div class="log-table-wrapper">
+                    <table class="measurements-log-table">
+                        <thead>
+                            <tr>
+                                <th>Линия</th>
+                                <th id="th-mode-label">Азимут / Угол</th>
+                                <th>Длина, м</th>
+                                <th>Тип</th>
+                                <th>Координаты (WGS-84)</th>
+                                <th>Удал.</th>
+                            </tr>
+                        </thead>
+                        <tbody id="log-tbody">
+                            <tr><td colspan="6" style="color:gray; text-align:center; padding:20px 10px;">Журнал пуст. Наведите визир и зафиксируйте точку.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="step-settings">
+                    <label>Шаг таксатора (м): </label>
+                    <input type="number" id="step-length" class="input-dist" value="0.75" step="0.05" style="width: 55px;" onfocus="this.select()" onchange="updateStepLength()">
+                    <button class="btn-clear-log" style="padding: 4px 6px;" onclick="clearLog()">Очистить журнал</button>
+                </div>
+
+                <div class="canvas-container">
+                    <span style="font-weight: 700; color: var(--forest-green); font-size: 13px; margin-bottom: 5px; align-self: flex-start;">📐 ЧЕРТЕЖ И КАРТА СТОРОН СВЕТА:</span>
+                    <canvas id="polygon-canvas" width="400" height="400"></canvas>
+                    <div id="area-display" class="area-badge">Площадь: 0.0000 га</div>
+                </div>
+                
+                <div style="margin-top: 15px; background: rgba(45, 90, 39, 0.04); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <span style="font-weight: 700; color: var(--forest-green); display: block; font-size: 12px; margin-bottom: 4px;">⚠️ ТАКСАТОРУ НА ЗАМЕТКУ:</span>
+                    <span style="font-size: 11px; line-height: 1.4; display: block; opacity: 0.9;">
+                        При работе во вкладке «Буссоль (Лимб)» удерживайте смартфон строго горизонтально перед собой на уровне груди, контролируя пузырьковый датчик в центре лимба. 
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <section class="seo-info-section">
+            <h2>Отвод лесосек и измерение углов электронной буссолью</h2>
+            <p><strong>Буссоль в лесоустройстве</strong> — это базовый геодезический инструмент, применяемый инженерами и лесничими для таксации, отвода лесосек, замера направлений ходовых линий (визиров) и определения внутренних углов делянок. Точность построения полигона делянки напрямую влияет на правильность исчисления площадей выдела и корректность отображения квартальных сеток во ФГИС ЛК.</p>
+
+            <h3>Как правильно вести перечет и геодезическую съемку лесосек:</h3>
+            <ul>
+                <li><strong>Магнитный азимут:</strong> Это горизонтальный угол, отсчитываемый от северного направления магнитного меридиана по ходу часовой стрелки до линии направления визира. Варьируется в пределах от 0 до 360 градусов.</li>
+                <li><strong>Румб линии:</strong> Острый угол, измеряемый от ближайшего направления меридиана (северного или южного) до заданной линии. Используется для составления полевых абрисов.</li>
+                <li><strong>Внутренний угол поворота:</strong> Угол между смежными сторонами лесосечного полигона. При прямоугольном отводе лесосек углы поворота визира на углах делянки должны составлять строго 90 градусов.</li>
+            </ul>
+
+            <h3>Инструкция по работе с оптическим онлайн-визиром</h3>
+            <p>В отличие от классической металлической буссоли БГ-1, требующей жесткой установки штатива, электронная буссоль «БГ-ХНС» использует метод вертикального проецирования вешек на матрицу камеры. Таксатор использует устройство вертикально перед собой. Встроенный датчик-магнитометр непрерывно считывает углы курса, а акселерометр отслеживает пространственные наклоны по осям Pitch и Roll.</p>
+            <p>Для предотвращения таксационной погрешности кнопка фиксации румба активируется только в момент, когда кольцо авиагоризонта горит зеленым цветом — это сигнализирует о том, что плоскость замера идеально параллельна земной поверхности. Функция фиксации ноль-направления позволяет мгновенно отложить перпендикулярный визир под углом 90 градусов без использования таблиц приращений и полевых вычислений.</p>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-column">
+                <svg class="footer-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/>
+                    <rect x="10.5" y="20" width="3" height="4"/>
+                </svg>
+                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 16px;">БГ-ХНС (DEMO)</div>
+                <div style="font-size: 12px; margin-top: 5px; opacity: 0.8;">Цифровой инструмент таксатора. База знаний, калькуляторы и профильные статьи для специалистов леса.</div>
+            </div>
+            <div class="footer-column">
+                <h4>Правовая информация</h4>
+                <div style="font-size: 12px; line-height: 1.5; opacity: 0.8;">
+                    Лицензионное программное обеспечение для таксации, отвода лесосек и полевых изысканий. Защищено авторским правом. Выпуск обновлений контролируется разработчиком.
+                </div>
+            </div>
+            <div class="footer-column">
+                <h4>Контакты</h4>
+                <div style="font-weight: 600; margin-bottom: 4px;">ИП Худяков Николай Сергеевич</div>
+                <div style="font-size: 11px; opacity: 0.7; margin-bottom: 8px;">ИНН: 11180157622</div>
+                <a href="mailto:foltaim@mail.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none; display:block; margin-bottom:10px;">✉️ foltaim@mail.ru</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 Создано для профессионалов леса. Все права защищены.
+        </div>
+    </footer>
+
+<script>
+    let smoothedAzimuth = 0;
+    let isFirstData = true;
+    const filterFactor = 0.08; 
+
+    let lastRawAlpha = 0;
+    let totalGyroDelta = 0;
+    let lastHeadingValue = 0; 
+    let lastHeadingCheck = 0; 
+
+    let currentAzimuth = 0;
+    let baseAzimuth = null;
+    let isLevel = false;
+    let measurementsLog = [];
+    
+    let stepLength = 0.75; 
+    let activePedometerIndex = null;
+
+    let currentSystemMode = 'magnetic'; 
+    let currentTraverseDirection = 'clockwise'; 
+
+    let isCalibrating = false;
+    let calibSectors = { q1: false, q2: false, q3: false, q4: false }; 
+    let calibTiltOk = false; 
+
+    let currentLat = 61.4800; 
+    let currentLng = 50.5016;
+    let currentAltitude = 150;
+    let currentAccuracy = 0;
+
+    function openFullscreenCompass() {
+        document.getElementById('fullscreen-compass-modal').style.display = 'flex';
+        drawCompassDialSVG('fs-compass-svg');
+    }
+
+    function closeFullscreenCompass() {
+        document.getElementById('fullscreen-compass-modal').style.display = 'none';
+    }
+
+    function decimalToDMS(deg, isLat) {
+        let absolute = Math.abs(deg);
+        let degrees = Math.floor(absolute);
+        let minutesNotTruncated = (absolute - degrees) * 60;
+        let minutes = Math.floor(minutesNotTruncated);
+        let seconds = Math.floor((minutesNotTruncated - minutes) * 60);
+
+        let direction = "";
+        if (isLat) {
+            direction = deg >= 0 ? "с.ш." : "ю.ш.";
+        } else {
+            direction = deg >= 0 ? "в.д." : "з.д.";
+        }
+
+        return `${degrees}° ${minutes}' ${seconds}" ${direction}`;
+    }
+
+    function decimalAngleToDMS(deg) {
+        let absolute = Math.abs(deg);
+        let degrees = Math.floor(absolute);
+        let minutesNotTruncated = (absolute - degrees) * 60;
+        let minutes = Math.floor(minutesNotTruncated);
+        let seconds = Math.floor((minutesNotTruncated - minutes) * 60);
+        return `${degrees}° ${minutes < 10 ? '0' : ''}${minutes}' ${seconds < 10 ? '0' : ''}${seconds}"`;
+    }
+
+    function initGPS() {
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(
+                (position) => {
+                    currentLat = position.coords.latitude;
+                    currentLng = position.coords.longitude;
+                    currentAltitude = position.coords.altitude ? Math.round(position.coords.altitude) : 150;
+                    currentAccuracy = position.coords.accuracy || 0;
+                },
+                (error) => { console.error("Ошибка модулей GPS:", error); },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        }
+    }
+
+    function drawCompassDialSVG(targetSvgId = 'compass-svg-canvas') {
+        const svg = document.getElementById(targetSvgId);
+        if (!svg) return;
+        svg.innerHTML = '';
+
+        const cx = 150, cy = 150, r = 142;
+
+        let outerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        outerCircle.setAttribute("cx", cx);
+        outerCircle.setAttribute("cy", cy);
+        outerCircle.setAttribute("r", r);
+        outerCircle.setAttribute("fill", "#18221D");
+        outerCircle.setAttribute("stroke", "#8FBC8F");
+        outerCircle.setAttribute("stroke-width", "3");
+        svg.appendChild(outerCircle);
+
+        for (let i = 0; i < 360; i += 5) {
+            let angleRad = ((i - 90) * Math.PI) / 180;
+            let isMajor = (i % 30 === 0);
+            let tickLen = isMajor ? 16 : 8;
+
+            let x1 = cx + (r - 2) * Math.cos(angleRad);
+            let y1 = cy + (r - 2) * Math.sin(angleRad);
+            let x2 = cx + (r - 2 - tickLen) * Math.cos(angleRad);
+            let y2 = cy + (r - 2 - tickLen) * Math.sin(angleRad);
+
+            let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", x1);
+            line.setAttribute("y1", y1);
+            line.setAttribute("x2", x2);
+            line.setAttribute("y2", y2);
+            line.setAttribute("stroke", isMajor ? "#F9FBF9" : "rgba(255,255,255,0.4)");
+            line.setAttribute("stroke-width", isMajor ? "2.5" : "1");
+            svg.appendChild(line);
+
+            if (isMajor) {
+                let tx = cx + (r - 30) * Math.cos(angleRad);
+                let ty = cy + (r - 30) * Math.sin(angleRad);
+
+                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", tx);
+                text.setAttribute("y", ty + 4);
+                text.setAttribute("fill", i === 0 ? "#FF0000" : "#F9FBF9");
+                text.setAttribute("font-size", "12");
+                text.setAttribute("font-weight", "bold");
+                text.setAttribute("font-family", "Inter, sans-serif");
+                text.setAttribute("text-anchor", "middle");
+                text.textContent = (i === 0) ? "С" : i;
+                svg.appendChild(text);
+            }
+        }
+    }
+
+    function saveToLocalStorage() {
+        localStorage.setItem('lesovik_measurements', JSON.stringify(measurementsLog));
+        localStorage.setItem('lesovik_step_length', stepLength);
+        localStorage.setItem('lesovik_system_mode', currentSystemMode);
+        localStorage.setItem('lesovik_traverse_direction', currentTraverseDirection);
+    }
+
+    function loadFromLocalStorage() {
+        const savedLog = localStorage.getItem('lesovik_measurements');
+        const savedStep = localStorage.getItem('lesovik_step_length');
+        const savedMode = localStorage.getItem('lesovik_system_mode');
+        const savedDir = localStorage.getItem('lesovik_traverse_direction');
+        
+        if (savedStep) {
+            stepLength = parseFloat(savedStep);
+            document.getElementById('step-length').value = stepLength;
+        }
+        if (savedMode) {
+            currentSystemMode = savedMode;
+            applyModeUI();
+        }
+        if (savedDir) {
+            currentTraverseDirection = savedDir;
+            document.getElementById('traverse-select-direction').value = currentTraverseDirection;
+        }
+        if (savedLog) {
+            measurementsLog = JSON.parse(savedLog);
+            renderLogTable();
+            drawPolygon();
+        }
+        updateArchiveSelect();
+    }
+
+    function applyDigitalZoom(val) {
+        const zoomValue = parseFloat(val).toFixed(1);
+        document.getElementById('zoom-value-label').innerText = zoomValue;
+        const video = document.getElementById('video-preview');
+        if (video) {
+            video.style.transform = `scale(${zoomValue})`;
+        }
+    }
+
+    function changeTraverseDirection(val) {
+        currentTraverseDirection = val;
+        saveToLocalStorage();
+        drawPolygon();
+    }
+
+    function openPopup(id, event) {
+        if(event) event.stopPropagation(); 
+        document.getElementById(id).style.display = 'flex';
+    }
+
+    function clearLog() {
+        if (confirm("Вы уверены, что хотите полностью очистить журнал съемок делянки?")) {
+            measurementsLog = [];
+            baseAzimuth = null;
+            activePedometerIndex = null;
+            resetZeroDirection();
+            renderLogTable();
+            saveToLocalStorage();
+            drawPolygon();
+        }
+    }
+
+    function closePopup(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+
+    function closePopupOuter(id, event) {
+        if (event.target.id === id) {
+            closePopup(id);
+        }
+    }
+
+    function openInstruction() {
+        openPopup('instruction-popup');
+    }
+
+    function closeInstruction() {
+        closePopup('instruction-popup');
+    }
+
+    function closeInstructionOuter(event) {
+        closePopupOuter('instruction-popup', event);
+    }
+
+    function openCalibration() {
+        document.getElementById('calibration-popup').style.display = 'flex';
+        resetCalibUI();
+    }
+
+    function closeCalibration() {
+        document.getElementById('calibration-popup').style.display = 'none';
+        isCalibrating = false;
+    }
+
+    function closeCalibrationOuter(event) {
+        if (event.target.id === 'calibration-popup') {
+            closeCalibration();
+        }
+    }
+
+    function switchSystemMode(mode) {
+        if (measurementsLog.length > 0) {
+            if (!confirm("Внимание! При смене режима текущий журнал полевой съемки будет очищен. Продолжить?")) {
+                return;
+            }
+        }
+        measurementsLog = [];
+        baseAzimuth = null;
+        activePedometerIndex = null;
+        currentSystemMode = mode;
+        
+        applyModeUI();
+        resetZeroDirection();
+        renderLogTable();
+        saveToLocalStorage();
+        drawPolygon();
+    }
+
+    function applyModeUI() {
+        document.getElementById('mode-mag').classList.remove('active-mode');
+        document.getElementById('mode-theo').classList.remove('active-mode');
+        
+        const compassDisk = document.getElementById('digital-compass-disk');
+        const videoPreview = document.getElementById('video-preview');
+        const vLine = document.getElementById('v-line-element');
+        const vDot = document.getElementById('v-dot-element');
+        const gyroRing = document.getElementById('gyro-ring');
+        const zoomPanel = document.getElementById('optic-zoom-panel');
+        const btnLockZero = document.getElementById('btn-lock-zero');
+        const btnClearZero = document.getElementById('btn-clear-zero');
+        const btnFsToggle = document.getElementById('btn-fullscreen-toggle');
+
+        if (currentSystemMode === 'magnetic') {
+            document.getElementById('mode-mag').classList.add('active-mode');
+            document.getElementById('label-live-mode').innerText = "АЗИМУТ:";
+            document.getElementById('th-mode-label').innerText = "Азимут / Угол";
+            
+            compassDisk.style.display = 'none';
+            videoPreview.style.display = 'block';
+            vLine.style.display = 'block';
+            vDot.style.display = 'block';
+            gyroRing.style.display = 'block';
+            zoomPanel.style.display = 'block';
+            btnLockZero.style.display = 'block';
+            btnClearZero.style.display = 'block';
+            btnFsToggle.style.display = 'none';
+        } else {
+            document.getElementById('mode-theo').classList.add('active-mode'); 
+            document.getElementById('label-live-mode').innerText = "БУССОЛЬ:";
+            document.getElementById('th-mode-label').innerText = "Азимут / Угол";
+            document.getElementById('sensor-stuck-alert').style.display = 'none'; 
+
+            compassDisk.style.display = 'flex';
+            videoPreview.style.display = 'none';
+            vLine.style.display = 'none';
+            vDot.style.display = 'none';
+            gyroRing.style.display = 'none';
+            zoomPanel.style.display = 'none';
+            btnLockZero.style.display = 'none';
+            btnClearZero.style.display = 'none';
+            btnFsToggle.style.display = 'block';
+
+            drawCompassDialSVG('compass-svg-canvas');
+        }
+    }
+
+    function resetCalibUI() {
+        isCalibrating = false;
+        calibTiltOk = false;
+        calibSectors = { q1: false, q2: false, q3: false, q4: false };
+        document.getElementById('calib-bar').style.width = '0%';
+        document.getElementById('calib-status').innerText = "Ожидание движений... Описывайте «восьмерку»";
+        document.getElementById('calib-status').style.color = 'var(--text-graphite)';
+        document.getElementById('btn-start-calib').disabled = false;
+        document.getElementById('btn-start-calib').innerText = "Начать калибровку";
+    }
+
+    function startLiveCalibration() {
+        resetCalibUI();
+        isCalibrating = true;
+        document.getElementById('btn-start-calib').disabled = true;
+        document.getElementById('btn-start-calib').innerText = "Идет замер...";
+        document.getElementById('calib-status').innerText = "Выполняйте объемные петли в воздухе!";
+        
+        setTimeout(() => {
+            if (isCalibrating) {
+                isCalibrating = false;
+                document.getElementById('btn-start-calib').disabled = false;
+                document.getElementById('btn-start-calib').innerText = "Повторить";
+                
+                const isCircleOk = calibSectors.q1 && calibSectors.q2 && calibSectors.q3 && calibSectors.q4;
+                
+                if (isCircleOk && calibTiltOk) {
+                    document.getElementById('calib-bar').style.width = '100%';
+                    document.getElementById('calib-status').innerText = "✔️ Ваша буссоль успешно откалибрована!";
+                    document.getElementById('calib-status').style.color = 'var(--success)';
+                } else {
+                    document.getElementById('calib-bar').style.width = '20%';
+                    document.getElementById('calib-status').innerText = "❌ Буссоль не прошла калибровку, внимательно прочтите инструкцию.";
+                    document.getElementById('calib-status').style.color = 'var(--danger)';
+                }
+            }
+        }, 12000);
+    }
+
+    function toggleTheme() {
+        const body = document.documentElement;
+        if (body.getAttribute('data-theme') === 'dark') {
+            body.removeAttribute('data-theme');
+        } else {
+            body.setAttribute('data-theme', 'dark');
+        }
+        drawPolygon();
+    }
+
+    async function startCamera() {
+        const video = document.getElementById('video-preview');
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: "environment" } }, 
+                audio: false
+            });
+            video.srcObject = stream;
+        } catch (err) {
+            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                .then(stream => { video.srcObject = stream; })
+                .catch(e => console.error("Камера заблокирована", e));
+        }
+    }
+
+    function handleOrientation(event) {
+        let heading = event.webkitCompassHeading;
+        if (heading === undefined) {
+            heading = (360 - (event.alpha || 0)) % 360;
+        }
+        
+        if (!heading) heading = 0;
+        
+        if (heading < 0) heading += 360;
+        if (heading >= 360) heading -= 360;
+
+        let currentRawAlpha = event.alpha || 0;
+        let currentTime = Date.now();
+        
+        if (currentTime - lastHeadingCheck > 400) {
+            if (lastRawAlpha !== 0 && currentSystemMode === 'magnetic') {
+                let alphaDelta = Math.abs(currentRawAlpha - lastRawAlpha);
+                if (alphaDelta > 180) alphaDelta = 360 - alphaDelta;
+                
+                let headingDelta = Math.abs(heading - lastHeadingValue); 
+                totalGyroDelta += alphaDelta;
+                
+                if (totalGyroDelta > 15) {
+                    if (headingDelta < 2 && alphaDelta > 5) {
+                        document.getElementById('sensor-stuck-alert').style.display = 'block';
+                    } else {
+                        document.getElementById('sensor-stuck-alert').style.display = 'none';
+                        totalGyroDelta = 0; 
+                    }
+                }
+            }
+            lastRawAlpha = currentRawAlpha;
+            lastHeadingValue = heading; 
+            lastHeadingCheck = currentTime;
+        }
+
+        if (isFirstData) {
+            smoothedAzimuth = heading;
+            isFirstData = false;
+        } else {
+            let diff = heading - smoothedAzimuth;
+            if (diff > 180) diff -= 360;
+            if (diff < -180) diff += 360;
+            smoothedAzimuth += filterFactor * diff;
+            smoothedAzimuth = (smoothedAzimuth % 360 + 360) % 360;
+        }
+        
+        currentAzimuth = smoothedAzimuth;
+
+        let pitch = Math.round(event.beta || 0); 
+        let roll = Math.round(event.gamma || 0);  
+
+        document.getElementById('live-pitch').innerText = `${pitch}°`;
+        document.getElementById('live-roll').innerText = `${roll}°`;
+
+        if (isCalibrating) {
+            if (currentAzimuth >= 0 && currentAzimuth < 90) calibSectors.q1 = true;
+            if (currentAzimuth >= 90 && currentAzimuth < 180) calibSectors.q2 = true;
+            if (currentAzimuth >= 180 && currentAzimuth < 270) calibSectors.q3 = true;
+            if (currentAzimuth >= 270 && currentAzimuth <= 360) calibSectors.q4 = true;
+            if (Math.abs(pitch) > 25 || Math.abs(roll) > 25) calibTiltOk = true;
+            
+            let score = 0;
+            if(calibSectors.q1) score += 20;
+            if(calibSectors.q2) score += 20;
+            if(calibSectors.q3) score += 20;
+            if(calibSectors.q4) score += 20;
+            if(calibTiltOk) score += 15;
+            document.getElementById('calib-bar').style.width = `${score}%`;
+        }
+
+        const badge = document.getElementById('angle-turn-badge');
+        
+        if (currentSystemMode === 'magnetic') {
+            document.getElementById('live-azimuth').innerText = `${currentAzimuth.toFixed(1)}°`;
+            if (baseAzimuth !== null) {
+                let turnAngle = currentAzimuth - baseAzimuth;
+                if (turnAngle < 0) turnAngle += 360;
+                badge.innerText = `ПОВОРОТ: ${turnAngle.toFixed(1)}°`;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        } else {
+            document.getElementById('live-azimuth').innerText = `${currentAzimuth.toFixed(1)}°`;
+            badge.style.display = 'none';
+            
+            const dialSvg = document.getElementById('compass-svg-canvas');
+            const fsDialSvg = document.getElementById('fs-compass-svg');
+            
+            if (dialSvg) dialSvg.style.transform = `rotate(${-currentAzimuth}deg)`;
+            if (fsDialSvg) fsDialSvg.style.transform = `rotate(${-currentAzimuth}deg)`;
+
+            let dmsText = `АЗИМУТ: ${decimalAngleToDMS(currentAzimuth)}`;
+            let coordsText = `${decimalToDMS(currentLat, true)}  ${decimalToDMS(currentLng, false)}`;
+            let altText = `Высота: ${currentAltitude} м`;
+
+            document.getElementById('dms-azimuth-text').innerText = dmsText;
+            document.getElementById('dms-coords-text').innerText = coordsText;
+            document.getElementById('altitude-text').innerText = altText;
+
+            document.getElementById('fs-dms-azimuth').innerText = dmsText;
+            document.getElementById('fs-dms-coords').innerText = coordsText;
+            document.getElementById('fs-altitude').innerText = altText;
+
+            let moveX = Math.max(-20, Math.min(20, roll));
+            let moveY = Math.max(-20, Math.min(20, pitch));
+
+            const bubble = document.getElementById('compass-bubble');
+            const fsBubble = document.getElementById('fs-compass-bubble');
+            if (bubble) {
+                bubble.style.left = `calc(50% + ${moveX}px)`;
+                bubble.style.top = `calc(50% + ${moveY}px)`;
+            }
+            if (fsBubble) {
+                fsBubble.style.left = `calc(50% + ${moveX}px)`;
+                fsBubble.style.top = `calc(50% + ${moveY}px)`;
+            }
+        }
+
+        const btnCapture = document.getElementById('btn-capture');
+        const btnFsCapture = document.getElementById('btn-fs-capture');
+
+        if (currentSystemMode === 'magnetic') {
+            const isPitchOk = Math.abs(pitch - 90) <= 5 || Math.abs(pitch - 0) <= 5 || Math.abs(pitch + 90) <= 5;
+            const isRollOk = Math.abs(roll) <= 4 || Math.abs(roll - 180) <= 4 || Math.abs(roll + 180) <= 4;
+            
+            if (isPitchOk && isRollOk) {
+                isLevel = true;
+                document.getElementById('gyro-ring').classList.add('level-perfect');
+                btnCapture.classList.add('ready-to-fire');
+                btnCapture.innerText = "➕ Зафиксировать румб в журнал";
+                btnCapture.disabled = false;
+            } else {
+                isLevel = false;
+                document.getElementById('gyro-ring').classList.remove('level-perfect');
+                btnCapture.classList.remove('ready-to-fire');
+                btnCapture.innerText = "Поймайте уровень horizon";
+                btnCapture.disabled = true;
+            }
+        } else {
+            const isHorizontal = Math.abs(pitch) <= 4 && Math.abs(roll) <= 4;
+            if (isHorizontal) {
+                isLevel = true;
+                btnCapture.classList.add('ready-to-fire');
+                btnCapture.innerText = "➕ Зафиксировать азимут в журнал";
+                btnCapture.disabled = false;
+
+                if (btnFsCapture) {
+                    btnFsCapture.classList.add('ready-to-fire');
+                    btnFsCapture.innerText = "➕ Зафиксировать азимут в журнал";
+                    btnFsCapture.disabled = false;
+                }
+            } else {
+                isLevel = false;
+                btnCapture.classList.remove('ready-to-fire');
+                btnCapture.innerText = "Поймайте пузырек уровня";
+                btnCapture.disabled = true;
+
+                if (btnFsCapture) {
+                    btnFsCapture.classList.remove('ready-to-fire');
+                    btnFsCapture.innerText = "Поймайте пузырек уровня";
+                    btnFsCapture.disabled = true;
+                }
+            }
+        }
+    }
+
+    function initOrientationSensors() {
+        if (window.DeviceOrientationEvent) {
+            if ('ondeviceorientationabsolute' in window) {
+                window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+            } else {
+                window.addEventListener('deviceorientation', handleOrientation, true);
+            }
+        } else {
+            alert("Ваш смартфон не поддерживает аппаратные гироскопы и компасы!");
+        }
+        initPedometer();
+    }
+
+    function initPedometer() {
+        if (window.DeviceMotionEvent) {
+            let lastAmount = 0;
+            let lastUpdate = 0;
+            window.addEventListener('devicemotion', (e) => {
+                let acc = e.accelerationIncludingGravity;
+                if(!acc) return;
+                
+                let currentTime = Date.now();
+                if ((currentTime - lastUpdate) > 100) {
+                    lastUpdate = currentTime;
+                    let speed = Math.sqrt(acc.x*acc.x + acc.y*acc.y + acc.z*acc.z);
+                    if (speed > 11.2 && (currentTime - lastAmount) > 400) {
+                        lastAmount = currentTime;
+                        onStepDetected();
+                    }
+                }
+            });
+        }
+    }
+
+    function onStepDetected() {
+        if (activePedometerIndex !== null) {
+            let rowIdx = measurementsLog.findIndex(m => m.id === activePedometerIndex);
+            if (rowIdx !== -1 && measurementsLog[rowIdx].mode === 'steps') {
+                measurementsLog[rowIdx].steps += 1;
+                measurementsLog[rowIdx].distance = parseFloat((measurementsLog[rowIdx].steps * stepLength).toFixed(1));
+                
+                let inputEl = document.getElementById(`dist-${activePedometerIndex}`);
+                if (inputEl) inputEl.value = measurementsLog[rowIdx].distance;
+                
+                let badgeEl = document.getElementById(`step-badge-${activePedometerIndex}`);
+                if (badgeEl) badgeEl.innerText = `👣 ${measurementsLog[rowIdx].steps}`;
+                
+                saveToLocalStorage();
+                document.body.click(); 
+                drawPolygon();
+            }
+        }
+    }
+
+    function updateStepLength() {
+        let val = parseFloat(document.getElementById('step-length').value);
+        if(!isNaN(val) && val > 0) {
+            stepLength = val;
+            measurementsLog.forEach(m => {
+                if (m.mode === 'steps') {
+                    m.distance = parseFloat((m.steps * stepLength).toFixed(1));
+                    let inputEl = document.getElementById(`dist-${m.id}`);
+                    if (inputEl) inputEl.value = m.distance;
+                }
+            });
+            saveToLocalStorage();
+            drawPolygon();
+        }
+    }
+
+    function setZeroDirection() {
+        baseAzimuth = currentAzimuth;
+        document.getElementById('base-azimuth').innerText = `${baseAzimuth.toFixed(1)}°`;
+    }
+
+    function resetZeroDirection() {
+        baseAzimuth = null;
+        document.getElementById('base-azimuth').innerText = `НЕТ`;
+        document.getElementById('angle-turn-badge').style.display = 'none';
+    }
+
+    function captureMeasurement() {
+        if (!isLevel) return;
+
+        let valueToRecord = parseFloat(currentAzimuth.toFixed(1));
+
+        const newMeasurement = {
+            id: measurementsLog.length + 1,
+            azimuth: valueToRecord, 
+            distance: 20.0, 
+            mode: 'manual',
+            steps: 0,
+            systemMode: currentSystemMode,
+            lat: currentLat,
+            lng: currentLng,
+            altitude: currentAltitude,
+            accuracy: currentAccuracy
+        };
+
+        if (activePedometerIndex !== null) {
+            activePedometerIndex = null;
+        }
+
+        measurementsLog.push(newMeasurement);
+        renderLogTable();
+        saveToLocalStorage();
+        drawPolygon();
+    }
+
+    function changeLineAzimuth(id, value) {
+        let idx = measurementsLog.findIndex(m => m.id === id);
+        if(idx !== -1) {
+            let parsedVal = parseFloat(value);
+            if (!isNaN(parsedVal)) {
+                measurementsLog[idx].azimuth = (parsedVal % 360 + 360) % 360;
+                saveToLocalStorage();
+                drawPolygon();
+            }
+        }
+    }
+
+    function changeLineDistance(id, value) {
+        let idx = measurementsLog.findIndex(m => m.id === id);
+        if(idx !== -1) {
+            measurementsLog[idx].distance = parseFloat(value) || 0;
+            saveToLocalStorage();
+            drawPolygon();
+        }
+    }
+
+    function changeLineMode(id, mode) {
+        let idx = measurementsLog.findIndex(m => m.id === id);
+        if(idx !== -1) {
+            measurementsLog[idx].mode = mode;
+            if (mode === 'steps') {
+                activePedometerIndex = id;
+                measurementsLog[idx].steps = 0;
+                measurementsLog[idx].distance = 0;
+                let inputEl = document.getElementById(`dist-${id}`);
+                if (inputEl) inputEl.value = 0;
+            } else {
+                if (activePedometerIndex === id) activePedometerIndex = null;
+            }
+            renderLogTable();
+            saveToLocalStorage();
+            drawPolygon();
+        }
+    }
+
+    function deleteMeasurement(id) {
+        if (confirm(`Удалить линию №${id}?`)) {
+            let idx = measurementsLog.findIndex(m => m.id === id);
+            if (idx !== -1) {
+                if (activePedometerIndex === id) activePedometerIndex = null;
+                measurementsLog.splice(idx, 1);
+                measurementsLog.forEach((m, index) => { m.id = index + 1; });
+                renderLogTable();
+                saveToLocalStorage();
+                drawPolygon();
+            }
+        }
+    }
+
+    function renderLogTable() {
+        const tbody = document.getElementById('log-tbody');
+        if (measurementsLog.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="color:gray; text-align:center; padding:20px 10px;">Журнал пуст. Наведите визир и зафиксируйте точку.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = "";
+        measurementsLog.forEach(m => {
+            let isManualSelected = m.mode === 'manual' ? 'selected' : '';
+            let isStepsSelected = m.mode === 'steps' ? 'selected' : '';
+            let stepIndicator = (activePedometerIndex === m.id && m.mode === 'steps') ? `<span id="step-badge-${m.id}" style="color:var(--success); font-weight:bold; font-size:10px; display:block; margin-top:2px;">👣 ${m.steps}</span>` : '';
+            
+            let dmsLat = m.lat ? decimalToDMS(m.lat, true) : "0° 00' 00\" с.ш.";
+            let dmsLng = m.lng ? decimalToDMS(m.lng, false) : "0° 00' 00\" в.д.";
+            let altVal = m.altitude ? `${m.altitude} м` : "150 м";
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>№${m.id}</b></td>
+                    <td>
+                        <input type="number" class="input-dist" value="${m.azimuth}" step="0.1" style="color:var(--forest-green); font-weight:700;" onfocus="this.select()" oninput="changeLineAzimuth(${m.id}, this.value)">
+                    </td>
+                    <td>
+                        <input type="number" id="dist-${m.id}" class="input-dist" value="${m.distance}" step="0.5" onfocus="this.select()" oninput="changeLineDistance(${m.id}, this.value)">
+                    </td>
+                    <td>
+                        <select class="select-mode" onchange="changeLineMode(${m.id}, this.value)">
+                            <option value="manual" ${isManualSelected}>Ручной</option>
+                            <option value="steps" ${isStepsSelected}>Шаги</option>
+                        </select>
+                        ${stepIndicator}
+                    </td>
+                    <td><span style="font-size:10px; font-family:monospace; display:block; white-space:normal; word-break:break-all;">${dmsLat}<br>${dmsLng} (${altVal})</span></td>
+                    <td>
+                        <button class="btn-delete-row" onclick="deleteMeasurement(${m.id})">❌</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function drawPolygon() {
+        const canvas = document.getElementById('polygon-canvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        ctx.fillStyle = isDark ? '#22302B' : '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.fillStyle = isDark ? 'rgba(255,255,255,0.4)' : '#333333'; 
+        ctx.font = "bold 12px Inter, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("С", width / 2, 18); 
+        ctx.fillText("Ю", width / 2, height - 8);
+        ctx.textAlign = "left";
+        ctx.fillText("З", 10, height / 2 + 4); 
+        ctx.textAlign = "right";
+        ctx.fillText("В", width - 10, height / 2 + 4);
+
+        if (measurementsLog.length === 0) {
+            document.getElementById('area-display').innerText = "Площадь: 0.0000 га";
+            return;
+        }
+
+        let points = [{ x: 0, y: 0 }];
+        let currentX = 0;
+        let currentY = 0;
+
+        measurementsLog.forEach((m) => {
+            let angleRad = (m.azimuth * Math.PI) / 180;
+            currentX += m.distance * Math.sin(angleRad);
+            currentY += m.distance * Math.cos(angleRad);
+            points.push({ x: currentX, y: currentY });
+        });
+
+        let minX = Math.min(...points.map(p => p.x));
+        let maxX = Math.max(...points.map(p => p.x));
+        let minY = Math.min(...points.map(p => p.y));
+        let maxY = Math.max(...points.map(p => p.y));
+
+        let scale = (width - 60) / Math.max(maxX - minX, maxY - minY, 1);
+
+        function toPixel(pt) {
+            return {
+                x: width/2 + (pt.x - (maxX+minX)/2)*scale,
+                y: height/2 - (pt.y - (maxY+minY)/2)*scale
+            };
+        }
+
+        ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
+        ctx.lineWidth = 1;
+        for(let i = 0; i < width; i += 40) {
+            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke();
+        }
+
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = isDark ? '#8FBC8F' : '#2D5A27';
+
+        for (let i = 0; i < points.length - 1; i++) {
+            let p1 = toPixel(points[i]);
+            let p2 = toPixel(points[i+1]);
+
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+
+            let midX = (p1.x + p2.x) / 2;
+            let midY = (p1.y + p2.y) / 2;
+            
+            ctx.font = "bold 10px Inter, sans-serif";
+            ctx.fillStyle = isDark ? '#FFFFFF' : '#111111';
+            ctx.textAlign = "center";
+            ctx.fillText(`№ ${measurementsLog[i].id} лин. (${measurementsLog[i].distance} м)`, midX, midY - 5);
+        }
+
+        points.forEach((p, idx) => {
+            let pix = toPixel(p);
+            ctx.beginPath();
+            ctx.arc(pix.x, pix.y, idx === 0 ? 5 : 3.5, 0, 2 * Math.PI);
+            ctx.fillStyle = idx === 0 ? '#DC2626' : '#16A34A'; 
+            ctx.fill();
+        });
+
+        let area = 0;
+        let j = points.length - 1;
+        for (let i = 0; i < points.length; i++) {
+            area += (points[j].x + points[i].x) * (points[j].y - points[i].y);
+            j = i;
+        }
+        area = Math.abs(area / 2);
+        let areaHa = area / 10000; 
+
+        document.getElementById('area-display').innerText = `Площадь: ${areaHa.toFixed(4)} га (${Math.round(area)} м²)`;
+    }
+
+    // --- ОГРАНИЧЕНИЕ ДЕМО-ВЕРСИИ: НЕ БОЛЕЕ 2 ДЕЛЯНОК В АРХИВЕ ---
+    function saveCurrentToArchive() {
+        let nameInput = document.getElementById('project-name').value.trim();
+        if (!nameInput) {
+            alert("Введите уникальное название делянки для сохранения в архив!");
+            return;
+        }
+        if (measurementsLog.length === 0) {
+            alert("Журнал съемок пуст. Наведите визир и зафиксируйте точки перед архивацией.");
+            return;
+        }
+        
+        let savedProjects = [];
+        const localData = localStorage.getItem('bg_hns_projects_archive');
+        if (localData) {
+            savedProjects = JSON.parse(localData);
+        }
+
+        if (savedProjects.length >= 2) {
+            alert("⚠️ В демонстрационной версии доступно сохранение не более 2 делянок!\n\nДля снимания ограничений и работы с неограниченным архивом приобретите коммерческую лицензию.");
+            return;
+        }
+        
+        const projectSnapshot = {
+            name: nameInput,
+            timestamp: new Date().toLocaleString('ru-RU'),
+            log: measurementsLog,
+            systemMode: currentSystemMode,
+            traverseDirection: currentTraverseDirection,
+            baseAzimuth: baseAzimuth
+        };
+        
+        savedProjects.push(projectSnapshot);
+        localStorage.setItem('bg_hns_projects_archive', JSON.stringify(savedProjects));
+        alert(`Проект "${nameInput}" успешно сохранен в ДЕМО-архив (${savedProjects.length}/2)!`);
+        updateArchiveSelect();
+    }
+
+    function updateArchiveSelect() {
+        const select = document.getElementById('archive-select');
+        select.innerHTML = '<option value="">-- Выберите из архива --</option>';
+        
+        const localData = localStorage.getItem('bg_hns_projects_archive');
+        if (localData) {
+            const savedProjects = JSON.parse(localData);
+            savedProjects.forEach((proj, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.innerText = `${proj.name} (${proj.timestamp})`;
+                select.appendChild(option);
+            });
+        }
+    }
+
+    function deleteSelectedFromArchive() {
+        const select = document.getElementById('archive-select');
+        const index = select.value;
+        if (index === "") { alert("Выберите делянку из списка для удаления!"); return; }
+        
+        let savedProjects = JSON.parse(localStorage.getItem('bg_hns_projects_archive') || "[]");
+        if (confirm(`Вы действительно хотите безвозвратно удалить проект "${savedProjects[index].name}" из памяти устройства?`)) {
+            savedProjects.splice(index, 1);
+            localStorage.setItem('bg_hns_projects_archive', JSON.stringify(savedProjects));
+            updateArchiveSelect();
+            clearLog();
+            alert("Проект успешно удален.");
+        }
+    }
+
+    function loadFromArchive(index) {
+        if (index === "") return;
+        if (measurementsLog.length > 0) {
+            if (!confirm("Внимание! Текущие активные замеры на экране будут замещены проектом из архива. Продолжить?")) {
+                document.getElementById('archive-select').value = "";
+                return;
+            }
+        }
+        
+        const localData = localStorage.getItem('bg_hns_projects_archive');
+        if (localData) {
+            const savedProjects = JSON.parse(localData);
+            const proj = savedProjects[index];
+            
+            measurementsLog = proj.log;
+            currentSystemMode = proj.systemMode || 'magnetic';
+            currentTraverseDirection = proj.traverseDirection || 'clockwise';
+            baseAzimuth = proj.baseAzimuth !== undefined ? proj.baseAzimuth : null;
+            
+            document.getElementById('project-name').value = proj.name;
+            document.getElementById('traverse-select-direction').value = currentTraverseDirection;
+            
+            applyModeUI();
+            if (baseAzimuth !== null) {
+                document.getElementById('base-azimuth').innerText = `${baseAzimuth.toFixed(1)}°`;
+            } else {
+                document.getElementById('base-azimuth').innerText = `НЕТ`;
+            }
+            
+            renderLogTable();
+            saveToLocalStorage();
+            drawPolygon();
+            alert(`Проект "${proj.name}" успешно загружен на интерактивный экран.`);
+        }
+    }
+
+    // --- БЛОКИРОВКА ЭКСПОРТА В ДЕМО-ВЕРСИИ ---
+    function exportArchiveToCSV() {
+        alert("🔒 Функция экспорта отчетов в Excel (CSV) заблокирована в ДЕМО-версии.\n\nДля выгрузки файлов приобретите коммерческую лицензию ПО «БГ-ХНС».");
+    }
+
+    function exportToKML() {
+        alert("🔒 Функция экспорта контура в ГИС (KML) заблокирована в ДЕМО-версии.\n\nДля выгрузки файлов приобретите коммерческую лицензию ПО «БГ-ХНС».");
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        startCamera();
+        initGPS(); 
+        
+        const triggerSensorAccess = async () => {
+            try {
+                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    const [orientRes, motionRes] = await Promise.all([
+                        DeviceOrientationEvent.requestPermission(),
+                        typeof DeviceMotionEvent.requestPermission === 'function' ? DeviceMotionEvent.requestPermission() : 'granted'
+                    ]);
+                    if (orientRes === 'granted' && motionRes === 'granted') {
+                        initOrientationSensors();
+                    }
+                } else {
+                    initOrientationSensors();
+                }
+            } catch (e) {
+                console.error("Ошибка активации сенсоров:", e);
+            }
+            document.removeEventListener('click', triggerSensorAccess, true);
+        };
+
+        document.addEventListener('click', triggerSensorAccess, true);
+        loadFromLocalStorage();
+    });
+</script>
+</body>
+</html>
