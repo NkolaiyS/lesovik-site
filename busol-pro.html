@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>БГ-ХНС ПРО — Единый Лесотаксационный Комплекс</title>
+    
+    <link rel="icon" type="image/jpeg" href="logo.jpeg">
+    <script type="text/javascript" src="cordova.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.mini.min.js"></script>
+
+    <script type="text/javascript">
+    // --- 1. АВТОНОМНАЯ ЗАЩИТА ЛИЦЕНЗИИ КОМПЛЕКСА (БГ-ХНС) ---
+    (function() {
+        const licensedDevices = {
+            "HNS-6680-TVK32U": new Date(2026, 6, 25),  
+            "HNS-RAL2-45TCN0": new Date(2099, 11, 31), 
+            "HNS-3SBX-TQMJO7": new Date(2026, 11, 31), 
+            "HNS-5V40-G89K6X": new Date(2026, 6, 25),  
+            "HNS-6BS0-ZIHISC": new Date(2026, 6, 25)   
+        };
+
+        const defaultLicenseExpirationDate = new Date(2026, 6, 21); 
+
+        function generateWebDeviceId() {
+            const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let segment1 = '', segment2 = '';
+            for (let i = 0; i < 4; i++) segment1 += chars.charAt(Math.floor(Math.random() * chars.length));
+            for (let i = 0; i < 6; i++) segment2 += chars.charAt(Math.floor(Math.random() * chars.length));
+            return `HNS-${segment1}-${segment2}`;
+        }
+
+        function getCurrentDeviceId() {
+            if (window.device && window.device.uuid) return window.device.uuid;
+            let webId = localStorage.getItem('bg_hns_web_id');
+            if (!webId) {
+                webId = generateWebDeviceId();
+                localStorage.setItem('bg_hns_web_id', webId);
+            }
+            return webId;
+        }
+
+        function runLicenseCheck() {
+            const currentId = getCurrentDeviceId();
+            const now = Date.now();
+            let isBlocked = false;
+
+            if (licensedDevices.hasOwnProperty(currentId)) {
+                if (now > licensedDevices[currentId].getTime()) isBlocked = true;
+            } else {
+                if (now > defaultLicenseExpirationDate.getTime()) isBlocked = true;
+            }
+
+            if (isBlocked) {
+                document.body.innerHTML = `
+                    <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:#111815; color:#F9FBF9; z-index:999999; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif; padding:20px; text-align:center;">
+                        <span style="font-size:50px; margin-bottom:20px;">🔒</span>
+                        <h2 style="color:#8FBC8F; margin-bottom:10px;">Срок действия лицензии «БГ-ХНС ПРО» истек</h2>
+                        <p style="max-width:480px; font-size:14px; opacity:0.8; line-height:1.5;">
+                            Доступ заблокирован.<br>ID устройства: <b>${currentId}</b>
+                        </p>
+                        <a href="mailto:foltaim@mail.ru" style="color:#8FBC8F; font-weight:bold; margin-top:15px; text-decoration:none;">✉️ foltaim@mail.ru</a>
+                    </div>
+                `;
+            }
+        }
+
+        document.addEventListener('deviceready', runLicenseCheck, false);
+        document.addEventListener('DOMContentLoaded', () => { setTimeout(() => { if (!window.device) runLicenseCheck(); }, 400); }, false);
+    })();
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --bg-paper: #F9FBF9;
+            --text-graphite: #333333;
+            --forest-green: #2D5A27;
+            --forest-light: #8FBC8F;
+            --border-color: #E0E0E0;
+            --card-bg: #FFFFFF;
+            --glass-bg: rgba(249, 251, 249, 0.92);
+            --danger: #DC2626;
+            --success: #16A34A;
+            --info: #2563EB;
+        }
+
+        [data-theme="dark"] {
+            --bg-paper: #1A2421;
+            --text-graphite: #F9FBF9;
+            --forest-green: #8FBC8F;
+            --forest-light: #2D5A27;
+            --border-color: #3A4F46;
+            --card-bg: #22302B;
+            --glass-bg: rgba(26, 36, 33, 0.92);
+        }
+
+        html, body {
+            margin: 0; padding: 0; width: 100%; max-width: 100vw; overflow-x: hidden;
+            background-color: var(--bg-paper); color: var(--text-graphite);
+            font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent;
+        }
+
+        .glass-header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 16px; background: var(--glass-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .logo-container { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        .header-logo { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid var(--forest-green); }
+        .glass-header h1 { font-family: 'Merriweather', serif; color: var(--forest-green); margin: 0; font-size: 16px; }
+
+        .header-controls { display: flex; align-items: center; gap: 8px; }
+        .tandem-box {
+            display: flex; align-items: center; gap: 4px; background: rgba(45, 90, 39, 0.1);
+            padding: 4px 8px; border-radius: 16px; border: 1px solid var(--forest-light); font-size: 11px; font-weight: 700; color: var(--forest-green);
+        }
+
+        .spa-tab-bar {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
+            background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border-color); display: flex; justify-content: space-around;
+            padding: 6px 0 env(safe-area-inset-bottom, 6px);
+        }
+        .tab-btn {
+            background: transparent; border: none; color: var(--text-graphite); opacity: 0.6;
+            display: flex; flex-direction: column; align-items: center; gap: 2px;
+            font-size: 9px; font-weight: 600; cursor: pointer; padding: 2px 4px;
+        }
+        .tab-btn .tab-icon { font-size: 16px; }
+        .tab-btn.active { color: var(--forest-green); opacity: 1; font-weight: 700; }
+
+        .spa-container { margin: 55px auto 75px; max-width: 900px; padding: 10px; }
+        .module-section { display: none; }
+        .module-section.active-module { display: block; }
+
+        .card {
+            background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+            padding: 16px; margin-bottom: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+        .card h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 18px; margin-bottom: 6px; }
+        
+        .input-app { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-paper); color: var(--text-graphite); font-size: 14px; box-sizing: border-box; }
+        .btn-app { background: var(--forest-green); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 13px; text-transform: uppercase; cursor: pointer; width: 100%; transition: 0.2s; }
+        .btn-app:active { opacity: 0.8; }
+
+        .camera-box { position: relative; width: 100%; aspect-ratio: 4/3; background: #000; border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+        .camera-box video { width: 100%; height: 100%; object-fit: cover; }
+        .crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; border-left: 2px solid #FFF; border-top: 2px solid #FFF; pointer-events: none; }
+
+        .table-res { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+        .table-res th, .table-res td { padding: 8px; border: 1px solid var(--border-color); text-align: left; }
+        .table-res th { background: var(--forest-green); color: white; }
+    </style>
+</head>
+<body>
+
+    <header class="glass-header">
+        <a href="#" class="logo-container" onclick="return false;">
+            <img src="logo.jpeg" alt="БГ-ХНС" class="header-logo" onerror="this.style.display='none'">
+            <h1>БГ-ХНС ПРО</h1>
+        </a>
+        <div class="header-controls">
+            <div class="tandem-box">
+                <input type="checkbox" id="tandem-toggle" checked onchange="appState.tandem = this.checked">
+                <label for="tandem-toggle">ТАНДЕМ</label>
+            </div>
+            <button class="btn-app" style="padding:4px 8px; font-size:11px;" onclick="toggleTheme()">Тема</button>
+        </div>
+    </header>
+
+    <main class="spa-container">
+
+        <!-- ================= 1. БУССОЛЬ ================= -->
+        <section id="mod-busol" class="module-section active-module">
+            <div class="card">
+                <h2>🧭 Электронная буссоль БГ-ХНС</h2>
+                <div style="margin-bottom: 10px;">
+                    <label style="font-size: 11px; font-weight: bold;">Название лесосеки:</label>
+                    <input type="text" id="busol-name" class="input-app" value="Участок 1, выдел 4" oninput="appState.projectName = this.value; saveAppState();">
+                </div>
+                
+                <div class="camera-box">
+                    <video id="busol-video" autoplay playsinline muted></video>
+                    <div style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-family: monospace;">
+                        Азимут: <b id="live-azimuth">0.0°</b> | Румб: <b id="live-rumb">СВ 0.0°</b>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                    <button class="btn-app" style="background:#2563EB;" onclick="captureBusolPoint()">📌 Засечь точку</button>
+                    <button class="btn-app" style="background:#DC2626;" onclick="clearBusolPoly()">❌ Сбросить ход</button>
+                </div>
+
+                <canvas id="busol-canvas" width="350" height="250" style="width:100%; border:1px solid var(--border-color); border-radius:8px; background:var(--card-bg);"></canvas>
+                <div id="busol-area-res" style="text-align:center; font-weight:bold; color:var(--forest-green); margin-top:8px;">Площадь: 0.00 га</div>
+            </div>
+        </section>
+
+        <!-- ================= 2. ПЕРЕЧЕТНАЯ ВЕДОМОСТЬ ================= -->
+        <section id="mod-tally" class="module-section">
+            <div class="card">
+                <h2>📋 Перечетная ведомость</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                    <select id="tally-sp" class="input-app" onchange="renderTallyGrid()">
+                        <option value="Сосна">🌲 Сосна (С)</option>
+                        <option value="Ель">🌲 Ель (Е)</option>
+                        <option value="Береза">🌳 Береза (Б)</option>
+                        <option value="Осина">🌳 Осина (Ос)</option>
+                    </select>
+                    <select id="tally-cat" class="input-app">
+                        <option value="delo">Деловые</option>
+                        <option value="half">Полуделовые</option>
+                        <option value="fire">Дрова</option>
+                    </select>
+                </div>
+
+                <div id="tally-steps-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;"></div>
+            </div>
+        </section>
+
+        <!-- ================= 3. AR ВЫСОТОМЕР ================= -->
+        <section id="mod-altimeter" class="module-section">
+            <div class="card">
+                <h2>📏 AR Высотомер и дальномер</h2>
+                <div style="margin-bottom: 10px;">
+                    <label style="font-size: 11px; font-weight: bold;">Дистанция D (м):</label>
+                    <input type="number" id="alt-dist" class="input-app" value="15.0" step="0.5">
+                </div>
+
+                <div class="camera-box">
+                    <video id="alt-video" autoplay playsinline muted></video>
+                    <div style="position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 6px; border-radius: 6px; font-size: 12px;">
+                        Низ: <b id="alt-angle-base">--</b> | Верх: <b id="alt-angle-top">--</b>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <button class="btn-app" style="background:#3B82F6;" onclick="lockAltAngle('base')">1. Фикс Низ</button>
+                    <button class="btn-app" style="background:#16A34A;" onclick="lockAltAngle('top')">2. Фикс Верх</button>
+                </div>
+
+                <div id="alt-final-h" style="text-align:center; font-size:22px; font-weight:bold; color:var(--forest-green); margin-top:10px;">H = 0.0 м</div>
+            </div>
+        </section>
+
+        <!-- ================= 4. ПОЛНОТОМЕР БИТТЕРЛИХА ================= -->
+        <section id="mod-bitterlich" class="module-section">
+            <div class="card">
+                <h2>🌲 Полнотомер Биттерлиха (HF)</h2>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px;">
+                    <button class="btn-app" style="background:#16A34A;" onclick="addBitterlich(1.0)">+1.0 (Счет)</button>
+                    <button class="btn-app" style="background:#2563EB;" onclick="addBitterlich(0.5)">+0.5 (Полу)</button>
+                    <button class="btn-app" style="background:#DC2626;" onclick="addBitterlich(-0.5)">-0.5 Сброс</button>
+                </div>
+                <div id="bitterlich-stat" style="font-size:14px; font-weight:bold;">Площадь сечений G: 0.0 м²/га | Запас V: 0.0 м³/га</div>
+            </div>
+        </section>
+
+        <!-- ================= 5. КАЛЬКУЛЯТОР МДО ================= -->
+        <section id="mod-mdo" class="module-section">
+            <div class="card">
+                <h2>📊 Материально-денежная оценка (МДО)</h2>
+                <button class="btn-app" style="background:#16A34A; margin-bottom:10px;" onclick="recalcMDO()">🔄 Пересчитать ведомость МДО</button>
+                <div id="mdo-table-box"></div>
+                <button class="btn-app" style="background:#2563EB; margin-top:10px;" onclick="exportMDOXlsx()">💾 Скачать ведомость в XLSX</button>
+            </div>
+        </section>
+
+        <!-- ================= 6. ФОТОФИКСАЦИЯ ================= -->
+        <section id="mod-photo" class="module-section">
+            <div class="card">
+                <h2>📸 Юридическая фотофиксация</h2>
+                <input type="text" id="photo-note" class="input-app" placeholder="Объект: Делянка 1, Выдел 4, Столб 2" style="margin-bottom:10px;">
+                <label class="btn-app" style="display:block; text-align:center; background:#2D5A27; cursor:pointer;">
+                    📷 Сделать снимок
+                    <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="makeLegalPhoto(event)">
+                </label>
+                <canvas id="photo-canvas" style="width:100%; border-radius:8px; margin-top:10px; display:none; border:1px solid var(--border-color);"></canvas>
+                <a id="photo-dl-btn" class="btn-app" style="display:none; text-align:center; text-decoration:none; margin-top:10px; background:#16A34A;">💾 Сохранить фото со штампом</a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- НИЖНЯЯ ПАНЕЛЬ ПЕРЕКЛЮЧЕНИЯ (TAB BAR) -->
+    <nav class="spa-tab-bar">
+        <button class="tab-btn active" onclick="switchTab('mod-busol', this)"><span class="tab-icon">🧭</span><span>Буссоль</span></button>
+        <button class="tab-btn" onclick="switchTab('mod-tally', this)"><span class="tab-icon">📋</span><span>Перечет</span></button>
+        <button class="tab-btn" onclick="switchTab('mod-altimeter', this)"><span class="tab-icon">📏</span><span>Высота</span></button>
+        <button class="tab-btn" onclick="switchTab('mod-bitterlich', this)"><span class="tab-icon">🌲</span><span>Полнота</span></button>
+        <button class="tab-btn" onclick="switchTab('mod-mdo', this)"><span class="tab-icon">📊</span><span>МДО</span></button>
+        <button class="tab-btn" onclick="switchTab('mod-photo', this)"><span class="tab-icon">📸</span><span>Фото</span></button>
+    </nav>
+
+    <script>
+        // --- ГЛОБАЛЬНОЕ СОСТОЯНИЕ ДАННЫХ ПРИЛОЖЕНИЯ ---
+        let appState = JSON.parse(localStorage.getItem('bg_hns_app_state_v4')) || {
+            tandem: true,
+            projectName: "Участок 1, выдел 4",
+            busolPoints: [],
+            tally: { "Сосна": {}, "Ель": {}, "Береза": {}, "Осина": {} },
+            heights: { "Сосна": 24, "Ель": 22, "Береза": 20, "Осина": 22 },
+            bitterlichG: 0,
+            areaHa: 1.0
+        };
+
+        function saveAppState() {
+            localStorage.setItem('bg_hns_app_state_v4', JSON.stringify(appState));
+        }
+
+        function switchTab(modId, btn) {
+            document.querySelectorAll('.module-section').forEach(el => el.classList.remove('active-module'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(modId).classList.add('active-module');
+            btn.classList.add('active');
+            if (modId === 'mod-busol') initCamera('busol-video');
+            if (modId === 'mod-altimeter') initCamera('alt-video');
+        }
+
+        function toggleTheme() {
+            const body = document.documentElement;
+            if (body.getAttribute('data-theme') === 'dark') body.removeAttribute('data-theme');
+            else body.setAttribute('data-theme', 'dark');
+        }
+
+        // --- КАМЕРА И ДАТЧИКИ ---
+        let activeStream = null;
+        async function initCamera(videoId) {
+            if (activeStream) activeStream.getTracks().forEach(t => t.stop());
+            try {
+                activeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                document.getElementById(videoId).srcObject = activeStream;
+            } catch (e) { console.log("Камера недоступна"); }
+        }
+
+        let currentOrientation = 0;
+        let currentPitch = 0;
+        window.addEventListener('deviceorientation', (e) => {
+            if (e.alpha !== null) {
+                currentOrientation = e.alpha;
+                document.getElementById('live-azimuth').innerText = currentOrientation.toFixed(1) + '°';
+            }
+            if (e.beta !== null) {
+                currentPitch = e.beta;
+            }
+        });
+
+        // --- ЛОГИКА БУССОЛИ И ПЛОЩАДИ ---
+        function captureBusolPoint() {
+            const dist = parseFloat(prompt("Введите расстояние до следующего столба (м):", "50")) || 0;
+            if (dist > 0) {
+                appState.busolPoints.push({ az: currentOrientation, dist: dist });
+                drawBusolPolygon();
+                saveAppState();
+            }
+        }
+
+        function clearBusolPoly() {
+            appState.busolPoints = [];
+            drawBusolPolygon();
+            saveAppState();
+        }
+
+        function drawBusolPolygon() {
+            const canvas = document.getElementById('busol-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+
+            if (appState.busolPoints.length === 0) {
+                document.getElementById('busol-area-res').innerText = "Площадь: 0.00 га";
+                return;
+            }
+
+            let x = canvas.width / 2, y = canvas.height / 2;
+            let coords = [{x, y}];
+
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.strokeStyle = '#2D5A27';
+            ctx.lineWidth = 2;
+
+            appState.busolPoints.forEach(pt => {
+                let rad = (pt.az - 90) * (Math.PI / 180);
+                x += Math.cos(rad) * (pt.dist * 0.8);
+                y += Math.sin(rad) * (pt.dist * 0.8);
+                coords.push({x, y});
+                ctx.lineTo(x, y);
+            });
+            ctx.closePath();
+            ctx.stroke();
+
+            // Вычисление площади по формуле Гаусса
+            let area = 0;
+            for (let i = 0; i < coords.length; i++) {
+                let j = (i + 1) % coords.length;
+                area += coords[i].x * coords[j].y;
+                area -= coords[j].x * coords[i].y;
+            }
+            let areaHa = Math.abs(area / 2) / 1000;
+            if (areaHa === 0) areaHa = 1.0; 
+            appState.areaHa = parseFloat(areaHa.toFixed(2));
+            document.getElementById('busol-area-res').innerText = `Площадь: ${appState.areaHa} га`;
+        }
+
+        // --- ЛОГИКА ПЕРЕЧЕТНОЙ ВЕДОМОСТИ ---
+        function renderTallyGrid() {
+            const sp = document.getElementById('tally-sp').value;
+            const container = document.getElementById('tally-steps-grid');
+            container.innerHTML = '';
+
+            const steps = [16, 20, 24, 28, 32, 36, 40, 44, 48];
+            steps.forEach(d => {
+                let count = (appState.tally[sp] && appState.tally[sp][d]) ? appState.tally[sp][d] : 0;
+                container.innerHTML += `
+                    <div style="background:var(--card-bg); border:1px solid var(--border-color); padding:8px; border-radius:8px; text-align:center;">
+                        <b style="font-size:12px;">${d} см</b>
+                        <div style="font-size:18px; font-weight:bold; color:var(--forest-green); my-1;">${count}</div>
+                        <button class="btn-app" style="padding:4px;" onclick="addTreeVal('${sp}', ${d})">+1</button>
+                    </div>
+                `;
+            });
+        }
+
+        function addTreeVal(sp, d) {
+            if (!appState.tally[sp]) appState.tally[sp] = {};
+            appState.tally[sp][d] = (appState.tally[sp][d] || 0) + 1;
+            renderTallyGrid();
+            saveAppState();
+        }
+
+        // --- ЛОГИКА AR ВЫСОТОМЕРА ---
+        let altBasePitch = null;
+        function lockAltAngle(type) {
+            if (type === 'base') {
+                altBasePitch = currentPitch;
+                document.getElementById('alt-angle-base').innerText = altBasePitch.toFixed(1) + '°';
+            } else if (type === 'top' && altBasePitch !== null) {
+                let topPitch = currentPitch;
+                document.getElementById('alt-angle-top').innerText = topPitch.toFixed(1) + '°';
+                
+                let dist = parseFloat(document.getElementById('alt-dist').value) || 15;
+                let rad1 = Math.abs(altBasePitch) * (Math.PI / 180);
+                let rad2 = Math.abs(topPitch) * (Math.PI / 180);
+                let h = dist * (Math.tan(rad1) + Math.tan(rad2));
+                
+                document.getElementById('alt-final-h').innerText = `H = ${h.toFixed(1)} м`;
+                
+                if (appState.tandem) {
+                    let sp = document.getElementById('tally-sp').value;
+                    appState.heights[sp] = parseFloat(h.toFixed(1));
+                    alert(`📥 ТАНДЕМ: Высота ${h.toFixed(1)} м записана для породы ${sp}!`);
+                }
+                saveAppState();
+            }
+        }
+
+        // --- ЛОГИКА ПОЛНОТОМЕРА ---
+        function addBitterlich(val) {
+            appState.bitterlichG = Math.max(0, appState.bitterlichG + val);
+            let v = appState.bitterlichG * 0.43 * 22; // Приблизительный запас
+            document.getElementById('bitterlich-stat').innerText = `Площадь сечений G: ${appState.bitterlichG.toFixed(1)} м²/га | Запас V: ${v.toFixed(1)} м³/га`;
+            saveAppState();
+        }
+
+        // --- МДО РАСЧЕТ И XLSX ---
+        function recalcMDO() {
+            let box = document.getElementById('mdo-table-box');
+            let html = `<table class="table-res"><thead><tr><th>Порода</th><th>Деревьев (шт)</th><th>Запас (м³)</th><th>Площадь (га)</th></tr></thead><tbody>`;
+            
+            for (let sp in appState.tally) {
+                let totalTrees = 0;
+                for (let d in appState.tally[sp]) totalTrees += appState.tally[sp][d];
+                let vol = totalTrees * 0.45; // Базовый расчет
+                if (totalTrees > 0) {
+                    html += `<tr><td><b>${sp}</b></td><td>${totalTrees}</td><td>${vol.toFixed(2)}</td><td>${appState.areaHa}</td></tr>`;
+                }
+            }
+            html += `</tbody></table>`;
+            box.innerHTML = html;
+        }
+
+        function exportMDOXlsx() {
+            let data = [
+                ["ВЕДОМОСТЬ МАТЕРИАЛЬНО-ДЕНЕЖНОЙ ОЦЕНКИ"],
+                ["Объект:", appState.projectName],
+                ["Площадь лесосеки (га):", appState.areaHa],
+                []
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "МДО");
+            XLSX.writeFile(wb, `MDO_${Date.now()}.xlsx`);
+        }
+
+        // --- ЮРИДИЧЕСКАЯ ФОТОФИКСАЦИЯ ---
+        function makeLegalPhoto(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.getElementById('photo-canvas');
+                    canvas.width = 1000;
+                    canvas.height = (img.height * 1000) / img.width;
+                    const ctx = canvas.getContext('2d');
+                    
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    // Штамп
+                    ctx.fillStyle = "rgba(0,0,0,0.7)";
+                    ctx.fillRect(0, canvas.height - 80, canvas.width, 80);
+                    
+                    ctx.fillStyle = "#FFF";
+                    ctx.font = "bold 20px sans-serif";
+                    ctx.fillText(`🌲 ЛЕСОВИК ПРО | ${appState.projectName}`, 20, canvas.height - 45);
+                    ctx.font = "16px sans-serif";
+                    ctx.fillText(`Время: ${new Date().toLocaleString('ru-RU')} | Заметка: ${document.getElementById('photo-note').value}`, 20, canvas.height - 18);
+
+                    canvas.style.display = 'block';
+                    const dlBtn = document.getElementById('photo-dl-btn');
+                    dlBtn.href = canvas.toDataURL('image/jpeg', 0.85);
+                    dlBtn.download = `evidence_${Date.now()}.jpg`;
+                    dlBtn.style.display = 'block';
+                };
+                img.src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTallyGrid();
+            initCamera('busol-video');
+        });
+    </script>
+</body>
+</html>
