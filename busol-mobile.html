@@ -4,95 +4,113 @@
     <script type="text/javascript" src="cordova.js"></script>
 
     <script type="text/javascript">
-        // --- БЛОК АВТОНОМНОЙ ЗАЩИТЫ ЛИЦЕНЗИИ ДЛЯ ЗАКАЗЧИКА ---
-        (function() {
-            // Список разрешенных устройств (безлимитный доступ)
-            const allowedDevices = [
-                "HNS-6680-TVK32U",  // Активированное устройство тестирование
-                "HNS-RAL2-45TCN0"   // ID Худякова Николая Сергеевича
-            ];
+    // --- БЛОК АВТОНОМНОЙ ЗАЩИТЫ ЛИЦЕНЗИИ ДЛЯ ЗАКАЗЧИКА ---
+    (function() {
+        // --- СПИСОК УСТРОЙСТВ С ИНДИВИДУАЛЬНЫМИ СРОКАМИ ЛИЦЕНЗИИ ---
+        // Месяцы в JS: 0 - Янв, 1 - Фев, 2 - Мар, 3 - Апр, 4 - Май, 5 - Июн, 6 - Июл, 7 - Авг, 8 - Сен, 9 - Окт, 10 - Ноя, 11 - Дек
+        const licensedDevices = {
+            "HNS-6680-TVK32U": new Date(2026, 6, 25),  // До 25 июля 2026
+            "HNS-RAL2-45TCN0": new Date(2099, 11, 31), // Бессрочно (Ваш телефон)
+            "HNS-3SBX-TQMJO7": new Date(2026, 11, 31)  // До 31 декабря 2026 (Ваш ноутбук)
+        };
 
-            // Дата окончания работы приложения для остальных пользователей: 24 июля 2026 года
-            const licenseExpirationDate = new Date(2026, 6, 21); 
+        // Общая дата окончания бесплатного периода для ВСЕХ остальных пользователей (21 июля 2026)
+        const defaultLicenseExpirationDate = new Date(2026, 6, 21); 
 
-            // Генератор безопасного ID для браузера
-            function generateWebDeviceId() {
-                const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                let segment1 = '', segment2 = '';
-                for (let i = 0; i < 4; i++) segment1 += chars.charAt(Math.floor(Math.random() * chars.length));
-                for (let i = 0; i < 6; i++) segment2 += chars.charAt(Math.floor(Math.random() * chars.length));
-                return `HNS-${segment1}-${segment2}`;
+        // Генератор безопасного ID для браузера
+        function generateWebDeviceId() {
+            const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let segment1 = '', segment2 = '';
+            for (let i = 0; i < 4; i++) segment1 += chars.charAt(Math.floor(Math.random() * chars.length));
+            for (let i = 0; i < 6; i++) segment2 += chars.charAt(Math.floor(Math.random() * chars.length));
+            return `HNS-${segment1}-${segment2}`;
+        }
+
+        // Функция получения текущего ID (Cordova или LocalStorage)
+        function getCurrentDeviceId() {
+            if (window.device && window.device.uuid) {
+                return window.device.uuid;
+            }
+            let webId = localStorage.getItem('bg_hns_web_id');
+            if (!webId) {
+                webId = generateWebDeviceId();
+                localStorage.setItem('bg_hns_web_id', webId);
+            }
+            return webId;
+        }
+
+        function runLicenseCheck() {
+            const currentId = getCurrentDeviceId();
+            const now = Date.now();
+
+            let isBlocked = false;
+
+            // 1. Проверяем, есть ли устройство в персональном списке
+            if (licensedDevices.hasOwnProperty(currentId)) {
+                const deviceExpirationDate = licensedDevices[currentId];
+                // Если индивидуальная дата истекла — блокируем
+                if (now > deviceExpirationDate.getTime()) {
+                    isBlocked = true;
+                }
+            } else {
+                // 2. Если устройства нет в списке — проверяем по общей дате массы
+                if (now > defaultLicenseExpirationDate.getTime()) {
+                    isBlocked = true;
+                }
             }
 
-            // Функция получения текущего ID (Cordova или LocalStorage)
-            function getCurrentDeviceId() {
-                if (window.device && window.device.uuid) {
-                    return window.device.uuid;
-                }
-                let webId = localStorage.getItem('bg_hns_web_id');
-                if (!webId) {
-                    webId = generateWebDeviceId();
-                    localStorage.setItem('bg_hns_web_id', webId);
-                }
-                return webId;
-            }
-
-            function runLicenseCheck() {
-                const currentId = getCurrentDeviceId();
-                const isAllowedDevice = allowedDevices.includes(currentId);
-
-                // Блокируем, только если устройство не в белом списке И дата истекла
-                if (!isAllowedDevice && Date.now() > licenseExpirationDate.getTime()) {
-                    document.body.innerHTML = `
-                        <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; 
-                                    background:#111815; color:#F9FBF9; z-index:99999; 
-                                    display:flex; flex-direction:column; align-items:center; 
-                                    justify-content:center; font-family:'Inter',sans-serif; padding:20px; text-align:center;">
-                            <span style="font-size:50px; margin-bottom:20px;">🔒</span>
-                            <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:10px;">Срок действия ПО истек</h2>
-                            <p style="max-width:450px; font-size:14px; opacity:0.8; line-height:1.5;">
-                                Период демонстрационной или оплаченной установки данной копии электронной буссоли «БГ-ХНС» завершен.<br>
-                                Ваш ID устройства: <b>${currentId}</b>
-                            </p>
-                            <div style="margin-top:25px; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:8px; border:1px solid rgba(143,188,143,0.2);">
-                                <span style="display:block; font-size:12px; opacity:0.6; text-transform:uppercase;">Для продления лицензии:</span>
-                                <a href="mailto:foltaim@mail.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none; font-size:16px; display:block; margin-top:5px;">✉️ foltaim@mail.ru</a>
-                            </div>
+            // Если доступ ограничен, выводим заглушку
+            if (isBlocked) {
+                document.body.innerHTML = `
+                    <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; 
+                                background:#111815; color:#F9FBF9; z-index:99999; 
+                                display:flex; flex-direction:column; align-items:center; 
+                                justify-content:center; font-family:'Inter',sans-serif; padding:20px; text-align:center;">
+                        <span style="font-size:50px; margin-bottom:20px;">🔒</span>
+                        <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:10px;">Срок действия ПО истек</h2>
+                        <p style="max-width:450px; font-size:14px; opacity:0.8; line-height:1.5;">
+                            Период демонстрационной или оплаченной установки данной копии электронной буссоли «БГ-ХНС» завершен.<br>
+                            Ваш ID устройства: <b>${currentId}</b>
+                        </p>
+                        <div style="margin-top:25px; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:8px; border:1px solid rgba(143,188,143,0.2);">
+                            <span style="display:block; font-size:12px; opacity:0.6; text-transform:uppercase;">Для продления лицензии:</span>
+                            <a href="mailto:foltaim@mail.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none; font-size:16px; display:block; margin-top:5px;">✉️ foltaim@mail.ru</a>
                         </div>
-                    `;
-                }
+                    </div>
+                `;
             }
+        }
 
-            // Безопасный запуск: проверяем Cordova deviceready, либо падаем на DOMContentLoaded
-            document.addEventListener('deviceready', runLicenseCheck, false);
-            document.addEventListener('DOMContentLoaded', () => {
-                setTimeout(() => {
-                    if (!window.device) runLicenseCheck();
-                }, 500);
-            }, false);
-        })();
+        // Безопасный запуск: проверяем Cordova deviceready, либо падаем на DOMContentLoaded
+        document.addEventListener('deviceready', runLicenseCheck, false);
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                if (!window.device) runLicenseCheck();
+            }, 500);
+        }, false);
+    })();
 
-        // --- ПЕРЕХВАТ БОТОВ ДЛЯ SEO-ПРЕВЬЮ ---
-        (function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const postSlug = urlParams.get('post');
-            const userAgent = (navigator.userAgent || '').toLowerCase();
-            const isBot = /telegrambot|vkshare|facebookexternalhit|twitterbot|slackbot|whatsapp|viber/i.test(userAgent);
-            
-            if (postSlug && isBot) {
-                window.location.href = 'https://functions.yandexcloud.net/d4ecn5ag33dcdd2deivd?post=' + encodeURIComponent(postSlug);
-            }
-        })();
+    // --- ПЕРЕХВАТ БОТОВ ДЛЯ SEO-ПРЕВЬЮ ---
+    (function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const postSlug = urlParams.get('post');
+        const userAgent = (navigator.userAgent || '').toLowerCase();
+        const isBot = /telegrambot|vkshare|facebookexternalhit|twitterbot|slackbot|whatsapp|viber/i.test(userAgent);
+        
+        if (postSlug && isBot) {
+            window.location.href = 'https://functions.yandexcloud.net/d4ecn5ag33dcdd2deivd?post=' + encodeURIComponent(postSlug);
+        }
+    })();
 
-        // --- ЯНДЕКС МЕТРИКА ---
-        (function(m,e,t,r,i,k,a){
-            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)}; m[i].l=1*new Date();
-            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109130409', 'ym');
+    // --- ЯНДЕКС МЕТРИКА ---
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)}; m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109130409', 'ym');
 
-        ym(109130409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
-    </script>
+    ym(109130409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+</script>
     <noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 
     <meta charset="UTF-8">
