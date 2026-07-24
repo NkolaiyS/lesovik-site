@@ -79,6 +79,14 @@
             --footer-bg: #2C3531;
             --danger: #DC2626;
             --success: #16A34A;
+            --overlay-bg: rgba(0, 0, 0, 0.6);
+            
+            /* Цвета кнопок замера (Светлая тема) */
+            --btn-base-bg: #FFFFFF;
+            --btn-base-text: var(--text-graphite);
+            --btn-base-border: var(--border-color);
+            --btn-top-bg: var(--forest-green);
+            --btn-top-text: #FFFFFF;
         }
 
         [data-theme="dark"] {
@@ -90,6 +98,14 @@
             --card-bg: #22302B;
             --glass-bg: rgba(26, 36, 33, 0.85);
             --footer-bg: #111815;
+            --overlay-bg: rgba(0, 0, 0, 0.8);
+
+            /* Цвета кнопок замера (Темная тема) */
+            --btn-base-bg: var(--forest-green);
+            --btn-base-text: #111111;
+            --btn-base-border: transparent;
+            --btn-top-bg: #FFFFFF;
+            --btn-top-text: #111111;
         }
 
         html, body {
@@ -103,7 +119,6 @@
 
         *, *:before, *:after { box-sizing: inherit; }
 
-        /* ШАПКА B СТИЛЕ БУССОЛИ */
         .glass-header {
             position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
             display: flex; justify-content: space-between; align-items: center;
@@ -133,7 +148,7 @@
         .subtitle { font-size: 11px; color: var(--text-graphite); opacity: 0.6; margin-bottom: 15px; }
 
         /* ОКНО КАМЕРЫ */
-        .camera-viewport-wrapper { position: relative; width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid var(--border-color); box-sizing: border-box; }
+        .camera-viewport-wrapper { position: relative; width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid var(--border-color); box-sizing: border-box; margin-bottom: 10px; }
         #camera-stream { width: 100%; height: 100%; object-fit: cover; transform-origin: center center; transition: transform 0.1s ease-out; }
 
         /* ПРИЦЕЛ */
@@ -142,6 +157,28 @@
         .crosshair::before { top: 19px; left: 0; width: 40px; height: 2px; }
         .crosshair::after { top: 0; left: 19px; width: 2px; height: 40px; }
         .crosshair-dot { position: absolute; top: 16px; left: 16px; width: 8px; height: 8px; background: #DC2626; border-radius: 50%; box-shadow: 0 0 6px #DC2626; }
+
+        /* ОВЕРЛЕЙ УГЛА ВНУТРИ КАМЕРЫ */
+        .camera-angle-overlay {
+            position: absolute; top: 10px; left: 10px; z-index: 35;
+            background: rgba(0, 0, 0, 0.7); color: #FFF; padding: 4px 10px;
+            border-radius: 6px; font-family: monospace; font-size: 12px; pointer-events: none;
+        }
+
+        /* КНОПКИ ФИКСАЦИИ В ОДИН РЯД */
+        .in-camera-controls {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;
+        }
+
+        .btn-target-base {
+            background-color: var(--btn-base-bg); color: var(--btn-base-text); border: 1px solid var(--btn-base-border);
+            padding: 12px 6px; border-radius: 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; cursor: pointer; text-align: center;
+        }
+        .btn-target-top {
+            background-color: var(--btn-top-bg); color: var(--btn-top-text); border: none;
+            padding: 12px 6px; border-radius: 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; cursor: pointer; text-align: center;
+        }
+        .btn-target-top:disabled { opacity: 0.4; cursor: not-allowed; }
 
         /* ЭЛЕМЕНТЫ УПРАВЛЕНИЯ */
         .optic-control-box { background: rgba(45, 90, 39, 0.05); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 12px; font-size: 12px; font-weight: 500; }
@@ -156,12 +193,23 @@
 
         .btn { background-color: var(--forest-green); color: #fff; border: none; padding: 12px; width: 100%; border-radius: 8px; font-size: 13px; font-weight: 700; text-transform: uppercase; cursor: pointer; margin-bottom: 8px; transition: 0.2s; }
         .btn:active { transform: scale(0.98); }
-        .btn:disabled { background-color: #A0A0A0; color: #FFF; cursor: not-allowed; opacity: 0.6; }
         .btn-outline { background-color: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); }
 
         #result-box { display: none; background: var(--forest-light); color: #111; text-align: center; padding: 12px; border-radius: 8px; font-size: 22px; font-weight: bold; margin-bottom: 12px; }
 
         #start-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-paper); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; text-align: center; }
+
+        /* ПОЛНОЭКРАННОЕ ОКНО КАМЕРЫ */
+        .fullscreen-camera-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #000; z-index: 9999; flex-direction: column; justify-content: space-between;
+            padding: 12px; box-sizing: border-box;
+        }
+
+        /* ПОПАПЫ */
+        .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--overlay-bg); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 12px; box-sizing: border-box; }
+        .popup-window { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; max-width: 540px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 18px; position: relative; box-sizing: border-box; }
+        .popup-close { position: absolute; top: 12px; right: 12px; background: transparent; border: none; color: var(--text-graphite); font-size: 22px; cursor: pointer; }
 
         .seo-info-section { margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border-color); font-size: 12px; line-height: 1.6; }
         .seo-info-section h3 { font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 14px; margin-top: 10px; margin-bottom: 6px; }
@@ -183,6 +231,39 @@
         <a href="index.html" class="btn btn-outline" style="max-width: 280px; text-decoration: none; display: block; box-sizing: border-box; margin-top: 10px;">НАЗАД</a>
     </div>
 
+    <!-- ПОЛНОЭКРАННАЯ КАМЕРА -->
+    <div id="fs-camera-modal" class="fullscreen-camera-modal">
+        <div style="display:flex; justify-content:space-between; align-items:center; color:#8FBC8F; font-weight:bold;">
+            <span>🔍 ПОЛНОЭКРАННЫЙ ВИДОИСКАТЕЛЬ</span>
+            <button class="btn btn-outline" style="width:auto; padding:4px 12px; margin:0;" onclick="closeFullscreenCamera()">✕ ЗАКРЫТЬ</button>
+        </div>
+        <div style="position:relative; width:100%; height:75vh; overflow:hidden; border-radius:12px; margin:10px 0;">
+            <video id="fs-camera-stream" autoplay playsinline style="width:100%; height:100%; object-fit:cover;"></video>
+            <div class="crosshair"><div class="crosshair-dot"></div></div>
+            <div class="camera-angle-overlay">УГОЛ: <b id="fs-current-angle">0.0°</b></div>
+        </div>
+        <div class="in-camera-controls" style="margin:0;">
+            <button id="fs-btn-base" class="btn-target-base" onclick="lockBase()">1. КОМЕЛЬ (НИЗ)</button>
+            <button id="fs-btn-top" class="btn-target-top" onclick="lockTop()" disabled>2. ВЕРШИНА</button>
+        </div>
+    </div>
+
+    <!-- ПОПАП ИНСТРУКЦИИ -->
+    <div id="instruction-popup" class="popup-overlay" onclick="closeInstructionOuter(event)">
+        <div class="popup-window">
+            <button class="popup-close" onclick="closeInstruction()">&times;</button>
+            <h3 style="font-family: 'Merriweather', serif; color: var(--forest-green); margin-top:0;">📖 Инструкция высотомера</h3>
+            <ul style="padding-left:18px; font-size:13px; line-height:1.6; color:var(--text-graphite);">
+                <li><strong>На какое расстояние отходить?</strong> Вам <u>не нужно отмерять строго 15 или 20 метров</u>. Отойти можно на любое удобное расстояние (11м, 16.5м, 22м), с которого четко видны комель и вершина. Оптимально отходить примерно на предполагаемую высоту дерева.</li>
+                <li><strong>Замер ручной дистанции:</strong> Измерьте расстояние до дерева (шагами, рулеткой или дальномером) и введите число в поле <em>«Дистанция (м)»</em>.</li>
+                <li><strong>AR-автозамер дистанции:</strong> Включите галочку <em>«AR-автозамер»</em>, наведите прицел на комель (низ) и нажмите <em>«1. КОМЕЛЬ (НИЗ)»</em>. Дистанция вычислится автоматически.</li>
+                <li><strong>Зум для высоких крон:</strong> Используйте ползунок <em>«🔎 ЗУМ»</em> для оптического или цифрового приближения вершины.</li>
+                <li><strong>Завершение замера:</strong> Поднимите телефон вверх, наведите прицел на вершину и нажмите <em>«2. ВЕРШИНА»</em>. Вы получите точную высоту дерева в метрах.</li>
+            </ul>
+            <button class="btn" style="margin-top:15px;" onclick="closeInstruction()">Понятно, к замеру</button>
+        </div>
+    </div>
+
     <!-- ШАПКА -->
     <header class="glass-header">
         <a href="index.html" class="logo-container">
@@ -195,29 +276,40 @@
         </div>
     </header>
 
-    <!-- ОСНОВНОЙ КОНТЕНТ В ДВЕ КОЛОНКИ НА ПК -->
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
     <main class="container">
         <div class="grid-layout">
             
-            <!-- ЛЕВАЯ КОЛОНКА: КАМЕРА И ПРИЦЕЛ -->
+            <!-- ЛЕВАЯ КОЛОНКА: КАМЕРА И УПРАВЛЕНИЕ -->
             <div class="card">
                 <h2>Оптический видоискатель</h2>
                 <div class="subtitle">Наведите красную точку прицела на комель или вершину.</div>
 
                 <div class="optic-control-box">
-                    <div class="zoom-slider-wrapper">
-                        <label for="zoom-slider">🔎 Увеличение (Зум): <span id="zoom-val-text">1.0</span>x</label>
+                    <div class="zoom-slider-wrapper" style="margin-bottom:8px;">
+                        <label for="zoom-slider">🔎 ЗУМ: <span id="zoom-val-text">1.0</span>x</label>
                         <input type="range" id="zoom-slider" min="1.0" max="4.0" step="0.1" value="1.0" oninput="updateCameraZoom(this.value)">
                     </div>
+                    <button class="btn btn-outline" style="padding:6px; font-size:11px; margin:0;" onclick="openFullscreenCamera()">🔍 Увеличить видоискатель (На весь экран)</button>
                 </div>
 
                 <div class="camera-viewport-wrapper">
                     <video id="camera-stream" autoplay playsinline></video>
                     <div class="crosshair"><div class="crosshair-dot"></div></div>
+                    <div class="camera-angle-overlay">УГОЛ: <b id="overlay-current-angle">0.0°</b></div>
                 </div>
+
+                <!-- КНОПКИ В ОДИН РЯД ПОД КАМЕРОЙ -->
+                <div class="in-camera-controls">
+                    <button id="btn-base" class="btn-target-base" onclick="lockBase()">1. КОМЕЛЬ (НИЗ)</button>
+                    <button id="btn-top" class="btn-target-top" onclick="lockTop()" disabled>2. ВЕРШИНА</button>
+                </div>
+
+                <!-- КНОПКА СБРОСА НИЖЕ В СВОБОДНОЙ ЗОНЕ -->
+                <button class="btn btn-outline" onclick="resetApp()" style="margin-top:5px;">СБРОСИТЬ ЗАМЕР</button>
             </div>
 
-            <!-- ПРАВАЯ КОЛОНКА: ПАНЕЛЬ ЗАМЕРА И ИНСТРУКЦИЯ -->
+            <!-- ПРАВАЯ КОЛОНКА: ПАНЕЛЬ ДАННЫХ И ИНСТРУКЦИИ -->
             <div class="card">
                 <h2>Параметры и замер высоты</h2>
                 <div class="subtitle">Расчет высоты по тригонометрической формуле.</div>
@@ -255,20 +347,14 @@
                     <span id="top-angle" style="font-weight: bold;">--</span>
                 </div>
 
-                <div style="margin-top: 15px;">
-                    <button id="btn-base" class="btn" onclick="lockBase()" style="background-color: var(--danger);">1. ПРИЦЕЛ НА КОМЕЛЬ (НИЗ)</button>
-                    <button id="btn-top" class="btn" onclick="lockTop()" style="background-color: #2563EB;" disabled>2. ПРИЦЕЛ НА ВЕРШИНУ</button>
-                    <button class="btn btn-outline" onclick="resetApp()">СБРОСИТЬ ЗАМЕР</button>
-                </div>
+                <button class="btn btn-outline" style="margin-top:15px;" onclick="openInstruction()">📖 Инструкция высотомера</button>
 
-                <!-- SEO СЛОЙ И ИНСТРУКЦИЯ ПОПОЛАМ -->
+                <!-- SEO СЛОЙ -->
                 <div class="seo-info-section">
-                    <h3>📖 Полевая инструкция высотомера</h3>
-                    <ul>
-                        <li><strong>На какое расстояние отходить?</strong> Отойти можно на любое расстояние (11м, 16.5м, 22м). Оптимально отходить примерно на предполагаемую высоту дерева.</li>
-                        <li><strong>AR-автозамер дистанции:</strong> Включите <em>«AR-автозамер»</em>, наведите прицел на комель и нажмите красную кнопку. Дистанция замерится автоматически по углу наклона земли.</li>
-                        <li><strong>Зум для высоких крон:</strong> Используйте ползунок зума для детального прицеливания на верхушку дерева.</li>
-                    </ul>
+                    <h3>Высотомер для леса онлайн и измерение деревьев</h3>
+                    <p>
+                        Цифровой <strong>оптический высотомер кроны калькулятор</strong> заменяет стандартные механические высотомеры (ВУ-1, Макарова, Эклиметр). Предназначен для инженеров лесного хозяйства и таксаторов.
+                    </p>
                 </div>
             </div>
 
@@ -284,6 +370,22 @@
     let baseAngleRad = null;
     let topAngleRad = null;
     let videoTrack = null;
+    let activeStream = null;
+
+    function openInstruction() { document.getElementById('instruction-popup').style.display = 'flex'; }
+    function closeInstruction() { document.getElementById('instruction-popup').style.display = 'none'; }
+    function closeInstructionOuter(e) { if(e.target.id === 'instruction-popup') closeInstruction(); }
+
+    function openFullscreenCamera() {
+        const modal = document.getElementById('fs-camera-modal');
+        const fsVideo = document.getElementById('fs-camera-stream');
+        if (activeStream) { fsVideo.srcObject = activeStream; }
+        modal.style.display = 'flex';
+    }
+
+    function closeFullscreenCamera() {
+        document.getElementById('fs-camera-modal').style.display = 'none';
+    }
 
     function toggleTheme() {
         const body = document.documentElement;
@@ -302,7 +404,9 @@
         }
 
         const videoEl = document.getElementById('camera-stream');
+        const fsVideoEl = document.getElementById('fs-camera-stream');
         if (videoEl) { videoEl.style.transform = `scale(${val})`; }
+        if (fsVideoEl) { fsVideoEl.style.transform = `scale(${val})`; }
     }
 
     function toggleAutoDistance() {
@@ -336,13 +440,13 @@
                 window.addEventListener('deviceorientation', handleOrientation);
             }
 
-            const stream = await navigator.mediaDevices.getUserMedia({ 
+            activeStream = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: { ideal: "environment" } } 
             });
             
             const videoEl = document.getElementById('camera-stream');
-            videoEl.srcObject = stream;
-            videoTrack = stream.getVideoTracks()[0];
+            videoEl.srcObject = activeStream;
+            videoTrack = activeStream.getVideoTracks()[0];
 
             document.getElementById('start-screen').style.display = 'none';
 
@@ -356,7 +460,11 @@
         if (angleDeg > 90) angleDeg = 90;
         if (angleDeg < -90) angleDeg = -90;
 
-        document.getElementById('current-angle').innerText = angleDeg.toFixed(1) + '°';
+        const textVal = angleDeg.toFixed(1) + '°';
+        document.getElementById('current-angle').innerText = textVal;
+        document.getElementById('overlay-current-angle').innerText = textVal;
+        document.getElementById('fs-current-angle').innerText = textVal;
+
         currentAngleRad = angleDeg * (Math.PI / 180);
     }
 
@@ -378,6 +486,11 @@
 
         document.getElementById('btn-base').disabled = true;
         document.getElementById('btn-top').disabled = false;
+        
+        const fsBtnBase = document.getElementById('fs-btn-base');
+        const fsBtnTop = document.getElementById('fs-btn-top');
+        if(fsBtnBase) fsBtnBase.disabled = true;
+        if(fsBtnTop) fsBtnTop.disabled = false;
     }
 
     function lockTop() {
@@ -408,6 +521,8 @@
         }
 
         document.getElementById('btn-top').disabled = true;
+        const fsBtnTop = document.getElementById('fs-btn-top');
+        if(fsBtnTop) fsBtnTop.disabled = true;
     }
 
     function resetApp() {
@@ -415,8 +530,14 @@
         topAngleRad = null;
         document.getElementById('base-angle').innerText = '--';
         document.getElementById('top-angle').innerText = '--';
+        
         document.getElementById('btn-base').disabled = false;
         document.getElementById('btn-top').disabled = true;
+
+        const fsBtnBase = document.getElementById('fs-btn-base');
+        const fsBtnTop = document.getElementById('fs-btn-top');
+        if(fsBtnBase) fsBtnBase.disabled = false;
+        if(fsBtnTop) fsBtnTop.disabled = true;
         
         const resultBox = document.getElementById('result-box');
         resultBox.style.display = 'none';
