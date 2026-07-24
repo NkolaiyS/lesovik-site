@@ -69,7 +69,6 @@
     <script src="https://yandex.ru/ads/system/context.js" async></script>
 
     <script>
-        // Полноэкранный блок Touch
         window.yaContextCb.push(() => {
             Ya.Context.AdvManager.render({
                 "blockId": "R-A-19250236-2",
@@ -77,7 +76,6 @@
                 "platform": "touch"
             })
         });
-        // FloorAd Touch (Приклеен к низу)
         window.yaContextCb.push(() => {
             Ya.Context.AdvManager.render({
                 "blockId": "R-A-19250236-1",
@@ -85,7 +83,6 @@
                 "platform": "touch"
             })
         });
-        // Полноэкранный блок Desktop
         window.yaContextCb.push(() => {
             Ya.Context.AdvManager.render({
                 "blockId": "R-A-19250236-3",
@@ -93,7 +90,6 @@
                 "platform": "desktop"
             })
         });
-        // FloorAd Desktop
         window.yaContextCb.push(() => {
             Ya.Context.AdvManager.render({
                 "blockId": "R-A-19250236-4",
@@ -104,474 +100,438 @@
     </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-
-        body, html {
-            margin: 0; padding: 0; height: 100%;
-            font-family: 'Inter', sans-serif;
-            background-color: #000;
-            color: #fff;
-            overflow: hidden;
-        }
-
-        #camera-stream {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            object-fit: cover;
-            z-index: 1;
-        }
-
-        /* Вертикальные визирные линии разметки ствола на заднем плане (под интерфейсом) */
-        .measurement-line {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background-color: #FF3B30;
-            z-index: 10;
-            pointer-events: none;
-            box-shadow: 0 0 8px rgba(255, 63, 48, 0.6);
-        }
-
-        #line-left { left: 40%; }
-        #line-right { left: 60%; }
-
-        /* Центральная вспомогательная точка прицеливания */
-        .center-marker {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 6px; height: 6px;
-            background-color: #3B82F6;
-            border-radius: 50%;
-            z-index: 10;
-            pointer-events: none;
-        }
-
-        .ui-layer {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 20;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            pointer-events: none;
-        }
-
-        .top-panel {
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: 12px 15px;
-            pointer-events: auto;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            max-height: 60vh;
-            overflow-y: auto;
-        }
-
-        .bottom-panel {
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: 15px;
-            pointer-events: auto;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            padding-bottom: env(safe-area-inset-bottom, 15px);
-            max-height: 45vh;
-            overflow-y: auto;
-        }
-
-        h1 { margin: 0; font-size: 18px; color: #8FBC8F; display: flex; align-items: center; }
-
-        /* Кнопка инструкции */
-        .info-icon-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            border: 2px solid #8FBC8F;
-            color: #8FBC8F;
-            font-size: 14px;
-            font-weight: bold;
-            margin-left: 10px;
-            cursor: pointer;
-            background: transparent;
-            outline: none;
-            transition: 0.2s;
-        }
-        .info-icon-btn:active {
-            background-color: #8FBC8F;
-            color: #000;
-        }
-
-        .input-group {
-            display: flex; align-items: center; justify-content: space-between;
-            background: rgba(255,255,255,0.1);
-            border-radius: 8px; padding: 6px 12px; margin-bottom: 10px;
-        }
-        .input-group label { font-weight: 600; font-size: 13px; }
-        .input-group input {
-            background: transparent; border: none; color: #fff;
-            font-size: 16px; font-weight: bold; text-align: right; width: 80px;
-            outline: none;
-        }
-
-        .method-settings-block {
-            margin-bottom: 10px;
-        }
-
-        /* Блок калибровки */
-        .calibration-trigger-box {
-            margin-bottom: 10px;
-        }
-        .calibration-panel {
-            display: none; background: rgba(59, 130, 246, 0.15);
-            border: 1px dashed #3B82F6; border-radius: 8px; padding: 12px; margin-top: 8px;
-        }
-
-        .slider-container {
-            background: rgba(255,255,255,0.05);
-            padding: 12px; border-radius: 8px; margin-bottom: 12px;
-        }
-        .slider-label-box {
-            display: flex; justify-content: space-between; font-size: 12px;
-            font-weight: 600; margin-bottom: 6px; color: #8FBC8F;
-        }
-        .width-slider {
-            width: 100%; -webkit-appearance: none; background: #333;
-            height: 6px; border-radius: 3px; outline: none;
-            accent-color: #2D5A27;
-        }
-        .width-slider::-webkit-slider-thumb {
-            -webkit-appearance: none; width: 22px; height: 22px;
-            border-radius: 50%; background: #2D5A27; cursor: pointer;
-            border: 2px solid #fff;
-        }
-
-        .btn {
-            background-color: #2D5A27; color: #fff;
-            border: none; padding: 14px; width: 100%; border-radius: 8px;
-            font-size: 15px; font-weight: 600; text-transform: uppercase;
-            cursor: pointer; margin-bottom: 8px; transition: 0.2s;
-        }
-        .btn:active { background-color: #1a3617; transform: scale(0.98); }
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
         
-        .btn-outline {
-            background-color: transparent; border: 1px solid #8FBC8F; color: #8FBC8F;
-        }
-        .btn-blue {
-            background-color: #3B82F6; color: #fff; border: none; padding: 10px;
-            font-size: 13px; font-weight: 600; width: 100%; border-radius: 6px;
-            cursor: pointer; text-transform: uppercase;
-        }
-
-        #result-box {
-            display: none; background: #8FBC8F; color: #000;
-            text-align: center; padding: 12px; border-radius: 8px;
-            font-size: 22px; font-weight: bold; margin-bottom: 10px;
+        :root {
+            --bg-paper: #F9FBF9;
+            --text-graphite: #333333;
+            --forest-green: #2D5A27;
+            --forest-light: #8FBC8F;
+            --border-color: #E0E0E0;
+            --card-bg: #FFFFFF;
+            --glass-bg: rgba(249, 251, 249, 0.85);
+            --footer-bg: #2C3531;
+            --danger: #DC2626;
+            --overlay-bg: rgba(0, 0, 0, 0.6);
         }
 
-        #start-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #1A2421; z-index: 100;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            padding: 20px; box-sizing: border-box; text-align: center;
+        [data-theme="dark"] {
+            --bg-paper: #1A2421;
+            --text-graphite: #F9FBF9;
+            --forest-green: #8FBC8F;
+            --forest-light: #2D5A27;
+            --border-color: #3A4F46;
+            --card-bg: #22302B;
+            --glass-bg: rgba(26, 36, 33, 0.85);
+            --footer-bg: #111815;
+            --overlay-bg: rgba(0, 0, 0, 0.8);
         }
 
-        .recommendation-box {
-            background: rgba(143, 188, 143, 0.1);
-            border: 1px solid #8FBC8F;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 30px;
-            max-width: 320px;
-            text-align: left;
+        html, body {
+            margin: 0; padding: 0;
+            width: 100%; max-width: 100vw;
+            background-color: var(--bg-paper); color: var(--text-graphite);
+            font-family: 'Inter', sans-serif; line-height: 1.6;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
         }
 
-        /* Окно инструкции */
-        .info-modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.75);
-            z-index: 10005;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-        }
-        .info-modal-box {
-            background: #1A2421;
-            border: 1px solid #2D5A27;
-            border-radius: 12px;
-            padding: 25px;
-            width: 85%;
-            max-width: 400px;
-            position: relative;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.5);
-            color: #fff;
-            pointer-events: auto;
-        }
-        .info-modal-close {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: transparent;
-            border: none;
-            font-size: 20px;
-            color: #E0E0E0;
-            cursor: pointer;
-            opacity: 0.7;
-        }
-        .info-modal-close:hover { opacity: 1; }
-        .info-modal-title {
-            color: #8FBC8F;
-            margin-top: 0;
-            font-size: 20px;
-            margin-bottom: 15px;
-            border-bottom: 1px solid rgba(143, 188, 143, 0.3);
-            padding-bottom: 10px;
-        }
-        .info-modal-text ol {
-            padding-left: 20px;
-            margin: 0 0 15px 0;
-            line-height: 1.6;
-            font-size: 14px;
-            color: #E0E0E0;
-        }
-        .info-modal-text li {
-            margin-bottom: 10px;
+        *, *:before, *:after { box-sizing: inherit; }
+
+        .glass-header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 20px; background: var(--glass-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            box-sizing: border-box;
         }
 
-        /* Интегрированный подвал */
-        .simple-footer {
-            text-align: center; padding: 12px 0 5px 0; border-top: 1px solid rgba(255,255,255,0.15); font-size: 11px; opacity: 0.6; color: #E0E0E0; margin-top: 15px; width: 100%; box-sizing: border-box;
+        .logo-container { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        .header-logo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--forest-green); }
+        .glass-header h1 { font-family: 'Merriweather', serif; color: var(--forest-green); margin: 0; font-size: 16px; }
+
+        .header-right { display: flex; align-items: center; gap: 8px; }
+        .btn-back { display: inline-flex; align-items: center; gap: 6px; background: transparent; color: var(--forest-green); border: 1px solid var(--forest-green); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; transition: 0.2s; font-size: 12px; }
+        .btn-back:hover { background: var(--forest-green); color: var(--bg-paper); }
+
+        .theme-toggle { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; min-height: 34px; }
+
+        .container { max-width: 1000px; width: 100%; margin: 75px auto 80px; padding: 0 10px; box-sizing: border-box; }
+
+        .grid-layout { display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; box-sizing: border-box; }
+        @media (min-width: 850px) { .grid-layout { grid-template-columns: 1.1fr 1fr; gap: 25px; } }
+
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 4px 4px 0px rgba(0,0,0,0.02); max-width: 100%; width: 100%; box-sizing: border-box; }
+        .card h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 18px; margin-bottom: 5px; }
+        .subtitle { font-size: 11px; color: var(--text-graphite); opacity: 0.6; margin-bottom: 15px; }
+
+        /* ОКНО КАМЕРЫ */
+        .camera-viewport-wrapper { position: relative; width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid var(--border-color); box-sizing: border-box; margin-bottom: 10px; }
+        .camera-stream-el { width: 100%; height: 100%; object-fit: cover; transform-origin: center center; transition: transform 0.1s ease-out; }
+
+        /* ВИЗИРНЫЕ ЛИНИИ */
+        .measurement-line {
+            position: absolute; top: 0; bottom: 0; width: 2px;
+            background-color: #FF3B30; z-index: 10; pointer-events: none;
+            box-shadow: 0 0 8px rgba(255, 63, 48, 0.8);
         }
+        .center-marker {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 6px; height: 6px; background-color: #3B82F6; border-radius: 50%;
+            z-index: 10; pointer-events: none;
+        }
+
+        /* ПОЛЗУНОК ВЫРАВНИВАНИЯ */
+        .slider-container { background: rgba(0,0,0,0.03); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; margin-bottom: 12px; }
+        .slider-label-box { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--forest-green); }
+        .width-slider { width: 100%; -webkit-appearance: none; background: #ccc; height: 6px; border-radius: 3px; outline: none; accent-color: var(--forest-green); }
+        .width-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--forest-green); cursor: pointer; border: 2px solid #fff; }
+
+        /* КНОПКИ УПРАВЛЕНИЯ */
+        .optic-control-box { background: rgba(45, 90, 39, 0.05); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 12px; font-size: 12px; font-weight: 500; }
+        .zoom-slider-wrapper { display: flex; align-items: center; gap: 10px; }
+        .zoom-slider-wrapper input[type="range"] { flex: 1; accent-color: var(--forest-green); }
+
+        .input-group { display: flex; align-items: center; justify-content: space-between; background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; }
+        .input-group label { font-weight: 600; font-size: 13px; }
+        .input-group input { background: transparent; border: none; color: var(--text-graphite); font-size: 16px; font-weight: bold; text-align: right; width: 80px; outline: none; }
+
+        .btn { background-color: var(--forest-green); color: #fff; border: none; padding: 12px; width: 100%; border-radius: 8px; font-size: 13px; font-weight: 700; text-transform: uppercase; cursor: pointer; margin-bottom: 8px; transition: 0.2s; }
+        .btn:active { transform: scale(0.98); }
+        .btn-outline { background-color: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); }
+        .btn-blue { background-color: #3B82F6; color: #fff; border: none; padding: 8px; font-size: 12px; font-weight: 600; width: 100%; border-radius: 6px; cursor: pointer; text-transform: uppercase; }
+
+        #result-box { display: none; background: var(--forest-light); color: #111; text-align: center; padding: 12px; border-radius: 8px; font-size: 22px; font-weight: bold; margin-bottom: 12px; }
+
+        .calibration-panel { display: none; background: rgba(59, 130, 246, 0.08); border: 1px dashed #3B82F6; border-radius: 8px; padding: 10px; margin-top: 8px; }
+
+        #start-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-paper); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; text-align: center; }
+
+        /* ПОЛНОЭКРАННАЯ КАМЕРА */
+        .fullscreen-camera-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #000; z-index: 9999; flex-direction: column; justify-content: space-between;
+            padding: 12px; box-sizing: border-box;
+        }
+
+        /* ПОПАПЫ */
+        .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--overlay-bg); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 12px; box-sizing: border-box; }
+        .popup-window { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; max-width: 540px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 18px; position: relative; box-sizing: border-box; }
+        .popup-close { position: absolute; top: 12px; right: 12px; background: transparent; border: none; color: var(--text-graphite); font-size: 22px; cursor: pointer; }
+
+        .seo-info-section { margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border-color); font-size: 12px; line-height: 1.6; }
+        .seo-info-section h3 { font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 14px; margin-top: 10px; margin-bottom: 6px; }
+
+        footer { background-color: var(--footer-bg); color: #E0E0E0; padding: 30px 15px 20px; font-size: 12px; text-align: center; margin-top: 40px; }
     </style>
 </head>
 <body>
 
+    <!-- ЭКРАН СТАРТА -->
     <div id="start-screen">
-        <h1 style="color: #8FBC8F; font-size: 26px; margin-bottom: 15px; text-align: center;">Оптическая мерная вилка</h1>
-        <p style="color: #E0E0E0; margin-bottom: 20px; line-height: 1.5; font-size: 15px;">Для вычисления диаметра ствола необходим доступ к камере вашего мобильного устройства.</p>
+        <h1 style="font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 26px; margin-bottom: 10px;">Мерная вилка</h1>
+        <p style="margin-bottom: 20px; max-width: 400px; font-size: 13px;">
+            Для вычисления диаметра ствола разрешите доступ к камере вашего мобильного устройства.
+        </p>
         
-        <div class="recommendation-box">
-            <p style="color: #8FBC8F; margin: 0; font-size: 13px; line-height: 1.5;">
-                <b>Совет эксперта:</b> Для идеального использования и эталонной точности расчетов используйте дополнительно лазерный дальномер для точного определения расстояния до дерева.
-            </p>
+        <div style="background: rgba(143, 188, 143, 0.15); border: 1px solid var(--forest-green); border-radius: 8px; padding: 12px; margin-bottom: 25px; max-width: 320px; text-align: left; font-size: 12px;">
+            <b style="color: var(--forest-green);">Совет эксперта:</b> Для идеального использования и эталонной точности расчетов используйте дополнительно лазерный дальномер для определения расстояния до дерева.
         </div>
 
-        <button class="btn" onclick="initDiameterApp()" style="max-width: 300px;">РАЗРЕШИТЬ ДОСТУП</button>
-        <a href="index.html" class="btn btn-outline" style="max-width: 300px; text-decoration: none; display: block; box-sizing: border-box;">НАЗАД</a>
+        <button class="btn" onclick="initDiameterApp()" style="max-width: 280px;">РАЗРЕШИТЬ И НАЧАТЬ</button>
+        <a href="index.html" class="btn btn-outline" style="max-width: 280px; text-decoration: none; display: block; box-sizing: border-box; margin-top: 10px;">НАЗАД</a>
     </div>
 
-    <video id="camera-stream" autoplay playsinline></video>
+    <!-- ПОЛНОЭКРАННАЯ КАМЕРА -->
+    <div id="fs-camera-modal" class="fullscreen-camera-modal">
+        <div style="display:flex; justify-content:space-between; align-items:center; color:#8FBC8F; font-weight:bold;">
+            <span>🔍 ПОЛНОЭКРАННЫЙ ВИДОИСКАТЕЛЬ</span>
+            <button class="btn btn-outline" style="width:auto; padding:4px 12px; margin:0;" onclick="closeFullscreenCamera()">✕ ЗАКРЫТЬ</button>
+        </div>
+        <div style="position:relative; width:100%; height:70vh; overflow:hidden; border-radius:12px; margin:10px 0;">
+            <video id="fs-camera-stream" class="camera-stream-el" autoplay playsinline></video>
+            <div id="fs-line-left" class="measurement-line" style="left: 40%;"></div>
+            <div id="fs-line-right" class="measurement-line" style="left: 60%;"></div>
+            <div class="center-marker"></div>
+        </div>
+        <div>
+            <div class="slider-container" style="background: rgba(255,255,255,0.1); margin-bottom: 8px;">
+                <input type="range" class="width-slider" min="5" max="95" value="20" oninput="syncSliders(this.value)">
+            </div>
+            <button class="btn" onclick="calculateDiameter(); closeFullscreenCamera();" style="margin: 0;">РАССЧИТАТЬ ДИАМЕТР</button>
+        </div>
+    </div>
 
-    <div id="line-left" class="measurement-line"></div>
-    <div id="line-right" class="measurement-line"></div>
-    <div class="center-marker"></div>
+    <!-- ПОПАП ИНСТРУКЦИИ -->
+    <div id="instruction-popup" class="popup-overlay" onclick="closeInstructionOuter(event)">
+        <div class="popup-window">
+            <button class="popup-close" onclick="closeInstruction()">&times;</button>
+            <h3 style="font-family: 'Merriweather', serif; color: var(--forest-green); margin-top:0;">📖 Инструкция мерной вилки</h3>
+            <ol style="padding-left:18px; font-size:13px; line-height:1.6; color:var(--text-graphite);">
+                <li>Измерьте точное расстояние до дерева в метрах (шагами, рулеткой или дальномером) и введите в поле <b>«Дистанция»</b>.</li>
+                <li>Наведите камеру смартфона на ствол дерева.</li>
+                <li>С помощью ползунка раздвиньте красные линии так, чтобы они точно касались левого и правого краев коры.</li>
+                <li>Нажмите кнопку <b>«РАССЧИТАТЬ ДИАМЕТР»</b>.</li>
+            </ol>
+            <p style="font-size: 12px; color: var(--forest-green); margin-top: 10px;"><b>Важно:</b> Для эталонной точности выполните калибровку угла обзора вашей камеры (FOV) по листу А4.</p>
+            <button class="btn" style="margin-top:15px;" onclick="closeInstruction()">Понятно, к замеру</button>
+        </div>
+    </div>
 
-    <div class="ui-layer">
-        
-        <div class="top-panel">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h1>
-                    Замер диаметра
-                    <button class="info-icon-btn" onclick="openInstruction()">?</button>
-                </h1>
-                <a href="index.html" style="color: #8FBC8F; text-decoration: none; font-size: 13px; font-weight: bold;">ВЫХОД</a>
+    <!-- ШАПКА -->
+    <header class="glass-header">
+        <a href="index.html" class="logo-container">
+            <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
+            <h1>Лесовик • МЕРНАЯ ВИЛКА</h1>
+        </a>
+        <div class="header-right">
+            <a href="index.html" class="btn-back">← Главная</a>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тема</button>
+        </div>
+    </header>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
+    <main class="container">
+        <div class="grid-layout">
+            
+            <!-- ЛЕВАЯ КОЛОНКА: КАМЕРА И ВИЗИРЫ -->
+            <div class="card">
+                <h2>Оптический видоискатель</h2>
+                <div class="subtitle">Совместите красные визиры с внешними краями коры ствола.</div>
+
+                <div class="optic-control-box">
+                    <div class="zoom-slider-wrapper" style="margin-bottom:8px;">
+                        <label for="zoom-slider">🔎 ЗУМ: <span id="zoom-val-text">1.0</span>x</label>
+                        <input type="range" id="zoom-slider" min="1.0" max="4.0" step="0.1" value="1.0" oninput="updateCameraZoom(this.value)">
+                    </div>
+                    <button class="btn btn-outline" style="padding:6px; font-size:11px; margin:0;" onclick="openFullscreenCamera()">🔍 Увеличить видоискатель (На весь экран)</button>
+                </div>
+
+                <div class="camera-viewport-wrapper">
+                    <video id="camera-stream" class="camera-stream-el" autoplay playsinline></video>
+                    <div id="line-left" class="measurement-line" style="left: 40%;"></div>
+                    <div id="line-right" class="measurement-line" style="left: 60%;"></div>
+                    <div class="center-marker"></div>
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-label-box">
+                        <span>Совмещение визиров по коре</span>
+                        <span id="slider-value">20%</span>
+                    </div>
+                    <input type="range" id="width-slider" class="width-slider" min="5" max="95" value="20" oninput="syncSliders(this.value)">
+                </div>
+
+                <button class="btn" onclick="calculateDiameter()">РАССЧИТАТЬ ДИАМЕТР</button>
+                <button class="btn btn-outline" onclick="resetMeasurement()">СБРОСИТЬ</button>
             </div>
 
-            <div class="input-group" id="distance-container">
-                <label>Дистанция до дерева (м):</label>
-                <input type="number" id="distance" value="0" step="0.1" min="0" onfocus="this.select()">
-            </div>
+            <!-- ПРАВАЯ КОЛОНКА: ПАРАМЕТРЫ И КАЛИБРОВКА -->
+            <div class="card">
+                <h2>Параметры и калибровка</h2>
+                <div class="subtitle">Дистанция до дерева и настройки угла обзора камеры.</div>
 
-            <div class="method-settings-block">
+                <div id="result-box">Диаметр ствола: 0.0 см</div>
+
                 <div class="input-group">
-                    <label>Угол обзора камеры FOV (град):</label>
+                    <label for="distance">Дистанция до дерева (м):</label>
+                    <input type="number" id="distance" value="2.0" step="0.1" min="0" onfocus="this.select()">
+                </div>
+
+                <div class="input-group">
+                    <label for="camera-fov">Угол обзора FOV (град):</label>
                     <input type="number" id="camera-fov" value="60" step="1" onfocus="this.select()">
                 </div>
-                
-                <div class="calibration-trigger-box">
-                    <button class="btn-blue" id="cal-toggle-btn" onclick="toggleCalibrationBlock()">Калибровка камеры</button>
+
+                <div style="margin-bottom: 15px;">
+                    <button class="btn-blue" id="cal-toggle-btn" onclick="toggleCalibrationBlock()">Калибровка камеры (по Листу А4)</button>
                     <div id="calibration-panel" class="calibration-panel">
                         <div class="input-group">
-                            <label>Ширина эталона Лист А4 (см):</label>
+                            <label>Ширина эталона (см):</label>
                             <input type="number" id="cal-target-width" value="29.7" step="0.1" onfocus="this.select()">
                         </div>
                         <div class="input-group">
                             <label>Дистанция до эталона (м):</label>
                             <input type="number" id="cal-target-dist" value="1.0" step="0.1" onfocus="this.select()">
                         </div>
-                        <button class="btn-blue" style="background-color: #2563EB; margin-top: 5px;" onclick="executeCameraCalibration()">Зафиксировать параметры</button>
+                        <button class="btn-blue" style="background-color: var(--forest-green); margin-top: 5px;" onclick="executeCameraCalibration()">Зафиксировать FOV</button>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="bottom-panel">
-            <div id="result-box">Диаметр ствола: 0.0 см</div>
+                <button class="btn btn-outline" onclick="openInstruction()">📖 Инструкция вилки</button>
 
-            <div class="slider-container">
-                <div class="slider-label-box">
-                    <span>Совмещение визиров по коре</span>
-                    <span id="slider-value">20%</span>
+                <!-- SEO СЛОЙ -->
+                <div class="seo-info-section">
+                    <h3>Оптическая мерная вилка для таксации леса</h3>
+                    <p>
+                        Цифровой прибор бесконтактного измерения диаметра ствола на высоте груди (1.3 м). Позволяет быстро определять толщину древесины без прямого доступа к стволу на крутосклонах и в буреломе.
+                    </p>
                 </div>
-                <input type="range" id="width-slider" class="width-slider" min="5" max="95" value="20" oninput="updateVisors(this.value)">
             </div>
 
-            <button class="btn" onclick="calculateDiameter()">РАССЧИТАТЬ ДИАМЕТР</button>
-            <button class="btn btn-outline" onclick="resetMeasurement()">СБРОСИТЬ</button>
-
-            <footer class="simple-footer">
-                &copy; 2026 Лесовик - про, все права защищены
-            </footer>
         </div>
+    </main>
 
-    </div>
+    <footer>
+        &copy; 2026 Лесовик Про. Все права защищены.
+    </footer>
 
-    <div id="instruction-modal" class="info-modal-overlay" onclick="closeInstruction()">
-        <div class="info-modal-box" onclick="event.stopPropagation()">
-            <button class="info-modal-close" onclick="closeInstruction()">✕</button>
-            <h3 class="info-modal-title">Как пользоваться вилкой</h3>
-            <div class="info-modal-text">
-                <ol>
-                    <li>Измерьте точное расстояние до дерева (в метрах) и введите его в поле <b>Дистанция</b>.</li>
-                    <li>Наведите камеру на ствол дерева.</li>
-                    <li>С помощью нижнего ползунка раздвиньте красные линии так, чтобы они точно касались левого и правого краев коры.</li>
-                    <li>Нажмите кнопку <b>Рассчитать диаметр</b>.</li>
-                </ol>
-                <p style="font-size: 12px; color: #8FBC8F; margin: 0;"><b>Важно:</b> Для точных расчетов предварительно выполните калибровку камеры по эталонному листу А4.</p>
-            </div>
-        </div>
-    </div>
+<script>
+    let activeStream = null;
+    let videoTrack = null;
+    let currentSpreadPercent = 20;
+    let isCalibrationOpen = false;
 
-    <script>
-        let screenWidth = window.innerWidth;
-        let currentSpreadPercent = 20;
-        let isCalibrationOpen = false;
+    function openInstruction() { document.getElementById('instruction-popup').style.display = 'flex'; }
+    function closeInstruction() { document.getElementById('instruction-popup').style.display = 'none'; }
+    function closeInstructionOuter(e) { if(e.target.id === 'instruction-popup') closeInstruction(); }
 
-        window.addEventListener('resize', () => {
-            screenWidth = window.innerWidth;
-        });
+    function toggleTheme() {
+        const body = document.documentElement;
+        if (body.getAttribute('data-theme') === 'dark') { body.removeAttribute('data-theme'); } 
+        else { body.setAttribute('data-theme', 'dark'); }
+    }
 
-        function toggleCalibrationBlock() {
-            const panel = document.getElementById('calibration-panel');
-            const btn = document.getElementById('cal-toggle-btn');
-            isCalibrationOpen = !isCalibrationOpen;
+    function openFullscreenCamera() {
+        const modal = document.getElementById('fs-camera-modal');
+        const fsVideo = document.getElementById('fs-camera-stream');
+        if (activeStream) { fsVideo.srcObject = activeStream; }
+        modal.style.display = 'flex';
+    }
+
+    function closeFullscreenCamera() {
+        document.getElementById('fs-camera-modal').style.display = 'none';
+    }
+
+    function updateCameraZoom(val) {
+        document.getElementById('zoom-val-text').innerText = parseFloat(val).toFixed(1);
+        
+        if (videoTrack && typeof videoTrack.getCapabilities === 'function') {
+            const capabilities = videoTrack.getCapabilities();
+            if (capabilities.zoom) {
+                videoTrack.applyConstraints({ advanced: [{ zoom: parseFloat(val) }] }).catch(() => {});
+            }
+        }
+
+        const videoEls = document.querySelectorAll('.camera-stream-el');
+        videoEls.forEach(el => el.style.transform = `scale(${val})`);
+    }
+
+    function syncSliders(value) {
+        currentSpreadPercent = parseInt(value, 10);
+        
+        const leftPercent = 50 - (currentSpreadPercent / 2);
+        const rightPercent = 50 + (currentSpreadPercent / 2);
+        
+        document.getElementById('line-left').style.left = leftPercent + '%';
+        document.getElementById('line-right').style.left = rightPercent + '%';
+        
+        const fsLeft = document.getElementById('fs-line-left');
+        const fsRight = document.getElementById('fs-line-right');
+        if(fsLeft) fsLeft.style.left = leftPercent + '%';
+        if(fsRight) fsRight.style.left = rightPercent + '%';
+
+        const sliders = document.querySelectorAll('.width-slider');
+        sliders.forEach(s => s.value = currentSpreadPercent);
+
+        document.getElementById('slider-value').innerText = currentSpreadPercent + '%';
+        hideResult();
+    }
+
+    async function initDiameterApp() {
+        try {
+            activeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } });
             
-            if (isCalibrationOpen) {
-                panel.style.display = 'block';
-                btn.innerText = 'Закрыть калибровку';
-            } else {
-                panel.style.display = 'none';
-                btn.innerText = 'Калибровка камеры';
-            }
+            const videoEl = document.getElementById('camera-stream');
+            videoEl.srcObject = activeStream;
+            videoTrack = activeStream.getVideoTracks()[0];
+
+            document.getElementById('start-screen').style.display = 'none';
+            syncSliders(20);
+
+        } catch (err) {
+            alert('Ошибка доступа к камере: ' + err.message + '\nУбедитесь, что сайт открыт по HTTPS.');
+        }
+    }
+
+    function toggleCalibrationBlock() {
+        const panel = document.getElementById('calibration-panel');
+        const btn = document.getElementById('cal-toggle-btn');
+        isCalibrationOpen = !isCalibrationOpen;
+        
+        if (isCalibrationOpen) {
+            panel.style.display = 'block';
+            btn.innerText = 'Закрыть калибровку';
+        } else {
+            panel.style.display = 'none';
+            btn.innerText = 'Калибровка камеры (по Листу А4)';
+        }
+    }
+
+    function executeCameraCalibration() {
+        const targetWidthCm = parseFloat(document.getElementById('cal-target-width').value);
+        const targetDistM = parseFloat(document.getElementById('cal-target-dist').value);
+
+        if (isNaN(targetWidthCm) || targetWidthCm <= 0 || isNaN(targetDistM) || targetDistM <= 0) {
+            alert('Укажите корректные параметры калибровочной цели.');
+            return;
         }
 
-        function openInstruction() {
-            document.getElementById('instruction-modal').style.display = 'flex';
+        const pct = currentSpreadPercent / 100;
+        if (pct <= 0.05) {
+            alert('Раздвиньте ползунок так, чтобы визиры совпали с краями калибровочного листа.');
+            return;
         }
 
-        function closeInstruction() {
-            document.getElementById('instruction-modal').style.display = 'none';
+        const alphaCalRad = 2 * Math.atan(targetWidthCm / (200 * targetDistM));
+        const calculatedFovRad = alphaCalRad / pct;
+        const calculatedFovDeg = calculatedFovRad * (180 / Math.PI);
+
+        if (calculatedFovDeg > 15 && calculatedFovDeg < 130) {
+            document.getElementById('camera-fov').value = calculatedFovDeg.toFixed(1);
+            alert('Калибровка завершена! Определенный FOV камеры: ' + calculatedFovDeg.toFixed(1) + '°');
+            toggleCalibrationBlock(); 
+        } else {
+            alert('Получено нереалистичное значение FOV: ' + calculatedFovDeg.toFixed(1) + '°\nПроверьте дистанцию до листа А4.');
+        }
+    }
+
+    function calculateDiameter() {
+        const distance = parseFloat(document.getElementById('distance').value);
+        const resultBox = document.getElementById('result-box');
+
+        if (isNaN(distance) || distance <= 0) {
+            alert('Укажите точную дистанцию до дерева перед расчетом.');
+            return;
         }
 
-        function updateVisors(value) {
-            currentSpreadPercent = parseInt(value, 10);
-            
-            const leftPercent = 50 - (currentSpreadPercent / 2);
-            const rightPercent = 50 + (currentSpreadPercent / 2);
-            
-            document.getElementById('line-left').style.left = leftPercent + '%';
-            document.getElementById('line-right').style.left = rightPercent + '%';
-            
-            document.getElementById('slider-value').innerText = currentSpreadPercent + '%';
-            hideResult();
+        const pct = currentSpreadPercent / 100;
+        const fovDegrees = parseFloat(document.getElementById('camera-fov').value) || 60;
+        const subtendedAngleRad = (pct * fovDegrees) * (Math.PI / 180);
+        
+        const diameterMeters = 2 * distance * Math.tan(subtendedAngleRad / 2);
+        const diameterCm = diameterMeters * 100;
+
+        resultBox.style.display = 'block';
+        if (!isNaN(diameterCm) && diameterCm > 0.5) {
+            resultBox.innerText = `Диаметр ствола: ${diameterCm.toFixed(1)} см`;
+            resultBox.style.background = 'var(--forest-light)';
+        } else {
+            resultBox.innerText = `Ошибка расчета`;
+            resultBox.style.background = '#FCA5A5';
         }
+    }
 
-        async function initDiameterApp() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                document.getElementById('camera-stream').srcObject = stream;
-                document.getElementById('start-screen').style.display = 'none';
-                updateVisors(document.getElementById('width-slider').value);
-            } catch (err) {
-                alert('Ошибка инициализации видеопотока камеры: ' + err.message + '\nПроверьте настройки разрешений и протокол HTTPS.');
-            }
-        }
+    function hideResult() {
+        document.getElementById('result-box').style.display = 'none';
+    }
 
-        // Выполнение инженерной автокалибровки FOV
-        function executeCameraCalibration() {
-            const targetWidthCm = parseFloat(document.getElementById('cal-target-width').value);
-            const targetDistM = parseFloat(document.getElementById('cal-target-dist').value);
-
-            if (isNaN(targetWidthCm) || targetWidthCm <= 0 || isNaN(targetDistM) || targetDistM <= 0) {
-                alert('Укажите корректные параметры калибровочной цели (ширину и дистанцию).');
-                return;
-            }
-
-            const pct = currentSpreadPercent / 100;
-            if (pct <= 0.05) {
-                alert('Пожалуйста, раздвиньте нижний ползунок так, чтобы красные линии точно совпали с краями калибровочного листа.');
-                return;
-            }
-
-            const alphaCalRad = 2 * Math.atan(targetWidthCm / (200 * targetDistM));
-            const calculatedFovRad = alphaCalRad / pct;
-            const calculatedFovDeg = calculatedFovRad * (180 / Math.PI);
-
-            if (calculatedFovDeg > 15 && calculatedFovDeg < 130) {
-                document.getElementById('camera-fov').value = calculatedFovDeg.toFixed(1);
-                alert('Калибровка завершена. Реальный угол обзора (FOV) вашей камеры определен как: ' + calculatedFovDeg.toFixed(1) + '°\nЗначение автоматически внесено в базу.');
-                toggleCalibrationBlock(); 
-            } else {
-                alert('Получено нереалистичное оптическое значение FOV: ' + calculatedFovDeg.toFixed(1) + '°\nПроверьте, точно ли вы отмерили 1 метр до листа А4 и правильно ли навели линии.');
-            }
-        }
-
-        function calculateDiameter() {
-            const distance = parseFloat(document.getElementById('distance').value);
-            const resultBox = document.getElementById('result-box');
-
-            if (isNaN(distance) || distance <= 0) {
-                alert('Пожалуйста, укажите точную дистанцию до дерева (в метрах) перед выполнением оптического расчета.');
-                return;
-            }
-
-            const pct = currentSpreadPercent / 100;
-            const fovDegrees = parseFloat(document.getElementById('camera-fov').value) || 60;
-            const subtendedAngleRad = (pct * fovDegrees) * (Math.PI / 180);
-            
-            // Расчет по тригонометрии
-            const diameterMeters = 2 * distance * Math.tan(subtendedAngleRad / 2);
-            const diameterCm = diameterMeters * 100;
-
-            resultBox.style.display = 'block';
-            if (!isNaN(diameterCm) && diameterCm > 0.5) {
-                resultBox.innerText = `Диаметр ствола: ${diameterCm.toFixed(1)} см`;
-                resultBox.style.background = '#8FBC8F';
-            } else {
-                resultBox.innerText = `Ошибка расчета параметров`;
-                resultBox.style.background = '#FCA5A5';
-            }
-        }
-
-        function hideResult() {
-            document.getElementById('result-box').style.display = 'none';
-        }
-
-        function resetMeasurement() {
-            document.getElementById('distance').value = '0';
-            document.getElementById('width-slider').value = '20';
-            updateVisors(20);
-            hideResult();
-        }
-    </script>
+    function resetMeasurement() {
+        document.getElementById('distance').value = '2.0';
+        syncSliders(20);
+        hideResult();
+    }
+</script>
 </body>
 </html>
