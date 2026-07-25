@@ -84,7 +84,7 @@
             --footer-bg: #2C3531;
             --danger: #DC2626;
             --success: #16A34A;
-            --overlay-bg: rgba(0, 0, 0, 0.7);
+            --overlay-bg: rgba(0, 0, 0, 0.75);
         }
 
         [data-theme="dark"] {
@@ -136,9 +136,8 @@
         .card h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 17px; margin-bottom: 4px; }
         .subtitle { font-size: 11px; color: var(--text-graphite); opacity: 0.6; margin-bottom: 12px; }
 
-        /* Переключатель режимов замера */
         .mode-switcher { display: flex; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
-        .mode-btn { flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-graphite); font-size: 11px; font-weight: 700; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        .mode-btn { flex: 1; padding: 10px 6px; border: none; background: transparent; color: var(--text-graphite); font-size: 11px; font-weight: 700; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
         .mode-btn.active { background: var(--forest-green); color: #FFF; }
 
         .btn-action { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: 700; font-size: 13px; text-transform: uppercase; cursor: pointer; text-align: center; transition: 0.2s; }
@@ -149,16 +148,19 @@
         .map-box { position: relative; width: 100%; height: 360px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); }
         #map, #fs-map { width: 100%; height: 100%; }
 
-        /* Таблица и ввод */
-        .log-table-wrapper { width: 100%; overflow-x: auto; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 10px; }
-        .log-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        .log-table th, .log-table td { padding: 6px; border-bottom: 1px solid var(--border-color); text-align: center; }
-        .log-table th { font-weight: 700; color: var(--forest-green); background: rgba(0,0,0,0.02); }
+        /* Крупные шрифты для журнала точек */
+        .log-table-wrapper { width: 100%; overflow-x: auto; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 12px; }
+        .log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .log-table th, .log-table td { padding: 8px 6px; border-bottom: 1px solid var(--border-color); text-align: center; }
+        .log-table th { font-weight: 700; color: var(--forest-green); background: rgba(0,0,0,0.03); font-size: 12px; }
+        .coord-text { font-family: monospace; font-size: 14px; font-weight: bold; color: var(--text-graphite); }
 
-        .input-dist { width: 100%; padding: 6px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--card-bg); color: var(--text-graphite); text-align: center; font-weight: bold; font-size: 12px; }
+        .input-dist { width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--card-bg); color: var(--text-graphite); text-align: center; font-weight: bold; font-size: 14px; }
 
         #polygon-canvas { background: var(--bg-paper); border: 1px dashed var(--border-color); border-radius: 6px; width: 100%; aspect-ratio: 1; box-sizing: border-box; }
-        .area-badge { font-size: 13px; font-weight: 700; color: var(--forest-green); margin-top: 6px; text-align: center; background: rgba(45, 90, 39, 0.08); padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); }
+        
+        /* Крупный индикатор площади */
+        .area-badge { font-size: 16px; font-weight: 700; color: var(--forest-green); margin-top: 8px; text-align: center; background: rgba(45, 90, 39, 0.12); padding: 12px; border-radius: 8px; border: 1px solid var(--forest-green); }
 
         /* Полноэкранные Модальные Окна */
         .fullscreen-modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-paper); z-index: 9999; flex-direction: column; justify-content: space-between; padding: 12px; box-sizing: border-box; }
@@ -217,60 +219,60 @@
                 </div>
 
                 <div style="display: flex; gap: 8px; margin-top: 10px;">
+                    <button class="btn-action btn-outline-green" style="flex: 1; font-size: 11px;" onclick="centerOnUser()">🎯 Где я</button>
                     <button class="btn-action btn-outline-green" style="flex: 1; font-size: 11px;" onclick="openFullscreenMap()">🔍 На весь экран</button>
                     <button class="btn-action btn-green" style="flex: 1; font-size: 11px;" onclick="openPhotoModal()">📸 Фотофиксация</button>
                 </div>
             </div>
 
-            <!-- ПРАВАЯ КОЛОНКА: ЗАМЕР ПЛОЩАДИ УЧАСТКА -->
+            <!-- ПРАВАЯ КОЛОНКА: ЗАМЕР ПЛОЩАДИ И ТАБЛИЦА ТОЧЕК -->
             <div class="card">
-                <h2>Расчет убранной площади</h2>
-                <div class="subtitle">Выбор инструмента замера в зависимости от локации.</div>
+                <h2>Журнал точек и расчет площади</h2>
+                <div class="subtitle">Укажите контур убранной территории на карте или ходами.</div>
 
                 <div class="mode-switcher">
                     <button class="mode-btn active" id="btn-mode-map" onclick="switchCalcMode('map')">📍 Простой (Точки на карте)</button>
                     <button class="mode-btn" id="btn-mode-pro" onclick="switchCalcMode('pro')">📐 Профи (С буссолью)</button>
                 </div>
 
-                <!-- БЛОК 1: ПРОСТОЙ РЕЖИМ (КЛИКИ НА КАРТЕ) -->
+                <!-- ПРОСТОЙ РЕЖИМ -->
                 <div id="panel-simple-mode">
-                    <p style="font-size: 11px; opacity: 0.8; margin-bottom: 8px;">
-                        Нажмите кнопку ниже, чтобы включить режим клика по углам участка прямо на карте. Система не позволит ставить точки дальше 200м от вас (Защита от завышений).
-                    </p>
                     <button class="btn-action btn-outline-green" id="btn-toggle-map-draw" style="margin-bottom: 10px;" onclick="toggleMapDrawing()">
                         📌 Включить ставку точек на карте
                     </button>
-                    <button class="btn-action btn-outline" style="font-size: 11px; margin-bottom: 10px;" onclick="clearMapPoints()">Сбросить точки карты</button>
                 </div>
 
-                <!-- БЛОК 2: ПРОФИ РЕЖИМ (БУССОЛЬ И ХОДЫ) -->
+                <!-- ПРОФИ РЕЖИМ -->
                 <div id="panel-pro-mode" style="display: none;">
                     <div style="display: flex; gap: 6px; margin-bottom: 10px;">
                         <input type="number" id="input-azimuth" class="input-dist" placeholder="Азимут (°)" readonly onclick="openCompassModal()">
                         <input type="number" id="input-distance" class="input-dist" placeholder="Длина (м)" min="1" step="0.5">
                         <button class="btn-action btn-green" style="width: auto; padding: 6px 12px;" onclick="addSurveyLine()">+ Шаг</button>
                     </div>
-
-                    <div class="log-table-wrapper">
-                        <table class="log-table">
-                            <thead>
-                                <tr>
-                                    <th>Ход</th>
-                                    <th>Азимут</th>
-                                    <th>Длина (м)</th>
-                                    <th>Удал.</th>
-                                </tr>
-                            </thead>
-                            <tbody id="log-tbody">
-                                <tr><td colspan="4" style="color:gray;">Нет зафиксированных ходов.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
 
-                <!-- ИТОГОВЫЙ ЧЕРТЕЖ И ПЛОЩАДЬ -->
-                <canvas id="polygon-canvas" width="300" height="300"></canvas>
-                <div id="area-display" class="area-badge">Очищено площади: 0.0 м² (0.0000 га)</div>
+                <!-- ЕДИНАЯ ТАБЛИЦА ТОЧЕК -->
+                <div class="log-table-wrapper">
+                    <table class="log-table">
+                        <thead>
+                            <tr>
+                                <th>Точка</th>
+                                <th>Координаты (WGS-84) / Данные</th>
+                                <th>Удалить</th>
+                            </tr>
+                        </thead>
+                        <tbody id="log-tbody">
+                            <tr><td colspan="3" style="color:gray; padding: 15px;">Нет поставленных точек. Включите выбор на карте и кликайте по углам участка.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <button class="btn-action btn-outline" style="font-size: 11px; width: auto; padding: 6px 12px;" onclick="clearAllPoints()">🗑️ Сбросить все точки</button>
+                </div>
+
+                <canvas id="polygon-canvas" width="300" height="300" style="display: none;"></canvas>
+                <div id="area-display" class="area-badge">Площадь охвата: 0 м² (0.0000 га)</div>
             </div>
 
         </div>
@@ -355,14 +357,19 @@
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО ЮРИДИЧЕСКОЙ ФОТОФИКСАЦИИ -->
+    <!-- МОДАЛЬНОЕ ОКНО ЮРИДИЧЕСКОЙ ФОТОФИКСАЦИИ ("ДО" И "ПОСЛЕ") -->
     <div id="photo-modal" class="popup-overlay" onclick="closePopupOuter('photo-modal', event)">
         <div class="popup-window">
             <button class="popup-close" onclick="closePopup('photo-modal')">&times;</button>
             <h3 style="font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0;">Юридическая фотофиксация</h3>
             <p style="font-size: 12px; opacity: 0.8;">
-                Штамп с точными GPS-координатами, датой и временем впекается напрямую в пиксели фотографии.
+                Штамп с точными GPS-координатами, датой и временем впекается напрямую в пиксели фото на смартфоне.
             </p>
+
+            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                <button class="mode-btn active" id="photo-type-before" onclick="setPhotoType('BEFORE')">1. Фото ДО</button>
+                <button class="mode-btn" id="photo-type-after" onclick="setPhotoType('AFTER')">2. Фото ПОСЛЕ</button>
+            </div>
 
             <div style="margin-bottom: 10px;">
                 <label style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: var(--forest-green);">Примечание / Объект</label>
@@ -378,7 +385,7 @@
 
             <canvas id="watermark-canvas" style="display: none; max-width: 100%; border-radius: 6px; border: 1px solid var(--border-color);"></canvas>
 
-            <a id="download-photo-btn" class="btn-action btn-green" style="display: none; text-decoration: none; margin-top: 10px;">💾 Сохранить фото в галерею</a>
+            <a id="download-photo-btn" class="btn-action btn-green" style="display: none; text-decoration: none; margin-top: 10px;">💾 Сохранить фото со штампом в галерею</a>
         </div>
     </div>
 
@@ -407,11 +414,13 @@
     </footer>
 
     <script>
-        let userLat = 61.6688, userLng = 50.8356; // Координаты Сыктывкара
-        let currentCalcMode = 'map'; // 'map' или 'pro'
+        let userLat = 61.6688, userLng = 50.8356; // Сыктывкар
+        let currentCalcMode = 'map';
         let mapDrawingActive = false;
         let mapPoints = [];
+        let mapGeoObjects = [];
         let mapPolygonObj = null;
+        let photoModeType = 'BEFORE';
 
         function toggleTheme() {
             const body = document.body;
@@ -425,6 +434,14 @@
         function closePopup(id) { document.getElementById(id).style.display = 'none'; }
         function closePopupOuter(id, e) { if (e.target.id === id) closePopup(id); }
 
+        function setPhotoType(type) {
+            photoModeType = type;
+            document.getElementById('photo-type-before').classList.remove('active');
+            document.getElementById('photo-type-after').classList.remove('active');
+            if (type === 'BEFORE') document.getElementById('photo-type-before').classList.add('active');
+            else document.getElementById('photo-type-after').classList.add('active');
+        }
+
         function switchCalcMode(mode) {
             currentCalcMode = mode;
             document.getElementById('btn-mode-map').classList.remove('active');
@@ -434,11 +451,14 @@
                 document.getElementById('btn-mode-map').classList.add('active');
                 document.getElementById('panel-simple-mode').style.display = 'block';
                 document.getElementById('panel-pro-mode').style.display = 'none';
+                document.getElementById('polygon-canvas').style.display = 'none';
             } else {
                 document.getElementById('btn-mode-pro').classList.add('active');
                 document.getElementById('panel-simple-mode').style.display = 'none';
                 document.getElementById('panel-pro-mode').style.display = 'block';
+                document.getElementById('polygon-canvas').style.display = 'block';
             }
+            renderLogTable();
             drawPolygon();
         }
 
@@ -449,25 +469,25 @@
         function initMaps() {
             mainMap = new ymaps.Map("map", {
                 center: [userLat, userLng],
-                zoom: 13,
+                zoom: 14,
                 controls: ['zoomControl']
             });
 
-            // Геолокация
+            // Запросить геолокацию и отцентрировать
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(pos => {
                     userLat = pos.coords.latitude;
                     userLng = pos.coords.longitude;
-                    mainMap.setCenter([userLat, userLng], 16);
+                    centerOnUser();
                 });
             }
 
-            // Слушатель кликов по карте для простого режима замеров
+            // Ставка точек на карте
             mainMap.events.add('click', function (e) {
-                if (!mapDrawingActive) return;
+                if (!mapDrawingActive || currentCalcMode !== 'map') return;
                 const coords = e.get('coords');
 
-                // Анти-фрод: Проверка расстояния от геолокации пользователя (не более 200 метров)
+                // Анти-фрод лимит 200 метров
                 const distFromUser = ymaps.formatter.distance(coords, [userLat, userLng]);
                 if (distFromUser > 200) {
                     alert(`Ошибка анти-фрода! Вы находитесь слишком далеко от этой точки (${Math.round(distFromUser)}м). Размечать площадки можно только там, где вы находитесь лично.`);
@@ -476,7 +496,17 @@
 
                 mapPoints.push(coords);
                 updateMapPolygon();
+                renderLogTable();
             });
+        }
+
+        function centerOnUser() {
+            if (mainMap) {
+                mainMap.setCenter([userLat, userLng], 16);
+                // Поставить яркий синий маркер местоположения
+                const userPin = new ymaps.Placemark([userLat, userLng], { balloonContent: 'Вы здесь' }, { preset: 'islands#geolocationIcon' });
+                mainMap.geoObjects.add(userPin);
+            }
         }
 
         function toggleMapDrawing() {
@@ -494,28 +524,91 @@
         }
 
         function updateMapPolygon() {
+            // Очистка старых объектов с карты
+            mapGeoObjects.forEach(obj => mainMap.geoObjects.remove(obj));
+            mapGeoObjects = [];
             if (mapPolygonObj) mainMap.geoObjects.remove(mapPolygonObj);
+
+            // Отрисовка занумерованных точек
+            mapPoints.forEach((pt, idx) => {
+                const pin = new ymaps.Placemark(pt, { iconContent: idx + 1 }, { preset: 'islands#greenCircleIcon' });
+                mainMap.geoObjects.add(pin);
+                mapGeoObjects.push(pin);
+            });
+
             if (mapPoints.length < 2) return;
 
             mapPolygonObj = new ymaps.Polygon([mapPoints], {}, {
-                fillColor: '#22C55E44',
+                fillColor: '#16A34A33',
                 strokeColor: '#16A34A',
                 strokeWidth: 3
             });
             mainMap.geoObjects.add(mapPolygonObj);
 
-            // Вычисление площади географического полигона
+            // Точный расчет площади охвата
             if (mapPoints.length >= 3) {
                 let areaSqMeters = Math.round(ymaps.util.math.area(mapPolygonObj.geometry));
                 let areaHa = (areaSqMeters / 10000).toFixed(4);
-                document.getElementById('area-display').innerText = `Очищено площади (Карта): ${areaSqMeters} м² (${areaHa} га)`;
+                document.getElementById('area-display').innerText = `Площадь охвата: ${areaSqMeters} м² (${areaHa} га)`;
             }
         }
 
-        function clearMapPoints() {
+        function deletePoint(idx) {
+            if (currentCalcMode === 'map') {
+                mapPoints.splice(idx, 1);
+                updateMapPolygon();
+            } else {
+                surveyLines.splice(idx, 1);
+                surveyLines.forEach((l, i) => l.id = i + 1);
+                drawPolygon();
+            }
+            renderLogTable();
+        }
+
+        function clearAllPoints() {
             mapPoints = [];
+            surveyLines = [];
+            mapGeoObjects.forEach(obj => mainMap.geoObjects.remove(obj));
             if (mapPolygonObj) mainMap.geoObjects.remove(mapPolygonObj);
-            document.getElementById('area-display').innerText = "Очищено площади: 0.0 м² (0.0000 га)";
+            document.getElementById('area-display').innerText = "Площадь охвата: 0 м² (0.0000 га)";
+            renderLogTable();
+            drawPolygon();
+        }
+
+        function renderLogTable() {
+            const tbody = document.getElementById('log-tbody');
+
+            if (currentCalcMode === 'map') {
+                if (mapPoints.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" style="color:gray; padding: 12px;">Нет поставленных точек. Включите режим кликов и нажимайте на карту.</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = "";
+                mapPoints.forEach((pt, i) => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><b>№${i + 1}</b></td>
+                            <td><span class="coord-text">${pt[0].toFixed(5)}, ${pt[1].toFixed(5)}</span></td>
+                            <td><button style="background:none; border:none; color:var(--danger); cursor:pointer; font-weight:bold; font-size:16px;" onclick="deletePoint(${i})">✕</button></td>
+                        </tr>
+                    `;
+                });
+            } else {
+                if (surveyLines.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" style="color:gray; padding: 12px;">Нет ходов. Введите азимут и длину.</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = "";
+                surveyLines.forEach((l, i) => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><b>№${l.id}</b></td>
+                            <td><span class="coord-text">Азимут: ${l.azimuth}° | Длина: ${l.distance}м</span></td>
+                            <td><button style="background:none; border:none; color:var(--danger); cursor:pointer; font-weight:bold; font-size:16px;" onclick="deletePoint(${i})">✕</button></td>
+                        </tr>
+                    `;
+                });
+            }
         }
 
         function openFullscreenMap() {
@@ -523,7 +616,7 @@
             if (!fsMap) {
                 fsMap = new ymaps.Map("fs-map", {
                     center: [userLat, userLng],
-                    zoom: 14,
+                    zoom: 15,
                     controls: ['zoomControl']
                 });
             }
@@ -558,7 +651,7 @@
             closeCompassModal();
         }
 
-        // Профи замер (Азимут + Дистанция)
+        // Профи замер
         let surveyLines = [];
 
         function addSurveyLine() {
@@ -579,32 +672,6 @@
             drawPolygon();
         }
 
-        function deleteLine(idx) {
-            surveyLines.splice(idx, 1);
-            surveyLines.forEach((l, i) => l.id = i + 1);
-            renderLogTable();
-            drawPolygon();
-        }
-
-        function renderLogTable() {
-            const tbody = document.getElementById('log-tbody');
-            if (surveyLines.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="color:gray;">Нет зафиксированных ходов.</td></tr>`;
-                return;
-            }
-            tbody.innerHTML = "";
-            surveyLines.forEach((l, i) => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td><b>№${l.id}</b></td>
-                        <td>${l.azimuth}°</td>
-                        <td>${l.distance} м</td>
-                        <td><button style="background:none; border:none; color:var(--danger); cursor:pointer; font-weight:bold;" onclick="deleteLine(${i})">✕</button></td>
-                    </tr>
-                `;
-            });
-        }
-
         function drawPolygon() {
             if (currentCalcMode === 'map') return;
 
@@ -618,7 +685,7 @@
             ctx.fillRect(0, 0, w, h);
 
             if (surveyLines.length === 0) {
-                document.getElementById('area-display').innerText = "Очищено площади: 0.0 м² (0.0000 га)";
+                document.getElementById('area-display').innerText = "Площадь охвата: 0 м² (0.0000 га)";
                 return;
             }
 
@@ -675,10 +742,10 @@
             area = Math.abs(area / 2);
             let areaHa = area / 10000;
 
-            document.getElementById('area-display').innerText = `Очищено площади (Профи): ${area.toFixed(1)} м² (${areaHa.toFixed(4)} га)`;
+            document.getElementById('area-display').innerText = `Площадь охвата (Профи): ${area.toFixed(1)} м² (${areaHa.toFixed(4)} га)`;
         }
 
-        // Юридическая Фотофиксация
+        // Юридическая Фотофиксация (Canvas + GPS)
         async function processPhoto(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -701,23 +768,24 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-                ctx.fillRect(0, canvas.height - 90, canvas.width, 90);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
 
                 ctx.fillStyle = '#FFFFFF';
-                ctx.font = 'bold 22px Inter, sans-serif';
-                ctx.fillText(`🌲 ЭКО-РЕСУРС • СЫКТЫВКАР ФОТОФИКСАЦИЯ`, 20, canvas.height - 55);
+                ctx.font = 'bold 24px Inter, sans-serif';
+                const statusTag = photoModeType === 'BEFORE' ? '[ФОТО ДО УБОРКИ]' : '[ФОТО ПОСЛЕ УБОРКИ]';
+                ctx.fillText(`🌲 ЭКО-РЕСУРС ${statusTag}`, 20, canvas.height - 60);
 
-                ctx.fillStyle = '#A7F3D0';
-                ctx.font = '18px Inter, sans-serif';
+                ctx.fillStyle = '#8FBC8F';
+                ctx.font = 'bold 18px monospace';
                 const timeStr = new Date().toLocaleString('ru-RU');
-                ctx.fillText(`Координаты: СШ ${lat}, ВД ${lon} | ${timeStr} ${note ? '| ' + note : ''}`, 20, canvas.height - 22);
+                ctx.fillText(`СШ ${lat}°, ВД ${lon}° | ${timeStr} ${note ? '| ' + note : ''}`, 20, canvas.height - 25);
 
                 canvas.style.display = 'block';
                 status.innerText = '✅ Штамп координат успешно впечен в фото!';
                 downloadBtn.style.display = 'block';
                 downloadBtn.href = canvas.toDataURL('image/jpeg', 0.85);
-                downloadBtn.download = `eco_evidence_${Date.now()}.jpg`;
+                downloadBtn.download = `eco_${photoModeType.toLowerCase()}_${Date.now()}.jpg`;
             };
         }
 
