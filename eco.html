@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ЭКО-РЕСУРС — Платформа Созидания и Чистоты</title>
+    <!-- Подключение существующего PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#122A21">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Эко-Ресурс">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+
+    <style>
+        :root {
+            --bg-dark: #0D1A14;
+            --bg-card: rgba(20, 38, 30, 0.7);
+            --bg-card-hover: rgba(28, 51, 41, 0.85);
+            --accent-green: #22C55E;
+            --accent-glow: rgba(34, 197, 94, 0.35);
+            --sage: #A7F3D0;
+            --sand-text: #E6F4EA;
+            --muted-text: #9CA3AF;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --font-heading: 'Outfit', sans-serif;
+            --font-body: 'Roboto', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--sand-text);
+            font-family: var(--font-body);
+            line-height: 1.6;
+            overflow-x: hidden;
+            padding-bottom: 90px;
+        }
+
+        /* Header / Navbar */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(13, 26, 20, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #22C55E, #10B981);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .logo-icon svg {
+            width: 22px;
+            height: 22px;
+            fill: #0D1A14;
+        }
+
+        .logo-text h1 {
+            font-family: var(--font-heading);
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: #FFFFFF;
+            line-height: 1.1;
+        }
+
+        .logo-text span {
+            font-size: 0.7rem;
+            color: var(--sage);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+
+        .user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            color: #0D1A14;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #FFF;
+        }
+
+        .user-points {
+            font-size: 0.7rem;
+            color: var(--sage);
+        }
+
+        /* Container */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px 16px;
+        }
+
+        /* Hero Section */
+        .hero-card {
+            background: linear-gradient(180deg, rgba(20, 45, 34, 0.8) 0%, rgba(13, 26, 20, 0.9) 100%);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 24px;
+            padding: 24px 20px;
+            text-align: center;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        .hero-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 60%);
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .hero-title {
+            font-family: var(--font-heading);
+            font-size: 1.65rem;
+            font-weight: 800;
+            color: #FFFFFF;
+            margin-bottom: 10px;
+            line-height: 1.25;
+        }
+
+        .hero-subtitle {
+            font-size: 0.95rem;
+            color: var(--muted-text);
+            margin-bottom: 20px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Action CTA Button */
+        .cta-btn {
+            background: linear-gradient(135deg, #22C55E, #16A34A);
+            color: #0D1A14;
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: 800;
+            padding: 16px 28px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 420px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 0 25px var(--accent-glow);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .cta-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Stats Grid */
+        .section-title {
+            font-family: var(--font-heading);
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #FFF;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            backdrop-filter: blur(8px);
+        }
+
+        .stat-val {
+            font-family: var(--font-heading);
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--sage);
+        }
+
+        .stat-lbl {
+            font-size: 0.75rem;
+            color: var(--muted-text);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Principles Section (Zakon) */
+        .principles-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .principle-card {
+            background: var(--bg-card);
+            border-left: 4px solid var(--accent-green);
+            border-top: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px;
+            transition: background 0.3s;
+        }
+
+        .principle-card h4 {
+            font-family: var(--font-heading);
+            color: #FFF;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .principle-card p {
+            font-size: 0.85rem;
+            color: var(--muted-text);
+        }
+
+        /* Map Section */
+        .map-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            overflow: hidden;
+            height: 320px;
+            margin-bottom: 28px;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Modal Form */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(12px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .modal-card {
+            background: #12241C;
+            border: 1px solid var(--accent-green);
+            border-radius: 24px;
+            padding: 24px;
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .modal-header h3 {
+            font-family: var(--font-heading);
+            color: #FFF;
+            font-size: 1.25rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--muted-text);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--sage);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .photo-upload-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .photo-box {
+            border: 2px dashed var(--border-color);
+            border-radius: 14px;
+            padding: 20px 10px;
+            text-align: center;
+            cursor: pointer;
+            background: rgba(255,255,255,0.02);
+            transition: all 0.3s;
+        }
+
+        .photo-box:hover {
+            border-color: var(--accent-green);
+            background: rgba(34, 197, 94, 0.05);
+        }
+
+        .photo-box svg {
+            width: 28px;
+            height: 28px;
+            fill: var(--sage);
+            margin-bottom: 6px;
+        }
+
+        .photo-box span {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--muted-text);
+        }
+
+        .form-control {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px;
+            color: #FFF;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-green);
+        }
+
+        /* Toast Popup for Slogans */
+        .toast-popup {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: linear-gradient(135deg, #16A34A, #15803D);
+            color: #FFF;
+            padding: 14px 22px;
+            border-radius: 50px;
+            font-family: var(--font-heading);
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 3000;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .toast-popup.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(13, 26, 20, 0.95);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--muted-text);
+            text-decoration: none;
+            font-size: 0.7rem;
+            transition: color 0.3s;
+        }
+
+        .nav-item.active, .nav-item:hover {
+            color: var(--accent-green);
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="logo-box">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24"><path d="M12,3E6.5,3 2,7.5 2,14C2,17.5 4.5,20.5 8,21.5C9.5,22 10.5,21 12,21C13.5,21 14.5,22 16,21.5C19.5,20.5 22,17.5 22,14C22,7.5 17.5,3 12,3Z"/></svg>
+            </div>
+            <div class="logo-text">
+                <h1>ЭКО-РЕСУРС</h1>
+                <span>Платформа Чистоты</span>
+            </div>
+        </div>
+
+        <div class="user-badge">
+            <div class="user-avatar">Н</div>
+            <div class="user-info">
+                <span class="user-name">Николай С.</span>
+                <span class="user-points">1 250 EP</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero-card">
+            <h2 class="hero-title">С каждого из нас начинается страна</h2>
+            <p class="hero-subtitle">Чистота начинается с тебя. Ты — основа своей страны. Созидай порядок во дворе, сквере и лесу в один клик.</p>
+            <button class="cta-btn" onclick="openModal()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#0D1A14"><path d="M4 4h3l2-2h6l2 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm8 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/></svg>
+                Зафиксировать след
+            </button>
+        </div>
+
+        <!-- Global Stats -->
+        <div class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--accent-green)"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+            Глобальный Ресурс Страны
+        </div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-val" id="stat-area">124,500 м²</span>
+                <span class="stat-lbl">Очищено земли</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-val" id="stat-weight">18.5 тонн</span>
+                <span class="stat-lbl">Собрано отходов</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-val">45,200</span>
+                <span class="stat-lbl">Созидателей</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-val">Сыктывкар</span>
+                <span class="stat-lbl">Лидер чистоты</span>
+            </div>
+        </div>
+
+        <!-- Principles -->
+        <div class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--accent-green)"><path d="M12 2L1 21h22L12 2zm0 3.45l8.15 14.1H3.85L12 5.45zM11 10h2v4h-2zm0 5h2v2h-2z"/></svg>
+            Принципы Созидания
+        </div>
+        <div class="principles-grid">
+            <div class="principle-card">
+                <h4>С малого начинается великое</h4>
+                <p>Даже самые великие корабли строятся по одной заклепке. Твой поднятый пластик сегодня — это чистая страна завтра.</p>
+            </div>
+            <div class="principle-card">
+                <h4>Хозяин своей земли</h4>
+                <p>Чисто не там, где убирают, а там, где каждый чувствует личную ответственность за свой дом и окружение.</p>
+            </div>
+            <div class="principle-card">
+                <h4>Наследие, которое мы созидаем</h4>
+                <p>Мы меняем мир вокруг себя не словах, а реальными делами, оставляя чистый след на карте природы.</p>
+            </div>
+        </div>
+
+        <!-- Interactive Map -->
+        <div class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--accent-green)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            Карта Чистых Локаций
+        </div>
+        <div class="map-box">
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <!-- Modal Form -->
+    <div class="modal-overlay" id="photoModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Фиксация Чистого Следа</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form onsubmit="submitReport(event)">
+                <div class="form-group">
+                    <label>Фотографии результата</label>
+                    <div class="photo-upload-grid">
+                        <div class="photo-box" onclick="triggerFileInput('photoBefore')">
+                            <svg viewBox="0 0 24 24"><path d="M4 4h3l2-2h6l2 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+                            <span>1. Снять "ДО"</span>
+                            <input type="file" id="photoBefore" accept="image/*" capture="environment" style="display:none;" onchange="updatePhotoStatus(this, 'ДО')">
+                        </div>
+                        <div class="photo-box" onclick="triggerFileInput('photoAfter')">
+                            <svg viewBox="0 0 24 24"><path d="M4 4h3l2-2h6l2 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+                            <span>2. Снять "ПОСЛЕ"</span>
+                            <input type="file" id="photoAfter" accept="image/*" capture="environment" style="display:none;" onchange="updatePhotoStatus(this, 'ПОСЛЕ')">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Описание локации</label>
+                    <input type="text" class="form-control" placeholder="Например: Берег реки, Сквер у дома" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Примерная площадь (м²)</label>
+                    <input type="number" class="form-control" placeholder="15" required>
+                </div>
+
+                <button type="submit" class="cta-btn" style="width: 100%; margin-top: 10px;">
+                    Отправить в Реестр
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Slogan Toast Popup -->
+    <div class="toast-popup" id="toast">
+        "Меняй мир вокруг себя!"
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item active">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            Главная
+        </a>
+        <a href="#" class="nav-item" onclick="showSloganToast()">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            Идея
+        </a>
+        <a href="#" class="nav-item" onclick="openModal()">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            Вклад
+        </a>
+        <a href="#" class="nav-item" onclick="showSloganToast()">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            Профиль
+        </a>
+    </nav>
+
+    <!-- Leaflet JS for Maps -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+    <script>
+        // Slogans List
+        const slogans = [
+            "Чистота начинается с тебя. Ты — основа своей страны!",
+            "С малого начинается великое!",
+            "Хозяин своей земли!",
+            "Меняй мир вокруг себя!",
+            "С каждого из нас начинается страна!",
+            "Наследие, которое мы созидаем!",
+            "Чистота без границ!",
+            "Чисто там, где уважают свой дом!"
+        ];
+
+        let sloganIndex = 0;
+
+        function showSloganToast() {
+            const toast = document.getElementById('toast');
+            toast.innerText = slogans[sloganIndex];
+            toast.classList.add('show');
+            
+            sloganIndex = (sloganIndex + 1) % slogans.length;
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3500);
+        }
+
+        // Show toast periodically
+        setInterval(showSloganToast, 12000);
+
+        // Modal Controls
+        function openModal() {
+            document.getElementById('photoModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('photoModal').style.display = 'none';
+        }
+
+        function triggerFileInput(id) {
+            document.getElementById(id).click();
+        }
+
+        function updatePhotoStatus(input, type) {
+            if (input.files && input.files[0]) {
+                alert(`Снимок "${type}" успешно добавлен!`);
+            }
+        }
+
+        function submitReport(e) {
+            e.preventDefault();
+            closeModal();
+            alert("Ваш вклад успешно отправлен и занесен в реестр 'ЭКО-РЕСУРС'! Спасибо за созидание.");
+            showSloganToast();
+        }
+
+        // Leaflet Map Setup
+        document.addEventListener("DOMContentLoaded", function() {
+            // Syktyvkar Coordinates
+            var map = L.map('map').setView([61.6688, 50.8356], 12);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap &copy; CARTO',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Add sample green pins
+            var greenIcon = L.divIcon({
+                className: 'custom-pin',
+                html: `<div style="background-color:#22C55E; width:14px; height:14px; border-radius:50%; border:2px solid #FFF; box-shadow:0 0 10px #22C55E;"></div>`
+            });
+
+            L.marker([61.6700, 50.8300], {icon: greenIcon}).addTo(map)
+                .bindPopup("<b>Коммунистическая ул.</b><br>Очищено 25 м²");
+
+            L.marker([61.6620, 50.8450], {icon: greenIcon}).addTo(map)
+                .bindPopup("<b>Парк им. Кирова</b><br>Очищено 50 м²");
+        });
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('PWA Service Worker зарегистрирован!'))
+                    .catch(err => console.log('Ошибка регистрации SW:', err));
+            });
+        }
+    </script>
+</body>
+</html>
