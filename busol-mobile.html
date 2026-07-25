@@ -11,7 +11,7 @@
         const licensedDevices = {
             "HNS-6680-TVK32U": new Date(2026, 6, 25),  // До 25 июля 2026
             "HNS-RAL2-45TCN0": new Date(2099, 11, 31), // Бессрочно (Ваш телефон)
-            "HNS-3SBX-TQMJO7": new Date(2026, 11, 31)  // До 31 декабря 2026 (Ваш ноутбук)
+            "HNS-3SBX-TQMJO7": new Date(2026, 11, 31), // До 31 декабря 2026 (Ваш ноутбук)
             "HNS-5V40-G89K6X": new Date(2026, 6, 25),  // До 25 июля 2026 Андрей Сателлит
             "HNS-6BS0-ZIHISC": new Date(2026, 6, 25),  // До 25 июля 2026 Паша брат
         };
@@ -229,6 +229,14 @@
         .traverse-direction-wrapper { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px dashed var(--border-color); padding-top: 8px; }
         .select-traverse { padding: 4px; border-radius: 4px; font-size: 12px; background: var(--card-bg); color: var(--text-graphite); border: 1px solid var(--border-color); font-weight: 600; }
 
+        /* ИНТЕРФЕЙС ЮСТИРОВКИ И ПОПРАВКИ */
+        .calibration-offset-wrapper { display: flex; flex-direction: column; gap: 6px; border-top: 1px dashed var(--border-color); padding-top: 8px; margin-top: 8px; }
+        .offset-controls-flex { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .select-offset-sign { padding: 4px; border-radius: 4px; font-size: 13px; font-weight: bold; background: var(--card-bg); color: var(--text-graphite); border: 1px solid var(--border-color); }
+        .input-offset-num { width: 55px; padding: 4px; border-radius: 4px; font-size: 12px; font-weight: bold; text-align: center; background: var(--card-bg); color: var(--text-graphite); border: 1px solid var(--border-color); }
+        .btn-clear-offset { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; margin-left: auto; }
+        .btn-clear-offset:hover { background: var(--danger); color: #FFF; }
+
         .sensor-stuck-alert-box { 
             display: none; 
             position: absolute; 
@@ -324,7 +332,6 @@
             line-height: 1.3;
         }
 
-        /* УВЕЛИЧЕННАЯ ЧУВСТВИТЕЛЬНАЯ ЗОНА В ПОЛНОЭКРАННОМ ОКНЕ */
         .fullscreen-compass-modal {
             display: none;
             position: fixed;
@@ -643,6 +650,25 @@
                             <option value="counter-clockwise">Против часовой (Левые)</option>
                         </select>
                     </div>
+
+                    <!-- ЛОГИКА ЮСТИРОВКИ / ПОПРАВКИ (АНДРЕЙ САТЕЛЛИТ) -->
+                    <div class="calibration-offset-wrapper">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label style="font-weight:700; color:var(--forest-green);">🎯 Юстировочная поправка (Магнитное склонение):</label>
+                        </div>
+                        <div class="offset-controls-flex">
+                            <select id="offset-sign-select" class="select-offset-sign" onchange="updateOffsetFromUI()">
+                                <option value="+">+</option>
+                                <option value="-">-</option>
+                            </select>
+                            <input type="number" id="offset-deg-input" class="input-offset-num" placeholder="0" min="0" max="359" oninput="updateOffsetFromUI()">
+                            <label style="font-weight:bold;">°</label>
+                            <input type="number" id="offset-min-input" class="input-offset-num" placeholder="0" min="0" max="59" oninput="updateOffsetFromUI()">
+                            <label style="font-weight:bold;">'</label>
+                            
+                            <button class="btn-clear-offset" onclick="clearCalibrationOffset()" title="Удалить поправку из памяти">🗑️ Сбросить</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="camera-viewport-wrapper">
@@ -819,6 +845,45 @@
 
     let lastVibratedSector = -1; 
 
+    // --- ПЕРЕМЕННАЯ И ЛОГИКА ЮСТИРОВОЧНОЙ ПОПРАВКИ ---
+    let calibrationOffsetDecimal = 0.0; // Поправка в десятичных градусах
+
+    function updateOffsetFromUI() {
+        const sign = document.getElementById('offset-sign-select').value;
+        const deg = parseFloat(document.getElementById('offset-deg-input').value) || 0;
+        const min = parseFloat(document.getElementById('offset-min-input').value) || 0;
+
+        let total = deg + (min / 60.0);
+        if (sign === '-') total = -total;
+
+        calibrationOffsetDecimal = total;
+        localStorage.setItem('lesovik_calibration_offset', calibrationOffsetDecimal);
+    }
+
+    function loadCalibrationOffset() {
+        const savedOffset = localStorage.getItem('lesovik_calibration_offset');
+        if (savedOffset !== null) {
+            calibrationOffsetDecimal = parseFloat(savedOffset) || 0.0;
+            
+            let absVal = Math.abs(calibrationOffsetDecimal);
+            let sign = calibrationOffsetDecimal < 0 ? '-' : '+';
+            let deg = Math.floor(absVal);
+            let min = Math.round((absVal - deg) * 60);
+
+            document.getElementById('offset-sign-select').value = sign;
+            document.getElementById('offset-deg-input').value = deg > 0 ? deg : '';
+            document.getElementById('offset-min-input').value = min > 0 ? min : '';
+        }
+    }
+
+    function clearCalibrationOffset() {
+        calibrationOffsetDecimal = 0.0;
+        localStorage.removeItem('lesovik_calibration_offset');
+        document.getElementById('offset-sign-select').value = '+';
+        document.getElementById('offset-deg-input').value = '';
+        document.getElementById('offset-min-input').value = '';
+    }
+
     function openFullscreenCompass() {
         document.getElementById('fullscreen-compass-modal').style.display = 'flex';
         drawCompassDialSVG('fs-compass-svg');
@@ -935,6 +1000,8 @@
         const savedMode = localStorage.getItem('lesovik_system_mode');
         const savedDir = localStorage.getItem('lesovik_traverse_direction');
         
+        loadCalibrationOffset();
+
         if (savedStep) {
             stepLength = parseFloat(savedStep);
             document.getElementById('step-length').value = stepLength;
@@ -1082,7 +1149,7 @@
             vLine.style.display = 'none';
             vDot.style.display = 'none';
             gyroRing.style.display = 'none';
-            zoomPanel.style.display = 'none';
+            zoomPanel.style.display = 'block';
             btnLockZero.style.display = 'none';
             btnClearZero.style.display = 'none';
             btnFsToggle.style.display = 'block';
@@ -1202,7 +1269,9 @@
             smoothedAzimuth = (smoothedAzimuth % 360 + 360) % 360;
         }
         
-        currentAzimuth = smoothedAzimuth;
+        // --- МГНОВЕННОЕ ПРИМЕНЕНИЕ ЮСТИРОВОЧНОЙ ПОПРАВКИ ---
+        let rawAzimuth = smoothedAzimuth;
+        currentAzimuth = (rawAzimuth + calibrationOffsetDecimal + 360) % 360;
 
         let pitch = Math.round(event.beta || 0); 
         let roll = Math.round(event.gamma || 0);  
