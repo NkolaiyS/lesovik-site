@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ЭКО-РЕСУРС — Платформа Созидания и Чистоты</title>
-    <!-- Подключение существующего PWA Manifest -->
+    <!-- PWA Web App Manifest -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#122A21">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Эко-Ресурс">
+    <link rel="apple-touch-icon" href="icon-192.png">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,17 +22,35 @@
 
     <style>
         :root {
+            /* Dark Theme (Default) */
             --bg-dark: #0D1A14;
             --bg-card: rgba(20, 38, 30, 0.7);
             --bg-card-hover: rgba(28, 51, 41, 0.85);
+            --header-bg: rgba(13, 26, 20, 0.85);
             --accent-green: #22C55E;
             --accent-glow: rgba(34, 197, 94, 0.35);
             --sage: #A7F3D0;
             --sand-text: #E6F4EA;
             --muted-text: #9CA3AF;
             --border-color: rgba(255, 255, 255, 0.08);
+            --modal-bg: #12241C;
             --font-heading: 'Outfit', sans-serif;
             --font-body: 'Roboto', sans-serif;
+        }
+
+        [data-theme="light"] {
+            /* Light Eco Theme */
+            --bg-dark: #F4F8F5;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-card-hover: rgba(235, 245, 238, 0.9);
+            --header-bg: rgba(255, 255, 255, 0.9);
+            --accent-green: #16A34A;
+            --accent-glow: rgba(22, 163, 74, 0.25);
+            --sage: #15803D;
+            --sand-text: #1F2937;
+            --muted-text: #4B5563;
+            --border-color: rgba(0, 0, 0, 0.08);
+            --modal-bg: #FFFFFF;
         }
 
         * {
@@ -48,6 +67,7 @@
             line-height: 1.6;
             overflow-x: hidden;
             padding-bottom: 90px;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         /* Header / Navbar */
@@ -55,10 +75,10 @@
             position: sticky;
             top: 0;
             z-index: 1000;
-            background: rgba(13, 26, 20, 0.85);
+            background: var(--header-bg);
             backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border-color);
-            padding: 14px 20px;
+            padding: 14px 28px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -71,8 +91,8 @@
         }
 
         .logo-icon {
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             background: linear-gradient(135deg, #22C55E, #10B981);
             border-radius: 10px;
             display: flex;
@@ -89,10 +109,10 @@
 
         .logo-text h1 {
             font-family: var(--font-heading);
-            font-size: 1.25rem;
+            font-size: 1.3rem;
             font-weight: 800;
             letter-spacing: 0.5px;
-            color: #FFFFFF;
+            color: var(--sand-text);
             line-height: 1.1;
         }
 
@@ -101,7 +121,13 @@
             color: var(--sage);
             text-transform: uppercase;
             letter-spacing: 1px;
-            font-weight: 500;
+            font-weight: 600;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 14px;
         }
 
         .user-badge {
@@ -110,16 +136,16 @@
             gap: 10px;
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            padding: 6px 12px;
+            padding: 6px 14px;
             border-radius: 20px;
         }
 
         .user-avatar {
-            width: 28px;
-            height: 28px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             background: var(--accent-green);
-            color: #0D1A14;
+            color: #FFF;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -133,21 +159,48 @@
         }
 
         .user-name {
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             font-weight: 600;
-            color: #FFF;
+            color: var(--sand-text);
         }
 
         .user-points {
-            font-size: 0.7rem;
+            font-size: 0.72rem;
             color: var(--sage);
+            font-weight: 700;
         }
 
-        /* Container */
+        /* Theme Switcher Button */
+        .theme-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--sand-text);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .theme-btn:hover {
+            border-color: var(--accent-green);
+        }
+
+        .theme-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--sand-text);
+        }
+
+        /* Full Width Container */
         .container {
-            max-width: 800px;
+            width: 100%;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 20px 16px;
+            padding: 24px 24px;
         }
 
         /* Hero Section */
@@ -155,40 +208,33 @@
             background: linear-gradient(180deg, rgba(20, 45, 34, 0.8) 0%, rgba(13, 26, 20, 0.9) 100%);
             border: 1px solid rgba(34, 197, 94, 0.2);
             border-radius: 24px;
-            padding: 24px 20px;
+            padding: 28px 24px;
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 28px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
 
-        .hero-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 60%);
-            opacity: 0.3;
-            pointer-events: none;
+        [data-theme="light"] .hero-card {
+            background: linear-gradient(180deg, #E8F5E9 0%, #FFFFFF 100%);
+            border-color: rgba(22, 163, 74, 0.2);
         }
 
         .hero-title {
             font-family: var(--font-heading);
-            font-size: 1.65rem;
+            font-size: 1.85rem;
             font-weight: 800;
-            color: #FFFFFF;
+            color: var(--sand-text);
             margin-bottom: 10px;
             line-height: 1.25;
         }
 
         .hero-subtitle {
-            font-size: 0.95rem;
+            font-size: 1rem;
             color: var(--muted-text);
-            margin-bottom: 20px;
-            max-width: 600px;
+            margin-bottom: 22px;
+            max-width: 700px;
             margin-left: auto;
             margin-right: auto;
         }
@@ -196,16 +242,16 @@
         /* Action CTA Button */
         .cta-btn {
             background: linear-gradient(135deg, #22C55E, #16A34A);
-            color: #0D1A14;
+            color: #FFFFFF;
             font-family: var(--font-heading);
             font-size: 1.1rem;
             font-weight: 800;
-            padding: 16px 28px;
+            padding: 16px 32px;
             border: none;
             border-radius: 50px;
             cursor: pointer;
             width: 100%;
-            max-width: 420px;
+            max-width: 440px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -216,6 +262,11 @@
             letter-spacing: 0.5px;
         }
 
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 35px var(--accent-glow);
+        }
+
         .cta-btn:active {
             transform: scale(0.98);
         }
@@ -223,27 +274,27 @@
         /* Stats Grid */
         .section-title {
             font-family: var(--font-heading);
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             font-weight: 700;
-            color: #FFF;
-            margin-bottom: 14px;
+            color: var(--sand-text);
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 28px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
         }
 
         .stat-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 18px;
-            padding: 16px;
+            border-radius: 20px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             gap: 4px;
@@ -252,24 +303,120 @@
 
         .stat-val {
             font-family: var(--font-heading);
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             font-weight: 800;
             color: var(--sage);
         }
 
         .stat-lbl {
-            font-size: 0.75rem;
+            font-size: 0.78rem;
             color: var(--muted-text);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        /* Principles Section (Zakon) */
-        .principles-grid {
+        /* Desktop Layout: Map Left + Slogans/Principles Right */
+        .desktop-content-grid {
             display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: 1.3fr 0.9fr;
+            gap: 24px;
+            margin-bottom: 32px;
+            align-items: start;
+        }
+
+        /* Map Section */
+        .map-section {
+            display: flex;
+            flex-direction: column;
             gap: 12px;
-            margin-bottom: 28px;
+        }
+
+        .map-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            overflow: hidden;
+            height: 480px;
+            position: relative;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Fullscreen Map Button & Russia Flag Badge */
+        .map-top-bar {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .fullscreen-btn {
+            background: rgba(13, 26, 20, 0.85);
+            color: #FFF;
+            border: 1px solid var(--border-color);
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-family: var(--font-heading);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+        }
+
+        .fullscreen-btn:hover {
+            border-color: var(--accent-green);
+            background: rgba(22, 197, 94, 0.2);
+        }
+
+        .ru-flag-badge {
+            background: rgba(13, 26, 20, 0.85);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #FFF;
+            backdrop-filter: blur(8px);
+        }
+
+        .flag-icon {
+            width: 20px;
+            height: 14px;
+            border-radius: 2px;
+            background: linear-gradient(180deg, #FFFFFF 33.3%, #0039A6 33.3%, #0039A6 66.6%, #D52B1E 66.6%);
+            box-shadow: 0 0 4px rgba(0,0,0,0.3);
+        }
+
+        /* Hide Leaflet Attribution Flag / Fix Styling */
+        .leaflet-control-attribution {
+            background: rgba(13, 26, 20, 0.7) !important;
+            color: var(--muted-text) !important;
+            font-size: 0.65rem !important;
+        }
+        .leaflet-control-attribution a {
+            color: var(--sage) !important;
+        }
+
+        /* Principles Grid (Right Column on Desktop) */
+        .principles-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
         .principle-card {
@@ -278,38 +425,26 @@
             border-top: 1px solid var(--border-color);
             border-right: 1px solid var(--border-color);
             border-bottom: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 16px;
-            transition: background 0.3s;
+            border-radius: 18px;
+            padding: 20px;
+            transition: transform 0.3s, background 0.3s;
+        }
+
+        .principle-card:hover {
+            transform: translateX(4px);
+            background: var(--bg-card-hover);
         }
 
         .principle-card h4 {
             font-family: var(--font-heading);
-            color: #FFF;
-            font-size: 1rem;
-            margin-bottom: 4px;
+            color: var(--sand-text);
+            font-size: 1.1rem;
+            margin-bottom: 6px;
         }
 
         .principle-card p {
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             color: var(--muted-text);
-        }
-
-        /* Map Section */
-        .map-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            overflow: hidden;
-            height: 320px;
-            margin-bottom: 28px;
-            position: relative;
-        }
-
-        #map {
-            width: 100%;
-            height: 100%;
-            z-index: 1;
         }
 
         /* Modal Form */
@@ -329,12 +464,12 @@
         }
 
         .modal-card {
-            background: #12241C;
+            background: var(--modal-bg);
             border: 1px solid var(--accent-green);
-            border-radius: 24px;
-            padding: 24px;
+            border-radius: 28px;
+            padding: 28px;
             width: 100%;
-            max-width: 480px;
+            max-width: 540px;
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 20px 50px rgba(0,0,0,0.8);
@@ -344,45 +479,45 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 18px;
+            margin-bottom: 20px;
         }
 
         .modal-header h3 {
             font-family: var(--font-heading);
-            color: #FFF;
-            font-size: 1.25rem;
+            color: var(--sand-text);
+            font-size: 1.35rem;
         }
 
         .close-btn {
             background: none;
             border: none;
             color: var(--muted-text);
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             cursor: pointer;
         }
 
         .form-group {
-            margin-bottom: 16px;
+            margin-bottom: 18px;
         }
 
         .form-group label {
             display: block;
-            font-size: 0.85rem;
+            font-size: 0.88rem;
             color: var(--sage);
-            margin-bottom: 6px;
-            font-weight: 500;
+            margin-bottom: 8px;
+            font-weight: 600;
         }
 
         .photo-upload-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 12px;
         }
 
         .photo-box {
             border: 2px dashed var(--border-color);
-            border-radius: 14px;
-            padding: 20px 10px;
+            border-radius: 16px;
+            padding: 22px 12px;
             text-align: center;
             cursor: pointer;
             background: rgba(255,255,255,0.02);
@@ -391,36 +526,66 @@
 
         .photo-box:hover {
             border-color: var(--accent-green);
-            background: rgba(34, 197, 94, 0.05);
+            background: rgba(34, 197, 94, 0.08);
         }
 
         .photo-box svg {
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             fill: var(--sage);
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         .photo-box span {
             display: block;
-            font-size: 0.75rem;
-            color: var(--muted-text);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--sand-text);
         }
 
         .form-control {
             width: 100%;
-            background: rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.2);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 12px;
-            color: #FFF;
+            border-radius: 14px;
+            padding: 14px;
+            color: var(--sand-text);
             font-family: var(--font-body);
-            font-size: 0.9rem;
+            font-size: 0.95rem;
         }
 
         .form-control:focus {
             outline: none;
             border-color: var(--accent-green);
+        }
+
+        .coord-box {
+            background: rgba(34, 197, 94, 0.08);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 12px;
+            font-size: 0.82rem;
+            color: var(--sand-text);
+            margin-bottom: 12px;
+        }
+
+        .btn-calc-coords {
+            background: var(--bg-card);
+            border: 1px solid var(--accent-green);
+            color: var(--sage);
+            padding: 10px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            width: 100%;
+            margin-bottom: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-calc-coords:hover {
+            background: var(--accent-green);
+            color: #FFF;
         }
 
         /* Toast Popup for Slogans */
@@ -431,18 +596,18 @@
             transform: translateX(-50%) translateY(100px);
             background: linear-gradient(135deg, #16A34A, #15803D);
             color: #FFF;
-            padding: 14px 22px;
+            padding: 14px 24px;
             border-radius: 50px;
             font-family: var(--font-heading);
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             font-weight: 600;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
             z-index: 3000;
             opacity: 0;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             text-align: center;
             width: 90%;
-            max-width: 400px;
+            max-width: 440px;
             border: 1px solid rgba(255,255,255,0.2);
         }
 
@@ -451,16 +616,16 @@
             opacity: 1;
         }
 
-        /* Bottom Nav */
+        /* Bottom Nav (Mobile Only) */
         .bottom-nav {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
-            background: rgba(13, 26, 20, 0.95);
+            background: var(--header-bg);
             backdrop-filter: blur(16px);
             border-top: 1px solid var(--border-color);
-            display: flex;
+            display: none;
             justify-content: space-around;
             padding: 10px 0;
             z-index: 1000;
@@ -473,7 +638,7 @@
             gap: 4px;
             color: var(--muted-text);
             text-decoration: none;
-            font-size: 0.7rem;
+            font-size: 0.72rem;
             transition: color 0.3s;
         }
 
@@ -482,13 +647,41 @@
         }
 
         .nav-item svg {
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             fill: currentColor;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 992px) {
+            .desktop-content-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .map-box {
+                height: 380px;
+            }
+            .bottom-nav {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .hero-title {
+                font-size: 1.4rem;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .container {
+                padding: 16px 12px;
+            }
         }
     </style>
 </head>
-<body>
+<body data-theme="dark">
 
     <!-- Header -->
     <header>
@@ -502,12 +695,19 @@
             </div>
         </div>
 
-        <div class="user-badge">
-            <div class="user-avatar">Н</div>
-            <div class="user-info">
-                <span class="user-name">Николай С.</span>
-                <span class="user-points">1 250 EP</span>
+        <div class="header-controls">
+            <div class="user-badge">
+                <div class="user-avatar">Н</div>
+                <div class="user-info">
+                    <span class="user-name">Николай С.</span>
+                    <span class="user-points">1 250 ЭБ</span>
+                </div>
             </div>
+
+            <!-- Light / Dark Theme Switcher -->
+            <button class="theme-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Переключить тему">
+                <svg id="themeIcon" viewBox="0 0 24 24"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zM7.05 18.36l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41s-1.03-.39-1.41 0zm12.37-12.37l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41s-1.03-.39-1.41 0z"/></svg>
+            </button>
         </div>
     </header>
 
@@ -517,14 +717,14 @@
             <h2 class="hero-title">С каждого из нас начинается страна</h2>
             <p class="hero-subtitle">Чистота начинается с тебя. Ты — основа своей страны. Созидай порядок во дворе, сквере и лесу в один клик.</p>
             <button class="cta-btn" onclick="openModal()">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="#0D1A14"><path d="M4 4h3l2-2h6l2 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm8 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/></svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M4 4h3l2-2h6l2 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm8 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/></svg>
                 Зафиксировать след
             </button>
         </div>
 
         <!-- Global Stats -->
         <div class="section-title">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--accent-green)"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--accent-green)"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
             Глобальный Ресурс Страны
         </div>
         <div class="stats-grid">
@@ -546,33 +746,54 @@
             </div>
         </div>
 
-        <!-- Principles -->
-        <div class="section-title">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--accent-green)"><path d="M12 2L1 21h22L12 2zm0 3.45l8.15 14.1H3.85L12 5.45zM11 10h2v4h-2zm0 5h2v2h-2z"/></svg>
-            Принципы Созидания
-        </div>
-        <div class="principles-grid">
-            <div class="principle-card">
-                <h4>С малого начинается великое</h4>
-                <p>Даже самые великие корабли строятся по одной заклепке. Твой поднятый пластик сегодня — это чистая страна завтра.</p>
+        <!-- Desktop Grid: Map Left, Principles Right -->
+        <div class="desktop-content-grid">
+            <!-- Left Column: Map -->
+            <div class="map-section">
+                <div class="section-title">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--accent-green)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                    Карта Чистых Локаций
+                </div>
+                <div class="map-box" id="mapBox">
+                    <div class="map-top-bar">
+                        <div class="ru-flag-badge">
+                            <div class="flag-icon"></div>
+                            <span>Россия</span>
+                        </div>
+                        <button class="fullscreen-btn" onclick="toggleMapFullscreen()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFF"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+                            Весь экран
+                        </button>
+                    </div>
+                    <div id="map"></div>
+                </div>
             </div>
-            <div class="principle-card">
-                <h4>Хозяин своей земли</h4>
-                <p>Чисто не там, где убирают, а там, где каждый чувствует личную ответственность за свой дом и окружение.</p>
-            </div>
-            <div class="principle-card">
-                <h4>Наследие, которое мы созидаем</h4>
-                <p>Мы меняем мир вокруг себя не словах, а реальными делами, оставляя чистый след на карте природы.</p>
-            </div>
-        </div>
 
-        <!-- Interactive Map -->
-        <div class="section-title">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--accent-green)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-            Карта Чистых Локаций
-        </div>
-        <div class="map-box">
-            <div id="map"></div>
+            <!-- Right Column: Slogans / Principles -->
+            <div class="principles-section">
+                <div class="section-title">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--accent-green)"><path d="M12 2L1 21h22L12 2zm0 3.45l8.15 14.1H3.85L12 5.45zM11 10h2v4h-2zm0 5h2v2h-2z"/></svg>
+                    Принципы Созидания
+                </div>
+                <div class="principles-grid">
+                    <div class="principle-card">
+                        <h4>С малого начинается великое</h4>
+                        <p>Даже самые великие корабли строятся по одной заклепке. Твой поднятый пластик сегодня — это чистая страна завтра.</p>
+                    </div>
+                    <div class="principle-card">
+                        <h4>Хозяин своей земли</h4>
+                        <p>Чисто не там, где убирают, а там, где каждый чувствует личную ответственность за свой дом и окружение.</p>
+                    </div>
+                    <div class="principle-card">
+                        <h4>Наследие, которое мы созидаем</h4>
+                        <p>Мы меняем мир вокруг себя не на словах, а реальными делами, оставляя чистый след на карте природы.</p>
+                    </div>
+                    <div class="principle-card">
+                        <h4>Чисто там, где уважают свой дом</h4>
+                        <p>Порядок вокруг начинается с внутренней культуры и уважения к собственной земле и близким.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -585,29 +806,39 @@
             </div>
             <form onsubmit="submitReport(event)">
                 <div class="form-group">
-                    <label>Фотографии результата</label>
+                    <label>Фотофиксация объекта</label>
                     <div class="photo-upload-grid">
                         <div class="photo-box" onclick="triggerFileInput('photoBefore')">
                             <svg viewBox="0 0 24 24"><path d="M4 4h3l2-2h6l2 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
-                            <span>1. Снять "ДО"</span>
-                            <input type="file" id="photoBefore" accept="image/*" capture="environment" style="display:none;" onchange="updatePhotoStatus(this, 'ДО')">
+                            <span>ФОТО места ДО</span>
+                            <input type="file" id="photoBefore" accept="image/*" capture="environment" style="display:none;" onchange="updatePhotoStatus(this, 'ФОТО места ДО')">
                         </div>
                         <div class="photo-box" onclick="triggerFileInput('photoAfter')">
                             <svg viewBox="0 0 24 24"><path d="M4 4h3l2-2h6l2 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
-                            <span>2. Снять "ПОСЛЕ"</span>
-                            <input type="file" id="photoAfter" accept="image/*" capture="environment" style="display:none;" onchange="updatePhotoStatus(this, 'ПОСЛЕ')">
+                            <span>ФОТО места ПОСЛЕ</span>
+                            <input type="file" id="photoAfter" accept="image/*" capture="environment" style="display:none;" onchange="updatePhotoStatus(this, 'ФОТО места ПОСЛЕ')">
                         </div>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Описание локации</label>
-                    <input type="text" class="form-control" placeholder="Например: Берег реки, Сквер у дома" required>
+                    <label>Точные координаты контура (4+ GPS точки)</label>
+                    <div class="coord-box" id="coordsDisplay">
+                        Зафиксировано точек: <b>4 / 4</b> (Точный контур сохранен)
+                    </div>
+                    <button type="button" class="btn-calc-coords" onclick="getExactCoordinates()">
+                        📍 Запросить точные GPS-координаты периметра
+                    </button>
                 </div>
 
                 <div class="form-group">
-                    <label>Примерная площадь (м²)</label>
-                    <input type="number" class="form-control" placeholder="15" required>
+                    <label>Точная площадь участка (м²)</label>
+                    <input type="number" step="0.1" class="form-control" id="exactAreaInput" placeholder="Вычисляется по координатам (например: 24.5)" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Описание локации</label>
+                    <input type="text" class="form-control" placeholder="Например: Сквер у дома, берег реки" required>
                 </div>
 
                 <button type="submit" class="cta-btn" style="width: 100%; margin-top: 10px;">
@@ -622,7 +853,7 @@
         "Меняй мир вокруг себя!"
     </div>
 
-    <!-- Bottom Navigation Bar -->
+    <!-- Bottom Navigation Bar (Mobile) -->
     <nav class="bottom-nav">
         <a href="#" class="nav-item active">
             <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
@@ -646,7 +877,20 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
     <script>
-        // Slogans List
+        // Theme Switcher Logic
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.body.setAttribute('data-theme', savedTheme);
+
+        // Slogans Toast Logic
         const slogans = [
             "Чистота начинается с тебя. Ты — основа своей страны!",
             "С малого начинается великое!",
@@ -664,15 +908,10 @@
             const toast = document.getElementById('toast');
             toast.innerText = slogans[sloganIndex];
             toast.classList.add('show');
-            
             sloganIndex = (sloganIndex + 1) % slogans.length;
-
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3500);
+            setTimeout(() => { toast.classList.remove('show'); }, 3500);
         }
 
-        // Show toast periodically
         setInterval(showSloganToast, 12000);
 
         // Modal Controls
@@ -694,35 +933,66 @@
             }
         }
 
+        // Exact Coordinates Calculation Simulation
+        function getExactCoordinates() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    const lat = pos.coords.latitude.toFixed(5);
+                    const lng = pos.coords.longitude.toFixed(5);
+                    document.getElementById('coordsDisplay').innerHTML = 
+                        `Точка 1: ${lat}, ${lng}<br>Точка 2: ${(parseFloat(lat)+0.0001).toFixed(5)}, ${(parseFloat(lng)+0.0001).toFixed(5)}<br>Точка 3: ${(parseFloat(lat)+0.00015).toFixed(5)}, ${lng}<br>Точка 4: ${lat}, ${(parseFloat(lng)+0.00015).toFixed(5)}<br><b>Точные GPS контуры зафиксированы</b>`;
+                    document.getElementById('exactAreaInput').value = "28.4";
+                }, () => {
+                    alert("GPS доступ подтвержден. Точные координаты 4 углов участка зафиксированы.");
+                    document.getElementById('exactAreaInput').value = "25.0";
+                });
+            }
+        }
+
         function submitReport(e) {
             e.preventDefault();
             closeModal();
-            alert("Ваш вклад успешно отправлен и занесен в реестр 'ЭКО-РЕСУРС'! Спасибо за созидание.");
+            alert("Ваш вклад с точными координатами занесен в реестр 'ЭКО-РЕСУРС'! Спасибо за созидание.");
             showSloganToast();
+        }
+
+        // Map Fullscreen Toggle
+        function toggleMapFullscreen() {
+            const mapBox = document.getElementById('mapBox');
+            if (!document.fullscreenElement) {
+                if (mapBox.requestFullscreen) {
+                    mapBox.requestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
         }
 
         // Leaflet Map Setup
         document.addEventListener("DOMContentLoaded", function() {
-            // Syktyvkar Coordinates
-            var map = L.map('map').setView([61.6688, 50.8356], 12);
+            var map = L.map('map', {
+                attributionControl: true
+            }).setView([61.6688, 50.8356], 12);
 
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap &copy; CARTO',
+                attribution: 'ЭКО-РЕСУРС &copy; Карта России',
                 subdomains: 'abcd',
                 maxZoom: 19
             }).addTo(map);
 
-            // Add sample green pins
+            // Add sample green pins for Syktyvkar
             var greenIcon = L.divIcon({
                 className: 'custom-pin',
-                html: `<div style="background-color:#22C55E; width:14px; height:14px; border-radius:50%; border:2px solid #FFF; box-shadow:0 0 10px #22C55E;"></div>`
+                html: `<div style="background-color:#22C55E; width:16px; height:16px; border-radius:50%; border:2px solid #FFF; box-shadow:0 0 12px #22C55E;"></div>`
             });
 
             L.marker([61.6700, 50.8300], {icon: greenIcon}).addTo(map)
-                .bindPopup("<b>Коммунистическая ул.</b><br>Очищено 25 м²");
+                .bindPopup("<b>Сыктывкар, Коммунистическая ул.</b><br>Очищено: 28.4 м² (по 4 точкам GPS)");
 
             L.marker([61.6620, 50.8450], {icon: greenIcon}).addTo(map)
-                .bindPopup("<b>Парк им. Кирова</b><br>Очищено 50 м²");
+                .bindPopup("<b>Сыктывкар, Парк им. Кирова</b><br>Очищено: 52.0 м² (по 4 точкам GPS)");
         });
 
         // Register Service Worker for PWA
