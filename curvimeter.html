@@ -29,12 +29,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
     <title>Курвиметр, Сеткометр и Трекер абриса онлайн | Лесовик</title>
-    <meta name="description" content="Онлайн курвиметр, цифровая палетка (сеткометр) и трекер отвода делянок. Измерение площадей и периметров выдела по фото и GPS в экосистеме Лесовик.">
-    <meta name="keywords" content="курвиметр онлайн, сеткометр, палетка для леса, расчет площади выдела, трекер абриса, отвод лесосек gps, Лесовик Про">
+    <meta name="description" content="Онлайн курвиметр, цифровая палетка (сеткометр) и трекер отвода делянок с линзой высокой точности. Измерение площадей и периметров выдела по фото и GPS в экосистеме Лесовик.">
+    <meta name="keywords" content="курвиметр онлайн, сеткометр, палетка для леса, расчет площади выдела, трекер абриса, отвод лесосек gps, линза для точек, Лесовик Про">
     <link rel="canonical" href="https://lesovik-pro.ru/curvimeter.html">
 
     <meta property="og:title" content="Курвиметр и Сеткометр онлайн | Лесовик">
-    <meta property="og:description" content="Цифровой планшет таксатора. Расчет площадей, палетка поверх карты и трекер абриса делянки.">
+    <meta property="og:description" content="Цифровой планшет таксатора. Расчет площадей, линза высокой точности, палетка поверх карты и трекер абриса делянки.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://lesovik-pro.ru/curvimeter.html">
     <meta property="og:image" content="https://lesovik-pro.ru/logo.jpeg">
@@ -198,6 +198,37 @@
         .img-input-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 10px; border-radius: 8px; background: var(--card-bg); border: 1px solid var(--forest-green); color: var(--forest-green); font-weight: bold; font-size: 12px; cursor: pointer; text-align: center; }
         .img-input-btn:hover { background: var(--forest-green); color: #FFF; }
 
+        /* ИНТЕРФЕЙС УПРАВЛЕНИЯ ОПТИЧЕСКИМ И ОБЩИМ ЗУМОМ */
+        .zoom-control-box { background: rgba(45, 90, 39, 0.04); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 12px; font-size: 12px; font-weight: 500; }
+        .zoom-slider-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        .zoom-slider-wrapper input[type="range"] { flex: 1; accent-color: var(--forest-green); }
+
+        /* ИНТЕРАКТИВНАЯ ЛИНЗА-ЛУПА ДЛЯ СВЕРХТОЧНОГО НАВЕДЕНИЯ ТОЧЕК */
+        #lens-magnifier {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border: 3px solid var(--forest-green);
+            border-radius: 50%;
+            pointer-events: none;
+            display: none;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            background-color: #FFF;
+            overflow: hidden;
+            transform: translate(-50%, -120%);
+        }
+        #lens-canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .lens-crosshair-v {
+            position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: red; transform: translateX(-50%); pointer-events: none;
+        }
+        .lens-crosshair-h {
+            position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: red; transform: translateY(-50%); pointer-events: none;
+        }
+
         .yandex-rtb-feed-wrapper { max-height: 500px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 12px; margin-top: 30px; margin-bottom: 40px; padding: 10px; background: var(--card-bg); }
 
         .seo-info-section { margin-top: 30px; padding-top: 20px; border-top: 2px solid var(--border-color); color: var(--text-graphite); opacity: 0.85; }
@@ -246,11 +277,13 @@
     <div id="help-curvimeter-popup" class="popup-overlay" onclick="closePopupOuter('help-curvimeter-popup', event)">
         <div class="popup-window">
             <button class="popup-close" onclick="closePopup('help-curvimeter-popup')">&times;</button>
-            <h3>Как работать с Курвиметром</h3>
+            <h3>Инструкция: Курвиметр и Масштабирование</h3>
             <ol class="instruction-steps">
-                <li><strong>Сделайте фото или загрузите файл:</strong> Нажмите «📷 Сфоткать абрис/карту» для мгновенного снимка с камеры или выберите готовый файл с диска.</li>
-                <li><strong>Задайте масштаб:</strong> Нажмите «📏 Задать масштаб», затем кликните две точки на чертеже с известным расстоянием и введите его в метрах.</li>
-                <li><strong>Обведите контур:</strong> Кликайте или нажимайте пальцем/стилусом по точкам границы выдела. Система моментально рассчитает периметр и общую площадь.</li>
+                <li><strong>Фотофиксация или Загрузка:</strong> Нажмите «📷 Сфоткать абрис» для прямого снимка с камеры или загрузите карту/схему из файла.</li>
+                <li><strong>Масштаб фонового фото:</strong> Настройте ползунок «🔎 Зум фото», чтобы детализировать нужный участок.</li>
+                <li><strong>Задание масштаба (Калибровка):</strong> Нажмите «📏 Задать масштаб», кликните 2 точки с известным расстоянием и введите метры.</li>
+                <li><strong>Линза точной наводки:</strong> При зажатии пальцем/курсором на экране автоматически появляется **увеличительная линза с красным перекрестием**. Отпустите палец для точной установки точки.</li>
+                <li><strong>Зум визуализатора:</strong> Используйте ползунок «🔍 Зум визуализатора» для полного масштабирования чертежа с точками.</li>
             </ol>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closePopup('help-curvimeter-popup')">Понятно</button>
         </div>
@@ -259,11 +292,11 @@
     <div id="help-grid-popup" class="popup-overlay" onclick="closePopupOuter('help-grid-popup', event)">
         <div class="popup-window">
             <button class="popup-close" onclick="closePopup('help-grid-popup')">&times;</button>
-            <h3>Как работать с Сеткометром (Палеткой)</h3>
+            <h3>Инструкция: Сеткометр (Палетка)</h3>
             <ol class="instruction-steps">
                 <li><strong>Наложение сетки:</strong> Включите тумблер «Показать сетку» поверх загруженной карты или фото абриса.</li>
-                <li><strong>Настройка шага:</strong> Изменяйте размер ячейки сетки в метрах (например, 10 м, 20 м или 50 м).</li>
-                <li><strong>Оценка площадей:</strong> Подсчитывайте количество ячеек поверх объекта для визуальной проверки выдела.</li>
+                <li><strong>Размер ячеек:</strong> Задайте шаг сетки в метрах (например, 10 м, 20 м или 50 м). Сетка автоматически масштабируется вместе с фото и визуализатором.</li>
+                <li><strong>Пересчет:</strong> Визуально подчитайте полные ячейки для контроля площади выдела.</li>
             </ol>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closePopup('help-grid-popup')">Понятно</button>
         </div>
@@ -272,7 +305,7 @@
     <div id="help-tracker-popup" class="popup-overlay" onclick="closePopupOuter('help-tracker-popup', event)">
         <div class="popup-window">
             <button class="popup-close" onclick="closePopup('help-tracker-popup')">&times;</button>
-            <h3>Как работать с Трекером абриса</h3>
+            <h3>Инструкция: Трекер абриса</h3>
             <ol class="instruction-steps">
                 <li><strong>Включите GPS:</strong> Перейдите во вкладку «Полевой (GPS Трекер)».</li>
                 <li><strong>Запись контура:</strong> Нажмите «▶ Начать запись трека» при натурном обходе делянки.</li>
@@ -287,8 +320,8 @@
         <div class="grid-layout">
             
             <div class="card">
-                <h2>Инструменты и параметры</h2>
-                <div class="subtitle">Выберите режим работы цифрового планшета таксатора.</div>
+                <h2>Инструменты и оптика</h2>
+                <div class="subtitle">Управление съемкой, фоном и масштабированием.</div>
 
                 <div class="mode-switcher-container">
                     <button id="tab-cameral" class="mode-tab active-mode" onclick="switchWorkMode('cameral')">
@@ -305,7 +338,6 @@
                     <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
                         <label style="font-size:12px; font-weight:bold;">1. Фоновое изображение карты/абриса:</label>
                         
-                        <!-- ВЫБОР: СФОТКАТЬ ИЛИ ЗАГРУЗИТЬ -->
                         <div style="display: flex; gap: 8px;">
                             <label class="img-input-btn" style="flex: 1; background: var(--forest-green); color: #FFF;">
                                 📷 Сфоткать абрис
@@ -315,6 +347,18 @@
                                 📁 Из файла
                                 <input type="file" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
                             </label>
+                        </div>
+                    </div>
+
+                    <!-- ОПТИЧЕСКИЙ ЗУМ ФОТО И ЗУМ ВИЗУАЛИЗАТОРА -->
+                    <div class="zoom-control-box">
+                        <div class="zoom-slider-wrapper">
+                            <label style="width:130px;">🖼️ Зум фото: <span id="img-zoom-val">1.0</span>x</label>
+                            <input type="range" id="img-zoom-range" min="1.0" max="3.0" step="0.1" value="1.0" oninput="updateZooms()">
+                        </div>
+                        <div class="zoom-slider-wrapper" style="margin-bottom:0;">
+                            <label style="width:130px;">🔍 Зум визуал.: <span id="view-zoom-val">1.0</span>x</label>
+                            <input type="range" id="view-zoom-range" min="1.0" max="4.0" step="0.1" value="1.0" oninput="updateZooms()">
                         </div>
                     </div>
 
@@ -358,10 +402,17 @@
             </div>
 
             <div class="card">
-                <h2>Визуализатор и палетка</h2>
-                <div class="subtitle">Интерактивный холст (кликайте по карте для установки вершин контура).</div>
+                <h2>Интерактивный холст с линзой</h2>
+                <div class="subtitle">Нажмите и зажмите палец для вызова оптической линзы-лупы.</div>
 
                 <div class="canvas-container">
+                    <!-- ЛИНЗА-ЛУПА ТОЧНОЙ НАВОДКИ -->
+                    <div id="lens-magnifier">
+                        <canvas id="lens-canvas" width="120" height="120"></canvas>
+                        <div class="lens-crosshair-v"></div>
+                        <div class="lens-crosshair-h"></div>
+                    </div>
+
                     <canvas id="curvimeter-canvas" width="400" height="400"></canvas>
                     <div id="area-display" class="area-badge">Площадь: 0.0000 га (0 м²)</div>
                     <div id="perimeter-display" style="font-size:11px; margin-top:4px; opacity:0.8;">Периметр / Длина: 0.0 м</div>
@@ -391,10 +442,10 @@
 
             <h3>Ключевые функции:</h3>
             <ul>
+                <li><strong>Интерактивная линза точной наводки:</strong> Всплывающая лупа с перекрестием для высокоточного позиционирования вершины контура.</li>
+                <li><strong>Двойной зум:</strong> Раздельное масштабирование фонового фотоснимка и холста визуализатора.</li>
                 <li><strong>Цифровая палетка (Сеткометр):</strong> Наложение адаптивной сетки на планшет для оценки площадей лесосек и полян.</li>
-                <li><strong>Электронный курвиметр:</strong> Точное измерение извилистых линий, границ выдела и просек.</li>
-                <li><strong>Быстрая фотофиксация:</strong> Прямая съемка абриса на камеру смартфона без использования сторонних редакторов.</li>
-                <li><strong>Трекер абриса:</strong> Автоматическое построение контурной схемы при обходе натуры.</li>
+                <li><strong>Быстрая фотофиксация:</strong> Прямая съемка абриса на камеру смартфона.</li>
             </ul>
         </section>
     </main>
@@ -424,6 +475,7 @@
 <script>
     let currentWorkMode = 'cameral';
     let canvas, ctx;
+    let lensCanvas, lensCtx;
     let bgImage = null;
 
     let points = [];
@@ -431,8 +483,11 @@
     let isCalibratingScale = false;
     let scaleCalibPoints = [];
 
-    let isTrackingGPS = false;
-    let gpsWatchId = null;
+    let imageZoom = 1.0;
+    let viewZoom = 1.0;
+
+    let isPointerDown = false;
+    let currentPointerPos = { x: 0, y: 0 };
 
     function checkNetworkStatus() {
         const blocker = document.getElementById('offline-blocker-screen');
@@ -466,8 +521,17 @@
             document.getElementById('tab-tracker').classList.add('active-mode');
             document.getElementById('cameral-panel').style.display = 'none';
             document.getElementById('tracker-panel').style.display = 'block';
-            initGPS();
         }
+        redrawCanvas();
+    }
+
+    function updateZooms() {
+        imageZoom = parseFloat(document.getElementById('img-zoom-range').value);
+        viewZoom = parseFloat(document.getElementById('view-zoom-range').value);
+
+        document.getElementById('img-zoom-val').innerText = imageZoom.toFixed(1);
+        document.getElementById('view-zoom-val').innerText = viewZoom.toFixed(1);
+
         redrawCanvas();
     }
 
@@ -500,10 +564,34 @@
         }
     }
 
-    function handleCanvasClick(e) {
+    function getCanvasCoordinates(e) {
         const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-        const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        const x = (clientX - rect.left) * (canvas.width / rect.width);
+        const y = (clientY - rect.top) * (canvas.height / rect.height);
+        return { x, y, clientX: clientX - rect.left, clientY: clientY - rect.top };
+    }
+
+    function handlePointerDown(e) {
+        isPointerDown = true;
+        currentPointerPos = getCanvasCoordinates(e);
+        updateLens(currentPointerPos);
+    }
+
+    function handlePointerMove(e) {
+        if (!isPointerDown) return;
+        currentPointerPos = getCanvasCoordinates(e);
+        updateLens(currentPointerPos);
+    }
+
+    function handlePointerUp(e) {
+        if (!isPointerDown) return;
+        isPointerDown = false;
+        document.getElementById('lens-magnifier').style.display = 'none';
+
+        const { x, y } = currentPointerPos;
 
         if (isCalibratingScale) {
             scaleCalibPoints.push({x, y});
@@ -520,6 +608,27 @@
         redrawCanvas();
     }
 
+    // ИНТЕРАКТИВНАЯ ЛИНЗА-ЛУПА С УВЕЛИЧЕНИЕМ
+    function updateLens(pos) {
+        const lens = document.getElementById('lens-magnifier');
+        lens.style.display = 'block';
+        lens.style.left = `${pos.clientX}px`;
+        lens.style.top = `${pos.clientY}px`;
+
+        const lensSize = 120;
+        const zoomFactor = 2.5;
+
+        lensCtx.clearRect(0, 0, lensSize, lensSize);
+        lensCtx.drawImage(
+            canvas,
+            pos.x - (lensSize / (2 * zoomFactor)),
+            pos.y - (lensSize / (2 * zoomFactor)),
+            lensSize / zoomFactor,
+            lensSize / zoomFactor,
+            0, 0, lensSize, lensSize
+        );
+    }
+
     function clearCanvasPoints() {
         points = [];
         scaleCalibPoints = [];
@@ -529,11 +638,24 @@
     function redrawCanvas() {
         if (!canvas) return;
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        ctx.save();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Применение зума визуализатора
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.scale(viewZoom, viewZoom);
+        ctx.translate(-canvas.width / 2, -canvas.height / 2);
+
         ctx.fillStyle = isDark ? '#151e1b' : '#FdfFfd';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+        // Отрисовка фото с учетом оптического зума
         if (bgImage) {
-            ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.scale(imageZoom, imageZoom);
+            ctx.drawImage(bgImage, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
+            ctx.restore();
         }
 
         // ВОДЯНОЙ ЗНАК
@@ -562,10 +684,10 @@
             }
         }
 
-        // ОТРИСОВКА ТОЧЕК И ЛИНИЙ КОНТУРА
+        // ОТРИСОВКА КОНТУРА И ТОЧЕК
         if (points.length > 0) {
             ctx.strokeStyle = isDark ? '#8FBC8F' : '#2D5A27';
-            ctx.lineWidth = 2.5;
+            ctx.lineWidth = 2.5 / viewZoom;
             ctx.beginPath();
             ctx.moveTo(points[0].x, points[0].y);
 
@@ -574,7 +696,7 @@
             }
 
             if (points.length > 2) {
-                ctx.lineTo(points[0].x, points[0].y); // Автозамыкание контура
+                ctx.lineTo(points[0].x, points[0].y);
                 ctx.fillStyle = isDark ? 'rgba(143, 188, 143, 0.15)' : 'rgba(45, 90, 39, 0.15)';
                 ctx.fill();
             }
@@ -582,26 +704,26 @@
 
             points.forEach((p, idx) => {
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, 4, 0, 2 * Math.PI);
+                ctx.arc(p.x, p.y, 4 / viewZoom, 0, 2 * Math.PI);
                 ctx.fillStyle = idx === 0 ? '#DC2626' : '#16A34A';
                 ctx.fill();
             });
         }
 
-        // КАЛИБРОВОЧНАЯ ЛИНИЯ МАСШТАБА
+        // КРАСНАЯ ЛИНИЯ КАЛИБРОВКИ
         if (scaleCalibPoints.length > 0) {
             ctx.strokeStyle = '#F59E0B';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 2 / viewZoom;
             ctx.beginPath();
             ctx.moveTo(scaleCalibPoints[0].x, scaleCalibPoints[0].y);
             if (scaleCalibPoints[1]) ctx.lineTo(scaleCalibPoints[1].x, scaleCalibPoints[1].y);
             ctx.stroke();
         }
 
+        ctx.restore();
         calculateMetrics();
     }
 
-    // ПОЛНЫЙ РАСЧЕТ ПЕРИМЕТРА И ПЛОЩАДИ (ФОРМУЛА ГАУССА)
     function calculateMetrics() {
         if (points.length < 2) {
             document.getElementById('perimeter-display').innerText = "Периметр / Длина: 0.0 м";
@@ -625,7 +747,6 @@
         let totalMeters = totalPx / scalePixelsPerMeter;
         document.getElementById('perimeter-display').innerText = `Периметр / Длина: ${totalMeters.toFixed(1)} м`;
 
-        // Расчет площади в м²
         if (points.length >= 3) {
             let areaPx = 0;
             for (let i = 0; i < points.length; i++) {
@@ -641,31 +762,6 @@
             document.getElementById('area-display').innerText = `Площадь: ${areaHa.toFixed(4)} га (${Math.round(areaM2)} м²)`;
         } else {
             document.getElementById('area-display').innerText = "Площадь: 0.0000 га (0 м²)";
-        }
-    }
-
-    function initGPS() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    document.getElementById('gps-status-text').innerText = "Активен";
-                    document.getElementById('gps-coords-text').innerText = `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
-                },
-                (err) => { document.getElementById('gps-status-text').innerText = "Ошибка GPS"; }
-            );
-        }
-    }
-
-    function toggleGPSTracking() {
-        const btn = document.getElementById('btn-toggle-gps-track');
-        if (!isTrackingGPS) {
-            isTrackingGPS = true;
-            btn.innerText = "⏹ Остановить трек";
-            btn.style.backgroundColor = "var(--danger)";
-        } else {
-            isTrackingGPS = false;
-            btn.innerText = "▶ Начать запись трека";
-            btn.style.backgroundColor = "var(--forest-green)";
         }
     }
 
@@ -700,7 +796,18 @@
         checkNetworkStatus();
         canvas = document.getElementById('curvimeter-canvas');
         ctx = canvas.getContext('2d');
-        canvas.addEventListener('click', handleCanvasClick);
+
+        lensCanvas = document.getElementById('lens-canvas');
+        lensCtx = lensCanvas.getContext('2d');
+
+        canvas.addEventListener('mousedown', handlePointerDown);
+        canvas.addEventListener('mousemove', handlePointerMove);
+        canvas.addEventListener('mouseup', handlePointerUp);
+
+        canvas.addEventListener('touchstart', handlePointerDown, { passive: true });
+        canvas.addEventListener('touchmove', handlePointerMove, { passive: true });
+        canvas.addEventListener('touchend', handlePointerUp);
+
         redrawCanvas();
     });
 </script>
