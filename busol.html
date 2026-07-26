@@ -184,6 +184,14 @@
         .traverse-direction-wrapper { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px dashed var(--border-color); padding-top: 8px; }
         .select-traverse { padding: 4px; border-radius: 4px; font-size: 12px; background: var(--card-bg); color: var(--text-graphite); border: 1px solid var(--border-color); font-weight: 600; }
 
+        /* ИНТЕРФЕЙС ЮСТИРОВКИ И ПОПРАВКИ МАГНИТНОГО СКЛОНЕНИЯ */
+        .calibration-offset-wrapper { display: flex; flex-direction: column; gap: 6px; border-top: 1px dashed var(--border-color); padding-top: 8px; margin-top: 8px; }
+        .offset-controls-flex { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .select-offset-sign { padding: 4px; border-radius: 4px; font-size: 13px; font-weight: bold; background: var(--card-bg); color: var(--text-graphite); border: 1px solid var(--border-color); }
+        .input-offset-num { width: 55px; padding: 4px; border-radius: 4px; font-size: 12px; font-weight: bold; text-align: center; background: var(--card-bg); color: var(--text-graphite); border: 1px solid var(--border-color); }
+        .btn-clear-offset { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; margin-left: auto; }
+        .btn-clear-offset:hover { background: var(--danger); color: #FFF; }
+
         .sensor-stuck-alert-box { 
             display: none; 
             position: absolute; 
@@ -547,7 +555,7 @@
         </div>
     </div>
 
-    <!-- МОДАЛКИ ИНФОРМАЦИИ И КАЛИБРОВКИ -->
+    <!-- МОДАЛКИ ИНФОРМАЦИИ, ЮСТИРОВКИ И КАЛИБРОВКИ -->
     <div id="mag-info-popup" class="popup-overlay" onclick="closePopupOuter('mag-info-popup', event)">
         <div class="popup-window">
             <button class="popup-close" onclick="closePopup('mag-info-popup')">&times;</button>
@@ -567,6 +575,20 @@
                 <li>Телефон лежит горизонтально на ладони. Полное дублирование механической буссоли БГ-1 с пузырьковым уровнем.</li>
             </ul>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closePopup('theo-info-popup')">Понятно</button>
+        </div>
+    </div>
+
+    <!-- ВСПЛЫВАЮЩАЯ ИНСТРУКЦИЯ ПО МАГНИТНОМУ СКЛОНЕНИЮ / ЮСТИРОВКЕ -->
+    <div id="offset-info-popup" class="popup-overlay" onclick="closePopupOuter('offset-info-popup', event)">
+        <div class="popup-window">
+            <button class="popup-close" onclick="closePopup('offset-info-popup')">&times;</button>
+            <h3>Юстировка и Магнитное склонение</h3>
+            <ul class="instruction-steps" style="font-size: 13px; line-height: 1.5;">
+                <li><strong>Компенсация погрешности смартфона:</strong> Если магнитометр вашего устройства имеет систематическое отклонение (например, постоянное смещение на +2° из-за намагничивания металлического корпуса или динамика), выберите знак «-» и введите 2°, чтобы откалибровать прибор «в ноль».</li>
+                <li><strong>Учет магнитного склонения:</strong> Для перехода от магнитных азимутов к истинными (географическим) введите величину магнитного склонения для вашей местности со знаком «+» (восточное) или «-» (западное).</li>
+                <li><strong>Автосохранение:</strong> Введенная поправка мгновенно пересчитывает все азимуты на экране и сохраняется в памяти смартфона. Кнопка «Сбросить» позволяет обнулить значение в один клик.</li>
+            </ul>
+            <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closePopup('offset-info-popup')">Понятно</button>
         </div>
     </div>
 
@@ -639,6 +661,28 @@
                             <option value="clockwise">По часовой стрелке (Правые)</option>
                             <option value="counter-clockwise">Против часовой (Левые)</option>
                         </select>
+                    </div>
+
+                    <!-- ИНТЕРФЕЙС МАГНИТНОГО СКЛОНЕНИЯ И ЮСТИРОВКИ -->
+                    <div class="calibration-offset-wrapper">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label style="font-weight:700; color:var(--forest-green); display:flex; align-items:center; gap:5px;">
+                                🎯 Магнитное склонение / Поправка
+                                <span class="btn-help-circle" onclick="openPopup('offset-info-popup', event)">?</span>
+                            </label>
+                        </div>
+                        <div class="offset-controls-flex">
+                            <select id="offset-sign-select" class="select-offset-sign" onchange="updateOffsetFromUI()">
+                                <option value="+">+</option>
+                                <option value="-">-</option>
+                            </select>
+                            <input type="number" id="offset-deg-input" class="input-offset-num" placeholder="0" min="0" max="359" oninput="updateOffsetFromUI()">
+                            <label style="font-weight:bold;">°</label>
+                            <input type="number" id="offset-min-input" class="input-offset-num" placeholder="0" min="0" max="59" oninput="updateOffsetFromUI()">
+                            <label style="font-weight:bold;">'</label>
+                            
+                            <button class="btn-clear-offset" onclick="clearCalibrationOffset()" title="Удалить поправку из памяти">🗑️ Сбросить</button>
+                        </div>
                     </div>
                 </div>
 
@@ -842,7 +886,46 @@
     let currentAltitude = 150;
     let currentAccuracy = 0;
 
-    // Скрытие нижней плашки без сохранения в localStorage (появится снова при перезагрузке)
+    // --- ПЕРЕМЕННАЯ И ЛОГИКА ЮСТИРОВОЧНОЙ ПОПРАВКИ ---
+    let calibrationOffsetDecimal = 0.0; // Поправка в десятичных градусах
+
+    function updateOffsetFromUI() {
+        const sign = document.getElementById('offset-sign-select').value;
+        const deg = parseFloat(document.getElementById('offset-deg-input').value) || 0;
+        const min = parseFloat(document.getElementById('offset-min-input').value) || 0;
+
+        let total = deg + (min / 60.0);
+        if (sign === '-') total = -total;
+
+        calibrationOffsetDecimal = total;
+        localStorage.setItem('lesovik_calibration_offset', calibrationOffsetDecimal);
+    }
+
+    function loadCalibrationOffset() {
+        const savedOffset = localStorage.getItem('lesovik_calibration_offset');
+        if (savedOffset !== null) {
+            calibrationOffsetDecimal = parseFloat(savedOffset) || 0.0;
+            
+            let absVal = Math.abs(calibrationOffsetDecimal);
+            let sign = calibrationOffsetDecimal < 0 ? '-' : '+';
+            let deg = Math.floor(absVal);
+            let min = Math.round((absVal - deg) * 60);
+
+            document.getElementById('offset-sign-select').value = sign;
+            document.getElementById('offset-deg-input').value = deg > 0 ? deg : '';
+            document.getElementById('offset-min-input').value = min > 0 ? min : '';
+        }
+    }
+
+    function clearCalibrationOffset() {
+        calibrationOffsetDecimal = 0.0;
+        localStorage.removeItem('lesovik_calibration_offset');
+        document.getElementById('offset-sign-select').value = '+';
+        document.getElementById('offset-deg-input').value = '';
+        document.getElementById('offset-min-input').value = '';
+    }
+
+    // Скрытие нижней плашки без сохранения в localStorage
     function closeBottomBanner() {
         const banner = document.getElementById('sticky-bottom-banner');
         if (banner) banner.style.display = 'none';
@@ -959,6 +1042,8 @@
         const savedMode = localStorage.getItem('lesovik_system_mode');
         const savedDir = localStorage.getItem('lesovik_traverse_direction');
         
+        loadCalibrationOffset();
+
         if (savedStep) { stepLength = parseFloat(savedStep); document.getElementById('step-length').value = stepLength; }
         if (savedMode) { currentSystemMode = savedMode; applyModeUI(); }
         if (savedDir) { currentTraverseDirection = savedDir; document.getElementById('traverse-select-direction').value = currentTraverseDirection; }
@@ -1030,7 +1115,7 @@
             document.getElementById('sensor-stuck-alert').style.display = 'none'; 
 
             compassDisk.style.display = 'flex'; videoPreview.style.display = 'none'; vLine.style.display = 'none';
-            vDot.style.display = 'none'; gyroRing.style.display = 'none'; zoomPanel.style.display = 'none';
+            vDot.style.display = 'none'; gyroRing.style.display = 'none'; zoomPanel.style.display = 'block';
             btnLockZero.style.display = 'none'; btnClearZero.style.display = 'none'; btnFsToggle.style.display = 'block';
 
             drawCompassDialSVG('compass-svg-canvas');
@@ -1116,7 +1201,10 @@
             smoothedAzimuth += filterFactor * diff; smoothedAzimuth = (smoothedAzimuth % 360 + 360) % 360;
         }
         
-        currentAzimuth = smoothedAzimuth;
+        // --- МГНОВЕННОЕ ПРИМЕНЕНИЕ ЮСТИРОВОЧНОЙ ПОПРАВКИ ---
+        let rawAzimuth = smoothedAzimuth;
+        currentAzimuth = (rawAzimuth + calibrationOffsetDecimal + 360) % 360;
+
         let pitch = Math.round(event.beta || 0); let roll = Math.round(event.gamma || 0);  
 
         document.getElementById('live-pitch').innerText = `${pitch}°`; document.getElementById('live-roll').innerText = `${roll}°`;
