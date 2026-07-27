@@ -118,6 +118,8 @@
             font-family: 'Inter', sans-serif; line-height: 1.6;
             box-sizing: border-box;
             transition: background-color 0.3s, color 0.3s;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         *, *:before, *:after { box-sizing: inherit; }
@@ -174,7 +176,18 @@
         .btn-help-circle { background: rgba(0,0,0,0.1); border: none; width: 18px; height: 18px; border-radius: 50%; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; color: inherit; padding: 0; }
 
         .canvas-container { position: relative; width: 100%; max-width: 100%; background: #FFFFFF; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; align-items: center; padding: 8px; box-sizing: border-box; }
-        #curvimeter-canvas { background: #FdfFfd; border-radius: 6px; width: 100%; max-width: 100%; aspect-ratio: 1; border: 1px dashed rgba(0,0,0,0.1); box-sizing: border-box; cursor: crosshair; touch-action: none; }
+        #curvimeter-canvas { 
+            background: #FdfFfd; 
+            border-radius: 6px; 
+            width: 100%; 
+            max-width: 100%; 
+            aspect-ratio: 1; 
+            border: 1px dashed rgba(0,0,0,0.1); 
+            box-sizing: border-box; 
+            cursor: crosshair; 
+            touch-action: none;
+            -webkit-touch-callout: none;
+        }
         [data-theme="dark"] #curvimeter-canvas { background: #151e1b; border: 1px dashed rgba(255,255,255,0.1); }
 
         .area-badge { font-size: 13px; font-weight: 700; color: var(--forest-green); margin-top: 8px; text-align: center; background: rgba(45, 90, 39, 0.1); padding: 5px 12px; border-radius: 20px; width: 100%; }
@@ -198,10 +211,14 @@
         .img-input-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 10px; border-radius: 8px; background: var(--card-bg); border: 1px solid var(--forest-green); color: var(--forest-green); font-weight: bold; font-size: 12px; cursor: pointer; text-align: center; }
         .img-input-btn:hover { background: var(--forest-green); color: #FFF; }
 
-        /* ИНТЕРФЕЙС УПРАВЛЕНИЯ ОПТИЧЕСКИМ И ОБЩИМ ЗУМОМ */
-        .zoom-control-box { background: rgba(45, 90, 39, 0.04); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 12px; font-size: 12px; font-weight: 500; }
-        .zoom-slider-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        /* ИНТЕРФЕЙС УПРАВЛЕНИЯ ЕДИНЫМ ЗУМОМ И ПЕРЕМЕЩЕНИЕМ */
+        .zoom-control-box { background: rgba(45, 90, 39, 0.04); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 10px; font-size: 12px; font-weight: 500; width: 100%; }
+        .zoom-slider-wrapper { display: flex; align-items: center; gap: 10px; }
         .zoom-slider-wrapper input[type="range"] { flex: 1; accent-color: var(--forest-green); }
+
+        .pan-tool-bar { display: flex; gap: 8px; margin-bottom: 8px; width: 100%; }
+        .btn-tool { flex: 1; padding: 8px; border: 1px solid var(--forest-green); border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; background: transparent; color: var(--forest-green); text-align: center; }
+        .btn-tool.active { background: var(--forest-green); color: #FFF; }
 
         /* ИНТЕРАКТИВНАЯ ЛИНЗА-ЛУПА ДЛЯ СВЕРХТОЧНОГО НАВЕДЕНИЯ ТОЧЕК */
         #lens-magnifier {
@@ -212,7 +229,7 @@
             border-radius: 50%;
             pointer-events: none;
             display: none;
-            z-index: 100;
+            z-index: 500;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             background-color: #FFF;
             overflow: hidden;
@@ -223,10 +240,13 @@
             height: 100%;
         }
         .lens-crosshair-v {
-            position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: red; transform: translateX(-50%); pointer-events: none;
+            position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: red; transform: translateX(-50%); pointer-events: none;
         }
         .lens-crosshair-h {
-            position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: red; transform: translateY(-50%); pointer-events: none;
+            position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: red; transform: translateY(-50%); pointer-events: none;
+        }
+        .lens-center-dot {
+            position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; background: red; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; border: 1px solid #FFF;
         }
 
         .yandex-rtb-feed-wrapper { max-height: 500px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 12px; margin-top: 30px; margin-bottom: 40px; padding: 10px; background: var(--card-bg); }
@@ -246,7 +266,7 @@
         @media (max-width: 600px) { .glass-header { padding: 10px 12px; } .container { padding: 10px; margin-top: 70px; } .card { padding: 12px; margin-bottom: 12px; } }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
     <!-- ОФФЛАЙН ЗАГЛУШКА -->
     <div id="offline-blocker-screen" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#111815; color:#F9FBF9; z-index:999999; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px; box-sizing:border-box;">
@@ -280,10 +300,9 @@
             <h3>Инструкция: Курвиметр и Масштабирование</h3>
             <ol class="instruction-steps">
                 <li><strong>Фотофиксация или Загрузка:</strong> Нажмите «📷 Сфоткать абрис» для прямого снимка с камеры или загрузите карту/схему из файла.</li>
-                <li><strong>Масштаб фонового фото:</strong> Настройте ползунок «🔎 Зум фото», чтобы детализировать нужный участок.</li>
+                <li><strong>Единый Зум и Сдвиг:</strong> Пользуйтесь одним ползунком «🔍 Зум». Чтобы подвинуть абрис внутри рамки, включите режим «✋ Двигать абрис».</li>
                 <li><strong>Задание масштаба (Калибровка):</strong> Нажмите «📏 Задать масштаб», кликните 2 точки с известным расстоянием и введите метры.</li>
-                <li><strong>Линза точной наводки:</strong> При зажатии пальцем/курсором на экране автоматически появляется **увеличительная линза с красным перекрестием**. Отпустите палец для точной установки точки.</li>
-                <li><strong>Зум визуализатора:</strong> Используйте ползунок «🔍 Зум визуализатора» для полного масштабирования чертежа с точками.</li>
+                <li><strong>Линза точной наводки:</strong> В режиме «📍 Ставить точки» при зажатии пальцем/курсором всплывает **увеличительная линза с прицелом**. При отпускании точка фиксируется.</li>
             </ol>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closePopup('help-curvimeter-popup')">Понятно</button>
         </div>
@@ -296,7 +315,7 @@
             <ol class="instruction-steps">
                 <li><strong>Наложение сетки:</strong> Включите тумблер «Показать сетку» поверх загруженной карты или фото абриса.</li>
                 <li><strong>Размер ячеек:</strong> Задайте шаг сетки в метрах (например, 10 м, 20 м или 50 м). Сетка автоматически масштабируется вместе с фото и визуализатором.</li>
-                <li><strong>Пересчет:</strong> Визуально подчитайте полные ячейки для контроля площади выдела.</li>
+                <li><strong>Пересчет:</strong> Визуально подсчитайте полные ячейки для контроля площади выдела.</li>
             </ol>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closePopup('help-grid-popup')">Понятно</button>
         </div>
@@ -350,22 +369,10 @@
                         </div>
                     </div>
 
-                    <!-- ОПТИЧЕСКИЙ ЗУМ ФОТО И ЗУМ ВИЗУАЛИЗАТОРА -->
-                    <div class="zoom-control-box">
-                        <div class="zoom-slider-wrapper">
-                            <label style="width:130px;">🖼️ Зум фото: <span id="img-zoom-val">1.0</span>x</label>
-                            <input type="range" id="img-zoom-range" min="1.0" max="3.0" step="0.1" value="1.0" oninput="updateZooms()">
-                        </div>
-                        <div class="zoom-slider-wrapper" style="margin-bottom:0;">
-                            <label style="width:130px;">🔍 Зум визуал.: <span id="view-zoom-val">1.0</span>x</label>
-                            <input type="range" id="view-zoom-range" min="1.0" max="4.0" step="0.1" value="1.0" oninput="updateZooms()">
-                        </div>
-                    </div>
-
                     <div style="display:flex; gap:10px; margin-bottom:12px;">
                         <div style="flex:1;">
                             <label style="font-size:11px; font-weight:bold; display:block;">Известная длина (м):</label>
-                            <input type="number" id="scale-known-meters" class="input-dist" value="100" min="1" onchange="updateScaleFromMeters()">
+                            <input type="number" id="scale-known-meters" class="input-dist" value="100" min="1" onfocus="this.select()" onchange="updateScaleFromMeters()">
                         </div>
                         <div style="flex:1; display:flex; align-items:flex-end;">
                             <button class="btn-action btn-reset-zero" style="width:100%; padding:8px; font-size:11px;" onclick="startScaleCalibration()">📏 Задать масштаб</button>
@@ -382,7 +389,7 @@
                         </div>
                         <div style="display:flex; gap:10px; align-items:center;">
                             <label style="font-size:11px;">Размер ячейки (м):</label>
-                            <input type="number" id="grid-size-meters" class="input-dist" value="20" style="width:70px;" onchange="redrawCanvas()">
+                            <input type="number" id="grid-size-meters" class="input-dist" value="20" style="width:80px;" onfocus="this.select()" onchange="redrawCanvas()">
                         </div>
                     </div>
                 </div>
@@ -403,14 +410,29 @@
 
             <div class="card">
                 <h2>Интерактивный холст с линзой</h2>
-                <div class="subtitle">Нажмите и зажмите палец для вызова оптической линзы-лупы.</div>
+                <div class="subtitle">Установите масштаб, режим перетаскивания или точек.</div>
 
                 <div class="canvas-container">
+                    <!-- РЕЖИМЫ И ЕДИНЫЙ ЗУМ НЕПОСРЕДСТВЕННО НАД ХОЛСТОМ -->
+                    <div class="pan-tool-bar">
+                        <button id="tool-draw-btn" class="btn-tool active" onclick="setCanvasMode('draw')">📍 Ставить точки</button>
+                        <button id="tool-pan-btn" class="btn-tool" onclick="setCanvasMode('pan')">✋ Двигать абрис</button>
+                        <button class="btn-tool" style="max-width:80px;" onclick="resetPanZoom()">🎯 Сброс</button>
+                    </div>
+
+                    <div class="zoom-control-box">
+                        <div class="zoom-slider-wrapper">
+                            <label style="width:110px; font-weight:bold;">🔍 Зум: <span id="unified-zoom-val">1.0</span>x</label>
+                            <input type="range" id="unified-zoom-range" min="1.0" max="5.0" step="0.1" value="1.0" oninput="updateUnifiedZoom()">
+                        </div>
+                    </div>
+
                     <!-- ЛИНЗА-ЛУПА ТОЧНОЙ НАВОДКИ -->
                     <div id="lens-magnifier">
                         <canvas id="lens-canvas" width="120" height="120"></canvas>
                         <div class="lens-crosshair-v"></div>
                         <div class="lens-crosshair-h"></div>
+                        <div class="lens-center-dot"></div>
                     </div>
 
                     <canvas id="curvimeter-canvas" width="400" height="400"></canvas>
@@ -442,8 +464,9 @@
 
             <h3>Ключевые функции:</h3>
             <ul>
-                <li><strong>Интерактивная линза точной наводки:</strong> Всплывающая лупа с перекрестием для высокоточного позиционирования вершины контура.</li>
-                <li><strong>Двойной зум:</strong> Раздельное масштабирование фонового фотоснимка и холста визуализатора.</li>
+                <li><strong>Интерактивная линза точной наводки:</strong> Всплывающая лупа с прицелом и центральной точкой для высокоточного позиционирования вершин контура.</li>
+                <li><strong>Сохранение пропорций снимка:</strong> Автоматическое выравнивание пропорций загружаемого фото без геометрических искажений.</li>
+                <li><strong>Единый зум и перемещение:</strong> Масштабирование и свобода позиционирования абриса с помощью специального инструмента панорамирования.</li>
                 <li><strong>Цифровая палетка (Сеткометр):</strong> Наложение адаптивной сетки на планшет для оценки площадей лесосек и полян.</li>
                 <li><strong>Быстрая фотофиксация:</strong> Прямая съемка абриса на камеру смартфона.</li>
             </ul>
@@ -483,10 +506,14 @@
     let isCalibratingScale = false;
     let scaleCalibPoints = [];
 
-    let imageZoom = 1.0;
-    let viewZoom = 1.0;
+    // ЕДИНЫЙ ЗУМ И ТРАНСФОРМАЦИЯ ПАНОРАМИРОВАНИЯ
+    let unifiedZoom = 1.0;
+    let panX = 0;
+    let panY = 0;
+    let activeToolMode = 'draw'; // 'draw' или 'pan'
 
     let isPointerDown = false;
+    let startPointerPos = { x: 0, y: 0 };
     let currentPointerPos = { x: 0, y: 0 };
 
     function checkNetworkStatus() {
@@ -525,13 +552,24 @@
         redrawCanvas();
     }
 
-    function updateZooms() {
-        imageZoom = parseFloat(document.getElementById('img-zoom-range').value);
-        viewZoom = parseFloat(document.getElementById('view-zoom-range').value);
+    function setCanvasMode(mode) {
+        activeToolMode = mode;
+        document.getElementById('tool-draw-btn').classList.toggle('active', mode === 'draw');
+        document.getElementById('tool-pan-btn').classList.toggle('active', mode === 'pan');
+    }
 
-        document.getElementById('img-zoom-val').innerText = imageZoom.toFixed(1);
-        document.getElementById('view-zoom-val').innerText = viewZoom.toFixed(1);
+    function updateUnifiedZoom() {
+        unifiedZoom = parseFloat(document.getElementById('unified-zoom-range').value);
+        document.getElementById('unified-zoom-val').innerText = unifiedZoom.toFixed(1);
+        redrawCanvas();
+    }
 
+    function resetPanZoom() {
+        unifiedZoom = 1.0;
+        panX = 0;
+        panY = 0;
+        document.getElementById('unified-zoom-range').value = 1.0;
+        document.getElementById('unified-zoom-val').innerText = "1.0";
         redrawCanvas();
     }
 
@@ -541,7 +579,10 @@
         const reader = new FileReader();
         reader.onload = function(event) {
             bgImage = new Image();
-            bgImage.onload = function() { redrawCanvas(); };
+            bgImage.onload = function() { 
+                resetPanZoom();
+                redrawCanvas(); 
+            };
             bgImage.src = event.target.result;
         };
         reader.readAsDataURL(file);
@@ -550,6 +591,7 @@
     function startScaleCalibration() {
         isCalibratingScale = true;
         scaleCalibPoints = [];
+        setCanvasMode('draw');
         alert("Кликните две точки на карте с известным расстоянием!");
     }
 
@@ -569,21 +611,49 @@
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-        const x = (clientX - rect.left) * (canvas.width / rect.width);
-        const y = (clientY - rect.top) * (canvas.height / rect.height);
-        return { x, y, clientX: clientX - rect.left, clientY: clientY - rect.top };
+        const screenX = (clientX - rect.left) * (canvas.width / rect.width);
+        const screenY = (clientY - rect.top) * (canvas.height / rect.height);
+
+        // Перевод экранных координат в мировую систему холста с учетом Pan и Zoom
+        const worldX = (screenX - canvas.width / 2 - panX) / unifiedZoom + canvas.width / 2;
+        const worldY = (screenY - canvas.height / 2 - panY) / unifiedZoom + canvas.height / 2;
+
+        return { 
+            x: worldX, 
+            y: worldY, 
+            screenX, 
+            screenY,
+            clientX: clientX - rect.left, 
+            clientY: clientY - rect.top 
+        };
     }
 
     function handlePointerDown(e) {
         isPointerDown = true;
-        currentPointerPos = getCanvasCoordinates(e);
-        updateLens(currentPointerPos);
+        const pos = getCanvasCoordinates(e);
+        startPointerPos = { x: pos.screenX, y: pos.screenY };
+        currentPointerPos = pos;
+
+        if (activeToolMode === 'draw') {
+            updateLens(currentPointerPos);
+        }
     }
 
     function handlePointerMove(e) {
         if (!isPointerDown) return;
-        currentPointerPos = getCanvasCoordinates(e);
-        updateLens(currentPointerPos);
+        const pos = getCanvasCoordinates(e);
+
+        if (activeToolMode === 'pan') {
+            const dx = pos.screenX - startPointerPos.x;
+            const dy = pos.screenY - startPointerPos.y;
+            panX += dx;
+            panY += dy;
+            startPointerPos = { x: pos.screenX, y: pos.screenY };
+            redrawCanvas();
+        } else {
+            currentPointerPos = pos;
+            updateLens(currentPointerPos);
+        }
     }
 
     function handlePointerUp(e) {
@@ -591,24 +661,26 @@
         isPointerDown = false;
         document.getElementById('lens-magnifier').style.display = 'none';
 
-        const { x, y } = currentPointerPos;
+        if (activeToolMode === 'draw') {
+            const { x, y } = currentPointerPos;
 
-        if (isCalibratingScale) {
-            scaleCalibPoints.push({x, y});
-            if (scaleCalibPoints.length === 2) {
-                isCalibratingScale = false;
-                updateScaleFromMeters();
-                alert("Масштаб успешно задан!");
+            if (isCalibratingScale) {
+                scaleCalibPoints.push({x, y});
+                if (scaleCalibPoints.length === 2) {
+                    isCalibratingScale = false;
+                    updateScaleFromMeters();
+                    alert("Масштаб успешно задан!");
+                }
+                redrawCanvas();
+                return;
             }
-            redrawCanvas();
-            return;
-        }
 
-        points.push({x, y});
-        redrawCanvas();
+            points.push({x, y});
+            redrawCanvas();
+        }
     }
 
-    // ИНТЕРАКТИВНАЯ ЛИНЗА-ЛУПА С УВЕЛИЧЕНИЕМ
+    // ИНТЕРАКТИВНАЯ ЛИНЗА-ЛУПА С ТОЧНЫМ ПРИЦЕЛОМ
     function updateLens(pos) {
         const lens = document.getElementById('lens-magnifier');
         lens.style.display = 'block';
@@ -621,8 +693,8 @@
         lensCtx.clearRect(0, 0, lensSize, lensSize);
         lensCtx.drawImage(
             canvas,
-            pos.x - (lensSize / (2 * zoomFactor)),
-            pos.y - (lensSize / (2 * zoomFactor)),
+            pos.screenX - (lensSize / (2 * zoomFactor)),
+            pos.screenY - (lensSize / (2 * zoomFactor)),
             lensSize / zoomFactor,
             lensSize / zoomFactor,
             0, 0, lensSize, lensSize
@@ -641,20 +713,30 @@
         ctx.save();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Применение зума визуализатора
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.scale(viewZoom, viewZoom);
-        ctx.translate(-canvas.width / 2, -canvas.height / 2);
-
+        // ФОН
         ctx.fillStyle = isDark ? '#151e1b' : '#FdfFfd';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Отрисовка фото с учетом оптического зума
+        // Применение трансформирования (Единый Зум + Панорамирование)
+        ctx.translate(canvas.width / 2 + panX, canvas.height / 2 + panY);
+        ctx.scale(unifiedZoom, unifiedZoom);
+        ctx.translate(-canvas.width / 2, -canvas.height / 2);
+
+        // Отрисовка фонового изображения С СОХРАНЕНИЕМ ПРОПОРЦИЙ
         if (bgImage) {
             ctx.save();
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.scale(imageZoom, imageZoom);
-            ctx.drawImage(bgImage, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
+            const hRatio = canvas.width / bgImage.width;
+            const vRatio = canvas.height / bgImage.height;
+            const ratio = Math.min(hRatio, vRatio);
+
+            const centerShiftX = (canvas.width - bgImage.width * ratio) / 2;
+            const centerShiftY = (canvas.height - bgImage.height * ratio) / 2;
+
+            ctx.drawImage(
+                bgImage, 
+                0, 0, bgImage.width, bgImage.height,
+                centerShiftX, centerShiftY, bgImage.width * ratio, bgImage.height * ratio
+            );
             ctx.restore();
         }
 
@@ -673,21 +755,21 @@
         if (showGrid) {
             const gridMeters = parseFloat(document.getElementById('grid-size-meters').value) || 20;
             const gridPx = gridMeters * scalePixelsPerMeter;
-            ctx.strokeStyle = isDark ? 'rgba(143, 188, 143, 0.25)' : 'rgba(45, 90, 39, 0.2)';
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = isDark ? 'rgba(143, 188, 143, 0.3)' : 'rgba(45, 90, 39, 0.25)';
+            ctx.lineWidth = 1 / unifiedZoom;
 
-            for (let x = 0; x < canvas.width; x += gridPx) {
-                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            for (let x = -canvas.width * 2; x < canvas.width * 3; x += gridPx) {
+                ctx.beginPath(); ctx.moveTo(x, -canvas.height * 2); ctx.lineTo(x, canvas.height * 3); ctx.stroke();
             }
-            for (let y = 0; y < canvas.height; y += gridPx) {
-                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            for (let y = -canvas.height * 2; y < canvas.height * 3; y += gridPx) {
+                ctx.beginPath(); ctx.moveTo(-canvas.width * 2, y); ctx.lineTo(canvas.width * 3, y); ctx.stroke();
             }
         }
 
         // ОТРИСОВКА КОНТУРА И ТОЧЕК
         if (points.length > 0) {
             ctx.strokeStyle = isDark ? '#8FBC8F' : '#2D5A27';
-            ctx.lineWidth = 2.5 / viewZoom;
+            ctx.lineWidth = 2.5 / unifiedZoom;
             ctx.beginPath();
             ctx.moveTo(points[0].x, points[0].y);
 
@@ -697,23 +779,26 @@
 
             if (points.length > 2) {
                 ctx.lineTo(points[0].x, points[0].y);
-                ctx.fillStyle = isDark ? 'rgba(143, 188, 143, 0.15)' : 'rgba(45, 90, 39, 0.15)';
+                ctx.fillStyle = isDark ? 'rgba(143, 188, 143, 0.2)' : 'rgba(45, 90, 39, 0.2)';
                 ctx.fill();
             }
             ctx.stroke();
 
             points.forEach((p, idx) => {
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, 4 / viewZoom, 0, 2 * Math.PI);
+                ctx.arc(p.x, p.y, 5 / unifiedZoom, 0, 2 * Math.PI);
                 ctx.fillStyle = idx === 0 ? '#DC2626' : '#16A34A';
                 ctx.fill();
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = 1 / unifiedZoom;
+                ctx.stroke();
             });
         }
 
         // КРАСНАЯ ЛИНИЯ КАЛИБРОВКИ
         if (scaleCalibPoints.length > 0) {
             ctx.strokeStyle = '#F59E0B';
-            ctx.lineWidth = 2 / viewZoom;
+            ctx.lineWidth = 2 / unifiedZoom;
             ctx.beginPath();
             ctx.moveTo(scaleCalibPoints[0].x, scaleCalibPoints[0].y);
             if (scaleCalibPoints[1]) ctx.lineTo(scaleCalibPoints[1].x, scaleCalibPoints[1].y);
