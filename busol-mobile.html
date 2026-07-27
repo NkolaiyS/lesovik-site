@@ -19,6 +19,7 @@
             "HNS-3SBX-TQMJO7": new Date(2026, 11, 31), // До 31 декабря 2026 (Ваш ноутбук)
             "HNS-5V40-G89K6X": new Date(2026, 6, 25),  // До 25 июля 2026 Андрей Сателлит
             "HNS-6BS0-ZIHISC": new Date(2026, 6, 25),  // До 25 июля 2026 Паша брат
+            "HNS-MINCIFRA-TEST": new Date(2099, 11, 31),// Доступ экспертов Минцифры
         };
 
         // Общая дата окончания бесплатного периода для ВСЕХ остальных пользователей (21 июля 2026)
@@ -33,11 +34,21 @@
             return `HNS-${segment1}-${segment2}`;
         }
 
-        // Функция получения текущего ID (Cordova или LocalStorage)
+        // Функция получения текущего ID (С ПЕРЕХВАТОМ КЛЮЧА ДЛЯ МИНЦИФРЫ)
         function getCurrentDeviceId() {
             if (window.device && window.device.uuid) {
                 return window.device.uuid;
             }
+
+            // --- ПЕРЕХВАТ КЛЮЧА ИЗ ССЫЛКИ ДЛЯ МИНЦИФРЫ ---
+            const urlParams = new URLSearchParams(window.location.search);
+            const keyParam = urlParams.get('key');
+            if (keyParam) {
+                localStorage.setItem('bg_hns_web_id', keyParam);
+                return keyParam;
+            }
+            // ----------------------------------------------
+
             let webId = localStorage.getItem('bg_hns_web_id');
             if (!webId) {
                 webId = generateWebDeviceId();
