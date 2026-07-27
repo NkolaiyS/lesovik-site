@@ -1834,7 +1834,7 @@
         }
     }
 
-    function exportArchiveToCSV() {
+   function exportArchiveToCSV() {
         const localData = localStorage.getItem('bg_hns_projects_archive');
         let dataToExport = [];
         if (localData) dataToExport = JSON.parse(localData);
@@ -1864,29 +1864,31 @@
                 csvContent += `"${proj.name}";"${proj.timestamp}";"№${m.id}";"${m.azimuth}";"${m.distance}";"${modeText}";"${dmsLat}";"${dmsLng}";"${altVal}"\n`;
             });
         });
-        
-        // --- ФОРСИРУЕМ СОХРАНЕНИЕ КАК ЭКСЕЛЬ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ ---
-        const fileName = "Архив_полевых_съемок_БГ_ХНС_1_2.csv";
-        const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
-        
-        if (navigator.msSaveBlob) { 
-            // Для устаревших браузеров
-            navigator.msSaveBlob(blob, fileName);
-        } else {
+
+        // Расширение .xls форсирует открытие в Excel на мобильных ОС
+        const fileName = "Архив_полевых_съемок_БГ_ХНС_1_2.xls";
+        const isHuawei = /huawei|harmonyos/i.test(navigator.userAgent);
+
+        if (isHuawei) {
+            // Прямой метод Data URI для обхода ограничений WebView Huawei
+            const encodedUri = "data:application/vnd.ms-excel;charset=utf-8," + encodeURIComponent(csvContent);
             const link = document.createElement("a");
-            if (link.download !== undefined) {
-                const url = URL.createObjectURL(blob);
-                link.setAttribute("href", url);
-                link.setAttribute("download", fileName);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-            } else {
-                // Запасной фоллбэк для жестких мобильных ограничений
-                window.open("data:application/vnd.ms-excel;charset=utf-8," + encodeURIComponent(csvContent));
-            }
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            // Стандартный Blob-метод для Samsung, Redmi, iPhone и ПК
+            const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
     }
 
@@ -1942,14 +1944,29 @@
         });
         
         kml += `</Document>\n</kml>`;
-        
-        const blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.setAttribute("download", `${name}_контур_БГ_ХНС 1.2.kml`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+
+        const fileName = `${name}_контур_БГ_ХНС_1.2.kml`;
+        const isHuawei = /huawei|harmonyos/i.test(navigator.userAgent);
+
+        if (isHuawei) {
+            const encodedUri = "data:application/vnd.google-earth.kml+xml;charset=utf-8," + encodeURIComponent(kml);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            const blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
