@@ -1,115 +1,49 @@
+<!-- 
+  (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
+  Свидетельство ИНН: 11180157622.
+  Программное обеспечение: «Электронная буссоль БГ-ХНС PRO» (Версия 1.2).
+-->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <script type="text/javascript" src="cordova.js"></script>
-    <!-- Подключаем SheetJS для будущего МДО -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.mini.min.js"></script>
-
-    <script type="text/javascript">
-    // --- БЛОК АВТОНОМНОЙ ЗАЩИТЫ ЛИЦЕНЗИИ ДЛЯ ЗАКАЗЧИКА ---
-    (function() {
-        const licensedDevices = {
-            "HNS-6680-TVK32U": new Date(2026, 6, 25),  
-            "HNS-RAL2-45TCN0": new Date(2099, 11, 31), 
-            "HNS-3SBX-TQMJO7": new Date(2026, 11, 31), 
-            "HNS-5V40-G89K6X": new Date(2026, 6, 25),  
-            "HNS-6BS0-ZIHISC": new Date(2026, 6, 25),  
-        };
-
-        const defaultLicenseExpirationDate = new Date(2026, 6, 21); 
-
-        function generateWebDeviceId() {
-            const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            let segment1 = '', segment2 = '';
-            for (let i = 0; i < 4; i++) segment1 += chars.charAt(Math.floor(Math.random() * chars.length));
-            for (let i = 0; i < 6; i++) segment2 += chars.charAt(Math.floor(Math.random() * chars.length));
-            return `HNS-${segment1}-${segment2}`;
-        }
-
-        function getCurrentDeviceId() {
-            if (window.device && window.device.uuid) {
-                return window.device.uuid;
-            }
-            let webId = localStorage.getItem('bg_hns_web_id');
-            if (!webId) {
-                webId = generateWebDeviceId();
-                localStorage.setItem('bg_hns_web_id', webId);
-            }
-            return webId;
-        }
-
-        function runLicenseCheck() {
-            const currentId = getCurrentDeviceId();
-            const now = Date.now();
-            let isBlocked = false;
-
-            if (licensedDevices.hasOwnProperty(currentId)) {
-                if (now > licensedDevices[currentId].getTime()) isBlocked = true;
-            } else {
-                if (now > defaultLicenseExpirationDate.getTime()) isBlocked = true;
-            }
-
-            if (isBlocked) {
-                document.body.innerHTML = `
-                    <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; 
-                                background:#111815; color:#F9FBF9; z-index:99999; 
-                                display:flex; flex-direction:column; align-items:center; 
-                                justify-content:center; font-family:'Inter',sans-serif; padding:20px; text-align:center;">
-                        <span style="font-size:50px; margin-bottom:20px;">🔒</span>
-                        <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:10px;">Срок действия ПО истек</h2>
-                        <p style="max-width:450px; font-size:14px; opacity:0.8; line-height:1.5;">
-                            Период демонстрационной или оплаченной установки данной копии электронной буссоли «БГ-ХНС ПРО» завершен.<br>
-                            Ваш ID устройства: <b>${currentId}</b>
-                        </p>
-                        <div style="margin-top:25px; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:8px; border:1px solid rgba(143,188,143,0.2);">
-                            <span style="display:block; font-size:12px; opacity:0.6; text-transform:uppercase;">Для продления лицензии:</span>
-                            <a href="mailto:foltaim@mail.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none; font-size:16px; display:block; margin-top:5px;">✉️ foltaim@mail.ru</a>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
-        document.addEventListener('deviceready', runLicenseCheck, false);
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => { if (!window.device) runLicenseCheck(); }, 500);
-        }, false);
-    })();
-
-    // --- ПЕРЕХВАТ БОТОВ ДЛЯ SEO-ПРЕВЬЮ ---
-    (function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const postSlug = urlParams.get('post');
-        const userAgent = (navigator.userAgent || '').toLowerCase();
-        const isBot = /telegrambot|vkshare|facebookexternalhit|twitterbot|slackbot|whatsapp|viber/i.test(userAgent);
-        
-        if (postSlug && isBot) {
-            window.location.href = 'https://functions.yandexcloud.net/d4ecn5ag33dcdd2deivd?post=' + encodeURIComponent(postSlug);
-        }
-    })();
-
-    // --- ЯНДЕКС МЕТРИКА ---
-    (function(m,e,t,r,i,k,a){
-        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)}; m[i].l=1*new Date();
-        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109130409', 'ym');
-
-    ym(109130409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
-    </script>
-    <noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 
     <meta charset="UTF-8">
+    <meta name="application-name" content="БГ-ХНС PRO 1.2">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="google-site-verification" content="rLtNyEQ2h992Lp8m73ynLM8J6xY5tJcr3dbVwbO35rU" />
     
-    <title>Лесовик ПРО: Единый таксационный комплекс | БГ-ХНС</title>
+    <title>Электронная буссоль онлайн с визиром и уровнем | БГ-ХНС PRO 1.2</title>
     <meta name="description" content="Бесплатная электронная буссоль и геодезический компас для отвода лесосек. Точное измерение магнитных азимутов, внутренних углов поворота делянки и визиров с помощью гироскопа и камеры смартфона.">
+    <meta name="keywords" content="буссоль онлайн, буссоль лазерная карманная, electronic буссоль для телефона, компас таксатора, измерение азимута онлайн, отвод лесосек, углы поворота делянки, БГ-ХНС">
     <link rel="canonical" href="https://lesovik-pro.ru/busol-pro.html">
+
+    <meta property="og:title" content="Электронная буссоль онлайн с визиром и уровнем | БГ-ХНС PRO 1.2">
+    <meta property="og:description" content="Геодезический прибор таксатора в кармане. Разбивка лесосек, фиксация азимутов и замер внутренних углов через камеру смартфона.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://lesovik-pro.ru/busol-pro.html">
+    <meta property="og:image" content="https://lesovik-pro.ru/logo.jpeg">
+    <meta property="og:image:width" content="500">
+    <meta property="og:image:height" content="500">
 
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
     <meta name="geo.region" content="RU-KO">
     <meta name="geo.placename" content="Сыктывкар">
+
+    <!-- Ссылка на индивидуальный манифест PWA -->
+    <link rel="manifest" href="/busol.webmanifest">
+    <meta name="theme-color" content="#2D5A27">
+
+    <!-- Регистрация Service Worker -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw-busol.js')
+            .then(reg => console.log('Буссоль PRO ready for offline:', reg.scope))
+            .catch(err => console.error('SW registration failed:', err));
+        });
+      }
+    </script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
@@ -142,9 +76,12 @@
         }
 
         html, body {
-            margin: 0; padding: 0; width: 100%; max-width: 100vw; overflow-x: hidden;
+            margin: 0; padding: 0;
+            width: 100%; max-width: 100vw;
+            overflow-x: hidden;
             background-color: var(--bg-paper); color: var(--text-graphite);
-            font-family: 'Inter', sans-serif; line-height: 1.6; box-sizing: border-box;
+            font-family: 'Inter', sans-serif; line-height: 1.6;
+            box-sizing: border-box;
             transition: background-color 0.3s, color 0.3s;
         }
 
@@ -155,7 +92,9 @@
             display: flex; justify-content: space-between; align-items: center;
             padding: 12px 20px; background: var(--glass-bg);
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-color); box-sizing: border-box;
+            border-bottom: 1px solid var(--border-color);
+            box-sizing: border-box;
+            max-width: 100vw;
         }
 
         .logo-container { display: flex; align-items: center; gap: 8px; text-decoration: none; }
@@ -166,44 +105,17 @@
         @media (min-width: 900px) { .header-seo-text { display: block; } }
 
         .header-right { display: flex; align-items: center; gap: 8px; }
-        
-        /* ТУМБЛЕР ТАНДЕМ */
-        .tandem-switch-container {
-            display: flex; align-items: center; gap: 6px;
-            background: rgba(45, 90, 39, 0.08); border: 1px solid var(--forest-light);
-            padding: 6px 12px; border-radius: 8px;
-        }
-        .tandem-switch-container label {
-            font-size: 12px; font-weight: 700; color: var(--forest-green); cursor: pointer; letter-spacing: 0.5px;
-        }
-        .tandem-switch-container input { accent-color: var(--forest-green); cursor: pointer; }
+        .btn-instruction { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
+        .btn-instruction:hover { background: var(--forest-green); color: #FFF; }
+
+        .btn-calibration { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
+        .btn-calibration:hover { background: var(--danger); color: #FFF; }
 
         .theme-toggle { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; min-height: 36px; }
 
-        main { flex: 1; padding-bottom: 80px; } /* Отступ для нижнего таб-бара */
-        .container { max-width: 1000px; width: 100%; margin: 75px auto 0; padding: 0 10px; box-sizing: border-box; overflow-x: hidden; }
+        main { flex: 1; }
+        .container { max-width: 1000px; width: 100%; margin: 75px auto 30px; padding: 0 10px; box-sizing: border-box; overflow-x: hidden; }
 
-        /* SPA МОДУЛИ */
-        .module-block { display: none; animation: fadeIn 0.3s ease; }
-        .module-block.active-module { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* НИЖНИЙ TAB BAR */
-        .spa-tab-bar {
-            position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
-            background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border-top: 1px solid var(--border-color); display: flex; justify-content: space-around;
-            padding: 8px 0 env(safe-area-inset-bottom, 8px); box-sizing: border-box;
-        }
-        .tab-btn {
-            background: transparent; border: none; color: var(--text-graphite); opacity: 0.6;
-            display: flex; flex-direction: column; align-items: center; gap: 3px;
-            font-size: 10px; font-weight: 600; cursor: pointer; padding: 4px 6px; transition: 0.2s;
-        }
-        .tab-btn.active { color: var(--forest-green); opacity: 1; font-weight: 700; }
-        .tab-btn .tab-icon { font-size: 18px; }
-
-        /* ОСТАЛЬНЫЕ СТИЛИ БУССОЛИ (Без изменений) */
         .grid-layout { display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; box-sizing: border-box; }
         @media (min-width: 850px) { .grid-layout { grid-template-columns: 1.1fr 1fr; gap: 25px; } }
 
@@ -226,31 +138,198 @@
         .traverse-direction-wrapper { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px dashed var(--border-color); padding-top: 8px; }
         .select-traverse { padding: 4px; border-radius: 4px; font-size: 12px; background: var(--card-bg); color: var(--text-graphite); border: 1px solid var(--border-color); font-weight: 600; }
 
-        .sensor-stuck-alert-box { display: none; position: absolute; bottom: 50px; left: 10px; right: 10px; background: rgba(245, 158, 11, 0.9); border: 1px solid var(--warning-alert); color: #111111; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; text-align: justify; line-height: 1.3; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        /* ИНТЕРФЕЙС ЮСТИРОВКИ И ПОПРАВКИ */
+        .calibration-offset-wrapper { display: flex; flex-direction: column; gap: 6px; border-top: 1px dashed var(--border-color); padding-top: 8px; margin-top: 8px; }
+        .offset-controls-flex { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .select-offset-sign { padding: 4px; border-radius: 4px; font-size: 13px; font-weight: bold; background: var(--card-bg); color: var(--text-graphite); border: 1px solid var(--border-color); }
+        .input-offset-num { width: 55px; padding: 4px; border-radius: 4px; font-size: 12px; font-weight: bold; text-align: center; background: var(--card-bg); color: var(--text-graphite); border: 1px solid var(--border-color); }
+        .btn-clear-offset { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; margin-left: auto; }
+        .btn-clear-offset:hover { background: var(--danger); color: #FFF; }
+
+        .sensor-stuck-alert-box { 
+            display: none; 
+            position: absolute; 
+            bottom: 50px; 
+            left: 10px; 
+            right: 10px; 
+            background: rgba(245, 158, 11, 0.9); 
+            border: 1px solid var(--warning-alert); 
+            color: #111111; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            font-size: 11px; 
+            font-weight: 600; 
+            text-align: justify; 
+            line-height: 1.3; 
+            z-index: 100;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
 
         .camera-viewport-wrapper { position: relative; width: 100%; max-width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid var(--border-color); box-sizing: border-box; }
         #video-preview { width: 100%; height: 100%; object-fit: cover; transform-origin: center center; transition: transform 0.1s ease-out; }
         
-        .digital-compass-disk-container { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #111815; z-index: 80; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; padding: 5px; }
-        #compass-svg-canvas { width: 96%; aspect-ratio: 1; transition: transform 0.05s linear; }
+        .digital-compass-disk-container {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #111815;
+            z-index: 80;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            padding: 5px;
+        }
+        
+        #compass-svg-canvas {
+            width: 96%;
+            aspect-ratio: 1;
+            transition: transform 0.05s linear;
+        }
 
-        .compass-device-sight-line { position: absolute; top: 5px; left: 50%; width: 4px; height: 40px; background: #FF0000; transform: translateX(-50%); z-index: 95; filter: drop-shadow(0 0 8px #FF0000); }
-        .compass-device-sight-line::after { content: '▲'; position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); font-size: 14px; color: #FF0000; filter: drop-shadow(0 0 8px #FF0000); }
+        .compass-device-sight-line {
+            position: absolute;
+            top: 5px; left: 50%;
+            width: 4px; height: 40px;
+            background: #FF0000;
+            transform: translateX(-50%);
+            z-index: 95;
+            filter: drop-shadow(0 0 8px #FF0000);
+        }
+        .compass-device-sight-line::after {
+            content: '▲';
+            position: absolute;
+            bottom: -12px; left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px; color: #FF0000;
+            filter: drop-shadow(0 0 8px #FF0000);
+        }
 
-        .compass-center-bubble-level { position: absolute; top: 42%; left: 50%; width: 48px; height: 48px; border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.5); z-index: 90; }
-        .compass-bubble-dot { position: absolute; width: 14px; height: 14px; background: #16A34A; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); transition: all 0.05s ease-out; box-shadow: 0 0 10px #16A34A; }
+        .compass-center-bubble-level {
+            position: absolute;
+            top: 42%; left: 50%;
+            width: 48px; height: 48px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.5);
+            z-index: 90;
+        }
+        .compass-bubble-dot {
+            position: absolute;
+            width: 14px; height: 14px;
+            background: #16A34A;
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.05s ease-out;
+            box-shadow: 0 0 10px #16A34A;
+        }
 
-        .compass-bottom-info-panel { position: absolute; bottom: 8px; left: 8px; right: 8px; background: rgba(0,0,0,0.85); border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 10px; color: #FFF; text-align: center; font-family: monospace; font-size: 11px; z-index: 95; line-height: 1.3; }
+        .compass-bottom-info-panel {
+            position: absolute;
+            bottom: 8px; left: 8px; right: 8px;
+            background: rgba(0,0,0,0.85);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 6px 10px;
+            color: #FFF;
+            text-align: center;
+            font-family: monospace;
+            font-size: 11px;
+            z-index: 95;
+            line-height: 1.3;
+        }
 
-        .fullscreen-compass-modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0D1311; z-index: 9999; flex-direction: column; align-items: center; justify-content: space-between; padding: 12px; box-sizing: border-box; }
-        .fs-header-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; color: #8FBC8F; font-weight: bold; }
-        .fs-close-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #FFF; font-size: 18px; padding: 8px 18px; border-radius: 8px; cursor: pointer; }
-        .fs-compass-viewport { position: relative; width: 90vw; height: 90vw; max-width: 75vh; max-height: 75vh; display: flex; align-items: center; justify-content: center; }
-        #fs-compass-svg { width: 100%; height: 100%; transition: transform 0.05s linear; }
-        .fs-crosshair-line-v { position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: rgba(255,255,255,0.25); transform: translateX(-50%); pointer-events: none; z-index: 85; }
-        .fs-crosshair-line-h { position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: rgba(255,255,255,0.25); transform: translateY(-50%); pointer-events: none; z-index: 85; }
-        .fs-bottom-controls-container { width: 100%; max-width: 600px; text-align: center; color: #FFF; font-family: monospace; padding: 5px 0 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-        .btn-fs-huge-trigger { width: 100%; min-height: 65px; padding: 16px; font-size: 16px; font-weight: bold; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); touch-action: manipulation; }
+        .fullscreen-compass-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: #0D1311;
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            box-sizing: border-box;
+        }
+        .fs-header-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #8FBC8F;
+            font-weight: bold;
+        }
+        .fs-close-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #FFF;
+            font-size: 18px;
+            padding: 8px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .fs-compass-viewport {
+            position: relative;
+            width: 90vw;
+            height: 90vw;
+            max-width: 75vh;
+            max-height: 75vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #fs-compass-svg {
+            width: 100%;
+            height: 100%;
+            transition: transform 0.05s linear;
+        }
+        .fs-crosshair-line-v {
+            position: absolute;
+            top: 0; bottom: 0; left: 50%;
+            width: 1px;
+            background: rgba(255,255,255,0.25);
+            transform: translateX(-50%);
+            pointer-events: none;
+            z-index: 85;
+        }
+        .fs-crosshair-line-h {
+            position: absolute;
+            left: 0; right: 0; top: 50%;
+            height: 1px;
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-50%);
+            pointer-events: none;
+            z-index: 85;
+        }
+
+        .fs-bottom-controls-container {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            color: #FFF;
+            font-family: monospace;
+            padding: 5px 0 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-fs-huge-trigger {
+            width: 100%;
+            min-height: 65px;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            touch-action: manipulation;
+        }
 
         .visir-line { position: absolute; top: 0; left: 50%; width: 2px; height: 100%; background: rgba(255,255,255,0.4); transform: translateX(-50%); z-index: 10; pointer-events: none; }
         .visir-center-dot { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; background: transparent; border: 2px solid #FFF; border-radius: 50%; transform: translate(-50%, -50%); z-index: 11; pointer-events: none; }
@@ -317,7 +396,7 @@
         .seo-info-section p { font-size: 13px; line-height: 1.6; margin-bottom: 12px; text-align: justify; }
         .seo-info-section ul { font-size: 13px; padding-left: 16px; margin-bottom: 12px; }
 
-        footer { background-color: var(--footer-bg); color: #E0E0E0; padding: 40px 15px 120px; margin-top: auto; font-size: 13px; }
+        footer { background-color: var(--footer-bg); color: #E0E0E0; padding: 40px 15px 20px; margin-top: auto; font-size: 13px; }
         .footer-content { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 30px; margin-bottom: 30px; }
         .footer-logo { fill: #E0E0E0; width: 24px; height: 24px; margin-bottom: 8px; }
         .footer-column h4 { font-family: 'Merriweather', serif; color: #E0E0E0; font-size: 15px; margin-top: 0; margin-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 8px; }
@@ -330,39 +409,41 @@
 
     <header class="glass-header">
         <a href="#" class="logo-container" onclick="return false;">
-            <img src="logo.jpeg" alt="БГ-ХНС" class="header-logo" onerror="this.style.display='none'">
-            <h1>БГ-ХНС <span style="font-size: 12px; opacity: 0.8;">ПРО</span></h1>
+            <img src="logo.jpeg" alt="БГ-ХНС 1.2" class="header-logo" onerror="this.style.display='none'">
+            <h1>БГ-ХНС PRO 1.2</h1>
         </a>
         <div class="header-seo-text">Электронная буссоль • Геодезия выдела • Отвод лесосек</div>
         <div class="header-right">
-            <!-- ТУМБЛЕР ТАНДЕМ -->
-            <div class="tandem-switch-container" title="Сквозной автообмен данными (Площадь, Высоты)">
-                <input type="checkbox" id="master-tandem-toggle" checked onchange="toggleTandemMode(this.checked)">
-                <label for="master-tandem-toggle">ТАНДЕМ</label>
-            </div>
             <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тема</button>
         </div>
     </header>
 
-    <!-- МОДАЛКИ БУССОЛИ (Без изменений) -->
     <div id="fullscreen-compass-modal" class="fullscreen-compass-modal">
         <div class="fs-header-bar">
             <span>🔍 ПОЛНОЭКРАННАЯ ЭЛЕКТРОННАЯ БУССОЛЬ</span>
             <button class="fs-close-btn" onclick="closeFullscreenCompass()">✕ Закрыть</button>
         </div>
+
         <div class="fs-compass-viewport">
             <div class="compass-device-sight-line"></div>
+            
             <div class="fs-crosshair-line-v"></div>
             <div class="fs-crosshair-line-h"></div>
-            <svg id="fs-compass-svg" viewBox="0 0 300 300"></svg>
+
+            <svg id="fs-compass-svg" viewBox="0 0 300 300">
+                <!-- JS отрисует векторный лимб -->
+            </svg>
+
             <div class="compass-center-bubble-level" style="width: 55px; height: 55px;">
                 <div id="fs-compass-bubble" class="compass-bubble-dot" style="width: 16px; height: 16px;"></div>
             </div>
         </div>
+
         <div class="fs-bottom-controls-container">
             <div id="fs-dms-azimuth" style="font-size: 20px; font-weight: bold; color: #8FBC8F; margin-bottom: 2px;">АЗИМУТ: 0° 00' 00"</div>
             <div id="fs-dms-coords" style="font-size: 12px; opacity: 0.9;">61° 28' 48" с.ш.  50° 30' 06" в.д.</div>
             <div id="fs-altitude" style="font-size: 12px; color: #8FBC8F; margin-bottom: 6px;">Высота: 150 м</div>
+            
             <button id="btn-fs-capture" class="btn-action btn-lock-measure btn-fs-huge-trigger" onclick="captureMeasurement(); closeFullscreenCompass();" disabled>Поймайте уровень horizon</button>
         </div>
     </div>
@@ -372,10 +453,10 @@
             <button class="popup-close" onclick="closeInstruction()">&times;</button>
             <h3>Полевая инструкция по отводу лесосеки</h3>
             <ol class="instruction-steps">
-                <li><strong>Оптический визир (Вертикально):</strong> Наведите вертикальную нить экрана на веху угла делянки. Дождитесь зеленого уровня авиагоризонта и зафиксируйте румб.</li>
-                <li><strong>Электронная буссоль (Горизонтально):</strong> Положите телефон горизонтально на ладонь. Совместите верхний торец устройства (неоновый визир) с вехой.</li>
-                <li><strong>Формат координат:</strong> Все GPS-координаты фиксируются в точном геодезическом формате градусов, минут и секунд.</li>
-                <li><strong>Расчет площади:</strong> По мере добавления линий выстраивается замкнутый контур делянки, и автоматически вычисляется чистая площадь выдела (га).</li>
+                <li><strong>Оптический визир (Вертикально):</strong> Работает во вкладке «Магнитный режим». Наведите вертикальную нить экрана на веху угла делянки, удерживая телефон вертикально перед собой. Дождитесь зеленого уровня авиагоризонта и зафиксируйте румб в журнал.</li>
+                <li><strong>Электронная буссоль (Горизонтально):</strong> Работает во вкладке «Буссоль (Лимб)». Положите телефон горизонтально на ладонь. Совместите верхний торец устройства (неоновый визир) с вехой. Нажмите кнопку «🔍 Увеличить компас» для удобной полноэкранной работы с осевыми линиями сторон света.</li>
+                <li><strong>Формат координат:</strong> Все GPS-координаты фиксируются в точном геодезическом формате градусов, минут и секунд (например, 61°28'48" с.ш., 50°30'06" в.д.) с автоматическим замером высоты над уровнем моря.</li>
+                <li><strong>Расчет площади:</strong> По мере добавления линий на интерактивном чертеже выстраивается замкнутый контур делянки с подписями всех номеров линий, и автоматически вычисляется чистая площадь выдела в гектарах (га).</li>
             </ol>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closeInstruction()">Понятно, к замеру</button>
         </div>
@@ -386,8 +467,8 @@
             <button class="popup-close" onclick="closePopup('mag-info-popup')">&times;</button>
             <h3>Магнитный режим (Вертикальный визир)</h3>
             <ul class="instruction-steps">
-                <li><strong>Съемка камерой:</strong> Предназначена для прямой видимости объектов. Телефон удерживается вертикально перед глазами.</li>
-                <li><strong>Фиксация базиса:</strong> Кнопка Фиксации 0 градусов служит для отслеживания взаимных разворотов линий и перпендикуляров.</li>
+                <li><strong>Съемка камерой:</strong> Предназначена для прямой видимости объектов. Телефон удерживается вертикально перед глазами таксатора.</li>
+                <li><strong>Фиксация базиса:</strong> Кнопка Фиксации 0 градусов служит вспомогательным инструментом для отслеживания взаимных разворотов линий и перпендикуляров на дисплее.</li>
             </ul>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closePopup('mag-info-popup')">Понятно</button>
         </div>
@@ -398,8 +479,8 @@
             <button class="popup-close" onclick="closePopup('theo-info-popup')">&times;</button>
             <h3>Горизонтальная дисковая буссоль</h3>
             <ul class="instruction-steps">
-                <li><strong>Работа по ладони:</strong> Полное аппаратное дублирование механической буссоли БГ-1. Телефон лежит горизонтально.</li>
-                <li><strong>Тактильный отклик и DMS:</strong> Показывает точные градусы, минуты, секунды и высоту над уровнем моря.</li>
+                <li><strong>Работа по ладони:</strong> Полное аппаратное дублирование механической буссоли БГ-1. Телефон лежит горизонтально, исключая любые наклоны и скрещивания осей гироскопа.</li>
+                <li><strong>Тактильный отклик и DMS:</strong> Показывает точные градусы, минуты, секунды и высоту над уровнем моря. При вращении корпус откликается мягкими щелчками на главных делениях шкалы.</li>
             </ul>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closePopup('theo-info-popup')">Понятно</button>
         </div>
@@ -409,6 +490,7 @@
         <div class="popup-window">
             <button class="popup-close" onclick="closeCalibration()">&times;</button>
             <h3>Помощник калибровки магнитометра</h3>
+            
             <div class="calib-box">
                 <span style="font-size: 13px; font-weight: bold; display: block;">ШКАЛА НАПРАВЛЕНИЙ СЕНСОРА:</span>
                 <div class="calib-progress-bar">
@@ -416,10 +498,12 @@
                 </div>
                 <div id="calib-status" class="calib-status-text" style="color: var(--text-graphite);">Ожидание движений... Описывайте «восьмерку»</div>
             </div>
+
             <h4 style="margin-top: 12px; font-family: 'Merriweather', serif; color: var(--forest-green);">Инструкция проведения калибровки в поле:</h4>
             <ul class="instruction-steps" style="font-size: 13px; line-height: 1.5;">
-                <li>Начните непрерывно выписывать в воздухе объемную фигуру знака бесконечности.</li>
-                <li>Плавно разворачивайте кисть руки, чтобы стереть налипшие магнитные шумы железа.</li>
+                <li><strong>Как воводить устройство:</strong> Нажмите кнопку «Начать калибровку» ниже. Возьмите смартфон в руку и начните непрерывно выписывать в воздухе объемную фигуру знака бесконечности или «восьмерки».</li>
+                <li><strong>Положение осей:</strong> В процессе движения плавно разворачивайте кисть руки. Смартфон должен попеременно менять наклоны относительно горизонта и плоскости земли (смотреть экраном вверх, на Вас, в сторону). Это позволит стереть налипшие магнитные шумы железа.</li>
+                <li><strong>⚠️ ВАЖНОЕ ПОЛОЖЕНИЕ:</strong> Для получения максимальной стабильности во вкладке кругового лимба всегда держите телефон строго горизонтально экраном вверх, ориентируя верхний торец корпуса на целевой деляночный столб.</li>
             </ul>
             <div style="display: flex; gap: 10px; margin-top: 15px;">
                 <button id="btn-start-calib" class="btn-action btn-set-zero" style="flex: 1;" onclick="startLiveCalibration()">Начать калибровку</button>
@@ -429,195 +513,186 @@
     </div>
 
     <main class="container">
+        <div class="card" style="margin-bottom: 20px;">
+            <h2>Управление проектами и архивом делянок (БГ-ХНС PRO 1.2)</h2>
+            <div class="subtitle">Сохранение нескольких независимых съемок в память устройства, фиксация GPS и выгрузка отчетов.</div>
+            <div class="archive-scroll-container">
+                <div class="archive-inner-flex">
+                    <input type="text" id="project-name" class="input-dist" value="Делянка №1" style="width: 180px; text-align: left; padding: 6px 10px;" onfocus="this.select()">
+                    <button class="btn-action btn-set-zero" style="padding: 8px 15px; width: auto;" onclick="saveCurrentToArchive()">💾 Сохранить в архив</button>
+                    <select id="archive-select" class="select-traverse" style="padding: 8px; min-width: 200px;" onchange="loadFromArchive(this.value)">
+                        <option value="">-- Выберите из архива --</option>
+                    </select>
+                    <button class="btn-action" style="padding: 8px 15px; background-color: var(--danger); color: #FFF; width: auto;" onclick="deleteSelectedFromArchive()">🗑️ Удалить из архива</button>
+                    <button class="btn-action btn-reset-zero" style="padding: 8px 15px; border: 1px solid var(--forest-green); color: var(--forest-green); width: auto;" onclick="exportArchiveToCSV()">📊 Экспорт CSV (Excel)</button>
+                    <button class="btn-action btn-reset-zero" style="padding: 8px 15px; border: 1px solid var(--warning-alert); color: var(--warning-alert); width: auto;" onclick="exportToKML()">🗺️ Экспорт KML (ГИС)</button>
+                </div>
+            </div>
+        </div>
 
-        <!-- ======================= МОДУЛЬ 1: БУССОЛЬ ======================= -->
-        <section id="mod-busol" class="module-block active-module">
-            <div class="card" style="margin-bottom: 20px;">
-                <h2>Управление проектами и архивом делянок (БГ-ХНС)</h2>
-                <div class="subtitle">Сохранение съемки, фиксация GPS и выгрузка отчетов.</div>
-                <div class="archive-scroll-container">
-                    <div class="archive-inner-flex">
-                        <!-- Изменено: oninput обновляет имя проекта в глобальном стейте ТАНДЕМА -->
-                        <input type="text" id="project-name" class="input-dist" value="Делянка №1" style="width: 180px; text-align: left; padding: 6px 10px;" oninput="updateGlobalProjectName(this.value)">
-                        <button class="btn-action btn-set-zero" style="padding: 8px 15px; width: auto;" onclick="saveCurrentToArchive()">💾 Сохранить в архив</button>
-                        <select id="archive-select" class="select-traverse" style="padding: 8px; min-width: 200px;" onchange="loadFromArchive(this.value)">
-                            <option value="">-- Выберите из архива --</option>
+        <div class="grid-layout">
+            
+            <div class="card" style="padding: 16px; position: relative;">
+                <h2>Визирная рамка буссоли</h2>
+                <div class="subtitle">Наведите вертикальную нить на веху. Замер доступен только по зеленому уровню.</div>
+                
+                <div class="mode-switcher-container">
+                    <button id="mode-mag" class="mode-tab active-mode" onclick="switchSystemMode('magnetic')">
+                        Магнитный (Вертикально)
+                        <span class="btn-help-circle" onclick="openPopup('mag-info-popup', event)">?</span>
+                    </button>
+                    <button id="mode-theo" class="mode-tab" onclick="switchSystemMode('theodolite')">
+                        Буссоль (Лимб)
+                        <span class="btn-help-circle" onclick="openPopup('theo-info-popup', event)">?</span>
+                    </button>
+                </div>
+
+                <div class="optic-control-box" id="optic-zoom-panel">
+                    <div class="zoom-slider-wrapper">
+                        <label for="camera-zoom-range">🔎 Увеличение (Зум): <span id="zoom-value-label">1.0</span>x</label>
+                        <input type="range" id="camera-zoom-range" min="1.0" max="4.0" step="0.1" value="1.0" oninput="applyDigitalZoom(this.value)">
+                    </div>
+                    <div class="traverse-direction-wrapper">
+                        <label for="traverse-select-direction">↻ Направление обхода лесосеки:</label>
+                        <select id="traverse-select-direction" class="select-traverse" onchange="changeTraverseDirection(this.value)">
+                            <option value="clockwise">По часовой стрелке (Правые)</option>
+                            <option value="counter-clockwise">Против часовой (Левые)</option>
                         </select>
-                        <button class="btn-action" style="padding: 8px 15px; background-color: var(--danger); color: #FFF; width: auto;" onclick="deleteSelectedFromArchive()">🗑️ Удалить из архива</button>
-                        <button class="btn-action btn-reset-zero" style="padding: 8px 15px; border: 1px solid var(--forest-green); color: var(--forest-green); width: auto;" onclick="exportArchiveToCSV()">📊 Экспорт CSV (Excel)</button>
-                        <button class="btn-action btn-reset-zero" style="padding: 8px 15px; border: 1px solid var(--warning-alert); color: var(--warning-alert); width: auto;" onclick="exportToKML()">🗺️ Экспорт KML (ГИС)</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid-layout">
-                <div class="card" style="padding: 16px; position: relative;">
-                    <h2>Визирная рамка буссоли</h2>
-                    <div class="subtitle">Наведите вертикальную нить на веху. Замер доступен только по зеленому уровню.</div>
-                    
-                    <div class="mode-switcher-container">
-                        <button id="mode-mag" class="mode-tab active-mode" onclick="switchSystemMode('magnetic')">
-                            Магнитный (Вертикально) <span class="btn-help-circle" onclick="openPopup('mag-info-popup', event)">?</span>
-                        </button>
-                        <button id="mode-theo" class="mode-tab" onclick="switchSystemMode('theodolite')">
-                            Буссоль (Лимб) <span class="btn-help-circle" onclick="openPopup('theo-info-popup', event)">?</span>
-                        </button>
                     </div>
 
-                    <div class="optic-control-box" id="optic-zoom-panel">
-                        <div class="zoom-slider-wrapper">
-                            <label for="camera-zoom-range">🔎 Увеличение: <span id="zoom-value-label">1.0</span>x</label>
-                            <input type="range" id="camera-zoom-range" min="1.0" max="4.0" step="0.1" value="1.0" oninput="applyDigitalZoom(this.value)">
+                    <!-- ЛОГИКА ЮСТИРОВКИ / ПОПРАВКИ -->
+                    <div class="calibration-offset-wrapper">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label style="font-weight:700; color:var(--forest-green);">🎯 Юстировочная поправка (Магнитное склонение):</label>
                         </div>
-                        <div class="traverse-direction-wrapper">
-                            <label for="traverse-select-direction">↻ Направление обхода:</label>
-                            <select id="traverse-select-direction" class="select-traverse" onchange="changeTraverseDirection(this.value)">
-                                <option value="clockwise">По часовой стрелке</option>
-                                <option value="counter-clockwise">Против часовой</option>
+                        <div class="offset-controls-flex">
+                            <select id="offset-sign-select" class="select-offset-sign" onchange="updateOffsetFromUI()">
+                                <option value="+">+</option>
+                                <option value="-">-</option>
                             </select>
+                            <input type="number" id="offset-deg-input" class="input-offset-num" placeholder="0" min="0" max="359" oninput="updateOffsetFromUI()">
+                            <label style="font-weight:bold;">°</label>
+                            <input type="number" id="offset-min-input" class="input-offset-num" placeholder="0" min="0" max="59" oninput="updateOffsetFromUI()">
+                            <label style="font-weight:bold;">'</label>
+                            
+                            <button class="btn-clear-offset" onclick="clearCalibrationOffset()" title="Удалить поправку из памяти">🗑️ Сбросить</button>
                         </div>
-                    </div>
-
-                    <div class="camera-viewport-wrapper">
-                        <div id="digital-compass-disk" class="digital-compass-disk-container">
-                            <div class="compass-device-sight-line"></div>
-                            <svg id="compass-svg-canvas" viewBox="0 0 300 300"></svg>
-                            <div class="compass-center-bubble-level"><div id="compass-bubble" class="compass-bubble-dot"></div></div>
-                            <div class="compass-bottom-info-panel">
-                                <div id="dms-azimuth-text" style="font-size: 15px; font-weight: bold; color: #8FBC8F; margin-bottom: 2px;">АЗИМУТ: 0° 00' 00"</div>
-                                <div id="dms-coords-text" style="font-size: 10px; opacity: 0.9;">61° 28' 48" с.ш.  50° 30' 06" в.д.</div>
-                                <div id="altitude-text" style="font-size: 10px; color: #8FBC8F;">Высота: 150 м</div>
-                            </div>
-                        </div>
-
-                        <div class="visir-line" id="v-line-element"></div>
-                        <div class="visir-center-dot" id="v-dot-element"></div>
-                        <div id="gyro-ring" class="horizon-gyro-scope"></div>
-                        
-                        <div class="overlay-data-box top-left-status">
-                            <span id="label-live-mode">АЗИМУТ:</span> <span id="live-azimuth" style="color:#8FBC8F; font-weight:bold;">0.0°</span><br>
-                            УГОЛ X: <span id="live-pitch">0°</span>
-                        </div>
-                        <div class="overlay-data-box top-right-status">
-                            ГОРИЗОНТ Y: <span id="live-roll">0°</span><br>
-                            БАЗА (0°): <span id="base-azimuth">НЕТ</span>
-                        </div>
-                        <div id="angle-turn-badge" class="overlay-data-box bottom-center-angle">ПОВОРОТ: 0.0°</div>
-
-                        <div id="sensor-stuck-alert" class="sensor-stuck-alert-box">
-                            ⚠️ Аппаратное заклинивание компаса! Переключитесь в режим «Буссоль (Лимб)».
-                        </div>
-
-                        <video id="video-preview" autoplay playsinline muted></video>
-                    </div>
-
-                    <div class="control-panel-buttons">
-                        <button class="btn-action btn-set-zero" id="btn-lock-zero" onclick="setZeroDirection()">🔒 Фиксировать 0°</button>
-                        <button class="btn-action btn-reset-zero" id="btn-clear-zero" onclick="resetZeroDirection()">Сбросить</button>
-                        <button id="btn-capture" class="btn-action btn-lock-measure" onclick="captureMeasurement()" disabled>Поймайте уровень horizon</button>
-                        
-                        <button id="btn-fullscreen-toggle" class="btn-fullscreen-toggle" onclick="openFullscreenCompass()">🔍 Увеличить компас</button>
-
-                        <button class="btn-instruction" onclick="openInstruction()">Инструкция для таксатора</button>
-                        <button class="btn-calibration" onclick="openCalibration()">Калибровка магнитометра</button>
                     </div>
                 </div>
 
-                <div class="card">
-                    <h2>Журнал полевой съемки визиров</h2>
-                    <div class="subtitle">Сюда автоматически заносятся зафиксированные румбы линий делянки.</div>
-                    
-                    <div class="log-table-wrapper">
-                        <table class="measurements-log-table">
-                            <thead>
-                                <tr>
-                                    <th>Линия</th>
-                                    <th id="th-mode-label">Азимут / Угол</th>
-                                    <th>Длина, м</th>
-                                    <th>Тип</th>
-                                    <th>Координаты (WGS-84)</th>
-                                    <th>Удал.</th>
-                                </tr>
-                            </thead>
-                            <tbody id="log-tbody">
-                                <tr><td colspan="6" style="color:gray; text-align:center; padding:20px 10px;">Журнал пуст. Наведите визир и зафиксируйте точку.</td></tr>
-                            </tbody>
-                        </table>
+                <div class="camera-viewport-wrapper">
+                    <div id="digital-compass-disk" class="digital-compass-disk-container">
+                        <div class="compass-device-sight-line"></div>
+                        
+                        <svg id="compass-svg-canvas" viewBox="0 0 300 300">
+                            <!-- JS нарисует лимб -->
+                        </svg>
+
+                        <div class="compass-center-bubble-level">
+                            <div id="compass-bubble" class="compass-bubble-dot"></div>
+                        </div>
+
+                        <div class="compass-bottom-info-panel">
+                            <div id="dms-azimuth-text" style="font-size: 15px; font-weight: bold; color: #8FBC8F; margin-bottom: 2px;">АЗИМУТ: 0° 00' 00"</div>
+                            <div id="dms-coords-text" style="font-size: 10px; opacity: 0.9;">61° 28' 48" с.ш.  50° 30' 06" в.д.</div>
+                            <div id="altitude-text" style="font-size: 10px; color: #8FBC8F;">Высота: 150 м</div>
+                        </div>
                     </div>
 
-                    <div class="step-settings">
-                        <label>Шаг таксатора (м): </label>
-                        <input type="number" id="step-length" class="input-dist" value="0.75" step="0.05" style="width: 55px;" onfocus="this.select()" onchange="updateStepLength()">
-                        <button class="btn-action btn-reset-zero" style="padding: 4px 6px;" onclick="clearLog()">Очистить журнал</button>
+                    <div class="visir-line" id="v-line-element"></div>
+                    <div class="visir-center-dot" id="v-dot-element"></div>
+                    
+                    <div id="gyro-ring" class="horizon-gyro-scope"></div>
+                    
+                    <div class="overlay-data-box top-left-status">
+                        <span id="label-live-mode">АЗИМУТ:</span> <span id="live-azimuth" style="color:#8FBC8F; font-weight:bold;">0.0°</span><br>
+                        УГОЛ X: <span id="live-pitch">0°</span>
                     </div>
-
-                    <div class="canvas-container">
-                        <span style="font-weight: 700; color: var(--forest-green); font-size: 13px; margin-bottom: 5px; align-self: flex-start;">📐 ЧЕРТЕЖ И КАРТА СТОРОН СВЕТА:</span>
-                        <canvas id="polygon-canvas" width="400" height="400"></canvas>
-                        <div id="area-display" class="area-badge">Площадь: 0.0000 га</div>
+                    <div class="overlay-data-box top-right-status">
+                        ГОРИЗОНТ Y: <span id="live-roll">0°</span><br>
+                        БАЗА (0°): <span id="base-azimuth">НЕТ</span>
                     </div>
                     
-                    <div style="margin-top: 15px; background: rgba(45, 90, 39, 0.04); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
-                        <span style="font-weight: 700; color: var(--forest-green); display: block; font-size: 12px; margin-bottom: 4px;">⚠️ ТАКСАТОРУ НА ЗАМЕТКУ:</span>
-                        <span style="font-size: 11px; line-height: 1.4; display: block; opacity: 0.9;">При работе во вкладке «Буссоль (Лимб)» удерживайте смартфон строго горизонтально перед собой на уровне груди, контролируя пузырьковый датчик.</span>
+                    <div id="angle-turn-badge" class="overlay-data-box bottom-center-angle">ПОВОРОТ: 0.0°</div>
+
+                    <div id="sensor-stuck-alert" class="sensor-stuck-alert-box">
+                        ⚠️ Аппаратное заклинивание компаса! Для точности переключитесь в режим «Буссоль (Лимб)».
                     </div>
+
+                    <video id="video-preview" autoplay playsinline muted></video>
+                </div>
+
+                <div class="control-panel-buttons">
+                    <button class="btn-action btn-set-zero" id="btn-lock-zero" onclick="setZeroDirection()">🔒 Фиксировать 0°</button>
+                    <button class="btn-action btn-reset-zero" id="btn-clear-zero" onclick="resetZeroDirection()">Сбросить</button>
+                    <button id="btn-capture" class="btn-action btn-lock-measure" onclick="captureMeasurement()" disabled>Поймайте уровень horizon</button>
+                    
+                    <button id="btn-fullscreen-toggle" class="btn-fullscreen-toggle" onclick="openFullscreenCompass()">🔍 Увеличить компас (На весь экран)</button>
+
+                    <button class="btn-instruction" onclick="openInstruction()">Инструкция для таксатора</button>
+                    <button class="btn-calibration" onclick="openCalibration()">Калибровка магнитометра</button>
                 </div>
             </div>
 
-            <section class="seo-info-section">
-                <h2>Отвод лесосек и измерение углов электронной буссолью</h2>
-                <p><strong>Буссоль в лесоустройстве</strong> — это базовый геодезический инструмент, применяемый инженерами и лесничими для таксации, отвода лесосек, замера направлений ходовых линий (визиров) и определения внутренних углов делянок.</p>
-                <!-- (Полный текст SEO сохранен) -->
-            </section>
-        </section>
-
-        <!-- ======================= МОДУЛЬ 2: ПЕРЕЧЕТ ======================= -->
-        <section id="mod-tally" class="module-block">
             <div class="card">
-                <h2>📋 Перечетная ведомость и точковка</h2>
-                <div class="subtitle">Поштучный перечет деревьев по ступеням толщины и категориям годности.</div>
-                <!-- Заглушка, будет заполнена во 2-й части -->
-                <div style="text-align:center; padding:40px; color:gray;">Интерфейс перечета (загрузка...)</div>
+                <h2>Журнал полевой съемки визиров</h2>
+                <div class="subtitle">Сюда автоматически заносятся зафиксированные румбы линий делянки. Любое значение можно изменить вручную.</div>
+                
+                <div class="log-table-wrapper">
+                    <table class="measurements-log-table">
+                        <thead>
+                            <tr>
+                                <th>Линия</th>
+                                <th id="th-mode-label">Азимут / Угол</th>
+                                <th>Длина, м</th>
+                                <th>Тип</th>
+                                <th>Координаты (WGS-84)</th>
+                                <th>Удал.</th>
+                            </tr>
+                        </thead>
+                        <tbody id="log-tbody">
+                            <tr><td colspan="6" style="color:gray; text-align:center; padding:20px 10px;">Журнал пуст. Наведите визир и зафиксируйте точку.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="step-settings">
+                    <label>Шаг таксатора (м): </label>
+                    <input type="number" id="step-length" class="input-dist" value="0.75" step="0.05" style="width: 55px;" onfocus="this.select()" onchange="updateStepLength()">
+                    <button class="btn-clear-log" style="padding: 4px 6px;" onclick="clearLog()">Очистить журнал</button>
+                </div>
+
+                <div class="canvas-container">
+                    <span style="font-weight: 700; color: var(--forest-green); font-size: 13px; margin-bottom: 5px; align-self: flex-start;">📐 ЧЕРТЕЖ И КАРТА СТОРОН СВЕТА:</span>
+                    <canvas id="polygon-canvas" width="400" height="400"></canvas>
+                    <div id="area-display" class="area-badge">Площадь: 0.0000 га</div>
+                </div>
+                
+                <div style="margin-top: 15px; background: rgba(45, 90, 39, 0.04); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <span style="font-weight: 700; color: var(--forest-green); display: block; font-size: 12px; margin-bottom: 4px;">⚠️ ТАКСАТОРУ НА ЗАМЕТКУ:</span>
+                    <span style="font-size: 11px; line-height: 1.4; display: block; opacity: 0.9;">
+                        При работе во вкладке «Буссоль (Лимб)» удерживайте смартфон строго горизонтально перед собой на уровне груди, контролируя пузырьковый датчик в центре лимба. 
+                    </span>
+                </div>
             </div>
-        </section>
+        </div>
 
-        <!-- ======================= МОДУЛЬ 3: ВИЛКА ======================= -->
-        <section id="mod-optic" class="module-block">
-            <div class="card"><h2>📐 Оптическая мерная вилка</h2></div>
-        </section>
+        <section class="seo-info-section">
+            <h2>Отвод лесосек и измерение углов электронной буссолью</h2>
+            <p><strong>Буссоль в лесоустройстве</strong> — это базовый геодезический инструмент, применяемый инженерами и лесничими для таксации, отвода лесосек, замера направлений ходовых линий (визиров) и определения внутренних углов делянок. Точность построения полигона делянки напрямую влияет на правильность исчисления площадей выдела и корректность отображения квартальных сеток во ФГИС ЛК.</p>
 
-        <!-- ======================= МОДУЛЬ 4: ВЫСОТОМЕР ======================= -->
-        <section id="mod-altimeter" class="module-block">
-            <div class="card"><h2>📏 AR Высотомер и дальномер</h2></div>
-        </section>
+            <h3>Как правильно вести перечет и геодезическую съемку лесосек:</h3>
+            <ul>
+                <li><strong>Магнитный азимут:</strong> Это горизонтальный угол, отсчитываемый от северного направления магнитного меридиана по ходу часовой стрелки до линии направления визира. Варьируется в пределах от 0 до 360 градусов.</li>
+                <li><strong>Румб линии:</strong> Острый угол, измеряемый от ближайшего направления меридиана (северного или южного) до заданной линии. Используется для составления полевых абрисов.</li>
+                <li><strong>Внутренний угол поворота:</strong> Угол между смежными сторонами лесосечного полигона. При прямоугольном отводе лесосек углы поворота визира на углах делянки должны составлять строго 90 градусов.</li>
+            </ul>
 
-        <!-- ======================= МОДУЛЬ 5: ПОЛНОТОМЕР ======================= -->
-        <section id="mod-bitterlich" class="module-block">
-            <div class="card"><h2>🌲 Полнотомер Биттерлиха (HF)</h2></div>
+            <h3>Инструкция по работе с оптическим онлайн-визиром</h3>
+            <p>В отличие от классической металлической буссоли БГ-1, требующей жесткой установки штатива, электронная буссоль «БГ-ХНС 1.2» использует метод вертикального проецирования вешек на матрицу камеры. Таксатор использует устройство вертикально перед собой. Встроенный датчик-магнитометр непрерывно считывает углы курса, а акселерометр отслеживает пространственные наклоны по осям Pitch и Roll.</p>
+            <p>Для предотвращения таксационной погрешности кнопка фиксации румба активируется только в момент, когда кольцо авиагоризонта горит зеленым цветом — это сигнализирует о том, что плоскость замера идеально параллельна земной поверхности. Функция фиксации ноль-направления позволяет мгновенно отложить перпендикулярный визир под углом 90 градусов без использования таблиц приращений и полевых вычислений.</p>
         </section>
-
-        <!-- ======================= МОДУЛЬ 6: МДО ======================= -->
-        <section id="mod-mdo" class="module-block">
-            <div class="card"><h2>📊 Материально-денежная оценка (МДО)</h2></div>
-        </section>
-
-        <!-- ======================= МОДУЛЬ 7: ФОТО ======================= -->
-        <section id="mod-photo" class="module-block">
-            <div class="card"><h2>📸 Юридическая фотофиксация</h2></div>
-        </section>
-
     </main>
-
-    <!-- НИЖНЯЯ ПАНЕЛЬ ПЕРЕКЛЮЧЕНИЯ МОДУЛЕЙ -->
-    <nav class="spa-tab-bar">
-        <button class="tab-btn active" onclick="switchModule('mod-busol', this)"><span class="tab-icon">🧭</span><span>Буссоль</span></button>
-        <button class="tab-btn" onclick="switchModule('mod-tally', this)"><span class="tab-icon">📋</span><span>Перечет</span></button>
-        <button class="tab-btn" onclick="switchModule('mod-optic', this)"><span class="tab-icon">📐</span><span>Вилка</span></button>
-        <button class="tab-btn" onclick="switchModule('mod-altimeter', this)"><span class="tab-icon">📏</span><span>Высота</span></button>
-        <button class="tab-btn" onclick="switchModule('mod-bitterlich', this)"><span class="tab-icon">🌲</span><span>Полнота</span></button>
-        <button class="tab-btn" onclick="switchModule('mod-mdo', this)"><span class="tab-icon">📊</span><span>МДО</span></button>
-        <button class="tab-btn" onclick="switchModule('mod-photo', this)"><span class="tab-icon">📸</span><span>Фото</span></button>
-    </nav>
 
     <footer>
         <div class="footer-content">
@@ -626,68 +701,28 @@
                     <path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/>
                     <rect x="10.5" y="20" width="3" height="4"/>
                 </svg>
-                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 16px;">БГ-ХНС ПРО</div>
-                <div style="font-size: 12px; margin-top: 5px; opacity: 0.8;">Единый цифровой инструмент таксатора. База знаний, калькуляторы и профильные статьи для специалистов леса.</div>
+                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 16px;">БГ-ХНС PRO 1.2</div>
+                <div style="font-size: 12px; margin-top: 5px; opacity: 0.8;">Цифровой инструмент таксатора. База знаний, калькуляторы и профильные статьи для специалистов леса.</div>
             </div>
             <div class="footer-column">
                 <h4>Правовая информация</h4>
-                <div style="font-size: 12px; line-height: 1.5; opacity: 0.8;">Лицензионное программное обеспечение для таксации, отвода лесосек и полевых изысканий. Защищено авторским правом.</div>
+                <div style="font-size: 12px; line-height: 1.5; opacity: 0.8;">
+                    Лицензионное программное обеспечение для таксации, отвода лесосек и полевых изысканий. Защищено авторским правом. Выпуск обновлений контролируется разработчиком.
+                </div>
             </div>
             <div class="footer-column">
                 <h4>Контакты</h4>
                 <div style="font-weight: 600; margin-bottom: 4px;">ИП Худяков Николай Сергеевич</div>
                 <div style="font-size: 11px; opacity: 0.7; margin-bottom: 8px;">ИНН: 11180157622</div>
-                <a href="mailto:foltaim@mail.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none; display:block; margin-bottom:10px;">✉️ foltaim@mail.ru</a>
+                <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; font-weight:bold; text-decoration:none; display:block; margin-bottom:10px;">✉️ folgoal@gmail.com</a>
             </div>
         </div>
-        <div class="footer-bottom">&copy; 2026 Создано для профессионалов леса. Все права защищены.</div>
+        <div class="footer-bottom">
+            &copy; 2026 Создано для профессионалов леса. Все права защищены.
+        </div>
     </footer>
 
-<!-- ======================= СКРИПТЫ (ЕДИНЫЙ КОНТРОЛЛЕР SPA И БУССОЛЬ) ======================= -->
 <script>
-    // --- ГЛОБАЛЬНАЯ ШИНА ДАННЫХ (ТАНДЕМ) ---
-    let globalTandemState = {
-        isActive: true,
-        projectName: "Делянка №1",
-        busolAreaHa: 0.0,
-        heights: { "Сосна": 0, "Ель": 0, "Береза": 0, "Осина": 0 },
-        bitterlichG: 0
-    };
-
-    function toggleTandemMode(isActive) {
-        globalTandemState.isActive = isActive;
-        if(isActive) alert("🟢 Режим ТАНДЕМ активирован! Буссоль автоматически передает площадь в МДО.");
-    }
-
-    function updateGlobalProjectName(val) {
-        globalTandemState.projectName = val;
-    }
-
-    // --- ПЕРЕКЛЮЧЕНИЕ МОДУЛЕЙ (TAB BAR) ---
-    function switchModule(modId, btn) {
-        document.querySelectorAll('.module-block').forEach(el => el.classList.remove('active-module'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        
-        document.getElementById(modId).classList.add('active-module');
-        btn.classList.add('active');
-
-        // Управление камерой (включаем только там, где она нужна)
-        if (modId === 'mod-busol' || modId === 'mod-optic' || modId === 'mod-altimeter') {
-            startCamera(); // Если камера отключилась, запускаем заново
-        }
-    }
-
-    function toggleTheme() {
-        const body = document.documentElement;
-        if (body.getAttribute('data-theme') === 'dark') {
-            body.removeAttribute('data-theme');
-        } else {
-            body.setAttribute('data-theme', 'dark');
-        }
-        drawPolygon();
-    }
-
-    // --- АБСОЛЮТНО ТОЧНЫЙ КОД БУССОЛИ ИЗ ВАШЕГО ИСХОДНИКА ---
     let smoothedAzimuth = 0;
     let isFirstData = true;
     const filterFactor = 0.08; 
@@ -719,6 +754,45 @@
 
     let lastVibratedSector = -1; 
 
+    // --- ПЕРЕМЕННАЯ И ЛОГИКА ЮСТИРОВОЧНОЙ ПОПРАВКИ ---
+    let calibrationOffsetDecimal = 0.0; // Поправка в десятичных градусах
+
+    function updateOffsetFromUI() {
+        const sign = document.getElementById('offset-sign-select').value;
+        const deg = parseFloat(document.getElementById('offset-deg-input').value) || 0;
+        const min = parseFloat(document.getElementById('offset-min-input').value) || 0;
+
+        let total = deg + (min / 60.0);
+        if (sign === '-') total = -total;
+
+        calibrationOffsetDecimal = total;
+        localStorage.setItem('lesovik_calibration_offset', calibrationOffsetDecimal);
+    }
+
+    function loadCalibrationOffset() {
+        const savedOffset = localStorage.getItem('lesovik_calibration_offset');
+        if (savedOffset !== null) {
+            calibrationOffsetDecimal = parseFloat(savedOffset) || 0.0;
+            
+            let absVal = Math.abs(calibrationOffsetDecimal);
+            let sign = calibrationOffsetDecimal < 0 ? '-' : '+';
+            let deg = Math.floor(absVal);
+            let min = Math.round((absVal - deg) * 60);
+
+            document.getElementById('offset-sign-select').value = sign;
+            document.getElementById('offset-deg-input').value = deg > 0 ? deg : '';
+            document.getElementById('offset-min-input').value = min > 0 ? min : '';
+        }
+    }
+
+    function clearCalibrationOffset() {
+        calibrationOffsetDecimal = 0.0;
+        localStorage.removeItem('lesovik_calibration_offset');
+        document.getElementById('offset-sign-select').value = '+';
+        document.getElementById('offset-deg-input').value = '';
+        document.getElementById('offset-min-input').value = '';
+    }
+
     function openFullscreenCompass() {
         document.getElementById('fullscreen-compass-modal').style.display = 'flex';
         drawCompassDialSVG('fs-compass-svg');
@@ -736,8 +810,11 @@
         let seconds = Math.floor((minutesNotTruncated - minutes) * 60);
 
         let direction = "";
-        if (isLat) { direction = deg >= 0 ? "с.ш." : "ю.ш."; } 
-        else { direction = deg >= 0 ? "в.д." : "з.д."; }
+        if (isLat) {
+            direction = deg >= 0 ? "с.ш." : "ю.ш.";
+        } else {
+            direction = deg >= 0 ? "в.д." : "з.д.";
+        }
 
         return `${degrees}° ${minutes}' ${seconds}" ${direction}`;
     }
@@ -832,6 +909,8 @@
         const savedMode = localStorage.getItem('lesovik_system_mode');
         const savedDir = localStorage.getItem('lesovik_traverse_direction');
         
+        loadCalibrationOffset();
+
         if (savedStep) {
             stepLength = parseFloat(savedStep);
             document.getElementById('step-length').value = stepLength;
@@ -856,7 +935,9 @@
         const zoomValue = parseFloat(val).toFixed(1);
         document.getElementById('zoom-value-label').innerText = zoomValue;
         const video = document.getElementById('video-preview');
-        if (video) video.style.transform = `scale(${zoomValue})`;
+        if (video) {
+            video.style.transform = `scale(${zoomValue})`;
+        }
     }
 
     function changeTraverseDirection(val) {
@@ -882,18 +963,49 @@
         }
     }
 
-    function closePopup(id) { document.getElementById(id).style.display = 'none'; }
-    function closePopupOuter(id, event) { if (event.target.id === id) closePopup(id); }
-    function openInstruction() { openPopup('instruction-popup'); }
-    function closeInstruction() { closePopup('instruction-popup'); }
-    function closeInstructionOuter(event) { closePopupOuter('instruction-popup', event); }
-    function openCalibration() { document.getElementById('calibration-popup').style.display = 'flex'; resetCalibUI(); }
-    function closeCalibration() { document.getElementById('calibration-popup').style.display = 'none'; isCalibrating = false; }
-    function closeCalibrationOuter(event) { if (event.target.id === 'calibration-popup') closeCalibration(); }
+    function closePopup(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+
+    function closePopupOuter(id, event) {
+        if (event.target.id === id) {
+            closePopup(id);
+        }
+    }
+
+    function openInstruction() {
+        openPopup('instruction-popup');
+    }
+
+    function closeInstruction() {
+        closePopup('instruction-popup');
+    }
+
+    function closeInstructionOuter(event) {
+        closePopupOuter('instruction-popup', event);
+    }
+
+    function openCalibration() {
+        document.getElementById('calibration-popup').style.display = 'flex';
+        resetCalibUI();
+    }
+
+    function closeCalibration() {
+        document.getElementById('calibration-popup').style.display = 'none';
+        isCalibrating = false;
+    }
+
+    function closeCalibrationOuter(event) {
+        if (event.target.id === 'calibration-popup') {
+            closeCalibration();
+        }
+    }
 
     function switchSystemMode(mode) {
         if (measurementsLog.length > 0) {
-            if (!confirm("Внимание! При смене режима текущий журнал полевой съемки будет очищен. Продолжить?")) return;
+            if (!confirm("Внимание! При смене режима текущий журнал полевой съемки будет очищен. Продолжить?")) {
+                return;
+            }
         }
         measurementsLog = [];
         baseAzimuth = null;
@@ -946,7 +1058,7 @@
             vLine.style.display = 'none';
             vDot.style.display = 'none';
             gyroRing.style.display = 'none';
-            zoomPanel.style.display = 'none';
+            zoomPanel.style.display = 'block';
             btnLockZero.style.display = 'none';
             btnClearZero.style.display = 'none';
             btnFsToggle.style.display = 'block';
@@ -994,6 +1106,16 @@
         }, 12000);
     }
 
+    function toggleTheme() {
+        const body = document.documentElement;
+        if (body.getAttribute('data-theme') === 'dark') {
+            body.removeAttribute('data-theme');
+        } else {
+            body.setAttribute('data-theme', 'dark');
+        }
+        drawPolygon();
+    }
+
     async function startCamera() {
         const video = document.getElementById('video-preview');
         try {
@@ -1011,7 +1133,10 @@
 
     function handleOrientation(event) {
         let heading = event.webkitCompassHeading;
-        if (heading === undefined) heading = (360 - (event.alpha || 0)) % 360;
+        if (heading === undefined) {
+            heading = (360 - (event.alpha || 0)) % 360;
+        }
+        
         if (!heading) heading = 0;
         
         if (heading < 0) heading += 360;
@@ -1053,7 +1178,9 @@
             smoothedAzimuth = (smoothedAzimuth % 360 + 360) % 360;
         }
         
-        currentAzimuth = smoothedAzimuth;
+        // --- МГНОВЕННОЕ ПРИМЕНЕНИЕ ЮСТИРОВОЧНОЙ ПОПРАВКИ ---
+        let rawAzimuth = smoothedAzimuth;
+        currentAzimuth = (rawAzimuth + calibrationOffsetDecimal + 360) % 360;
 
         let pitch = Math.round(event.beta || 0); 
         let roll = Math.round(event.gamma || 0);  
@@ -1113,7 +1240,9 @@
 
             let currentSector = Math.floor((currentAzimuth + 2) / 30);
             if (currentSector !== lastVibratedSector) {
-                if (navigator.vibrate) navigator.vibrate(10);
+                if (navigator.vibrate) {
+                    navigator.vibrate(10);
+                }
                 lastVibratedSector = currentSector;
             }
 
@@ -1122,8 +1251,14 @@
 
             const bubble = document.getElementById('compass-bubble');
             const fsBubble = document.getElementById('fs-compass-bubble');
-            if (bubble) { bubble.style.left = `calc(50% + ${moveX}px)`; bubble.style.top = `calc(50% + ${moveY}px)`; }
-            if (fsBubble) { fsBubble.style.left = `calc(50% + ${moveX}px)`; fsBubble.style.top = `calc(50% + ${moveY}px)`; }
+            if (bubble) {
+                bubble.style.left = `calc(50% + ${moveX}px)`;
+                bubble.style.top = `calc(50% + ${moveY}px)`;
+            }
+            if (fsBubble) {
+                fsBubble.style.left = `calc(50% + ${moveX}px)`;
+                fsBubble.style.top = `calc(50% + ${moveY}px)`;
+            }
         }
 
         const btnCapture = document.getElementById('btn-capture');
@@ -1137,13 +1272,13 @@
                 isLevel = true;
                 document.getElementById('gyro-ring').classList.add('level-perfect');
                 btnCapture.classList.add('ready-to-fire');
-                btnCapture.innerText = "➕ Зафиксировать румб";
+                btnCapture.innerText = "➕ Зафиксировать румб в журнал";
                 btnCapture.disabled = false;
             } else {
                 isLevel = false;
                 document.getElementById('gyro-ring').classList.remove('level-perfect');
                 btnCapture.classList.remove('ready-to-fire');
-                btnCapture.innerText = "Поймайте горизонт";
+                btnCapture.innerText = "Поймайте уровень horizon";
                 btnCapture.disabled = true;
             }
         } else {
@@ -1151,15 +1286,25 @@
             if (isHorizontal) {
                 isLevel = true;
                 btnCapture.classList.add('ready-to-fire');
-                btnCapture.innerText = "➕ Зафиксировать азимут";
+                btnCapture.innerText = "➕ Зафиксировать азимут в журнал";
                 btnCapture.disabled = false;
-                if (btnFsCapture) { btnFsCapture.classList.add('ready-to-fire'); btnFsCapture.innerText = "➕ Зафиксировать"; btnFsCapture.disabled = false; }
+
+                if (btnFsCapture) {
+                    btnFsCapture.classList.add('ready-to-fire');
+                    btnFsCapture.innerText = "➕ Зафиксировать азимут в журнал";
+                    btnFsCapture.disabled = false;
+                }
             } else {
                 isLevel = false;
                 btnCapture.classList.remove('ready-to-fire');
                 btnCapture.innerText = "Поймайте пузырек уровня";
                 btnCapture.disabled = true;
-                if (btnFsCapture) { btnFsCapture.classList.remove('ready-to-fire'); btnFsCapture.innerText = "Поймайте пузырек"; btnFsCapture.disabled = true; }
+
+                if (btnFsCapture) {
+                    btnFsCapture.classList.remove('ready-to-fire');
+                    btnFsCapture.innerText = "Поймайте пузырек уровня";
+                    btnFsCapture.disabled = true;
+                }
             }
         }
     }
@@ -1184,6 +1329,7 @@
             window.addEventListener('devicemotion', (e) => {
                 let acc = e.accelerationIncludingGravity;
                 if(!acc) return;
+                
                 let currentTime = Date.now();
                 if ((currentTime - lastUpdate) > 100) {
                     lastUpdate = currentTime;
@@ -1203,11 +1349,15 @@
             if (rowIdx !== -1 && measurementsLog[rowIdx].mode === 'steps') {
                 measurementsLog[rowIdx].steps += 1;
                 measurementsLog[rowIdx].distance = parseFloat((measurementsLog[rowIdx].steps * stepLength).toFixed(1));
+                
                 let inputEl = document.getElementById(`dist-${activePedometerIndex}`);
                 if (inputEl) inputEl.value = measurementsLog[rowIdx].distance;
+                
                 let badgeEl = document.getElementById(`step-badge-${activePedometerIndex}`);
                 if (badgeEl) badgeEl.innerText = `👣 ${measurementsLog[rowIdx].steps}`;
+                
                 saveToLocalStorage();
+                document.body.click(); 
                 drawPolygon();
             }
         }
@@ -1229,11 +1379,20 @@
         }
     }
 
-    function setZeroDirection() { baseAzimuth = currentAzimuth; document.getElementById('base-azimuth').innerText = `${baseAzimuth.toFixed(1)}°`; }
-    function resetZeroDirection() { baseAzimuth = null; document.getElementById('base-azimuth').innerText = `НЕТ`; document.getElementById('angle-turn-badge').style.display = 'none'; }
+    function setZeroDirection() {
+        baseAzimuth = currentAzimuth;
+        document.getElementById('base-azimuth').innerText = `${baseAzimuth.toFixed(1)}°`;
+    }
+
+    function resetZeroDirection() {
+        baseAzimuth = null;
+        document.getElementById('base-azimuth').innerText = `НЕТ`;
+        document.getElementById('angle-turn-badge').style.display = 'none';
+    }
 
     function captureMeasurement() {
         if (!isLevel) return;
+
         let valueToRecord = parseFloat(currentAzimuth.toFixed(1));
 
         const newMeasurement = {
@@ -1243,12 +1402,20 @@
             mode: 'manual',
             steps: 0,
             systemMode: currentSystemMode,
-            lat: currentLat, lng: currentLng, altitude: currentAltitude, accuracy: currentAccuracy
+            lat: currentLat,
+            lng: currentLng,
+            altitude: currentAltitude,
+            accuracy: currentAccuracy
         };
 
-        if (activePedometerIndex !== null) activePedometerIndex = null;
+        if (activePedometerIndex !== null) {
+            activePedometerIndex = null;
+        }
+
         measurementsLog.push(newMeasurement);
-        renderLogTable(); saveToLocalStorage(); drawPolygon();
+        renderLogTable();
+        saveToLocalStorage();
+        drawPolygon();
     }
 
     function changeLineAzimuth(id, value) {
@@ -1257,7 +1424,8 @@
             let parsedVal = parseFloat(value);
             if (!isNaN(parsedVal)) {
                 measurementsLog[idx].azimuth = (parsedVal % 360 + 360) % 360;
-                saveToLocalStorage(); drawPolygon();
+                saveToLocalStorage();
+                drawPolygon();
             }
         }
     }
@@ -1266,7 +1434,8 @@
         let idx = measurementsLog.findIndex(m => m.id === id);
         if(idx !== -1) {
             measurementsLog[idx].distance = parseFloat(value) || 0;
-            saveToLocalStorage(); drawPolygon();
+            saveToLocalStorage();
+            drawPolygon();
         }
     }
 
@@ -1276,13 +1445,16 @@
             measurementsLog[idx].mode = mode;
             if (mode === 'steps') {
                 activePedometerIndex = id;
-                measurementsLog[idx].steps = 0; measurementsLog[idx].distance = 0;
+                measurementsLog[idx].steps = 0;
+                measurementsLog[idx].distance = 0;
                 let inputEl = document.getElementById(`dist-${id}`);
                 if (inputEl) inputEl.value = 0;
             } else {
                 if (activePedometerIndex === id) activePedometerIndex = null;
             }
-            renderLogTable(); saveToLocalStorage(); drawPolygon();
+            renderLogTable();
+            saveToLocalStorage();
+            drawPolygon();
         }
     }
 
@@ -1293,7 +1465,9 @@
                 if (activePedometerIndex === id) activePedometerIndex = null;
                 measurementsLog.splice(idx, 1);
                 measurementsLog.forEach((m, index) => { m.id = index + 1; });
-                renderLogTable(); saveToLocalStorage(); drawPolygon();
+                renderLogTable();
+                saveToLocalStorage();
+                drawPolygon();
             }
         }
     }
@@ -1318,8 +1492,12 @@
             tbody.innerHTML += `
                 <tr>
                     <td><b>№${m.id}</b></td>
-                    <td><input type="number" class="input-dist" value="${m.azimuth}" step="0.1" style="color:var(--forest-green); font-weight:700;" onfocus="this.select()" oninput="changeLineAzimuth(${m.id}, this.value)"></td>
-                    <td><input type="number" id="dist-${m.id}" class="input-dist" value="${m.distance}" step="0.5" onfocus="this.select()" oninput="changeLineDistance(${m.id}, this.value)"></td>
+                    <td>
+                        <input type="number" class="input-dist" value="${m.azimuth}" step="0.1" style="color:var(--forest-green); font-weight:700;" onfocus="this.select()" oninput="changeLineAzimuth(${m.id}, this.value)">
+                    </td>
+                    <td>
+                        <input type="number" id="dist-${m.id}" class="input-dist" value="${m.distance}" step="0.5" onfocus="this.select()" oninput="changeLineDistance(${m.id}, this.value)">
+                    </td>
                     <td>
                         <select class="select-mode" onchange="changeLineMode(${m.id}, this.value)">
                             <option value="manual" ${isManualSelected}>Ручной</option>
@@ -1328,16 +1506,20 @@
                         ${stepIndicator}
                     </td>
                     <td><span style="font-size:10px; font-family:monospace; display:block; white-space:normal; word-break:break-all;">${dmsLat}<br>${dmsLng} (${altVal})</span></td>
-                    <td><button class="btn-delete-row" onclick="deleteMeasurement(${m.id})">❌</button></td>
+                    <td>
+                        <button class="btn-delete-row" onclick="deleteMeasurement(${m.id})">❌</button>
+                    </td>
                 </tr>
             `;
         });
     }
 
+    // ЧЕСТНОЕ ТРИГОНОМЕТРИЧЕСКОЕ ПОСТРОЕНИЕ ПО ФАКТИЧЕСКИМ АЗИМУТАМ МЕСТНОСТИ
     function drawPolygon() {
         const canvas = document.getElementById('polygon-canvas');
         const ctx = canvas.getContext('2d');
-        const width = canvas.width; const height = canvas.height;
+        const width = canvas.width;
+        const height = canvas.height;
         
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         ctx.fillStyle = isDark ? '#22302B' : '#FFFFFF';
@@ -1345,32 +1527,42 @@
 
         ctx.fillStyle = isDark ? 'rgba(255,255,255,0.4)' : '#333333'; 
         ctx.font = "bold 12px Inter, sans-serif";
-        ctx.textAlign = "center"; ctx.fillText("С", width / 2, 18); ctx.fillText("Ю", width / 2, height - 8);
-        ctx.textAlign = "left"; ctx.fillText("З", 10, height / 2 + 4); 
-        ctx.textAlign = "right"; ctx.fillText("В", width - 10, height / 2 + 4);
+        ctx.textAlign = "center";
+        ctx.fillText("С", width / 2, 18); 
+        ctx.fillText("Ю", width / 2, height - 8);
+        ctx.textAlign = "left";
+        ctx.fillText("З", 10, height / 2 + 4); 
+        ctx.textAlign = "right";
+        ctx.fillText("В", width - 10, height / 2 + 4);
 
         if (measurementsLog.length === 0) {
             document.getElementById('area-display').innerText = "Площадь: 0.0000 га";
-            globalTandemState.busolAreaHa = 0; // ТАНДЕМ: обнуляем площадь
             return;
         }
 
         let points = [{ x: 0, y: 0 }];
-        let currentX = 0; let currentY = 0;
+        let currentX = 0;
+        let currentY = 0;
 
         measurementsLog.forEach((m) => {
             let angleRad = (m.azimuth * Math.PI) / 180;
-            currentX += m.distance * Math.sin(angleRad); currentY += m.distance * Math.cos(angleRad);
+            currentX += m.distance * Math.sin(angleRad);
+            currentY += m.distance * Math.cos(angleRad);
             points.push({ x: currentX, y: currentY });
         });
 
-        let minX = Math.min(...points.map(p => p.x)); let maxX = Math.max(...points.map(p => p.x));
-        let minY = Math.min(...points.map(p => p.y)); let maxY = Math.max(...points.map(p => p.y));
+        let minX = Math.min(...points.map(p => p.x));
+        let maxX = Math.max(...points.map(p => p.x));
+        let minY = Math.min(...points.map(p => p.y));
+        let maxY = Math.max(...points.map(p => p.y));
 
         let scale = (width - 60) / Math.max(maxX - minX, maxY - minY, 1);
 
         function toPixel(pt) {
-            return { x: width/2 + (pt.x - (maxX+minX)/2)*scale, y: height/2 - (pt.y - (maxY+minY)/2)*scale };
+            return {
+                x: width/2 + (pt.x - (maxX+minX)/2)*scale,
+                y: height/2 - (pt.y - (maxY+minY)/2)*scale
+            };
         }
 
         ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
@@ -1384,10 +1576,17 @@
         ctx.strokeStyle = isDark ? '#8FBC8F' : '#2D5A27';
 
         for (let i = 0; i < points.length - 1; i++) {
-            let p1 = toPixel(points[i]); let p2 = toPixel(points[i+1]);
-            ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+            let p1 = toPixel(points[i]);
+            let p2 = toPixel(points[i+1]);
 
-            let midX = (p1.x + p2.x) / 2; let midY = (p1.y + p2.y) / 2;
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+
+            let midX = (p1.x + p2.x) / 2;
+            let midY = (p1.y + p2.y) / 2;
+            
             ctx.font = "bold 10px Inter, sans-serif";
             ctx.fillStyle = isDark ? '#FFFFFF' : '#111111';
             ctx.textAlign = "center";
@@ -1396,11 +1595,12 @@
 
         points.forEach((p, idx) => {
             let pix = toPixel(p);
-            ctx.beginPath(); ctx.arc(pix.x, pix.y, idx === 0 ? 5 : 3.5, 0, 2 * Math.PI);
-            ctx.fillStyle = idx === 0 ? '#DC2626' : '#16A34A'; ctx.fill();
+            ctx.beginPath();
+            ctx.arc(pix.x, pix.y, idx === 0 ? 5 : 3.5, 0, 2 * Math.PI);
+            ctx.fillStyle = idx === 0 ? '#DC2626' : '#16A34A'; 
+            ctx.fill();
         });
 
-        // ФОРМУЛА ГАУССА
         let area = 0;
         let j = points.length - 1;
         for (let i = 0; i < points.length; i++) {
@@ -1411,19 +1611,31 @@
         let areaHa = area / 10000; 
 
         document.getElementById('area-display').innerText = `Площадь: ${areaHa.toFixed(4)} га (${Math.round(area)} м²)`;
-        
-        // --- ТАНДЕМ: ПЕРЕДАЧА ПЛОЩАДИ В ГЛОБАЛЬНЫЙ СТЕЙТ ---
-        globalTandemState.busolAreaHa = parseFloat(areaHa.toFixed(4));
+
+        // Автоматическая передача рассчитанной площади в единое ядро LesovikCore
+        if (window.LesovikCore && window.LesovikCore.getProject) {
+            const proj = window.LesovikCore.getProject();
+            proj.explAreaHa = parseFloat(areaHa.toFixed(4));
+            window.LesovikCore.saveProject(proj);
+        }
     }
 
     function saveCurrentToArchive() {
         let nameInput = document.getElementById('project-name').value.trim();
-        if (!nameInput) { alert("Введите название делянки!"); return; }
-        if (measurementsLog.length === 0) { alert("Журнал съемок пуст."); return; }
+        if (!nameInput) {
+            alert("Введите уникальное название делянки для сохранения в архив!");
+            return;
+        }
+        if (measurementsLog.length === 0) {
+            alert("Журнал съемок пуст. Наведите визир и зафиксируйте точки перед архивацией.");
+            return;
+        }
         
         let savedProjects = [];
         const localData = localStorage.getItem('bg_hns_projects_archive');
-        if (localData) savedProjects = JSON.parse(localData);
+        if (localData) {
+            savedProjects = JSON.parse(localData);
+        }
         
         const projectSnapshot = {
             name: nameInput,
@@ -1436,19 +1648,21 @@
         
         savedProjects.push(projectSnapshot);
         localStorage.setItem('bg_hns_projects_archive', JSON.stringify(savedProjects));
-        alert(`Проект "${nameInput}" сохранен!`);
+        alert(`Проект "${nameInput}" успешно занесен в архив делянок смартфона!`);
         updateArchiveSelect();
     }
 
     function updateArchiveSelect() {
         const select = document.getElementById('archive-select');
         select.innerHTML = '<option value="">-- Выберите из архива --</option>';
+        
         const localData = localStorage.getItem('bg_hns_projects_archive');
         if (localData) {
             const savedProjects = JSON.parse(localData);
             savedProjects.forEach((proj, index) => {
                 const option = document.createElement('option');
-                option.value = index; option.innerText = `${proj.name} (${proj.timestamp})`;
+                option.value = index;
+                option.innerText = `${proj.name} (${proj.timestamp})`;
                 select.appendChild(option);
             });
         }
@@ -1457,19 +1671,25 @@
     function deleteSelectedFromArchive() {
         const select = document.getElementById('archive-select');
         const index = select.value;
-        if (index === "") { alert("Выберите делянку!"); return; }
+        if (index === "") { alert("Выберите делянку из списка для удаления!"); return; }
+        
         let savedProjects = JSON.parse(localStorage.getItem('bg_hns_projects_archive') || "[]");
-        if (confirm(`Удалить проект "${savedProjects[index].name}"?`)) {
+        if (confirm(`Вы действительно хотите безвозвратно удалить проект "${savedProjects[index].name}" из памяти устройства?`)) {
             savedProjects.splice(index, 1);
             localStorage.setItem('bg_hns_projects_archive', JSON.stringify(savedProjects));
-            updateArchiveSelect(); clearLog(); alert("Проект удален.");
+            updateArchiveSelect();
+            clearLog();
+            alert("Проект успешно удален.");
         }
     }
 
     function loadFromArchive(index) {
         if (index === "") return;
-        if (measurementsLog.length > 0 && !confirm("Заместить текущие замеры архивом?")) {
-            document.getElementById('archive-select').value = ""; return;
+        if (measurementsLog.length > 0) {
+            if (!confirm("Внимание! Текущие активные замеры на экране будут замещены проектом из архива. Продолжить?")) {
+                document.getElementById('archive-select').value = "";
+                return;
+            }
         }
         
         const localData = localStorage.getItem('bg_hns_projects_archive');
@@ -1483,26 +1703,39 @@
             baseAzimuth = proj.baseAzimuth !== undefined ? proj.baseAzimuth : null;
             
             document.getElementById('project-name').value = proj.name;
-            updateGlobalProjectName(proj.name); // ТАНДЕМ
             document.getElementById('traverse-select-direction').value = currentTraverseDirection;
             
             applyModeUI();
-            if (baseAzimuth !== null) document.getElementById('base-azimuth').innerText = `${baseAzimuth.toFixed(1)}°`;
-            else document.getElementById('base-azimuth').innerText = `НЕТ`;
+            if (baseAzimuth !== null) {
+                document.getElementById('base-azimuth').innerText = `${baseAzimuth.toFixed(1)}°`;
+            } else {
+                document.getElementById('base-azimuth').innerText = `НЕТ`;
+            }
             
-            renderLogTable(); saveToLocalStorage(); drawPolygon();
-            alert(`Проект "${proj.name}" загружен.`);
+            renderLogTable();
+            saveToLocalStorage();
+            drawPolygon();
+            alert(`Проект "${proj.name}" успешно загружен на интерактивный экран.`);
         }
     }
 
-    function exportArchiveToCSV() {
+   function exportArchiveToCSV() {
         const localData = localStorage.getItem('bg_hns_projects_archive');
         let dataToExport = [];
         if (localData) dataToExport = JSON.parse(localData);
+        
         if (dataToExport.length === 0 && measurementsLog.length > 0) {
-            dataToExport.push({ name: document.getElementById('project-name').value || "Текущая делянка", timestamp: new Date().toLocaleString('ru-RU'), log: measurementsLog });
+            dataToExport.push({
+                name: document.getElementById('project-name').value || "Текущая делянка",
+                timestamp: new Date().toLocaleString('ru-RU'),
+                log: measurementsLog
+            });
         }
-        if (dataToExport.length === 0) { alert("Архив пуст!"); return; }
+        
+        if (dataToExport.length === 0) {
+            alert("Ваш архив пуст! Добавьте полевые съемки в базу для экспорта отчета.");
+            return;
+        }
         
         let csvContent = "\uFEFF"; 
         csvContent += "Название делянки;Дата сохранения;Линия;Угол/Азимут;Длина (м);Тип ввода;Широта (СШ);Долгота (ВД);Высота (м)\n";
@@ -1516,21 +1749,48 @@
                 csvContent += `"${proj.name}";"${proj.timestamp}";"№${m.id}";"${m.azimuth}";"${m.distance}";"${modeText}";"${dmsLat}";"${dmsLng}";"${altVal}"\n`;
             });
         });
-        
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob); link.setAttribute("download", "Архив_Буссоль_ПРО.csv");
-        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+
+        // Расширение .xls форсирует открытие в Excel на мобильных ОС
+        const fileName = "Архив_полевых_съемок_БГ_ХНС_1_2.xls";
+        const isHuawei = /huawei|harmonyos/i.test(navigator.userAgent);
+
+        if (isHuawei) {
+            // Прямой метод Data URI для обхода ограничений WebView Huawei
+            const encodedUri = "data:application/vnd.ms-excel;charset=utf-8," + encodeURIComponent(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            // Стандартный Blob-метод для Samsung, Redmi, iPhone и ПК
+            const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
     }
 
     function exportToKML() {
-        if (measurementsLog.length === 0) { alert("Журнал пуст!"); return; }
+        if (measurementsLog.length === 0) {
+            alert("Журнал пуст. Невозможно экспортировать контур делянки в ГИС!");
+            return;
+        }
+        
         let name = document.getElementById('project-name').value || "Делянка";
         let kml = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n<name>${name}</name>\n<Placemark>\n<name>${name} - Полигон лесосеки</name>\n<Polygon>\n<outerBoundaryIs>\n<LinearRing>\n<coordinates>\n`;
         
         let startLat = measurementsLog[0].lat || currentLat;
         let startLng = measurementsLog[0].lng || currentLng;
-        let lat = startLat; let lng = startLng;
+        
+        let lat = startLat;
+        let lng = startLng;
         
         let polygonCoords = [];
         polygonCoords.push(`${lng.toFixed(6)},${lat.toFixed(6)},0`);
@@ -1539,31 +1799,59 @@
             let angleRad = (m.azimuth * Math.PI) / 180;
             let dX = m.distance * Math.sin(angleRad); 
             let dY = m.distance * Math.cos(angleRad); 
+            
             let deltaLat = dY / 111111;
             let deltaLng = dX / (111111 * Math.cos(lat * Math.PI / 180));
-            lat += deltaLat; lng += deltaLng;
+            
+            lat += deltaLat;
+            lng += deltaLng;
             polygonCoords.push(`${lng.toFixed(6)},${lat.toFixed(6)},0`);
         });
         
-        if (polygonCoords.length > 0) polygonCoords.push(polygonCoords[0]);
+        if (polygonCoords.length > 0) {
+            polygonCoords.push(polygonCoords[0]);
+        }
+        
         kml += polygonCoords.join("\n") + "\n";
         kml += `</coordinates>\n</LinearRing>\n</outerBoundaryIs>\n</Polygon>\n</Placemark>\n`;
         
-        lat = startLat; lng = startLng;
+        lat = startLat;
+        lng = startLng;
         kml += `<Placemark><name>Столб 1 (Старт)</name><Point><coordinates>${lng.toFixed(6)},${lat.toFixed(6)},0</coordinates></Point></Placemark>\n`;
         
         measurementsLog.forEach((m, idx) => {
             let angleRad = (m.azimuth * Math.PI) / 180;
-            let dX = m.distance * Math.sin(angleRad); let dY = m.distance * Math.cos(angleRad);
-            lat += dY / 111111; lng += dX / (111111 * Math.cos(lat * Math.PI / 180));
+            let dX = m.distance * Math.sin(angleRad);
+            let dY = m.distance * Math.cos(angleRad);
+            lat += dY / 111111;
+            lng += dX / (111111 * Math.cos(lat * Math.PI / 180));
             kml += `<Placemark><name>Столб ${idx + 2}</name><Point><coordinates>${lng.toFixed(6)},${lat.toFixed(6)},0</coordinates></Point></Placemark>\n`;
         });
-        kml += `</Document>\n</kml>`;
         
-        const blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob); link.setAttribute("download", `${name}_БГ_ХНС.kml`);
-        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        kml += `</Document>\n</kml>`;
+
+        const fileName = `${name}_контур_БГ_ХНС_1.2.kml`;
+        const isHuawei = /huawei|harmonyos/i.test(navigator.userAgent);
+
+        if (isHuawei) {
+            const encodedUri = "data:application/vnd.google-earth.kml+xml;charset=utf-8," + encodeURIComponent(kml);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            const blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -1593,5 +1881,8 @@
         loadFromLocalStorage();
     });
 </script>
+
+<!-- ПОДКЛЮЧЕНИЕ ЕДИНОГО МОДУЛЯ СИНХРОНИЗАЦИИ, ЛИЦЕНЗИЙ И PWA-НАВИГАЦИИ -->
+<script src="lesovik-core.js"></script>
 </body>
 </html>
