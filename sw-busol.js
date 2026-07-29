@@ -1,6 +1,6 @@
 const BUSOL_CACHE = 'busol-hns-v1.2';
 const BUSOL_ASSETS = [
-  '/busol.html',
+  '/busol-mobile.html',
   '/logo.jpeg',
   '/busol.webmanifest'
 ];
