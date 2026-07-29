@@ -1,4 +1,4 @@
-const BUSOL_CACHE = 'busol-hns-v1.2';
+const BUSOL_CACHE = 'busol-hns-v1.3'; // Повысим версию кэша, чтобы заставить браузер обновиться!
 const BUSOL_ASSETS = [
   '/busol-mobile.html',
   '/logo.jpeg',
@@ -38,8 +38,8 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request).then((cachedResponse) => {
       // Сначала отдаем из кэша (для работы в тайге)
       return cachedResponse || fetch(event.request).catch(() => {
-        // Офлайн-фоллбэк
-        return caches.match('/busol.html');
+        // Офлайн-фоллбэк (ИСПРАВЛЕНО на busol-mobile.html)
+        return caches.match('/busol-mobile.html');
       });
     })
   );
