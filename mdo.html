@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+    <!-- 1. Единое ядро защиты, блокировки РСЯ и контекста — СТРОГО ПЕРВЫМ! -->
+    <script src="lesovik-core.js"></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <script type="text/javascript">
         // --- ПЕРЕХВАТ БОТОВ ДЛЯ SEO-ПРЕВЬЮ ---
         (function() {
@@ -26,9 +32,6 @@
     </script>
     <noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
     <title>Официальный расчет МДО лесосек: индивидуальная стоимость пород и кубатура по ГОСТ</title>
     <meta name="description" content="Инженерный калькулятор материально-денежной оценки лесосек. Перечет в штуках деревьев, автоматический расчет кубатуры по разрядам высот и персональная стоимость для каждой породы древесины согласно ФГИС ЛК.">
     <meta name="keywords" content="материально денежная оценка лесосек, расчет мдо онлайн рубли, базовая ставка по породам, перечет в штуках деревьев, разряды высот рослесхоз, лесовик про">
@@ -44,11 +47,9 @@
     <meta name="geo.region" content="RU-KO">
     <meta name="geo.placename" content="Сыктывкар">
 
+    <!-- --- ЯНДЕКС РЕКЛАМА (РСЯ ИНИЦИАЛИЗАЦИЯ, БЕЗОПАСНО БЛОКИРУЕТСЯ В PRO) --- -->
     <script>window.yaContextCb=window.yaContextCb||[]</script>
-    <script src="https://yandex.ru/ads/system/context.js" async></script>
-
     <script>
-        // Полноэкранный блок Touch
         window.yaContextCb.push(() => {
             Ya.Context.AdvManager.render({
                 "blockId": "R-A-19250236-2",
@@ -56,7 +57,6 @@
                 "platform": "touch"
             })
         });
-        // FloorAd Touch
         window.yaContextCb.push(() => {
             Ya.Context.AdvManager.render({
                 "blockId": "R-A-19250236-1",
@@ -64,7 +64,6 @@
                 "platform": "touch"
             })
         });
-        // Полноэкранный блок Desktop
         window.yaContextCb.push(() => {
             Ya.Context.AdvManager.render({
                 "blockId": "R-A-19250236-3",
@@ -72,7 +71,6 @@
                 "platform": "desktop"
             })
         });
-        // FloorAd Desktop
         window.yaContextCb.push(() => {
             Ya.Context.AdvManager.render({
                 "blockId": "R-A-19250236-4",
@@ -81,6 +79,7 @@
             })
         });
     </script>
+    <script src="https://yandex.ru/ads/system/context.js" async></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -119,6 +118,7 @@
             font-family: 'Inter', sans-serif; line-height: 1.5;
             box-sizing: border-box;
             transition: background-color 0.3s, color 0.3s;
+            padding-bottom: 70px !important; /* Отступ под нижнее меню */
         }
 
         *, *:before, *:after { box-sizing: inherit; }
@@ -172,7 +172,7 @@
 
         .field-peruchet-section-title { font-size: 14px; font-weight: 700; color: var(--primary-forest); text-transform: uppercase; letter-spacing: 0.5px; margin: 35px 0 15px 0; padding-bottom: 6px; border-bottom: 2px solid var(--border-light); }
         .species-peruchet-block { background: var(--input-bg); border-radius: 10px; padding: 20px; margin-bottom: 25px; border: 1px solid var(--border-light); position: relative; animation: slideDown 0.25s ease-out; }
-        @media (from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); })
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         
         .species-title-badge { font-size: 15px; font-weight: 700; color: var(--primary-forest); margin-bottom: 15px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
         .btn-delete-species { background: transparent; color: var(--fire-accent); border: 1px solid var(--border-light); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s; margin-left: auto; }
@@ -234,7 +234,7 @@
             </div>
             <div class="form-group">
                 <label>Общая площадь лесосеки (га)</label>
-                <input type="number" id="mdo-space" value="50.0" step="0.1">
+                <input type="number" id="mdo-space" value="50.0" step="0.1" onchange="syncProjectData()">
             </div>
             <div class="form-group">
                 <label>Фактическая площадь перечета (га)</label>
@@ -336,6 +336,15 @@
     const diameters = [16, 20, 24, 28, 32, 36, 40, 44, 48];
     const addedSpeciesCodes = new Set();
 
+    function syncProjectData() {
+        if (window.LesovikCore && typeof window.LesovikCore.saveProject === 'function') {
+            const space = parseFloat(document.getElementById('mdo-space').value) || 0;
+            window.LesovikCore.saveProject({
+                explAreaHa: space
+            });
+        }
+    }
+
     function addSpeciesBlock() {
         const selector = document.getElementById('species-selector');
         const [rawCode, isConiferousStr, pLarge, pMedium, pSmall, pFire, displayLabel] = selector.value.split('|');
@@ -434,6 +443,8 @@
             alert("Перечетная ведомость пуста! Добавьте элементы леса.");
             return;
         }
+
+        syncProjectData();
 
         const scaleFactor = totalSpace / sampleSpace;
         tbody.innerHTML = '';
@@ -610,6 +621,19 @@
             body.setAttribute('data-theme', 'dark');
         }
     }
+
+    window.addEventListener('lesovikDataChanged', () => {
+        if (window.LesovikCore && window.LesovikCore.isPRO()) {
+            const project = window.LesovikCore.getProject();
+            if (project.explAreaHa) {
+                const spaceInput = document.getElementById('mdo-space');
+                if (spaceInput && parseFloat(spaceInput.value) !== project.explAreaHa) {
+                    spaceInput.value = project.explAreaHa;
+                }
+            }
+        }
+    });
+
     document.getElementById('themeBtn').addEventListener('click', toggleTheme);
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -617,6 +641,13 @@
         document.getElementById('species-selector').value = 'Б|false|180|110|60|25|🌳 Береза (Б)';
         addSpeciesBlock();
         document.getElementById('species-selector').value = 'С|true|266.45|190.05|94.79|6.60|🌲 Сосна (С)';
+        
+        if (window.LesovikCore && window.LesovikCore.isPRO()) {
+            const project = window.LesovikCore.getProject();
+            if (project.explAreaHa) {
+                document.getElementById('mdo-space').value = project.explAreaHa;
+            }
+        }
     });
 </script>
 </body>
