@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+    <!-- 1. Единое ядро защиты, блокировки РСЯ и контекста — СТРОГО ПЕРВЫМ! -->
+    <script src="lesovik-core.js"></script>
+
     <script type="text/javascript">
         // --- ПЕРЕХВАТ БОТОВ ДЛЯ SEO-ПРЕВЬЮ ---
         (function() {
@@ -50,6 +53,40 @@
     <!-- ПОДКЛЮЧЕНИЕ АВТОНОМНОЙ БИБЛИОТЕКИ SHEETJS ДЛЯ НАСТОЯЩЕГО XLSX -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.mini.min.js"></script>
 
+    <!-- БЛОК СКРИПТОВ ЯНДЕКС РСЯ (Безопасно блокируется в PRO через lesovik-core.js) -->
+    <script>window.yaContextCb=window.yaContextCb||[]</script>
+    <script>
+    window.yaContextCb.push(() => {
+        Ya.Context.AdvManager.render({
+            "blockId": "R-A-19250236-4",
+            "type": "floorAd",
+            "platform": "desktop"
+        })
+    });
+    window.yaContextCb.push(() => {
+        Ya.Context.AdvManager.render({
+            "blockId": "R-A-19250236-1",
+            "type": "floorAd",
+            "platform": "touch"
+        })
+    });
+    window.yaContextCb.push(() => {
+        Ya.Context.AdvManager.render({
+            "blockId": "R-A-19250236-3",
+            "type": "fullscreen",
+            "platform": "desktop"
+        })
+    });
+    window.yaContextCb.push(() => {
+        Ya.Context.AdvManager.render({
+            "blockId": "R-A-19250236-2",
+            "type": "fullscreen",
+            "platform": "touch"
+        })
+    });
+    </script>
+    <script src="https://yandex.ru/ads/system/context.js" async></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
 
@@ -89,6 +126,7 @@
             display: flex; flex-direction: column;
             min-height: 100vh;
             -webkit-tap-highlight-color: transparent;
+            padding-bottom: 70px !important; /* Отступ под нижнюю навигацию */
         }
 
         /* МАТОВАЯ ЕДИНАЯ ШАПКА С ЭФФЕКТОМ СТЕКЛА */
@@ -445,50 +483,6 @@
         </div>
     </footer>
 
-    <!-- БЛОК СКРИПТОВ ЯНДЕКС РСЯ -->
-    <script>window.yaContextCb=window.yaContextCb||[]</script>
-    <script src="https://yandex.ru/ads/system/context.js" async></script>
-
-    <script>
-    window.yaContextCb.push(() => {
-        Ya.Context.AdvManager.render({
-            "blockId": "R-A-19250236-4",
-            "type": "floorAd",
-            "platform": "desktop"
-        })
-    })
-    </script>
-
-    <script>
-    window.yaContextCb.push(() => {
-        Ya.Context.AdvManager.render({
-            "blockId": "R-A-19250236-1",
-            "type": "floorAd",
-            "platform": "touch"
-        })
-    })
-    </script>
-
-    <script>
-    window.yaContextCb.push(() => {
-        Ya.Context.AdvManager.render({
-            "blockId": "R-A-19250236-3",
-            "type": "fullscreen",
-            "platform": "desktop"
-        })
-    })
-    </script>
-
-    <script>
-    window.yaContextCb.push(() => {
-        Ya.Context.AdvManager.render({
-            "blockId": "R-A-19250236-2",
-            "type": "fullscreen",
-            "platform": "touch"
-        })
-    })
-    </script>
-
     <script>
         // ГЛУБОКАЯ ИНИЦИАЛИЗАЦИЯ ЖУРНАЛА ТАКСАТОРОВ 2.0 (ДЕЛОСЛАГАЕМАЯ СТРУКТУРА)
         let journalData = JSON.parse(localStorage.getItem('lesovik_tally_v3')) || {
@@ -531,6 +525,12 @@
 
         function saveData() {
             localStorage.setItem('lesovik_tally_v3', JSON.stringify(journalData));
+            if (window.LesovikCore && typeof window.LesovikCore.saveProject === 'function') {
+                window.LesovikCore.saveProject({
+                    name: journalData.name,
+                    explAreaHa: getExplArea()
+                });
+            }
         }
 
         function getLocation() {
@@ -814,7 +814,7 @@
                         <div class="tally-height-box">
                             <label>h ступ (м):</label>
                             <input type="number" id="h-step-${d}" value="${item.height !== null ? item.height : ''}" 
-                                placeholder="—" step="0.5" onfocus="this.select()" onid="h-input-${d}"
+                                placeholder="—" step="0.5" onfocus="this.select()" 
                                 onchange="updateSpecificHeight(${d}, this.value)">
                         </div>
                     </div>
@@ -861,7 +861,6 @@
             let grandTotalVolExpl = 0;
             let tablesHTML = '';
 
-            // Агрегируем все замеры по породам и ступеням толщины
             let aggregatedData = {};
             
             for (const probeKey in dataStructure.probes) {
@@ -884,7 +883,6 @@
                 }
             }
 
-            // Рендерим по каждой породе отдельный таксационный блок с суб-колонками категорий технической годности
             for (const sp in aggregatedData) {
                 let spStemsDel = 0, spStemsPolu = 0, spStemsDrova = 0, spStemsAll = 0;
                 let spVolHa = 0;
@@ -1009,7 +1007,6 @@
             }
         }
 
-        /* АРХИВАЦИЯ ДЕЛЯНОК ПО СТАНДАРТУ 3.0 */
         function saveToArchive() {
             let hasData = false;
             for (const p in journalData.probes) {
@@ -1087,14 +1084,12 @@
                 }
             };
 
-            // ФУНКЦИЯ ВОССТАНОВЛЕНИЯ ДЛЯ РЕДАКТИРОВАНИЯ ИЗ ПОПАПА БЕЗ ПОТЕРИ ДАННЫХ
             const restoreBtn = document.getElementById('popup-restore-btn');
             restoreBtn.onclick = function() {
                 if (confirm(`Восстановить делянку "${item.name}" в рабочее поле? Текущие данные на экране будут заменены.`)) {
                     journalData = JSON.parse(JSON.stringify(item.data));
                     localStorage.setItem('lesovik_tally_v3', JSON.stringify(journalData));
                     
-                    // Обновляем поля ввода
                     document.getElementById('tally-name').value = journalData.name || '';
                     document.getElementById('tally-type').value = journalData.tallyType || 'continuous';
                     document.getElementById('tally-bark').value = journalData.tallyBark || 'yes';
@@ -1132,7 +1127,6 @@
             }
         }
 
-        /* НАДЁЖНЫЙ ЭКСПОРТ В XLSX НА ОФИЦИАЛЬНОМ МДО-БЛАНКЕ */
         function downloadExcel() {
             if (typeof XLSX === 'undefined') {
                 alert("Ошибка: библиотека экспорта еще загружается. Повторите попытку.");
@@ -1144,7 +1138,6 @@
             const sampleArea = getProbeArea();
             const explArea = getExplArea();
             
-            // 1. Шапка паспорта лесосеки
             rows.push(["ПЕРЕЧЕТНАЯ ВЕДОМОСТЬ ЛЕСОСЕКИ (МДО ОЦЕНКА)"]);
             rows.push(["Название объекта / Делянка:", journalData.name || "Не указано"]);
             rows.push(["Метод инвентаризации:", journalData.tallyType, "", "Учет коры:", journalData.tallyBark === 'yes' ? "В коре" : "Без коры"]);
@@ -1154,7 +1147,6 @@
             rows.push(["Площадь замера (пробы):", sampleArea.toFixed(4) + " га", "", "Эксплуатационная площадь:", explArea.toFixed(2) + " га"]);
             rows.push([]); 
 
-            // Агрегируем замеры для формирования листов
             let aggregatedData = {};
             for (const probeKey in journalData.probes) {
                 for (const sp in journalData.probes[probeKey]) {
@@ -1177,7 +1169,6 @@
 
             let hasData = false;
 
-            // Формируем таблицы по породам древесины
             for (const sp in aggregatedData) {
                 rows.push([`ЭЛЕМЕНТ ЛЕСА (ПОРОДА): ${sp.toUpperCase()}`, "", "", "", "", `Разряд высот: ${journalData.heightClasses[sp] || '3'}`]);
                 rows.push(["Ступень толщины (см)", "Деловые (шт)", "Полуделовые (шт)", "Дровяные (шт)", "Всего по ступени (шт)", "Высота модельная (м)"]);
@@ -1222,13 +1213,11 @@
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Ведомость МДО");
 
-            // Настройка ширины столбцов
             worksheet['!cols'] = [{ wch: 22 }, { wch: 14 }, { wch: 16 }, { wch: 14 }, { wch: 22 }, { wch: 22 }];
 
             XLSX.writeFile(workbook, `lesovik_mdo_blank_${Date.now()}.xlsx`);
         }
 
-        /* ИНЖЕНЕРНЫЙ ГИС ЭКСПОРТ В СТАНДАРТ KML */
         function downloadGIS() {
             if (!journalData.coordinates) {
                 alert("Для формирования KML файла сначала определите координаты лесосеки по GPS.");
@@ -1272,6 +1261,22 @@
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         }
+
+        window.addEventListener('lesovikDataChanged', () => {
+            if (window.LesovikCore && window.LesovikCore.isPRO()) {
+                const project = window.LesovikCore.getProject();
+                if (project.name && project.name !== journalData.name) {
+                    journalData.name = project.name;
+                    document.getElementById('tally-name').value = project.name;
+                }
+                if (project.explAreaHa && project.explAreaHa !== getExplArea()) {
+                    document.getElementById('area-ha-expl').value = project.explAreaHa;
+                    document.getElementById('strip-area-expl').value = project.explAreaHa;
+                    document.getElementById('circ-area-expl').value = project.explAreaHa;
+                    calculateResults();
+                }
+            }
+        });
 
         document.addEventListener('DOMContentLoaded', () => {
             if(journalData.name) {
