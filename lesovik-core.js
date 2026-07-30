@@ -4,8 +4,8 @@
  * Центральное ядро экосистемы «Лесовик PRO»
  * Разработка и автоматизация для таксации и отвода лесосек
  * ============================================================================
- * Версия: 2.2 (С принудительным подавлением РСЯ и нижним меню)
- * Автор / Владелец: Николай
+ * Версия: 2.3 (Гибрид: Мгновенная блокировка РСЯ + Переключатель связки)
+ * Автор / Владелец: Николай Сергеевич Худяков (ИП Худяков Н.С.)
  * Экосистема: РЕСУРС (https://resurs-stretch.ru/)
  * ============================================================================
  */
@@ -14,7 +14,92 @@
     'use strict';
 
     // ------------------------------------------------------------------------
-    // 1. КОНСТАНТЫ И НАСТРОЙКИ СИСТЕМЫ
+    // 1. ПРОВЕРКА ЛИЦЕНЗИИ И МГНОВЕННАЯ БЛОКИРОВКА РЕКЛАМЫ (ИЗ ОРИГИНАЛА)
+    // ------------------------------------------------------------------------
+    const licensedDevices = {
+        "HNS-RAL2-45TCN0": new Date(2099, 11, 31),  // Бессрочно (iPhone Яндекс)
+        "HNS-DDFW-V15MN9": new Date(2099, 11, 31),  // Бессрочно (iPhone Safari)
+        "HNS-3SBX-TQMJO7": new Date(2026, 11, 31),  // До 31 декабря 2026 (Ноутбук)
+        "HNS-MINCIFRA-TEST": new Date(2099, 11, 31),// Доступ экспертов Минцифры
+    };
+
+    function generateWebDeviceId() {
+        const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        let segment1 = '', segment2 = '';
+        for (let i = 0; i < 4; i++) segment1 += chars.charAt(Math.floor(Math.random() * chars.length));
+        for (let i = 0; i < 6; i++) segment2 += chars.charAt(Math.floor(Math.random() * chars.length));
+        return `HNS-${segment1}-${segment2}`;
+    }
+
+    function getCurrentDeviceId() {
+        if (window.device && window.device.uuid) {
+            return window.device.uuid;
+        }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const keyParam = urlParams.get('key');
+        if (keyParam) {
+            localStorage.setItem('bg_hns_web_id', keyParam);
+            return keyParam;
+        }
+
+        let webId = localStorage.getItem('bg_hns_web_id');
+        if (!webId) {
+            webId = generateWebDeviceId();
+            localStorage.setItem('bg_hns_web_id', webId);
+        }
+        return webId;
+    }
+
+    function checkLicenseStatus() {
+        const currentId = getCurrentDeviceId();
+        const now = Date.now();
+        let isBlocked = true;
+
+        if (licensedDevices.hasOwnProperty(currentId)) {
+            const expDate = licensedDevices[currentId];
+            if (now <= expDate.getTime()) {
+                isBlocked = false; // Действительная лицензия
+            }
+        }
+
+        return { isBlocked, currentId };
+    }
+
+    // МГНОВЕННЫЙ ПЕРЕХВАТ РСЯ ПРИ ЗАГРУЗКЕ СКРИПТА В HEAD
+    const globalLicenseStatus = checkLicenseStatus();
+    if (!globalLicenseStatus.isBlocked) {
+        // 1. Заглушка очереди вызовов Яндекса
+        window.yaContextCb = {
+            push: function() { return 0; }
+        };
+        // 2. Инжекция CSS-подавления до рендера DOM
+        const style = document.createElement('style');
+        style.id = 'lesovik-pro-ad-blocker';
+        style.innerHTML = `
+            .yandex-rtb-feed-container, 
+            div[id*="yandex_rtb"], 
+            div[id*="ya_context"], 
+            div[class*="floorAd"],
+            .ya-share2,
+            .rsya-block,
+            .ad-container,
+            iframe[src*="an.yandex.ru"] { 
+                display: none !important; 
+                height: 0 !important; 
+                opacity: 0 !important; 
+                pointer-events: none !important;
+            }
+        `;
+        if (document.head) {
+            document.head.appendChild(style);
+        } else {
+            document.addEventListener('DOMContentLoaded', () => document.head.appendChild(style));
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // 2. КОНСТАНТЫ И НАСТРОЙКИ СИСТЕМЫ
     // ------------------------------------------------------------------------
     const STORAGE_KEYS = {
         PRO_LICENSE: 'lesovik_pro_license_key',
@@ -23,43 +108,31 @@
         SYSTEM_MODE: 'lesovik_system_mode_enabled' // true - В связке, false - Автономно
     };
 
-    // Список 6 модулей системы
     const SYSTEM_MODULES = [
-        { id: 'busol', name: 'Буссоль', file: 'busol-pro.html', icon: '🧭' },
-        { id: 'height', name: 'Высотомер', file: 'height.html', icon: '📏' },
+        { id: 'busol', name: 'Буссоль PRO', file: 'busol-pro.html', icon: '🧭' },
+        { id: 'height', name: 'Высота', file: 'height.html', icon: '📏' },
         { id: 'diameter', name: 'Вилка', file: 'diameter.html', icon: '🌲' },
         { id: 'bitterlich', name: 'Полнотомер', file: 'bitterlich.html', icon: '👁️' },
         { id: 'journal', name: 'Перечет', file: 'journal.html', icon: '📋' },
-        { id: 'mdo', name: 'МДО и Смета', file: 'mdo.html', icon: '📊' }
+        { id: 'mdo', name: 'МДО', file: 'mdo.html', icon: '📊' }
     ];
 
     // ------------------------------------------------------------------------
-    // 2. ИНИЦИАЛИЗАЦИЯ И МЕНЕДЖЕР ПРОЕКТОВ (ПАСПОРТ ДЕЛЯНКИ)
+    // 3. ЕДИНЫЙ API LESOVIKCORE
     // ------------------------------------------------------------------------
     window.LesovikCore = {
-        version: '2.2-PRO',
+        version: '2.3-PRO',
 
-        /**
-         * Проверка наличия PRO-лицензии
-         */
         isPro: function () {
-            const license = localStorage.getItem(STORAGE_KEYS.PRO_LICENSE);
-            if (!license) return false;
-            return license.trim().length >= 8;
+            return !checkLicenseStatus().isBlocked;
         },
 
-        /**
-         * Проверка режима сквозной связки ("Системный режим")
-         */
         isSystemMode: function () {
             if (!this.isPro()) return false;
             const savedMode = localStorage.getItem(STORAGE_KEYS.SYSTEM_MODE);
             return savedMode === null ? true : JSON.parse(savedMode);
         },
 
-        /**
-         * Переключение режима (Автономно <-> В связке)
-         */
         setSystemMode: function (enabled) {
             if (!this.isPro()) {
                 console.warn('Лесовик-Core: Доступно только в PRO версии.');
@@ -70,9 +143,6 @@
             location.reload();
         },
 
-        /**
-         * Получение списка всех проектов из локальной базы
-         */
         getProjects: function () {
             try {
                 const data = localStorage.getItem(STORAGE_KEYS.PROJECTS_DB);
@@ -83,9 +153,6 @@
             }
         },
 
-        /**
-         * Сохранение базы проектов
-         */
         saveProjectsDB: function (projects) {
             try {
                 localStorage.setItem(STORAGE_KEYS.PROJECTS_DB, JSON.stringify(projects));
@@ -95,24 +162,15 @@
             }
         },
 
-        /**
-         * Получить ID текущего активного проекта
-         */
         getActiveProjectId: function () {
             return localStorage.getItem(STORAGE_KEYS.ACTIVE_PROJECT_ID);
         },
 
-        /**
-         * Установить активный проект
-         */
         setActiveProject: function (projectId) {
             localStorage.setItem(STORAGE_KEYS.ACTIVE_PROJECT_ID, projectId);
             window.dispatchEvent(new CustomEvent('lesovik:project_changed', { detail: { projectId } }));
         },
 
-        /**
-         * Получить данные активного проекта
-         */
         getActiveProject: function () {
             const projects = this.getProjects();
             const activeId = this.getActiveProjectId();
@@ -123,9 +181,6 @@
             return projects.find(p => p.id === activeId) || null;
         },
 
-        /**
-         * Создать новый проект
-         */
         createProject: function (metaData) {
             const projects = this.getProjects();
             const newProject = {
@@ -151,9 +206,6 @@
             return newProject;
         },
 
-        /**
-         * Генератор структуры выдела
-         */
         generateEmptyPlot: function (name, area) {
             return {
                 id: 'plot_' + Math.random().toString(36).substr(2, 9),
@@ -164,9 +216,6 @@
             };
         },
 
-        /**
-         * Синхронизация данных от разных модулей
-         */
         updatePlotModuleData: function (plotId, moduleKey, payload) {
             if (!this.isSystemMode()) return;
 
@@ -199,73 +248,6 @@
         },
 
         // --------------------------------------------------------------------
-        // 3. ПОДАВЛЕНИЕ РЕКЛАМЫ (РСЯ)
-        // --------------------------------------------------------------------
-        suppressAds: function () {
-            if (!this.isPro()) return;
-
-            // 1. Внедрение агрессивного CSS для уничтожения верстки РСЯ
-            const adStyles = document.createElement('style');
-            adStyles.id = 'lesovik-pro-ad-blocker';
-            adStyles.innerHTML = `
-                [id*="yandex_rtb"], 
-                [class*="yandex_rtb"], 
-                [id*="ya-pg"], 
-                .ya-share2, 
-                .rsya-block, 
-                .ad-container, 
-                div[class*="yandex"],
-                iframe[src*="an.yandex.ru"],
-                iframe[src*="yandex"] { 
-                    display: none !important; 
-                    visibility: hidden !important;
-                    height: 0 !important; 
-                    width: 0 !important;
-                    opacity: 0 !important; 
-                    pointer-events: none !important; 
-                    position: absolute !important;
-                    top: -9999px !important;
-                }
-            `;
-            if (!document.getElementById('lesovik-pro-ad-blocker')) {
-                (document.head || document.documentElement).appendChild(adStyles);
-            }
-
-            // 2. Блокировка объектных вызовов Яндекса на уровне JS
-            window.yaContextCb = window.yaContextCb || [];
-            window.Ya = window.Ya || {};
-            window.Ya.Context = {
-                AdvManager: {
-                    render: function () { return null; },
-                    destroy: function () { return null; }
-                }
-            };
-
-            // 3. Динамический зачистщик элементов РСЯ из DOM через MutationObserver
-            const removeAdNodes = () => {
-                const selectors = '[id*="yandex_rtb"], [class*="yandex_rtb"], .rsya-block, .ad-container';
-                const adNodes = document.querySelectorAll(selectors);
-                adNodes.forEach(node => {
-                    node.remove();
-                });
-            };
-
-            removeAdNodes();
-
-            const observer = new MutationObserver(() => {
-                removeAdNodes();
-            });
-
-            if (document.body) {
-                observer.observe(document.body, { childList: true, subtree: true });
-            } else {
-                document.addEventListener('DOMContentLoaded', () => {
-                    observer.observe(document.body, { childList: true, subtree: true });
-                });
-            }
-        },
-
-        // --------------------------------------------------------------------
         // 4. ОТРЕСОВКА ПРИЛИПАЮЩЕГО НИЖНЕГО МЕНЮ И ВЕРХНЕЙ ПАНЕЛИ
         // --------------------------------------------------------------------
         renderNavigationUI: function () {
@@ -282,7 +264,6 @@
                 document.body.appendChild(bottomNav);
             }
 
-            // Добавляем отступ снизу для body, чтобы нижнее меню не перекрывало подвал
             document.body.style.paddingBottom = '75px';
 
             bottomNav.style.cssText = `
@@ -302,9 +283,10 @@
             `;
 
             bottomNav.innerHTML = SYSTEM_MODULES.map(m => {
-                const isActive = currentFile === m.file;
+                const isActive = currentFile.includes(m.file.replace('.html', ''));
+                const linkHref = isPro ? `href="${m.file}"` : `href="javascript:void(0)" onclick="window.showProPromoModal()"`;
                 return `
-                    <a href="${m.file}" style="
+                    <a ${linkHref} style="
                         text-decoration: none;
                         display: flex;
                         flex-direction: column;
@@ -325,7 +307,7 @@
                 `;
             }).join('');
 
-            // 2. Встраиваем статус связки и выбор делянки в существующую шапку .glass-header
+            // 2. Встраиваем статус связки и выбор делянки в верхнюю шапку .glass-header
             const headerRight = document.querySelector('.glass-header .header-right');
             if (headerRight && !document.getElementById('lesovik-top-control-box')) {
                 const controlBox = document.createElement('div');
@@ -335,7 +317,7 @@
                 let html = '';
                 if (isPro) {
                     html += `
-                        <label style="display:inline-flex; align-items:center; cursor:pointer; background:rgba(45,90,39,0.15); padding:4px 8px; border-radius:6px; border:1px solid var(--forest-green); font-size:11px;">
+                        <label style="display:inline-flex; align-items:center; cursor:pointer; background:rgba(45,90,39,0.15); padding:4px 8px; border-radius:6px; border:1px solid var(--forest-green); font-size:11px; color:#8FBC8F;">
                             <input type="checkbox" id="lesovik-mode-toggle" ${isSystemMode ? 'checked' : ''} style="margin-right:4px;">
                             <span>${isSystemMode ? '🔗 В связке' : '⚡ Автономно'}</span>
                         </label>
@@ -355,7 +337,6 @@
                 controlBox.innerHTML = html;
                 headerRight.insertBefore(controlBox, headerRight.firstChild);
 
-                // Обработчики переключения
                 const toggleBtn = document.getElementById('lesovik-mode-toggle');
                 if (toggleBtn) {
                     toggleBtn.addEventListener('change', (e) => this.setSystemMode(e.target.checked));
@@ -374,8 +355,6 @@
         // 5. ИНИЦИАЛИЗАЦИЯ
         // --------------------------------------------------------------------
         init: function () {
-            this.suppressAds();
-
             if (this.getProjects().length === 0 && this.isPro()) {
                 this.createProject({
                     lesnichestvo: 'Важгортское уч. лесничество',
@@ -390,6 +369,44 @@
                 this.renderNavigationUI();
             }
         }
+    };
+
+    // МОДАЛЬНОЕ ОКНО ДЛЯ БЕСПЛАТНЫХ ПОЛЬЗОВАТЕЛЕЙ
+    window.showProPromoModal = function() {
+        if (document.getElementById('pro-promo-modal')) {
+            document.getElementById('pro-promo-modal').style.display = 'flex';
+            return;
+        }
+
+        const currentId = getCurrentDeviceId();
+        const modalHTML = `
+            <div id="pro-promo-modal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.75); z-index:99999; display:flex; align-items:center; justify-content:center; padding:15px; box-sizing:border-box; font-family:'Inter',sans-serif;">
+                <div style="background:#111815; color:#F9FBF9; border:1px solid #8FBC8F; border-radius:12px; max-width:500px; width:100%; padding:20px; position:relative; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                    <button onclick="document.getElementById('pro-promo-modal').style.display='none'" style="position:absolute; top:12px; right:12px; background:transparent; border:none; color:#FFF; font-size:22px; cursor:pointer;">&times;</button>
+                    <div style="text-align:center; margin-bottom:15px;">
+                        <span style="font-size:40px;">🌲</span>
+                        <h3 style="font-family:'Merriweather',serif; color:#8FBC8F; margin:8px 0 5px 0;">Единая экосистема «Лесовик PRO»</h3>
+                        <span style="font-size:11px; opacity:0.7; text-transform:uppercase;">Сквозной контекст • Бесшовная связка 6 инструментов</span>
+                    </div>
+                    <p style="font-size:12px; line-height:1.5; opacity:0.9; margin-bottom:15px; text-align:justify;">
+                        Вы используете бесплатную автономную версию калькулятора. В версии <b>PRO</b> все 6 инструментов объединяются в единую сеть: чертеж делянки, площади и породы передаются между калькуляторами без рекламы.
+                    </p>
+                    <div style="background:rgba(255,255,255,0.04); padding:12px 15px; border-radius:8px; border:1px solid rgba(143,188,143,0.25); font-size:12px; margin-bottom:15px;">
+                        <span style="display:block; font-size:10px; opacity:0.6; text-transform:uppercase; margin-bottom:6px; font-weight:bold;">Ваш ID устройства: <b style="color:#8FBC8F; font-family:monospace;">${currentId}</b></span>
+                        <div style="margin-bottom:8px;">
+                            <span style="font-weight:bold; color:#8FBC8F;">• ООО «Сателлит» (Отдел продаж):</span><br>
+                            <a href="mailto:a1983v@yandex.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none;">✉️ a1983v@yandex.ru</a>
+                        </div>
+                        <div>
+                            <span style="font-weight:bold; color:#8FBC8F;">• ИП Худяков Н.С. (Разработка):</span><br>
+                            <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; font-weight:bold; text-decoration:none;">✉️ folgoal@gmail.com</a>
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('pro-promo-modal').style.display='none'" style="width:100%; padding:10px; background:#2D5A27; color:#FFF; border:none; border-radius:6px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:12px;">Понятно, продолжить в бесплатном режиме</button>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
     };
 
     // Запуск ядра
