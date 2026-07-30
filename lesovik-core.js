@@ -4,7 +4,7 @@
  * Центральное ядро экосистемы «Лесовик PRO»
  * Разработка и автоматизация для таксации и отвода лесосек
  * ============================================================================
- * Версия: 2.1 (С прилипающим нижним меню и сквозной синхронизацией)
+ * Версия: 2.2 (С принудительным подавлением РСЯ и нижним меню)
  * Автор / Владелец: Николай
  * Экосистема: РЕСУРС (https://resurs-stretch.ru/)
  * ============================================================================
@@ -37,7 +37,7 @@
     // 2. ИНИЦИАЛИЗАЦИЯ И МЕНЕДЖЕР ПРОЕКТОВ (ПАСПОРТ ДЕЛЯНКИ)
     // ------------------------------------------------------------------------
     window.LesovikCore = {
-        version: '2.1-PRO',
+        version: '2.2-PRO',
 
         /**
          * Проверка наличия PRO-лицензии
@@ -203,15 +203,65 @@
         // --------------------------------------------------------------------
         suppressAds: function () {
             if (!this.isPro()) return;
+
+            // 1. Внедрение агрессивного CSS для уничтожения верстки РСЯ
             const adStyles = document.createElement('style');
             adStyles.id = 'lesovik-pro-ad-blocker';
             adStyles.innerHTML = `
-                [id^="yandex_rtb"], .ya-share2, .rsya-block, .ad-container, div[class*="yandex"] { 
-                    display: none !important; height: 0 !important; opacity: 0 !important; pointer-events: none !important; 
+                [id*="yandex_rtb"], 
+                [class*="yandex_rtb"], 
+                [id*="ya-pg"], 
+                .ya-share2, 
+                .rsya-block, 
+                .ad-container, 
+                div[class*="yandex"],
+                iframe[src*="an.yandex.ru"],
+                iframe[src*="yandex"] { 
+                    display: none !important; 
+                    visibility: hidden !important;
+                    height: 0 !important; 
+                    width: 0 !important;
+                    opacity: 0 !important; 
+                    pointer-events: none !important; 
+                    position: absolute !important;
+                    top: -9999px !important;
                 }
             `;
             if (!document.getElementById('lesovik-pro-ad-blocker')) {
-                document.head.appendChild(adStyles);
+                (document.head || document.documentElement).appendChild(adStyles);
+            }
+
+            // 2. Блокировка объектных вызовов Яндекса на уровне JS
+            window.yaContextCb = window.yaContextCb || [];
+            window.Ya = window.Ya || {};
+            window.Ya.Context = {
+                AdvManager: {
+                    render: function () { return null; },
+                    destroy: function () { return null; }
+                }
+            };
+
+            // 3. Динамический зачистщик элементов РСЯ из DOM через MutationObserver
+            const removeAdNodes = () => {
+                const selectors = '[id*="yandex_rtb"], [class*="yandex_rtb"], .rsya-block, .ad-container';
+                const adNodes = document.querySelectorAll(selectors);
+                adNodes.forEach(node => {
+                    node.remove();
+                });
+            };
+
+            removeAdNodes();
+
+            const observer = new MutationObserver(() => {
+                removeAdNodes();
+            });
+
+            if (document.body) {
+                observer.observe(document.body, { childList: true, subtree: true });
+            } else {
+                document.addEventListener('DOMContentLoaded', () => {
+                    observer.observe(document.body, { childList: true, subtree: true });
+                });
             }
         },
 
@@ -324,6 +374,8 @@
         // 5. ИНИЦИАЛИЗАЦИЯ
         // --------------------------------------------------------------------
         init: function () {
+            this.suppressAds();
+
             if (this.getProjects().length === 0 && this.isPro()) {
                 this.createProject({
                     lesnichestvo: 'Важгортское уч. лесничество',
@@ -331,8 +383,6 @@
                     delyanka: '12'
                 });
             }
-
-            this.suppressAds();
 
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', () => this.renderNavigationUI());
