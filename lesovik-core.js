@@ -4,7 +4,7 @@
  * Центральное ядро экосистемы «Лесовик PRO»
  * Разработка и автоматизация для таксации и отвода лесосек
  * ============================================================================
- * Версия: 2.3 (Гибрид: Мгновенная блокировка РСЯ + Переключатель связки)
+ * Версия: 2.5 (Единый попап управления «⚙️ ПРОЕКТ» + Сквозной контекст)
  * Автор / Владелец: Николай Сергеевич Худяков (ИП Худяков Н.С.)
  * Экосистема: РЕСУРС (https://resurs-stretch.ru/)
  * ============================================================================
@@ -69,11 +69,9 @@
     // МГНОВЕННЫЙ ПЕРЕХВАТ РСЯ ПРИ ЗАГРУЗКЕ СКРИПТА В HEAD
     const globalLicenseStatus = checkLicenseStatus();
     if (!globalLicenseStatus.isBlocked) {
-        // 1. Заглушка очереди вызовов Яндекса
         window.yaContextCb = {
             push: function() { return 0; }
         };
-        // 2. Инжекция CSS-подавления до рендера DOM
         const style = document.createElement('style');
         style.id = 'lesovik-pro-ad-blocker';
         style.innerHTML = `
@@ -105,7 +103,7 @@
         PRO_LICENSE: 'lesovik_pro_license_key',
         ACTIVE_PROJECT_ID: 'lesovik_active_project_id',
         PROJECTS_DB: 'lesovik_projects_database',
-        SYSTEM_MODE: 'lesovik_system_mode_enabled' // true - В связке, false - Автономно
+        SYSTEM_MODE: 'lesovik_system_mode_enabled'
     };
 
     const SYSTEM_MODULES = [
@@ -121,7 +119,7 @@
     // 3. ЕДИНЫЙ API LESOVIKCORE
     // ------------------------------------------------------------------------
     window.LesovikCore = {
-        version: '2.3-PRO',
+        version: '2.5-PRO',
 
         isPro: function () {
             return !checkLicenseStatus().isBlocked;
@@ -134,10 +132,7 @@
         },
 
         setSystemMode: function (enabled) {
-            if (!this.isPro()) {
-                console.warn('Лесовик-Core: Доступно только в PRO версии.');
-                return false;
-            }
+            if (!this.isPro()) return false;
             localStorage.setItem(STORAGE_KEYS.SYSTEM_MODE, JSON.stringify(!!enabled));
             window.dispatchEvent(new CustomEvent('lesovik:mode_changed', { detail: { systemMode: !!enabled } }));
             location.reload();
@@ -195,8 +190,7 @@
                     year: metaData.year || '2026'
                 },
                 plots: metaData.plots || [
-                    this.generateEmptyPlot('Выдел 6', 6.32),
-                    this.generateEmptyPlot('Выдел 12', 4.50)
+                    this.generateEmptyPlot('Выдел 1', 1.0)
                 ]
             };
 
@@ -248,7 +242,134 @@
         },
 
         // --------------------------------------------------------------------
-        // 4. ОТРЕСОВКА ПРИЛИПАЮЩЕГО НИЖНЕГО МЕНЮ И ВЕРХНЕЙ ПАНЕЛИ
+        // 4. ЕДИНОЕ МОДАЛЬНОЕ ОКНО УПРАВЛЕНИЯ «⚙️ ПРОЕКТ»
+        // --------------------------------------------------------------------
+        openProjectControlModal: function () {
+            let modal = document.getElementById('lesovik-project-control-modal');
+            const isPro = this.isPro();
+            const isSystemMode = this.isSystemMode();
+            const activeProject = this.getActiveProject();
+            const projects = this.getProjects();
+
+            if (!isPro) {
+                window.showProPromoModal();
+                return;
+            }
+
+            if (modal) modal.remove(); // Пересоздаем актуальное окно
+
+            const modalHTML = `
+                <div id="lesovik-project-control-modal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.8); z-index:999999; display:flex; align-items:center; justify-content:center; padding:15px; box-sizing:border-box; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                    <div style="background:#1e252b; color:#eceff1; border:1px solid #2e3b44; border-radius:12px; max-width:460px; width:100%; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,0.6); position:relative;">
+                        <button onclick="document.getElementById('lesovik-project-control-modal').style.display='none'" style="position:absolute; top:12px; right:12px; background:transparent; border:none; color:#b0bec5; font-size:22px; cursor:pointer;">&times;</button>
+                        
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:15px;">
+                            <span style="font-size:22px;">⚙️</span>
+                            <h3 style="margin:0; color:#8FBC8F; font-size:16px;">Управление проектом делянки</h3>
+                        </div>
+
+                        <!-- 1. ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМА -->
+                        <div style="background:rgba(0,0,0,0.2); padding:12px; border-radius:8px; border:1px solid #2e3b44; margin-bottom:15px;">
+                            <div style="font-size:11px; color:#b0bec5; margin-bottom:8px; font-weight:bold; text-transform:uppercase;">Режим работы системы:</div>
+                            <label style="display:flex; align-items:center; cursor:pointer; font-size:13px; color:#fff;">
+                                <input type="checkbox" id="m-system-mode-toggle" ${isSystemMode ? 'checked' : ''} style="width:18px; height:18px; margin-right:10px; accent-color:#2D5A27;">
+                                <span style="font-weight:bold;">${isSystemMode ? '🔗 В связке (Передача данных)' : '⚡ Автономно (Изолированно)'}</span>
+                            </label>
+                            <div style="font-size:10px; color:#78909c; margin-top:6px; line-height:1.3;">
+                                ${isSystemMode ? 'Данные Буссоли, Высотомера и Полнотомера автоматически собираются в МДО.' : 'Калькулятор работает отдельно, данные не сохраняются в общий паспорт.'}
+                            </div>
+                        </div>
+
+                        <!-- 2. ВЫБОР ДЕЛЯНКИ -->
+                        ${isSystemMode ? `
+                            <div style="background:rgba(0,0,0,0.2); padding:12px; border-radius:8px; border:1px solid #2e3b44; margin-bottom:15px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                    <span style="font-size:11px; color:#b0bec5; font-weight:bold; text-transform:uppercase;">Текущая делянка:</span>
+                                    <button id="m-btn-new-project" style="background:#2D5A27; color:#fff; border:none; padding:3px 8px; border-radius:4px; font-size:10px; cursor:pointer; font-weight:bold;">+ Создать делянку</button>
+                                </div>
+
+                                <select id="m-project-select" style="width:100%; background:#111815; color:#8FBC8F; border:1px solid #2e3b44; padding:8px; border-radius:6px; font-size:12px; font-weight:bold; margin-bottom:10px;">
+                                    ${projects.map(p => `
+                                        <option value="${p.id}" ${activeProject && p.id === activeProject.id ? 'selected' : ''}>
+                                            Кв. ${p.passport.kvartal}, Д. ${p.passport.delyanka} (${p.passport.lesnichestvo})
+                                        </option>
+                                    `).join('')}
+                                </select>
+
+                                ${activeProject ? `
+                                    <div style="font-size:11px; color:#cfd8dc; background:rgba(255,255,255,0.03); padding:8px; border-radius:4px; line-height:1.4;">
+                                        <b>Цель:</b> ${activeProject.passport.target}<br>
+                                        <b>Выделов в базе:</b> ${activeProject.plots.length} шт.<br>
+                                        <b>Общая S:</b> ${activeProject.plots.reduce((acc, p) => acc + (p.area || 0), 0).toFixed(2)} га
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+
+                        <!-- ФОРМА СОЗДАНИЯ СОВА (СКРЫТАЯ) -->
+                        <div id="m-create-form" style="display:none; background:rgba(45,90,39,0.1); padding:12px; border-radius:8px; border:1px solid var(--forest-green, #2D5A27); margin-bottom:15px;">
+                            <div style="font-size:11px; color:#8FBC8F; font-weight:bold; margin-bottom:8px;">Новый паспорт объекта:</div>
+                            <input type="text" id="m-new-les" placeholder="Участковое лесничество" value="${activeProject ? activeProject.passport.lesnichestvo : 'Важгортское уч. лесничество'}" style="width:100%; background:#111815; border:1px solid #2e3b44; color:#fff; padding:6px; border-radius:4px; font-size:11px; margin-bottom:6px; box-sizing:border-box;">
+                            <div style="display:flex; gap:6px; margin-bottom:6px;">
+                                <input type="text" id="m-new-kv" placeholder="№ Квартала" style="flex:1; background:#111815; border:1px solid #2e3b44; color:#fff; padding:6px; border-radius:4px; font-size:11px; box-sizing:border-box;">
+                                <input type="text" id="m-new-del" placeholder="№ Делянки" style="flex:1; background:#111815; border:1px solid #2e3b44; color:#fff; padding:6px; border-radius:4px; font-size:11px; box-sizing:border-box;">
+                            </div>
+                            <input type="text" id="m-new-target" placeholder="Вид мероприятия" value="Сплошная рубка" style="width:100%; background:#111815; border:1px solid #2e3b44; color:#fff; padding:6px; border-radius:4px; font-size:11px; margin-bottom:8px; box-sizing:border-box;">
+                            <button id="m-save-new-project-btn" style="width:100%; background:#2D5A27; color:#fff; border:none; padding:7px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">Сохранить и сделать активной</button>
+                        </div>
+
+                        <div style="display:flex; justify-content:flex-end;">
+                            <button onclick="document.getElementById('lesovik-project-control-modal').style.display='none'" style="background:#37474f; border:none; color:#fff; padding:7px 16px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:bold;">Закрыть</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+            // Навешивание событий на элементы попапа
+            document.getElementById('m-system-mode-toggle').addEventListener('change', (e) => {
+                this.setSystemMode(e.target.checked);
+            });
+
+            const sel = document.getElementById('m-project-select');
+            if (sel) {
+                sel.addEventListener('change', (e) => {
+                    this.setActiveProject(e.target.value);
+                    location.reload();
+                });
+            }
+
+            const btnNew = document.getElementById('m-btn-new-project');
+            if (btnNew) {
+                btnNew.addEventListener('click', () => {
+                    const form = document.getElementById('m-create-form');
+                    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+                });
+            }
+
+            const saveBtn = document.getElementById('m-save-new-project-btn');
+            if (saveBtn) {
+                saveBtn.addEventListener('click', () => {
+                    const les = document.getElementById('m-new-les').value;
+                    const kv = document.getElementById('m-new-kv').value || '1';
+                    const del = document.getElementById('m-new-del').value || '1';
+                    const target = document.getElementById('m-new-target').value;
+
+                    this.createProject({
+                        lesnichestvo: les,
+                        kvartal: kv,
+                        delyanka: del,
+                        target: target
+                    });
+
+                    location.reload();
+                });
+            }
+        },
+
+        // --------------------------------------------------------------------
+        // 5. ОТРЕСОВКА ПРИЛИПАЮЩЕГО НИЖНЕГО МЕНЮ И КНОПКИ ШАПКИ
         // --------------------------------------------------------------------
         renderNavigationUI: function () {
             const currentFile = window.location.pathname.split('/').pop() || 'busol-pro.html';
@@ -307,52 +428,39 @@
                 `;
             }).join('');
 
-            // 2. Встраиваем статус связки и выбор делянки в верхнюю шапку .glass-header
+            // 2. Добавляем АКУРАТНУЮ ЕДИНСТВЕННУЮ КНОПКУ «[ ⚙️ ПРОЕКТ ]» В ШАПКУ
             const headerRight = document.querySelector('.glass-header .header-right');
-            if (headerRight && !document.getElementById('lesovik-top-control-box')) {
-                const controlBox = document.createElement('div');
-                controlBox.id = 'lesovik-top-control-box';
-                controlBox.style.cssText = 'display:flex; align-items:center; gap:8px; font-size:12px; margin-right:8px;';
+            if (headerRight && !document.getElementById('lesovik-project-btn-trigger')) {
+                const btnTrigger = document.createElement('button');
+                btnTrigger.id = 'lesovik-project-btn-trigger';
+                btnTrigger.style.cssText = `
+                    background: rgba(45, 90, 39, 0.25);
+                    border: 1px solid #2D5A27;
+                    color: #8FBC8F;
+                    padding: 5px 10px;
+                    border-radius: 6px;
+                    font-size: 11px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    margin-right: 8px;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                `;
+                
+                const projLabel = (isPro && isSystemMode && activeProject) 
+                    ? `Кв.${activeProject.passport.kvartal}` 
+                    : 'ПРОЕКТ';
 
-                let html = '';
-                if (isPro) {
-                    html += `
-                        <label style="display:inline-flex; align-items:center; cursor:pointer; background:rgba(45,90,39,0.15); padding:4px 8px; border-radius:6px; border:1px solid var(--forest-green); font-size:11px; color:#8FBC8F;">
-                            <input type="checkbox" id="lesovik-mode-toggle" ${isSystemMode ? 'checked' : ''} style="margin-right:4px;">
-                            <span>${isSystemMode ? '🔗 В связке' : '⚡ Автономно'}</span>
-                        </label>
-                    `;
-                    if (isSystemMode && activeProject) {
-                        html += `
-                            <select id="lesovik-project-select" style="background:var(--card-bg); color:var(--text-graphite); border:1px solid var(--border-color); padding:4px; border-radius:6px; font-size:11px; max-width:130px;">
-                                ${this.getProjects().map(p => `
-                                    <option value="${p.id}" ${p.id === activeProject.id ? 'selected' : ''}>
-                                        Кв.${p.passport.kvartal}, Д.${p.passport.delyanka}
-                                    </option>
-                                `).join('')}
-                            </select>
-                        `;
-                    }
-                }
-                controlBox.innerHTML = html;
-                headerRight.insertBefore(controlBox, headerRight.firstChild);
+                btnTrigger.innerHTML = `⚙️ ${projLabel}`;
+                btnTrigger.addEventListener('click', () => this.openProjectControlModal());
 
-                const toggleBtn = document.getElementById('lesovik-mode-toggle');
-                if (toggleBtn) {
-                    toggleBtn.addEventListener('change', (e) => this.setSystemMode(e.target.checked));
-                }
-                const projectSelect = document.getElementById('lesovik-project-select');
-                if (projectSelect) {
-                    projectSelect.addEventListener('change', (e) => {
-                        this.setActiveProject(e.target.value);
-                        location.reload();
-                    });
-                }
+                headerRight.insertBefore(btnTrigger, headerRight.firstChild);
             }
         },
 
         // --------------------------------------------------------------------
-        // 5. ИНИЦИАЛИЗАЦИЯ
+        // 6. ИНИЦИАЛИЗАЦИЯ
         // --------------------------------------------------------------------
         init: function () {
             if (this.getProjects().length === 0 && this.isPro()) {
