@@ -126,7 +126,7 @@
             display: flex; flex-direction: column;
             min-height: 100vh;
             -webkit-tap-highlight-color: transparent;
-            padding-bottom: 70px !important; /* Отступ под нижнюю навигацию */
+            padding-bottom: 75px !important;
         }
 
         /* МАТОВАЯ ЕДИНАЯ ШАПКА С ЭФФЕКТОМ СТЕКЛА */
@@ -159,6 +159,29 @@
         .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 4px 4px 0px rgba(0,0,0,0.02); transition: background-color 0.3s, border-color 0.3s; }
         h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 22px; margin-bottom: 20px; }
 
+        /* СТРОКА СТАТУСА СВЯЗКИ LESOVIKCORE */
+        .project-context-bar {
+            background: rgba(45, 90, 39, 0.08);
+            border: 1px solid var(--forest-green);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+        .project-context-bar .proj-title { font-weight: bold; color: var(--forest-green); }
+        .project-context-bar .mode-badge {
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .badge-linked { background: rgba(45, 90, 39, 0.2); color: var(--forest-green); }
+        .badge-standalone { background: rgba(255, 167, 38, 0.2); color: #E65100; }
+
         .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         @media (max-width: 600px) { .settings-grid { grid-template-columns: 1fr; gap: 15px; } }
 
@@ -182,7 +205,7 @@
         .btn-add-probe:hover { background: var(--forest-green); color: white; }
         .btn-del-probe { border: none; background: transparent; color: var(--danger); cursor: pointer; font-weight: bold; font-size: 14px; padding: 0 2px; }
 
-        /* ИНТЕРФЕЙС ТОЧКОВКИ 2.0 (СУБ-КОЛОНКИ ДЛЯ ПОЛЕВОЙ СРЕДЫ) */
+        /* ИНТЕРФЕЙС ТОЧКОВКИ 2.0 */
         .tally-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-top: 20px; }
         .tally-btn { background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; user-select: none; transition: all 0.2s; padding-bottom: 8px; }
         .tally-btn.active { border-color: var(--forest-green); box-shadow: 4px 4px 0px rgba(45, 90, 39, 0.08); }
@@ -237,7 +260,7 @@
         .archive-item-title { font-weight: 600; font-size: 14px; }
         .archive-item-meta { font-size: 12px; color: gray; margin-top: 2px; }
 
-        /* МОДАЛЬНОЕ ОКНО (ПОПАП) */
+        /* МОДАЛЬНОЕ ОКНО */
         .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; box-sizing: border-box; }
         .popup-overlay.active { display: flex; }
         .popup-content { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; max-width: 700px; width: 100%; padding: 24px; max-height: 85vh; overflow-y: auto; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
@@ -245,7 +268,7 @@
         .btn-delete-archive { background: var(--danger); border: none; color: white; padding: 10px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; margin-top: 20px; text-transform: uppercase; float: right; }
         .btn-restore-archive { background: var(--info); border: none; color: white; padding: 10px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; margin-top: 20px; text-transform: uppercase; float: left; margin-right: 10px; }
 
-        /* ОТКРЫТЫЙ СЕО БЛОК ДЛЯ ТАКСАТОРОВ */
+        /* СЕО БЛОК */
         .seo-info-section { margin-top: 40px; padding-top: 30px; border-top: 2px solid var(--border-color); color: var(--text-graphite); opacity: 0.85; }
         .seo-info-section h3 { font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 18px; margin-top: 25px; margin-bottom: 10px; }
         .seo-info-section p { font-size: 14px; line-height: 1.7; margin-bottom: 15px; text-align: justify; }
@@ -279,6 +302,15 @@
 
     <main class="container">
         
+        <!-- СТРОКА СТАТУСА СВЯЗКИ LESOVIKCORE -->
+        <div class="project-context-bar" id="project-context-bar">
+            <div>
+                <span style="opacity:0.7;">Активный объект:</span>
+                <span class="proj-title" id="ctx-project-name">Загрузка объекта...</span>
+            </div>
+            <span id="ctx-mode-badge" class="mode-badge badge-standalone">⚡ Автономно</span>
+        </div>
+        
         <div class="card">
             <h2>Параметры инвентаризации лесосеки</h2>
             
@@ -305,7 +337,7 @@
                 </div>
             </div>
 
-            <!-- РАЗДЕЛЕНИЕ ПЛОЩАДЕЙ ДЛЯ ПРАВИЛЬНОЙ МДО ТАКСАЦИИ -->
+            <!-- РАЗДЕЛЕНИЕ ПЛОЩАДЕЙ -->
             <div id="block-continuous" class="conditional-block active">
                 <div class="settings-grid">
                     <div>
@@ -484,7 +516,6 @@
     </footer>
 
     <script>
-        // ГЛУБОКАЯ ИНИЦИАЛИЗАЦИЯ ЖУРНАЛА ТАКСАТОРОВ 2.0 (ДЕЛОСЛАГАЕМАЯ СТРУКТУРА)
         let journalData = JSON.parse(localStorage.getItem('lesovik_tally_v3')) || {
             name: '',
             coordinates: null,
@@ -507,7 +538,33 @@
 
         let archiveData = JSON.parse(localStorage.getItem('lesovik_archive_v3')) || [];
         const diameters = [8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64];
-        const speciesKeysList = ['Сосна', 'Ель', 'Береза', 'Осина', 'Лиственница', 'Тополь', 'Дуб'];
+
+        function updateProjectContextDisplay() {
+            if (!window.LesovikCore) return;
+
+            const isSystemMode = window.LesovikCore.isSystemMode();
+            const activeProj = window.LesovikCore.getActiveProject();
+            
+            const badgeEl = document.getElementById('ctx-mode-badge');
+            const projTitleEl = document.getElementById('ctx-project-name');
+
+            if (isSystemMode && activeProj) {
+                const p = activeProj.passport;
+                projTitleEl.innerText = `${p.lesnichestvo || 'Лесничество'}, кв. ${p.kvartal || '-'}, дел. ${p.delyanka || '-'}`;
+                badgeEl.innerText = '🔗 В СВЯЗКЕ';
+                badgeEl.className = 'mode-badge badge-linked';
+
+                // Если имя в локальном журнале пустое, берём из паспорта ядра
+                if (!journalData.name) {
+                    journalData.name = `${p.lesnichestvo || ''} кв.${p.kvartal || ''} дел.${p.delyanka || ''}`.trim();
+                    document.getElementById('tally-name').value = journalData.name;
+                }
+            } else {
+                projTitleEl.innerText = 'Автономный режим (Локальный замер)';
+                badgeEl.innerText = '⚡ Автономно';
+                badgeEl.className = 'mode-badge badge-standalone';
+            }
+        }
 
         function toggleTheme() {
             const body = document.documentElement;
@@ -525,11 +582,17 @@
 
         function saveData() {
             localStorage.setItem('lesovik_tally_v3', JSON.stringify(journalData));
-            if (window.LesovikCore && typeof window.LesovikCore.saveProject === 'function') {
-                window.LesovikCore.saveProject({
-                    name: journalData.name,
-                    explAreaHa: getExplArea()
-                });
+            
+            // Синхронизация с единым ядром LesovikCore
+            if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
+                const activeProj = window.LesovikCore.getActiveProject();
+                if (activeProj && activeProj.plots && activeProj.plots.length > 0) {
+                    const plotId = activeProj.plots[0].id;
+                    window.LesovikCore.updatePlotModuleData(plotId, 'tally', {
+                        name: journalData.name,
+                        tallyData: journalData
+                    });
+                }
             }
         }
 
@@ -1263,22 +1326,14 @@
         }
 
         window.addEventListener('lesovikDataChanged', () => {
-            if (window.LesovikCore && window.LesovikCore.isPRO()) {
-                const project = window.LesovikCore.getProject();
-                if (project.name && project.name !== journalData.name) {
-                    journalData.name = project.name;
-                    document.getElementById('tally-name').value = project.name;
-                }
-                if (project.explAreaHa && project.explAreaHa !== getExplArea()) {
-                    document.getElementById('area-ha-expl').value = project.explAreaHa;
-                    document.getElementById('strip-area-expl').value = project.explAreaHa;
-                    document.getElementById('circ-area-expl').value = project.explAreaHa;
-                    calculateResults();
-                }
+            if (window.LesovikCore) {
+                updateProjectContextDisplay();
             }
         });
 
         document.addEventListener('DOMContentLoaded', () => {
+            updateProjectContextDisplay();
+
             if(journalData.name) {
                 document.getElementById('tally-name').value = journalData.name;
             }
