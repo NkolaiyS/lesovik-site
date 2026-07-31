@@ -4,7 +4,7 @@
  * Центральное ядро экосистемы «Лесовик PRO»
  * Разработка и автоматизация для таксации и отвода лесосек
  * ============================================================================
- * Версия: 2.6 (Оптимизированный переключатель связки + Пояснения для таксатора)
+ * Версия: 2.6.1 (Строгое разделение PRO / Реклама РСЯ)
  * Автор / Владелец: Николай Сергеевич Худяков (ИП Худяков Н.С.)
  * Экосистема: РЕСУРС (https://resurs-stretch.ru/)
  * ============================================================================
@@ -14,7 +14,7 @@
     'use strict';
 
     // ------------------------------------------------------------------------
-    // 1. ПРОВЕРКА ЛИЦЕНЗИИ И МГНОВЕННАЯ БЛОКИРОВКА РЕКЛАМЫ (ИЗ ОРИГИНАЛА)
+    // 1. ПРОВЕРКА ЛИЦЕНЗИИ И СТРОГИЙ КОНТРОЛЬ РЕКЛАМЫ (РСЯ)
     // ------------------------------------------------------------------------
     const licensedDevices = {
         "HNS-RAL2-45TCN0": new Date(2099, 11, 31),  // Бессрочно (iPhone Яндекс)
@@ -54,45 +54,53 @@
     function checkLicenseStatus() {
         const currentId = getCurrentDeviceId();
         const now = Date.now();
-        let isBlocked = true;
-
+        
         if (licensedDevices.hasOwnProperty(currentId)) {
             const expDate = licensedDevices[currentId];
             if (now <= expDate.getTime()) {
-                isBlocked = false; // Действительная лицензия
+                return { isPro: true, currentId }; // Лицензия активна
             }
         }
-
-        return { isBlocked, currentId };
+        return { isPro: false, currentId }; // Бесплатный режим
     }
 
-    // МГНОВЕННЫЙ ПЕРЕХВАТ РСЯ ПРИ ЗАГРУЗКЕ СКРИПТА В HEAD
-    const globalLicenseStatus = checkLicenseStatus();
-    if (!globalLicenseStatus.isBlocked) {
+    // БЛОКИРУЕМ РЕКЛАМУ ТОЛЬКО ДЛЯ PRO-ПОЛЬЗОВАТЕЛЕЙ
+    const globalAuth = checkLicenseStatus();
+
+    if (globalAuth.isPro) {
+        // Заглушка для вызовов Яндекса
         window.yaContextCb = {
             push: function() { return 0; }
         };
-        const style = document.createElement('style');
-        style.id = 'lesovik-pro-ad-blocker';
-        style.innerHTML = `
-            .yandex-rtb-feed-container, 
-            div[id*="yandex_rtb"], 
-            div[id*="ya_context"], 
-            div[class*="floorAd"],
-            .ya-share2,
-            .rsya-block,
-            .ad-container,
-            iframe[src*="an.yandex.ru"] { 
-                display: none !important; 
-                height: 0 !important; 
-                opacity: 0 !important; 
-                pointer-events: none !important;
+        
+        // Внедряем CSS-блокировщик только лицензированным устройствам
+        const applyAdBlock = () => {
+            if (!document.getElementById('lesovik-pro-ad-blocker')) {
+                const style = document.createElement('style');
+                style.id = 'lesovik-pro-ad-blocker';
+                style.innerHTML = `
+                    .yandex-rtb-feed-container, 
+                    div[id*="yandex_rtb"], 
+                    div[id*="ya_context"], 
+                    div[class*="floorAd"],
+                    .ya-share2,
+                    .rsya-block,
+                    .ad-container,
+                    iframe[src*="an.yandex.ru"] { 
+                        display: none !important; 
+                        height: 0 !important; 
+                        opacity: 0 !important; 
+                        pointer-events: none !important;
+                    }
+                `;
+                document.head.appendChild(style);
             }
-        `;
+        };
+
         if (document.head) {
-            document.head.appendChild(style);
+            applyAdBlock();
         } else {
-            document.addEventListener('DOMContentLoaded', () => document.head.appendChild(style));
+            document.addEventListener('DOMContentLoaded', applyAdBlock);
         }
     }
 
@@ -119,10 +127,10 @@
     // 3. ЕДИНЫЙ API LESOVIKCORE
     // ------------------------------------------------------------------------
     window.LesovikCore = {
-        version: '2.6-PRO',
+        version: '2.6.1-PRO',
 
         isPro: function () {
-            return !checkLicenseStatus().isBlocked;
+            return checkLicenseStatus().isPro;
         },
 
         isSystemMode: function () {
@@ -369,7 +377,7 @@
             }).join('');
 
             // 2. Добавляем ЕДИНСТВЕННУЮ КНОПКУ «[ ⚙️ ПРОЕКТ ]» В ШАПКУ
-            const headerRight = document.querySelector('.glass-header .header-right');
+            const headerRight = document.querySelector('.glass-header .header-right') || document.querySelector('.header .header-right');
             if (headerRight && !document.getElementById('lesovik-project-btn-trigger')) {
                 const btnTrigger = document.createElement('button');
                 btnTrigger.id = 'lesovik-project-btn-trigger';
