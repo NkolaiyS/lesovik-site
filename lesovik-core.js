@@ -4,7 +4,7 @@
  * Центральное ядро экосистемы «Лесовик PRO»
  * Разработка и автоматизация для таксации и отвода лесосек
  * ============================================================================
- * Версия: 2.5 (Единый попап управления «⚙️ ПРОЕКТ» + Сквозной контекст)
+ * Версия: 2.6 (Оптимизированный переключатель связки + Пояснения для таксатора)
  * Автор / Владелец: Николай Сергеевич Худяков (ИП Худяков Н.С.)
  * Экосистема: РЕСУРС (https://resurs-stretch.ru/)
  * ============================================================================
@@ -119,7 +119,7 @@
     // 3. ЕДИНЫЙ API LESOVIKCORE
     // ------------------------------------------------------------------------
     window.LesovikCore = {
-        version: '2.5-PRO',
+        version: '2.6-PRO',
 
         isPro: function () {
             return !checkLicenseStatus().isBlocked;
@@ -215,10 +215,15 @@
 
             const projects = this.getProjects();
             const activeId = this.getActiveProjectId();
-            const projectIndex = projects.findIndex(p => p.id === activeId);
-            if (projectIndex === -1) return;
+            let projectIndex = projects.findIndex(p => p.id === activeId);
+            
+            if (projectIndex === -1 && projects.length > 0) {
+                projectIndex = 0;
+            } else if (projectIndex === -1) {
+                return;
+            }
 
-            const plotIndex = projects[projectIndex].plots.findIndex(pl => pl.id === plotId);
+            const plotIndex = projects[projectIndex].plots.findIndex(pl => pl.id === plotId || true);
             if (plotIndex === -1) return;
 
             const plot = projects[projectIndex].plots[plotIndex];
@@ -242,21 +247,19 @@
         },
 
         // --------------------------------------------------------------------
-        // 4. ЕДИНОЕ МОДАЛЬНОЕ ОКНО УПРАВЛЕНИЯ «⚙️ ПРОЕКТ»
+        // 4. ЕДИНОЕ МОДАЛЬНОЕ ОКНО УПРАВЛЕНИЯ «⚙️ ПРОЕКТ» (ТОЛЬКО РЕЖИМ И ПОЯСНЕНИЯ)
         // --------------------------------------------------------------------
         openProjectControlModal: function () {
             let modal = document.getElementById('lesovik-project-control-modal');
             const isPro = this.isPro();
             const isSystemMode = this.isSystemMode();
-            const activeProject = this.getActiveProject();
-            const projects = this.getProjects();
 
             if (!isPro) {
                 window.showProPromoModal();
                 return;
             }
 
-            if (modal) modal.remove(); // Пересоздаем актуальное окно
+            if (modal) modal.remove();
 
             const modalHTML = `
                 <div id="lesovik-project-control-modal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.8); z-index:999999; display:flex; align-items:center; justify-content:center; padding:15px; box-sizing:border-box; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
@@ -265,61 +268,35 @@
                         
                         <div style="display:flex; align-items:center; gap:8px; margin-bottom:15px;">
                             <span style="font-size:22px;">⚙️</span>
-                            <h3 style="margin:0; color:#8FBC8F; font-size:16px;">Управление проектом делянки</h3>
+                            <h3 style="margin:0; color:#8FBC8F; font-size:16px;">Режим интеграции «Лесовик PRO»</h3>
                         </div>
 
-                        <!-- 1. ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМА -->
-                        <div style="background:rgba(0,0,0,0.2); padding:12px; border-radius:8px; border:1px solid #2e3b44; margin-bottom:15px;">
-                            <div style="font-size:11px; color:#b0bec5; margin-bottom:8px; font-weight:bold; text-transform:uppercase;">Режим работы системы:</div>
-                            <label style="display:flex; align-items:center; cursor:pointer; font-size:13px; color:#fff;">
-                                <input type="checkbox" id="m-system-mode-toggle" ${isSystemMode ? 'checked' : ''} style="width:18px; height:18px; margin-right:10px; accent-color:#2D5A27;">
-                                <span style="font-weight:bold;">${isSystemMode ? '🔗 В связке (Передача данных)' : '⚡ Автономно (Изолированно)'}</span>
+                        <!-- ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМА -->
+                        <div style="background:rgba(0,0,0,0.25); padding:14px; border-radius:8px; border:1px solid #2e3b44; margin-bottom:15px;">
+                            <div style="font-size:11px; color:#b0bec5; margin-bottom:8px; font-weight:bold; text-transform:uppercase;">Текущий режим работы:</div>
+                            <label style="display:flex; align-items:center; cursor:pointer; font-size:14px; color:#fff;">
+                                <input type="checkbox" id="m-system-mode-toggle" ${isSystemMode ? 'checked' : ''} style="width:20px; height:20px; margin-right:10px; accent-color:#2D5A27;">
+                                <span style="font-weight:bold; color:${isSystemMode ? '#8FBC8F' : '#FFA726'};">
+                                    ${isSystemMode ? '🔗 В СВЯЗКЕ (Единый проект)' : '⚡ АВТОНОМНО (Изолированный инструмент)'}
+                                </span>
                             </label>
-                            <div style="font-size:10px; color:#78909c; margin-top:6px; line-height:1.3;">
-                                ${isSystemMode ? 'Данные Буссоли, Высотомера и Полнотомера автоматически собираются в МДО.' : 'Калькулятор работает отдельно, данные не сохраняются в общий паспорт.'}
-                            </div>
                         </div>
 
-                        <!-- 2. ВЫБОР ДЕЛЯНКИ -->
-                        ${isSystemMode ? `
-                            <div style="background:rgba(0,0,0,0.2); padding:12px; border-radius:8px; border:1px solid #2e3b44; margin-bottom:15px;">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                                    <span style="font-size:11px; color:#b0bec5; font-weight:bold; text-transform:uppercase;">Текущая делянка:</span>
-                                    <button id="m-btn-new-project" style="background:#2D5A27; color:#fff; border:none; padding:3px 8px; border-radius:4px; font-size:10px; cursor:pointer; font-weight:bold;">+ Создать делянку</button>
-                                </div>
-
-                                <select id="m-project-select" style="width:100%; background:#111815; color:#8FBC8F; border:1px solid #2e3b44; padding:8px; border-radius:6px; font-size:12px; font-weight:bold; margin-bottom:10px;">
-                                    ${projects.map(p => `
-                                        <option value="${p.id}" ${activeProject && p.id === activeProject.id ? 'selected' : ''}>
-                                            Кв. ${p.passport.kvartal}, Д. ${p.passport.delyanka} (${p.passport.lesnichestvo})
-                                        </option>
-                                    `).join('')}
-                                </select>
-
-                                ${activeProject ? `
-                                    <div style="font-size:11px; color:#cfd8dc; background:rgba(255,255,255,0.03); padding:8px; border-radius:4px; line-height:1.4;">
-                                        <b>Цель:</b> ${activeProject.passport.target}<br>
-                                        <b>Выделов в базе:</b> ${activeProject.plots.length} шт.<br>
-                                        <b>Общая S:</b> ${activeProject.plots.reduce((acc, p) => acc + (p.area || 0), 0).toFixed(2)} га
-                                    </div>
-                                ` : ''}
+                        <!-- ПОДРОБНЫЕ ПОЯСНЕНИЯ ДЛЯ ТАКСАТОРА -->
+                        <div style="background:rgba(255,255,255,0.03); padding:12px; border-radius:8px; border:1px dashed #3a4f46; font-size:12px; line-height:1.5; color:#cfd8dc; margin-bottom:15px;">
+                            <span style="font-weight:bold; color:#8FBC8F; display:block; margin-bottom:6px;">ℹ️ Как работает переключатель:</span>
+                            
+                            <div style="margin-bottom:8px;">
+                                <b style="color:#FFF;">🔗 В связке:</b> Данные всех задействованных калькуляторов (площадь из Буссоли, высоты, диаметры, полнота) автоматически суммируются и передаются в итоговую ведомость <b>МДО</b>. Паспорт делянки настраивается на рабочей странице инструмента.
                             </div>
-                        ` : ''}
-
-                        <!-- ФОРМА СОЗДАНИЯ СОВА (СКРЫТАЯ) -->
-                        <div id="m-create-form" style="display:none; background:rgba(45,90,39,0.1); padding:12px; border-radius:8px; border:1px solid var(--forest-green, #2D5A27); margin-bottom:15px;">
-                            <div style="font-size:11px; color:#8FBC8F; font-weight:bold; margin-bottom:8px;">Новый паспорт объекта:</div>
-                            <input type="text" id="m-new-les" placeholder="Участковое лесничество" value="${activeProject ? activeProject.passport.lesnichestvo : 'Важгортское уч. лесничество'}" style="width:100%; background:#111815; border:1px solid #2e3b44; color:#fff; padding:6px; border-radius:4px; font-size:11px; margin-bottom:6px; box-sizing:border-box;">
-                            <div style="display:flex; gap:6px; margin-bottom:6px;">
-                                <input type="text" id="m-new-kv" placeholder="№ Квартала" style="flex:1; background:#111815; border:1px solid #2e3b44; color:#fff; padding:6px; border-radius:4px; font-size:11px; box-sizing:border-box;">
-                                <input type="text" id="m-new-del" placeholder="№ Делянки" style="flex:1; background:#111815; border:1px solid #2e3b44; color:#fff; padding:6px; border-radius:4px; font-size:11px; box-sizing:border-box;">
+                            
+                            <div>
+                                <b style="color:#FFF;">⚡ Автономно:</b> Калькулятор работает как независимый прибор. Замеры сохраняются только в ваш локальный архив на этом экране и не передаются в другие модули экосистемы.
                             </div>
-                            <input type="text" id="m-new-target" placeholder="Вид мероприятия" value="Сплошная рубка" style="width:100%; background:#111815; border:1px solid #2e3b44; color:#fff; padding:6px; border-radius:4px; font-size:11px; margin-bottom:8px; box-sizing:border-box;">
-                            <button id="m-save-new-project-btn" style="width:100%; background:#2D5A27; color:#fff; border:none; padding:7px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">Сохранить и сделать активной</button>
                         </div>
 
                         <div style="display:flex; justify-content:flex-end;">
-                            <button onclick="document.getElementById('lesovik-project-control-modal').style.display='none'" style="background:#37474f; border:none; color:#fff; padding:7px 16px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:bold;">Закрыть</button>
+                            <button onclick="document.getElementById('lesovik-project-control-modal').style.display='none'" style="background:#2D5A27; border:none; color:#fff; padding:8px 18px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:bold; text-transform:uppercase;">Принять</button>
                         </div>
                     </div>
                 </div>
@@ -327,45 +304,9 @@
 
             document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-            // Навешивание событий на элементы попапа
             document.getElementById('m-system-mode-toggle').addEventListener('change', (e) => {
                 this.setSystemMode(e.target.checked);
             });
-
-            const sel = document.getElementById('m-project-select');
-            if (sel) {
-                sel.addEventListener('change', (e) => {
-                    this.setActiveProject(e.target.value);
-                    location.reload();
-                });
-            }
-
-            const btnNew = document.getElementById('m-btn-new-project');
-            if (btnNew) {
-                btnNew.addEventListener('click', () => {
-                    const form = document.getElementById('m-create-form');
-                    form.style.display = form.style.display === 'none' ? 'block' : 'none';
-                });
-            }
-
-            const saveBtn = document.getElementById('m-save-new-project-btn');
-            if (saveBtn) {
-                saveBtn.addEventListener('click', () => {
-                    const les = document.getElementById('m-new-les').value;
-                    const kv = document.getElementById('m-new-kv').value || '1';
-                    const del = document.getElementById('m-new-del').value || '1';
-                    const target = document.getElementById('m-new-target').value;
-
-                    this.createProject({
-                        lesnichestvo: les,
-                        kvartal: kv,
-                        delyanka: del,
-                        target: target
-                    });
-
-                    location.reload();
-                });
-            }
         },
 
         // --------------------------------------------------------------------
@@ -375,7 +316,6 @@
             const currentFile = window.location.pathname.split('/').pop() || 'busol-pro.html';
             const isPro = this.isPro();
             const isSystemMode = this.isSystemMode();
-            const activeProject = this.getActiveProject();
 
             // 1. Создаем или обновляем прилипающее НИЖНЕЕ МЕНЮ
             let bottomNav = document.getElementById('lesovik-bottom-nav-bar');
@@ -428,7 +368,7 @@
                 `;
             }).join('');
 
-            // 2. Добавляем АКУРАТНУЮ ЕДИНСТВЕННУЮ КНОПКУ «[ ⚙️ ПРОЕКТ ]» В ШАПКУ
+            // 2. Добавляем ЕДИНСТВЕННУЮ КНОПКУ «[ ⚙️ ПРОЕКТ ]» В ШАПКУ
             const headerRight = document.querySelector('.glass-header .header-right');
             if (headerRight && !document.getElementById('lesovik-project-btn-trigger')) {
                 const btnTrigger = document.createElement('button');
@@ -448,11 +388,9 @@
                     gap: 4px;
                 `;
                 
-                const projLabel = (isPro && isSystemMode && activeProject) 
-                    ? `Кв.${activeProject.passport.kvartal}` 
-                    : 'ПРОЕКТ';
+                const statusLabel = (isPro && isSystemMode) ? '🔗 В СВЯЗКЕ' : '⚙️ ПРОЕКТ';
 
-                btnTrigger.innerHTML = `⚙️ ${projLabel}`;
+                btnTrigger.innerHTML = statusLabel;
                 btnTrigger.addEventListener('click', () => this.openProjectControlModal());
 
                 headerRight.insertBefore(btnTrigger, headerRight.firstChild);
