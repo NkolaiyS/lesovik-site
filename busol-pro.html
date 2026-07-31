@@ -1612,11 +1612,16 @@
 
         document.getElementById('area-display').innerText = `Площадь: ${areaHa.toFixed(4)} га (${Math.round(area)} м²)`;
 
-        // Автоматическая передача рассчитанной площади в единое ядро LesovikCore
-        if (window.LesovikCore && window.LesovikCore.getProject) {
-            const proj = window.LesovikCore.getProject();
-            proj.explAreaHa = parseFloat(areaHa.toFixed(4));
-            window.LesovikCore.saveProject(proj);
+        // АВТОМАТИЧЕСКАЯ СИНХРОНИЗАЦИЯ С ЛЕСОВИК-PRO (Если включен режим «В связке»)
+        if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
+            const activeProject = window.LesovikCore.getActiveProject();
+            if (activeProject && activeProject.plots.length > 0) {
+                window.LesovikCore.updatePlotModuleData(activeProject.plots[0].id, 'busol', {
+                    area: parseFloat(areaHa.toFixed(4)),
+                    points: points,
+                    measurements: measurementsLog
+                });
+            }
         }
     }
 
@@ -1879,6 +1884,17 @@
 
         document.addEventListener('click', triggerSensorAccess, true);
         loadFromLocalStorage();
+
+        // АВТОМАТИЧЕСКАЯ ПОДТЯЖКА НАЗВАНИЯ ИЗ АКТИВНОГО ПРОЕКТА КОРПУСА
+        if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
+            const activeProj = window.LesovikCore.getActiveProject();
+            if (activeProj) {
+                const nameInput = document.getElementById('project-name');
+                if (nameInput) {
+                    nameInput.value = `Кв. ${activeProj.passport.kvartal}, Выд. ${activeProj.passport.delyanka}`;
+                }
+            }
+        }
     });
 </script>
 
