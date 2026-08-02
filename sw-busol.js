@@ -1,4 +1,4 @@
-const BUSOL_CACHE = 'busol-hns-v13.2'; // Повысим версию кэша, чтобы заставить браузер обновиться!
+const BUSOL_CACHE = 'busol-hns-v13.3'; // Повысим версию кэша, чтобы заставить браузер обновиться!
 const BUSOL_ASSETS = [
   '/busol-mobile.html',
   '/logo.jpeg',
