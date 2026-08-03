@@ -476,7 +476,8 @@
 
         if (isSystemMode && activeProj) {
             const p = activeProj.passport;
-            projTitleEl.innerText = `${p.lesnichestvo || 'Лесничество'}, кв. ${p.kvartal || '-'}, дел. ${p.delyanka || '-'}`;
+            const objectName = p.lesnichestvo || p.object || 'Объект';
+            projTitleEl.innerText = `${objectName} • Кв. ${p.kvartal || '-'} • Дел. ${p.delyanka || '-'}`;
             badgeEl.innerText = '🔗 В СВЯЗКЕ';
             badgeEl.className = 'mode-badge badge-linked';
         } else {
@@ -493,7 +494,10 @@
     function openFullscreenCamera() {
         const modal = document.getElementById('fs-camera-modal');
         const fsVideo = document.getElementById('fs-camera-stream');
-        if (activeStream) { fsVideo.srcObject = activeStream; }
+        if (activeStream) { 
+            fsVideo.srcObject = activeStream; 
+            fsVideo.play().catch(() => {});
+        }
         modal.style.display = 'flex';
     }
 
@@ -542,35 +546,52 @@
 
     async function initAltimeter() {
         try {
+            // 1. Запрос доступа к гироскопу по клику
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 const permission = await DeviceOrientationEvent.requestPermission();
                 if (permission === 'granted') {
-                    window.addEventListener('deviceorientation', handleOrientation);
+                    window.addEventListener('deviceorientation', handleOrientation, true);
                 } else {
-                    alert('Доступ к гироскопу запрещен. Перезагрузите страницу.');
+                    alert('Доступ к гироскопу запрещен. Для работы высотомера разрешите датчики.');
                     return;
                 }
             } else {
-                window.addEventListener('deviceorientation', handleOrientation);
+                window.addEventListener('deviceorientation', handleOrientation, true);
             }
 
+            // 2. Запрос доступа к камере
             activeStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: { ideal: "environment" } } 
+                video: { 
+                    facingMode: { ideal: "environment" },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                } 
             });
             
             const videoEl = document.getElementById('camera-stream');
             videoEl.srcObject = activeStream;
-            videoTrack = activeStream.getVideoTracks()[0];
+            await videoEl.play();
 
+            videoTrack = activeStream.getVideoTracks()[0];
             document.getElementById('start-screen').style.display = 'none';
 
         } catch (err) {
-            alert('Ошибка доступа к камере: ' + err.message + '\nУбедитесь, что сайт открыт по HTTPS.');
+            alert('Ошибка доступа к камере: ' + err.message + '\nУбедитесь, что сайт открыт по HTTPS и камера не заблокирована.');
         }
     }
 
     function handleOrientation(event) {
-        let angleDeg = event.beta - 90; 
+        let beta = event.beta || 0;
+        let gamma = event.gamma || 0;
+        
+        // Корректное определение угла при удержании телефона в портретном и альбомном режимах
+        let angleDeg = 0;
+        if (Math.abs(window.orientation || 0) === 90) {
+            angleDeg = gamma;
+        } else {
+            angleDeg = beta - 90;
+        }
+
         if (angleDeg > 90) angleDeg = 90;
         if (angleDeg < -90) angleDeg = -90;
 
