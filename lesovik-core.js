@@ -4,7 +4,7 @@
  * Центральное ядро экосистемы «Лесовик PRO»
  * Разработка и автоматизация для таксации и отвода лесосек
  * ============================================================================
- * Версия: 2.7.0 (Жесткий Guard Shield + Silent Update + Паспорт делянки)
+ * Версия: 2.7.3 (Проброс PRO-ключа в навигации + Безопасные модули)
  * Автор / Владелец: Николай Сергеевич Худяков (ИП Худяков Н.С.)
  * Экосистема: РЕСУРС (https://resurs-stretch.ru/)
  * ============================================================================
@@ -197,7 +197,7 @@
     // 4. ЕДИНЫЙ API LESOVIKCORE
     // ------------------------------------------------------------------------
     window.LesovikCore = {
-        version: '2.7.0-PRO',
+        version: '2.7.3-PRO',
 
         isPro: function () {
             return checkLicenseStatus().isPro;
@@ -303,6 +303,31 @@
             }
         },
 
+        // БЕЗОПАСНАЯ ЗАПИСЬ ДАННЫХ МОДУЛЕЙ (ВЫСОТОМЕР / ВИЛКА)
+        updatePlotModuleData: function (plotId, moduleName, payload) {
+            try {
+                const projects = this.getProjects();
+                const activeProject = this.getActiveProject();
+                if (!activeProject) return false;
+
+                const plot = activeProject.plots.find(p => p.id === plotId) || activeProject.plots[0];
+                if (!plot) return false;
+
+                if (!plot.moduleData) plot.moduleData = {};
+                plot.moduleData[moduleName] = payload;
+
+                const idx = projects.findIndex(p => p.id === activeProject.id);
+                if (idx !== -1) {
+                    projects[idx] = activeProject;
+                    this.saveProjectsDB(projects);
+                }
+                return true;
+            } catch (e) {
+                console.warn('LesovikCore: Ошибка записи модуля', e);
+                return false;
+            }
+        },
+
         // --------------------------------------------------------------------
         // 5. ЕДИНОЕ МОДАЛЬНОЕ ОКНО УПРАВЛЕНИЯ «⚙️ ПРОЕКТ» (С ФОРМОЙ ПАСПОРТА)
         // --------------------------------------------------------------------
@@ -372,7 +397,7 @@
                             </div>
                         </div>
 
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; justify-style:space-between; align-items:center;">
                             <span style="font-size:10px; opacity:0.5;">ID устройства: ${globalAuth.currentId}</span>
                             <button id="lesovik-save-passport-btn" style="background:#2D5A27; border:none; color:#fff; padding:8px 18px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:bold; text-transform:uppercase;">Сохранить</button>
                         </div>
@@ -395,6 +420,7 @@
                     target: document.getElementById('p-target').value
                 });
                 document.getElementById('lesovik-project-control-modal').style.display = 'none';
+                location.reload();
             });
         },
 
@@ -409,6 +435,7 @@
             const currentFile = window.location.pathname.split('/').pop() || 'busol-pro.html';
             const isPro = this.isPro();
             const isSystemMode = this.isSystemMode();
+            const currentId = getCurrentDeviceId();
 
             let bottomNav = document.getElementById('lesovik-bottom-nav-bar');
             if (!bottomNav) {
@@ -435,9 +462,12 @@
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             `;
 
+            // ФОРМИРОВАНИЕ ССЫЛОК С СОХРАНЕНИЕМ ЛИЦЕНЗИОННОГО КЛЮЧА
             bottomNav.innerHTML = SYSTEM_MODULES.map(m => {
                 const isActive = currentFile.includes(m.file.replace('.html', ''));
-                const linkHref = isPro ? `href="${m.file}"` : `href="javascript:void(0)" onclick="window.showProPromoModal()"`;
+                const fileWithKey = `${m.file}?key=${encodeURIComponent(currentId)}`;
+                const linkHref = isPro ? `href="${fileWithKey}"` : `href="javascript:void(0)" onclick="window.showProPromoModal()"`;
+                
                 return `
                     <a ${linkHref} style="
                         text-decoration: none;
