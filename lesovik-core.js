@@ -4,7 +4,7 @@
  * Центральное ядро экосистемы «Лесовик PRO»
  * Разработка и автоматизация для таксации и отвода лесосек
  * ============================================================================
- * Версия: 2.6.1 (Строгое разделение PRO / Реклама РСЯ)
+ * Версия: 2.7.0 (Жесткий Guard Shield для Busol PRO + Строгое разделение PRO / Реклама РСЯ)
  * Автор / Владелец: Николай Сергеевич Худяков (ИП Худяков Н.С.)
  * Экосистема: РЕСУРС (https://resurs-stretch.ru/)
  * ============================================================================
@@ -21,8 +21,8 @@
         "HNS-DDFW-V15MN9": new Date(2099, 11, 31),  // Бессрочно (iPhone Safari)
         "HNS-3SBX-TQMJO7": new Date(2026, 11, 31),  // До 31 декабря 2026 (Ноутбук)
         "HNS-MINCIFRA-TEST": new Date(2099, 11, 31),// Доступ экспертов Минцифры
-        "HNS-6XP8-V9GK9P": new Date(2099, 7, 31),  // ТЕСТ ПРО до 31 августа (web Николай)
-        "HNS-3T7D-ZJKISD": new Date(2099, 7, 31),  // ТЕСТ ПРО до 31 августа (Андрей)
+        "HNS-6XP8-V9GK9P": new Date(2099, 7, 31),   // ТЕСТ ПРО до 31 августа (web Николай)
+        "HNS-8Z8T-R49OSZ": new Date(2099, 7, 31),   // ТЕСТ ПРО до 31 августа (Андрей редми)
     };
 
     function generateWebDeviceId() {
@@ -66,16 +66,73 @@
         return { isPro: false, currentId }; // Бесплатный режим
     }
 
-    // БЛОКИРУЕМ РЕКЛАМУ ТОЛЬКО ДЛЯ PRO-ПОЛЬЗОВАТЕЛЕЙ
     const globalAuth = checkLicenseStatus();
 
+    // ------------------------------------------------------------------------
+    // 2. ГЛУХАЯ ЗАГЛУШКА-БЛОКИРОВЩИК ДЛЯ BUSOL-PRO (ЕСЛИ НЕТ ЛИЦЕНЗИИ)
+    // ------------------------------------------------------------------------
+    function enforceBusolProAccessControl() {
+        const currentPath = window.location.pathname.toLowerCase();
+        
+        // Проверяем, зашел ли пользователь на платный модуль Буссоль PRO
+        if (currentPath.includes('busol-pro.html')) {
+            if (!globalAuth.isPro) {
+                // Полностью стираем интерфейс и выводим фирменную заглушку
+                document.body.innerHTML = `
+                    <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; 
+                                background:#111815; color:#F9FBF9; z-index:999999; 
+                                display:flex; flex-direction:column; align-items:center; 
+                                justify-content:center; font-family:'Inter', -apple-system, BlinkMacSystemFont, sans-serif; padding:20px; text-align:center; box-sizing:border-box;">
+                        
+                        <span style="font-size:50px; margin-bottom:15px;">🔒</span>
+                        <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:10px;">Доступ к «Буссоль PRO» ограничен</h2>
+                        
+                        <p style="max-width:480px; font-size:13px; opacity:0.85; line-height:1.5; margin-bottom:20px;">
+                            Модуль «Буссоль PRO» является закрытым офлайн-инструментом. Период демонстрационной установки завершен или лицензия не активирована.<br><br>
+                            Ваш ID устройства: <b style="color:#8FBC8F; font-family:monospace; font-size:15px;">${globalAuth.currentId}</b>
+                        </p>
+                        
+                        <div style="background:rgba(255,255,255,0.04); padding:16px 20px; border-radius:10px; border:1px solid rgba(143,188,143,0.25); text-align:left; max-width:480px; width:100%; box-sizing:border-box; margin-bottom:20px;">
+                            <span style="display:block; font-size:11px; opacity:0.6; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; text-align:center; font-weight:bold;">Для приобретения и продления лицензии:</span>
+                            
+                            <div style="margin-bottom:12px; padding-bottom:10px; border-bottom:1px dashed rgba(255,255,255,0.1);">
+                                <span style="display:block; font-size:12px; font-weight:bold; color:#8FBC8F;">• Официальный дистрибьютор (ООО «Сателлит»):</span>
+                                <span style="display:block; font-size:12px; opacity:0.85; margin-top:2px;">Отдел продаж / Продление ключей:</span>
+                                <a href="mailto:a1983v@yandex.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none; font-size:13px; display:inline-block; margin-top:3px;">✉️ a1983v@yandex.ru</a>
+                            </div>
+
+                            <div>
+                                <span style="display:block; font-size:12px; font-weight:bold; color:#8FBC8F;">• Отдел разработки ПО (ИП Худяков Н.С.):</span>
+                                <span style="display:block; font-size:12px; opacity:0.85; margin-top:2px;">Техническая поддержка:</span>
+                                <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; font-weight:bold; text-decoration:none; font-size:13px; display:inline-block; margin-top:3px;">✉️ folgoal@gmail.com</a>
+                            </div>
+                        </div>
+
+                        <!-- КНОПКА ПЕРЕХОДА НА БЕСПЛАТНУЮ ОНЛАЙН ВЕРСИЮ -->
+                        <a href="https://lesovik-pro.ru/busol.html" style="background:#2D5A27; color:#FFF; text-decoration:none; padding:12px 24px; border-radius:8px; font-weight:bold; font-size:13px; text-transform:uppercase; box-shadow:0 4px 15px rgba(0,0,0,0.4); display:inline-block;">
+                            🌐 Перейти в бесплатную онлайн-версию
+                        </a>
+                    </div>
+                `;
+                return true; // Доступ заблокирован
+            }
+        }
+        return false; // Доступ разрешен
+    }
+
+    // Выполняем проверку незамедлительно
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', enforceBusolProAccessControl);
+    } else {
+        enforceBusolProAccessControl();
+    }
+
+    // БЛОКИРУЕМ РЕКЛАМУ ТОЛЬКО ДЛЯ PRO-ПОЛЬЗОВАТЕЛЕЙ
     if (globalAuth.isPro) {
-        // Заглушка для вызовов Яндекса
         window.yaContextCb = {
             push: function() { return 0; }
         };
         
-        // Внедряем CSS-блокировщик только лицензированным устройствам
         const applyAdBlock = () => {
             if (!document.getElementById('lesovik-pro-ad-blocker')) {
                 const style = document.createElement('style');
@@ -107,7 +164,7 @@
     }
 
     // ------------------------------------------------------------------------
-    // 2. КОНСТАНТЫ И НАСТРОЙКИ СИСТЕМЫ
+    // 3. КОНСТАНТЫ И НАСТРОЙКИ СИСТЕМЫ
     // ------------------------------------------------------------------------
     const STORAGE_KEYS = {
         PRO_LICENSE: 'lesovik_pro_license_key',
@@ -126,10 +183,10 @@
     ];
 
     // ------------------------------------------------------------------------
-    // 3. ЕДИНЫЙ API LESOVIKCORE
+    // 4. ЕДИНЫЙ API LESOVIKCORE
     // ------------------------------------------------------------------------
     window.LesovikCore = {
-        version: '2.6.1-PRO',
+        version: '2.7.0-PRO',
 
         isPro: function () {
             return checkLicenseStatus().isPro;
@@ -257,7 +314,7 @@
         },
 
         // --------------------------------------------------------------------
-        // 4. ЕДИНОЕ МОДАЛЬНОЕ ОКНО УПРАВЛЕНИЯ «⚙️ ПРОЕКТ» (ТОЛЬКО РЕЖИМ И ПОЯСНЕНИЯ)
+        // 5. ЕДИНОЕ МОДАЛЬНОЕ ОКНО УПРАВЛЕНИЯ «⚙️ ПРОЕКТ»
         // --------------------------------------------------------------------
         openProjectControlModal: function () {
             let modal = document.getElementById('lesovik-project-control-modal');
@@ -320,14 +377,19 @@
         },
 
         // --------------------------------------------------------------------
-        // 5. ОТРЕСОВКА ПРИЛИПАЮЩЕГО НИЖНЕГО МЕНЮ И КНОПКИ ШАПКИ
+        // 6. ОТРЕСОВКА ПРИЛИПАЮЩЕГО НИЖНЕГО МЕНЮ И КНОПКИ ШАПКИ
         // --------------------------------------------------------------------
         renderNavigationUI: function () {
+            // Если экран заблокирован для не-PRO на busol-pro.html, навигацию не отрисовываем
+            if (!this.isPro() && window.location.pathname.toLowerCase().includes('busol-pro.html')) {
+                return;
+            }
+
             const currentFile = window.location.pathname.split('/').pop() || 'busol-pro.html';
             const isPro = this.isPro();
             const isSystemMode = this.isSystemMode();
 
-            // 1. Создаем или обновляем прилипающее НИЖНЕЕ МЕНЮ
+            // 1. Нижнее меню
             let bottomNav = document.getElementById('lesovik-bottom-nav-bar');
             if (!bottomNav) {
                 bottomNav = document.createElement('div');
@@ -378,7 +440,7 @@
                 `;
             }).join('');
 
-            // 2. Добавляем ЕДИНСТВЕННУЮ КНОПКУ «[ ⚙️ ПРОЕКТ ]» В ШАПКУ
+            // 2. Кнопка «⚙️ ПРОЕКТ» в шапку
             const headerRight = document.querySelector('.glass-header .header-right') || document.querySelector('.header .header-right');
             if (headerRight && !document.getElementById('lesovik-project-btn-trigger')) {
                 const btnTrigger = document.createElement('button');
@@ -408,7 +470,7 @@
         },
 
         // --------------------------------------------------------------------
-        // 6. ИНИЦИАЛИЗАЦИЯ
+        // 7. ИНИЦИАЛИЗАЦИЯ
         // --------------------------------------------------------------------
         init: function () {
             if (this.getProjects().length === 0 && this.isPro()) {
@@ -427,7 +489,7 @@
         }
     };
 
-    // МОДАЛЬНОЕ ОКНО ДЛЯ БЕСПЛАТНЫХ ПОЛЬЗОВАТЕЛЕЙ
+    // МОДАЛЬНОЕ ОКНО ДЛЯ БЕСПЛАТНЫХ ПОЛЬЗОВАТЕЛЕЙ (НА ОСТАЛЬНЫХ СТРАНИЦАХ)
     window.showProPromoModal = function() {
         if (document.getElementById('pro-promo-modal')) {
             document.getElementById('pro-promo-modal').style.display = 'flex';
