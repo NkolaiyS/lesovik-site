@@ -546,17 +546,19 @@
 
     async function initAltimeter() {
         try {
-            // 1. Запрос доступа к гироскопу по клику
+            // 1. Запрос доступа к датчикам гироскопа
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 const permission = await DeviceOrientationEvent.requestPermission();
                 if (permission === 'granted') {
                     window.addEventListener('deviceorientation', handleOrientation, true);
+                    window.addEventListener('deviceorientationabsolute', handleOrientation, true);
                 } else {
                     alert('Доступ к гироскопу запрещен. Для работы высотомера разрешите датчики.');
                     return;
                 }
             } else {
                 window.addEventListener('deviceorientation', handleOrientation, true);
+                window.addEventListener('deviceorientationabsolute', handleOrientation, true);
             }
 
             // 2. Запрос доступа к камере
@@ -581,10 +583,12 @@
     }
 
     function handleOrientation(event) {
+        if (event.beta === null && event.gamma === null) return;
+
         let beta = event.beta || 0;
         let gamma = event.gamma || 0;
         
-        // Корректное определение угла при удержании телефона в портретном и альбомном режимах
+        // Корректный расчет угла при удержании телефона в альбомной или портретной ориентации
         let angleDeg = 0;
         if (Math.abs(window.orientation || 0) === 90) {
             angleDeg = gamma;
@@ -638,17 +642,27 @@
 
     function calculateHeight() {
         const distance = parseFloat(document.getElementById('distance').value);
-        if (distance <= 0 || isNaN(distance)) {
-            alert('Пожалуйста, укажите дистанцию больше 0.');
+        
+        if (isNaN(distance) || distance <= 0) {
+            alert('Пожалуйста, укажите дистанцию до дерева больше 0.');
             return; 
         }
 
-        const height = distance * Math.abs(Math.tan(topAngleRad) - Math.tan(baseAngleRad));
+        if (baseAngleRad === null || topAngleRad === null) {
+            alert('Зафиксируйте сначала комель (низ), а затем вершину (верх)!');
+            return;
+        }
+
+        // Чистая тригонометрическая логика: H = D * (tan(верх) - tan(низ))
+        const tanTop = Math.tan(topAngleRad);
+        const tanBase = Math.tan(baseAngleRad);
+        const heightCalc = distance * (tanTop - tanBase);
+
         const resultBox = document.getElementById('result-box');
         resultBox.style.display = 'block';
-        
-        if (height > 0.1) {
-            const calculatedHeight = parseFloat(height.toFixed(1));
+
+        if (heightCalc > 0.1) {
+            const calculatedHeight = parseFloat(heightCalc.toFixed(1));
             const selectedSpecies = document.getElementById('species-select').value;
             
             let isLinkedSaved = false;
@@ -676,13 +690,13 @@
             resultBox.style.background = 'var(--forest-light)';
 
         } else {
-            resultBox.innerText = `Замер некорректен`;
+            resultBox.innerText = `Замер некорректен (Проверьте углы)`;
             resultBox.style.background = '#FCA5A5';
         }
 
         document.getElementById('btn-top').disabled = true;
         const fsBtnTop = document.getElementById('fs-btn-top');
-        if(fsBtnTop) fsBtnTop.disabled = true;
+        if (fsBtnTop) fsBtnTop.disabled = true;
     }
 
     // --- ЛОКАЛЬНЫЙ АРХИВ И ЭКСПОРТ CSV ---
