@@ -22,6 +22,7 @@
         "HNS-3SBX-TQMJO7": new Date(2026, 11, 31),  // До 31 декабря 2026 (Ноутбук)
         "HNS-MINCIFRA-TEST": new Date(2099, 11, 31),// Доступ экспертов Минцифры
         "HNS-6XP8-V9GK9P": new Date(2099, 7, 31),  // ТЕСТ ПРО до 31 августа (web Николай)
+        "HNS-3T7D-ZJKISD": new Date(2099, 7, 31),  // ТЕСТ ПРО до 31 августа (Андрей)
     };
 
     function generateWebDeviceId() {
