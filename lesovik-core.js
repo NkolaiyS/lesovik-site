@@ -4,7 +4,7 @@
  * Центральное ядро экосистемы «Лесовик PRO»
  * Разработка и автоматизация для таксации и отвода лесосек
  * ============================================================================
- * Версия: 2.7.3 (Проброс PRO-ключа в навигации + Безопасные модули)
+ * Версия: 2.8.0 (Сквозной Паспорт с Выделом + Фиксация активного объекта)
  * Автор / Владелец: Николай Сергеевич Худяков (ИП Худяков Н.С.)
  * Экосистема: РЕСУРС (https://resurs-stretch.ru/)
  * ============================================================================
@@ -197,7 +197,7 @@
     // 4. ЕДИНЫЙ API LESOVIKCORE
     // ------------------------------------------------------------------------
     window.LesovikCore = {
-        version: '2.7.3-PRO',
+        version: '2.8.0-PRO',
 
         isPro: function () {
             return checkLicenseStatus().isPro;
@@ -247,11 +247,17 @@
         getActiveProject: function () {
             const projects = this.getProjects();
             const activeId = this.getActiveProjectId();
-            if (!activeId && projects.length > 0) {
+            
+            if (projects.length > 0) {
+                if (activeId) {
+                    const found = projects.find(p => p.id === activeId);
+                    if (found) return found;
+                }
+                // Если активный ID не задан или не найден, делаем активным первый проект
                 this.setActiveProject(projects[0].id);
                 return projects[0];
             }
-            return projects.find(p => p.id === activeId) || null;
+            return null;
         },
 
         createProject: function (metaData) {
@@ -261,9 +267,10 @@
                 created: new Date().toISOString(),
                 updated: new Date().toISOString(),
                 passport: {
-                    lesnichestvo: metaData.lesnichestvo || 'Важгортское уч. лесничество',
-                    kvartal: metaData.kvartal || '312',
-                    delyanka: metaData.delyanka || '12',
+                    lesnichestvo: metaData.lesnichestvo || 'Красноярское лесничество',
+                    kvartal: metaData.kvartal || '1',
+                    delyanka: metaData.delyanka || '1',
+                    vydel: metaData.vydel || '1',
                     target: metaData.target || 'Сплошная рубка',
                     year: metaData.year || '2026'
                 },
@@ -284,23 +291,34 @@
                 name: name || 'Выдел 1',
                 area: area || 1.0,
                 gis: { points: [], perimeter: 0, kmlData: null },
-                speciesData: {}
+                speciesData: {},
+                moduleData: {}
             };
         },
 
         updatePassportData: function (passportData) {
-            const projects = this.getProjects();
-            const activeProject = this.getActiveProject();
-            if (!activeProject) return;
+            let projects = this.getProjects();
+            let activeProject = this.getActiveProject();
 
-            activeProject.passport = { ...activeProject.passport, ...passportData };
-            activeProject.updated = new Date().toISOString();
+            if (!activeProject) {
+                activeProject = this.createProject(passportData);
+                projects = this.getProjects();
+            } else {
+                activeProject.passport = { ...activeProject.passport, ...passportData };
+                activeProject.updated = new Date().toISOString();
 
-            const idx = projects.findIndex(p => p.id === activeProject.id);
-            if (idx !== -1) {
-                projects[idx] = activeProject;
+                const idx = projects.findIndex(p => p.id === activeProject.id);
+                if (idx !== -1) {
+                    projects[idx] = activeProject;
+                } else {
+                    projects.unshift(activeProject);
+                }
+
                 this.saveProjectsDB(projects);
+                this.setActiveProject(activeProject.id);
             }
+
+            this.syncPageFormFields();
         },
 
         // БЕЗОПАСНАЯ ЗАПИСЬ ДАННЫХ МОДУЛЕЙ (ВЫСОТОМЕР / ВИЛКА)
@@ -328,8 +346,34 @@
             }
         },
 
+        // СИНХРОНИЗАЦИЯ ПОЛЕЙ НА ФОРМАХ СТРАНИЦ С ПАСПОРТОМ ЯДРА
+        syncPageFormFields: function () {
+            if (!this.isSystemMode()) return;
+            const activeProj = this.getActiveProject();
+            if (!activeProj || !activeProj.passport) return;
+            const p = activeProj.passport;
+
+            const fullName = `${p.lesnichestvo || ''} кв.${p.kvartal || ''} дел.${p.delyanka || ''} выд.${p.vydel || ''}`;
+
+            // Поле в Полнотомере (bitterlich.html)
+            const bitterlichInput = document.getElementById('lesoseka-name');
+            if (bitterlichInput) bitterlichInput.value = fullName;
+
+            // Поля в Буссоли (busol-pro.html)
+            const busolKvartal = document.getElementById('kvartal-input');
+            if (busolKvartal) busolKvartal.value = `Кв. ${p.kvartal || ''}, Выд. ${p.vydel || ''}`;
+
+            // Поля в Перечете и МДО
+            const mdoLes = document.getElementById('mdo-lesnichestvo');
+            if (mdoLes) mdoLes.value = p.lesnichestvo || '';
+            const mdoKvk = document.getElementById('mdo-kvartal');
+            if (mdoKvk) mdoKvk.value = p.kvartal || '';
+            const mdoVyd = document.getElementById('mdo-vydel');
+            if (mdoVyd) mdoVyd.value = p.vydel || p.delyanka || '';
+        },
+
         // --------------------------------------------------------------------
-        // 5. ЕДИНОЕ МОДАЛЬНОЕ ОКНО УПРАВЛЕНИЯ «⚙️ ПРОЕКТ» (С ФОРМОЙ ПАСПОРТА)
+        // 5. ЕДИНОЕ МОДАЛЬНОЕ ОКНО УПРАВЛЕНИЯ «⚙️ ПРОЕКТ» (С ПОЛНЫМ ПАСПОРТОМ)
         // --------------------------------------------------------------------
         openProjectControlModal: function () {
             let modal = document.getElementById('lesovik-project-control-modal');
@@ -349,7 +393,7 @@
             const modalHTML = `
                 <div id="lesovik-project-control-modal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.8); z-index:999999; display:flex; align-items:center; justify-content:center; padding:15px; box-sizing:border-box; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
                     <div style="background:#1e252b; color:#eceff1; border:1px solid #2e3b44; border-radius:12px; max-width:480px; width:100%; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,0.6); position:relative; max-height:90vh; overflow-y:auto;">
-                        <button onclick="document.getElementById('lesovik-project-control-modal').style.display='none'" style="position:absolute; top:12px; right:12px; background:transparent; border:none; color:#b0bec5; font-size:22px; cursor:pointer;">&times;</button>
+                        <button onclick="document.getElementById('lesovik-project-control-modal').remove()" style="position:absolute; top:12px; right:12px; background:transparent; border:none; color:#b0bec5; font-size:22px; cursor:pointer;">&times;</button>
                         
                         <div style="display:flex; align-items:center; gap:8px; margin-bottom:15px;">
                             <span style="font-size:22px;">⚙️</span>
@@ -376,30 +420,36 @@
                                 <input type="text" id="p-lesnichestvo" value="${p.lesnichestvo || ''}" style="width:100%; background:#111815; border:1px solid #3a4f46; color:#FFF; padding:6px 8px; border-radius:4px; font-size:12px; box-sizing:border-box;">
                             </div>
 
-                            <div style="display:flex; gap:8px; margin-bottom:8px;">
-                                <div style="flex:1;">
+                            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px; margin-bottom:8px;">
+                                <div>
                                     <label style="display:block; font-size:10px; opacity:0.7; margin-bottom:2px;">Квартал:</label>
                                     <input type="text" id="p-kvartal" value="${p.kvartal || ''}" style="width:100%; background:#111815; border:1px solid #3a4f46; color:#FFF; padding:6px 8px; border-radius:4px; font-size:12px; box-sizing:border-box;">
                                 </div>
-                                <div style="flex:1;">
+                                <div>
                                     <label style="display:block; font-size:10px; opacity:0.7; margin-bottom:2px;">Делянка:</label>
                                     <input type="text" id="p-delyanka" value="${p.delyanka || ''}" style="width:100%; background:#111815; border:1px solid #3a4f46; color:#FFF; padding:6px 8px; border-radius:4px; font-size:12px; box-sizing:border-box;">
+                                </div>
+                                <div>
+                                    <label style="display:block; font-size:10px; opacity:0.7; margin-bottom:2px;">Выдел:</label>
+                                    <input type="text" id="p-vydel" value="${p.vydel || ''}" style="width:100%; background:#111815; border:1px solid #3a4f46; color:#FFF; padding:6px 8px; border-radius:4px; font-size:12px; box-sizing:border-box;">
+                                </div>
+                            </div>
+
+                            <div style="display:flex; gap:8px;">
+                                <div style="flex:2;">
+                                    <label style="display:block; font-size:10px; opacity:0.7; margin-bottom:2px;">Вид пользования / Цель:</label>
+                                    <input type="text" id="p-target" value="${p.target || ''}" style="width:100%; background:#111815; border:1px solid #3a4f46; color:#FFF; padding:6px 8px; border-radius:4px; font-size:12px; box-sizing:border-box;">
                                 </div>
                                 <div style="flex:1;">
                                     <label style="display:block; font-size:10px; opacity:0.7; margin-bottom:2px;">Год:</label>
                                     <input type="text" id="p-year" value="${p.year || '2026'}" style="width:100%; background:#111815; border:1px solid #3a4f46; color:#FFF; padding:6px 8px; border-radius:4px; font-size:12px; box-sizing:border-box;">
                                 </div>
                             </div>
-
-                            <div>
-                                <label style="display:block; font-size:10px; opacity:0.7; margin-bottom:2px;">Вид пользования / Цель:</label>
-                                <input type="text" id="p-target" value="${p.target || ''}" style="width:100%; background:#111815; border:1px solid #3a4f46; color:#FFF; padding:6px 8px; border-radius:4px; font-size:12px; box-sizing:border-box;">
-                            </div>
                         </div>
 
-                        <div style="display:flex; justify-style:space-between; align-items:center;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
                             <span style="font-size:10px; opacity:0.5;">ID устройства: ${globalAuth.currentId}</span>
-                            <button id="lesovik-save-passport-btn" style="background:#2D5A27; border:none; color:#fff; padding:8px 18px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:bold; text-transform:uppercase;">Сохранить</button>
+                            <button id="lesovik-save-passport-btn" style="background:#2D5A27; border:none; color:#fff; padding:8px 18px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:bold; text-transform:uppercase;">Сохранить Паспорт</button>
                         </div>
                     </div>
                 </div>
@@ -416,10 +466,11 @@
                     lesnichestvo: document.getElementById('p-lesnichestvo').value,
                     kvartal: document.getElementById('p-kvartal').value,
                     delyanka: document.getElementById('p-delyanka').value,
-                    year: document.getElementById('p-year').value,
-                    target: document.getElementById('p-target').value
+                    vydel: document.getElementById('p-vydel').value,
+                    target: document.getElementById('p-target').value,
+                    year: document.getElementById('p-year').value
                 });
-                document.getElementById('lesovik-project-control-modal').style.display = 'none';
+                document.getElementById('lesovik-project-control-modal').remove();
                 location.reload();
             });
         },
@@ -514,17 +565,20 @@
                 btnTrigger.addEventListener('click', () => this.openProjectControlModal());
                 headerRight.insertBefore(btnTrigger, headerRight.firstChild);
             }
+
+            this.syncPageFormFields();
         },
 
         // --------------------------------------------------------------------
         // 7. ИНИЦИАЛИЗАЦИЯ
-        // ------------------------------------------------------------------------
+        // --------------------------------------------------------------------
         init: function () {
             if (this.getProjects().length === 0 && this.isPro()) {
                 this.createProject({
-                    lesnichestvo: 'Важгортское уч. лесничество',
-                    kvartal: '312',
-                    delyanka: '12'
+                    lesnichestvo: 'Красноярское лесничество',
+                    kvartal: '1',
+                    delyanka: '1',
+                    vydel: '1'
                 });
             }
 
