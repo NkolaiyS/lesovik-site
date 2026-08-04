@@ -4,7 +4,7 @@
  * Центральное ядро экосистемы «Лесовик PRO»
  * Разработка и автоматизация для таксации и отвода лесосек
  * ============================================================================
- * Версия: 2.8.0 (Сквозной Паспорт с Выделом + Фиксация активного объекта)
+ * Версия: 2.8.1 (Исправлена синхронизация Паспорта в МДО и локальные поля)
  * Автор / Владелец: Николай Сергеевич Худяков (ИП Худяков Н.С.)
  * Экосистема: РЕСУРС (https://resurs-stretch.ru/)
  * ============================================================================
@@ -23,7 +23,7 @@
         "HNS-MINCIFRA-TEST": new Date(2099, 11, 31),// Доступ экспертов Минцифры
         "HNS-0LE2-PK7CV9": new Date(2099, 7, 31),   // ТЕСТ ПРО до 31 августа (web Николай)
         "HNS-8Z8T-R49OSZ": new Date(2099, 7, 31),   // ТЕСТ ПРО до 31 августа (Андрей редми)
-        "HNS-6680-TVK32U": new Date(2099, 7, 5),   // ТЕСТ ПРО до 5 августа (мой хонор 7)
+        "HNS-6680-TVK32U": new Date(2099, 7, 5),    // ТЕСТ ПРО до 5 августа (мой хонор 7)
     };
 
     function generateWebDeviceId() {
@@ -198,7 +198,7 @@
     // 4. ЕДИНЫЙ API LESOVIKCORE
     // ------------------------------------------------------------------------
     window.LesovikCore = {
-        version: '2.8.0-PRO',
+        version: '2.8.1-PRO',
 
         isPro: function () {
             return checkLicenseStatus().isPro;
@@ -354,23 +354,34 @@
             if (!activeProj || !activeProj.passport) return;
             const p = activeProj.passport;
 
-            const fullName = `${p.lesnichestvo || ''} кв.${p.kvartal || ''} дел.${p.delyanka || ''} выд.${p.vydel || ''}`;
+            const fullName = `${p.lesnichestvo || ''} кв.${p.kvartal || ''} выд.${p.vydel || ''} дел.${p.delyanka || ''}`.trim();
 
-            // Поле в Полнотомере (bitterlich.html)
+            // 1. Полнотомер (bitterlich.html)
             const bitterlichInput = document.getElementById('lesoseka-name');
             if (bitterlichInput) bitterlichInput.value = fullName;
 
-            // Поля в Буссоли (busol-pro.html)
+            // 2. Перечетная ведомость / Журнал (journal.html)
+            const journalInput = document.getElementById('tally-name');
+            if (journalInput) journalInput.value = fullName;
+
+            // 3. Буссоль (busol-pro.html)
             const busolKvartal = document.getElementById('kvartal-input');
             if (busolKvartal) busolKvartal.value = `Кв. ${p.kvartal || ''}, Выд. ${p.vydel || ''}`;
 
-            // Поля в Перечете и МДО
+            // 4. Калькулятор МДО (mdo.html)
             const mdoLes = document.getElementById('mdo-lesnichestvo');
-            if (mdoLes) mdoLes.value = p.lesnichestvo || '';
+            if (mdoLes && p.lesnichestvo) mdoLes.value = p.lesnichestvo;
             const mdoKvk = document.getElementById('mdo-kvartal');
-            if (mdoKvk) mdoKvk.value = p.kvartal || '';
+            if (mdoKvk && p.kvartal) mdoKvk.value = p.kvartal;
             const mdoVyd = document.getElementById('mdo-vydel');
-            if (mdoVyd) mdoVyd.value = p.vydel || p.delyanka || '';
+            if (mdoVyd && p.vydel) mdoVyd.value = p.vydel;
+            const mdoDel = document.getElementById('mdo-delyanka');
+            if (mdoDel && p.delyanka) mdoDel.value = p.delyanka;
+            const mdoTarget = document.getElementById('mdo-target');
+            if (mdoTarget && p.target) mdoTarget.value = p.target;
+
+            const mdoArchiveName = document.getElementById('mdo-archive-name');
+            if (mdoArchiveName) mdoArchiveName.value = `Кв. ${p.kvartal || ''}, Выд. ${p.vydel || ''}, Дел. ${p.delyanka || ''}`;
         },
 
         // --------------------------------------------------------------------
