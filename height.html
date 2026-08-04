@@ -5,7 +5,22 @@
     <script src="lesovik-core.js"></script>
 
     <meta charset="UTF-8">
+    <meta name="application-name" content="Лесовик Высотомер PRO">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- PWA МЕТА-ТЕГИ И МАНИФЕСТ -->
+    <link rel="manifest" href="/height.webmanifest">
+    <meta name="theme-color" content="#2D5A27">
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw-height.js')
+            .then(reg => console.log('Высотомер PRO ready for offline:', reg.scope))
+            .catch(err => console.error('SW PRO registration failed:', err));
+        });
+      }
+    </script>
     
     <!-- --- ЯНДЕКС МЕТРИКА --- -->
     <script type="text/javascript">
@@ -457,6 +472,12 @@
     let videoTrack = null;
     let activeStream = null;
 
+    // --- ФИЛЬТР КАЛМАНА ДЛЯ УГЛА НАКЛОНА (ПИТЧА) ---
+    let filteredAngleSin = 0;
+    let filteredAngleCos = 0;
+    let isAngleFilterInit = false;
+    const kalmanAngleAlpha = 0.05;
+
     const ARCHIVE_STORAGE_KEY = 'lesovik_height_archive_logs';
 
     // ИНИЦИАЛИЗАЦИЯ
@@ -475,7 +496,7 @@
         const projTitleEl = document.getElementById('ctx-project-name');
 
         if (isSystemMode && activeProj) {
-            const p = activeProj.passport;
+            const p = activeProj.passport || {};
             const objectName = p.lesnichestvo || p.object || 'Объект';
             projTitleEl.innerText = `${objectName} • Кв. ${p.kvartal || '-'} • Дел. ${p.delyanka || '-'}`;
             badgeEl.innerText = '🔗 В СВЯЗКЕ';
@@ -589,22 +610,38 @@
         let gamma = event.gamma || 0;
         
         // Корректный расчет угла при удержании телефона в альбомной или портретной ориентации
-        let angleDeg = 0;
+        let rawAngleDeg = 0;
         if (Math.abs(window.orientation || 0) === 90) {
-            angleDeg = gamma;
+            rawAngleDeg = gamma;
         } else {
-            angleDeg = beta - 90;
+            rawAngleDeg = beta - 90;
         }
 
-        if (angleDeg > 90) angleDeg = 90;
-        if (angleDeg < -90) angleDeg = -90;
+        if (rawAngleDeg > 90) rawAngleDeg = 90;
+        if (rawAngleDeg < -90) rawAngleDeg = -90;
 
-        const textVal = angleDeg.toFixed(1) + '°';
+        // Векторная фильтрация для абсолютного сглаживания дрожания рук
+        let rad = (rawAngleDeg * Math.PI) / 180;
+        let rSin = Math.sin(rad);
+        let rCos = Math.cos(rad);
+
+        if (!isAngleFilterInit) {
+            filteredAngleSin = rSin;
+            filteredAngleCos = rCos;
+            isAngleFilterInit = true;
+        } else {
+            filteredAngleSin = filteredAngleSin + kalmanAngleAlpha * (rSin - filteredAngleSin);
+            filteredAngleCos = filteredAngleCos + kalmanAngleAlpha * (rCos - filteredAngleCos);
+        }
+
+        let smoothedAngleDeg = Math.atan2(filteredAngleSin, filteredAngleCos) * (180 / Math.PI);
+
+        const textVal = smoothedAngleDeg.toFixed(1) + '°';
         document.getElementById('current-angle').innerText = textVal;
         document.getElementById('overlay-current-angle').innerText = textVal;
         document.getElementById('fs-current-angle').innerText = textVal;
 
-        currentAngleRad = angleDeg * (Math.PI / 180);
+        currentAngleRad = smoothedAngleDeg * (Math.PI / 180);
     }
 
     function lockBase() {
@@ -794,5 +831,8 @@
         if (!isAutoDist) { document.getElementById('distance').value = '15.0'; }
     }
 </script>
+
+<!-- ПОДКЛЮЧЕНИЕ ЕДИНОГО МОДУЛЯ СИНХРОНИЗАЦИИ, ЛИЦЕНЗИЙ И PWA-НАВИГАЦИИ -->
+<script src="lesovik-core.js"></script>
 </body>
 </html>
