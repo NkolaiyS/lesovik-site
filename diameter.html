@@ -4,7 +4,22 @@
     <!-- 1. Единое ядро защиты, блокировки РСЯ и контекста — СТРОГО ПЕРВЫМ! -->
     <script src="lesovik-core.js"></script>
 
-    <!-- 2. SEO-перехват ботов -->
+    <!-- 2. PWA МЕТА-ТЕГИ И РЕГИСТРАЦИЯ SERVICE WORKER -->
+    <meta name="application-name" content="Лесовик Вилка PRO">
+    <link rel="manifest" href="/diameter.webmanifest">
+    <meta name="theme-color" content="#2D5A27">
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw-diameter.js')
+            .then(reg => console.log('Мерная вилка PRO ready for offline:', reg.scope))
+            .catch(err => console.error('SW PRO registration failed:', err));
+        });
+      }
+    </script>
+
+    <!-- 3. SEO-перехват ботов -->
     <script type="text/javascript">
         (function() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -68,7 +83,7 @@
     }
     </script>
     
-    <!-- 3. Рекламный блок РСЯ (Безопасно перехватывается ядрам lesovik-core.js у PRO-пользователей) -->
+    <!-- 4. Рекламный блок РСЯ (Безопасно перехватывается ядром lesovik-core.js у PRO-пользователей) -->
     <script src="https://yandex.ru/ads/system/context.js" async></script>
     <script>
         window.yaContextCb = window.yaContextCb || [];
@@ -494,8 +509,8 @@
         const projTitleEl = document.getElementById('ctx-project-name');
 
         if (isSystemMode && activeProj) {
-            const p = activeProj.passport;
-            projTitleEl.innerText = `${p.lesnichestvo || 'Лесничество'}, кв. ${p.kvartal || '-'}, дел. ${p.delyanka || '-'}`;
+            const p = activeProj.passport || {};
+            projTitleEl.innerText = `${p.lesnichestvo || 'Лесничество'}, кв. ${p.kvartal || '-'}, дел. ${p.delyanka || '-'}, выд. ${p.vydel || '-'}`;
             badgeEl.innerText = '🔗 В СВЯЗКЕ';
             badgeEl.className = 'mode-badge badge-linked';
         } else {
@@ -756,5 +771,8 @@
         hideResult();
     }
 </script>
+
+<!-- ПОДКЛЮЧЕНИЕ ЕДИНОГО МОДУЛЯ СИНХРОНИЗАЦИИ, ЛИЦЕНЗИЙ И PWA-НАВИГАЦИИ -->
+<script src="lesovik-core.js"></script>
 </body>
 </html>
