@@ -723,9 +723,13 @@
     </footer>
 
 <script>
-    let smoothedAzimuth = 0;
     let isFirstData = true;
-    const filterFactor = 0.08; 
+
+    // --- ПЕРЕМЕННЫЕ ФИЛЬТРА КАЛМАНА ДЛЯ АНДРОИД ---
+    let filteredSin = 0;
+    let filteredCos = 0;
+    let isFilterInitialized = false;
+    const kalmanAlpha = 0.04; // Плавность вращения лимба
 
     let lastRawAlpha = 0;
     let totalGyroDelta = 0;
@@ -755,7 +759,7 @@
     let lastVibratedSector = -1; 
 
     // --- ПЕРЕМЕННАЯ И ЛОГИКА ЮСТИРОВОЧНОЙ ПОПРАВКИ ---
-    let calibrationOffsetDecimal = 0.0; // Поправка в десятичных градусах
+    let calibrationOffsetDecimal = 0.0;
 
     function updateOffsetFromUI() {
         const sign = document.getElementById('offset-sign-select').value;
@@ -1138,9 +1142,24 @@
         }
         
         if (!heading) heading = 0;
-        
         if (heading < 0) heading += 360;
         if (heading >= 360) heading -= 360;
+
+        // --- ВЕКТОРНЫЙ ФИЛЬТР КАЛМАНА ДЛЯ СГЛАЖИВАНИЯ ДЕРГАНИЯ НА ANDROID ---
+        let rad = (heading * Math.PI) / 180;
+        let rawSin = Math.sin(rad);
+        let rawCos = Math.cos(rad);
+
+        if (!isFilterInitialized) {
+            filteredSin = rawSin;
+            filteredCos = rawCos;
+            isFilterInitialized = true;
+        } else {
+            filteredSin = filteredSin + kalmanAlpha * (rawSin - filteredSin);
+            filteredCos = filteredCos + kalmanAlpha * (rawCos - filteredCos);
+        }
+
+        let smoothedHeading = (Math.atan2(filteredSin, filteredCos) * 180 / Math.PI + 360) % 360;
 
         let currentRawAlpha = event.alpha || 0;
         let currentTime = Date.now();
@@ -1150,7 +1169,7 @@
                 let alphaDelta = Math.abs(currentRawAlpha - lastRawAlpha);
                 if (alphaDelta > 180) alphaDelta = 360 - alphaDelta;
                 
-                let headingDelta = Math.abs(heading - lastHeadingValue); 
+                let headingDelta = Math.abs(smoothedHeading - lastHeadingValue); 
                 totalGyroDelta += alphaDelta;
                 
                 if (totalGyroDelta > 15) {
@@ -1163,24 +1182,12 @@
                 }
             }
             lastRawAlpha = currentRawAlpha;
-            lastHeadingValue = heading; 
+            lastHeadingValue = smoothedHeading; 
             lastHeadingCheck = currentTime;
-        }
-
-        if (isFirstData) {
-            smoothedAzimuth = heading;
-            isFirstData = false;
-        } else {
-            let diff = heading - smoothedAzimuth;
-            if (diff > 180) diff -= 360;
-            if (diff < -180) diff += 360;
-            smoothedAzimuth += filterFactor * diff;
-            smoothedAzimuth = (smoothedAzimuth % 360 + 360) % 360;
         }
         
         // --- МГНОВЕННОЕ ПРИМЕНЕНИЕ ЮСТИРОВОЧНОЙ ПОПРАВКИ ---
-        let rawAzimuth = smoothedAzimuth;
-        currentAzimuth = (rawAzimuth + calibrationOffsetDecimal + 360) % 360;
+        currentAzimuth = (smoothedHeading + calibrationOffsetDecimal + 360) % 360;
 
         let pitch = Math.round(event.beta || 0); 
         let roll = Math.round(event.gamma || 0);  
@@ -1760,7 +1767,6 @@
         const isHuawei = /huawei|harmonyos/i.test(navigator.userAgent);
 
         if (isHuawei) {
-            // Прямой метод Data URI для обхода ограничений WebView Huawei
             const encodedUri = "data:application/vnd.ms-excel;charset=utf-8," + encodeURIComponent(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
@@ -1769,7 +1775,6 @@
             link.click();
             document.body.removeChild(link);
         } else {
-            // Стандартный Blob-метод для Samsung, Redmi, iPhone и ПК
             const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
