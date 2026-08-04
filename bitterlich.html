@@ -4,6 +4,21 @@
     <!-- 1. Единое ядро защиты, блокировки РСЯ и контекста — СТРОГО ПЕРВЫМ! -->
     <script src="lesovik-core.js"></script>
 
+    <!-- 2. PWA МЕТА-ТЕГИ И РЕГИСТРАЦИЯ SERVICE WORKER -->
+    <meta name="application-name" content="Лесовик Биттерлих PRO">
+    <link rel="manifest" href="/bitterlich.webmanifest">
+    <meta name="theme-color" content="#2D5A27">
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw-bitterlich.js')
+            .then(reg => console.log('Полнотомер Биттерлиха PRO ready for offline:', reg.scope))
+            .catch(err => console.error('SW PRO registration failed:', err));
+        });
+      }
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -663,8 +678,8 @@
             const projTitleEl = document.getElementById('ctx-project-name');
 
             if (isSystemMode && activeProj) {
-                const p = activeProj.passport;
-                projTitleEl.innerText = `${p.lesnichestvo || 'Лесничество'}, кв. ${p.kvartal || '-'}, дел. ${p.delyanka || '-'}`;
+                const p = activeProj.passport || {};
+                projTitleEl.innerText = `${p.lesnichestvo || 'Лесничество'}, кв. ${p.kvartal || '-'}, дел. ${p.delyanka || '-'}, выд. ${p.vydel || '-'}`;
                 badgeEl.innerText = '🔗 В СВЯЗКЕ';
                 badgeEl.className = 'mode-badge badge-linked';
 
@@ -1261,5 +1276,8 @@
             renderArchiveList();
         });
     </script>
+
+<!-- ПОДКЛЮЧЕНИЕ ЕДИНОГО МОДУЛЯ СИНХРОНИЗАЦИИ, ЛИЦЕНЗИЙ И PWA-НАВИГАЦИИ -->
+<script src="lesovik-core.js"></script>
 </body>
 </html>
