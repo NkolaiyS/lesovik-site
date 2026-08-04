@@ -4,6 +4,21 @@
     <!-- 1. Единое ядро защиты, блокировки РСЯ и контекста — СТРОГО ПЕРВЫМ! -->
     <script src="lesovik-core.js"></script>
 
+    <!-- 2. PWA МЕТА-ТЕГИ И РЕГИСТРАЦИЯ SERVICE WORKER -->
+    <meta name="application-name" content="Лесовик Журнал PRO">
+    <link rel="manifest" href="/journal.webmanifest">
+    <meta name="theme-color" content="#2D5A27">
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw-journal.js')
+            .then(reg => console.log('Перечетный журнал PRO ready for offline:', reg.scope))
+            .catch(err => console.error('SW PRO registration failed:', err));
+        });
+      }
+    </script>
+
     <script type="text/javascript">
         // --- ПЕРЕХВАТ БОТОВ ДЛЯ SEO-ПРЕВЬЮ ---
         (function() {
@@ -337,7 +352,7 @@
                 </div>
             </div>
 
-            <!-- РАЗДЕЛЕНИЕ ПЛОЩАДЕЙ -->
+            <!-- РАЗДЕЛЕНИЕ ПЛОЩАДЕЙ С АВТО-ВЫДЕЛЕНИЕМ ИЗ СВЯЗКИ -->
             <div id="block-continuous" class="conditional-block active">
                 <div class="settings-grid">
                     <div>
@@ -549,14 +564,14 @@
             const projTitleEl = document.getElementById('ctx-project-name');
 
             if (isSystemMode && activeProj) {
-                const p = activeProj.passport;
-                projTitleEl.innerText = `${p.lesnichestvo || 'Лесничество'}, кв. ${p.kvartal || '-'}, дел. ${p.delyanka || '-'}`;
+                const p = activeProj.passport || {};
+                projTitleEl.innerText = `${p.lesnichestvo || 'Лесничество'}, кв. ${p.kvartal || '-'}, дел. ${p.delyanka || '-'}, выд. ${p.vydel || '-'}`;
                 badgeEl.innerText = '🔗 В СВЯЗКЕ';
                 badgeEl.className = 'mode-badge badge-linked';
 
                 // Если имя в локальном журнале пустое, берём из паспорта ядра
                 if (!journalData.name) {
-                    journalData.name = `${p.lesnichestvo || ''} кв.${p.kvartal || ''} дел.${p.delyanka || ''}`.trim();
+                    journalData.name = `${p.lesnichestvo || ''} кв.${p.kvartal || ''} дел.${p.delyanka || ''} выд.${p.vydel || ''}`.trim();
                     document.getElementById('tally-name').value = journalData.name;
                 }
             } else {
@@ -564,6 +579,41 @@
                 badgeEl.innerText = '⚡ Автономно';
                 badgeEl.className = 'mode-badge badge-standalone';
             }
+        }
+
+        // АВТОМАТИЧЕСКАЯ ПОДТЯЖКА ДАННЫХ ИЗ ДРУГИХ МОДУЛЕЙ ЯДРА
+        function loadLinkedDataFromCore() {
+            if (!window.LesovikCore || !window.LesovikCore.isSystemMode()) return;
+            
+            const activeProj = window.LesovikCore.getActiveProject();
+            if (!activeProj || !activeProj.plots || activeProj.plots.length === 0) return;
+
+            const plotModuleData = activeProj.plots[0].moduleData;
+            if (!plotModuleData) return;
+
+            // 1. Подтягиваем высоту из Высотомера
+            if (plotModuleData.height && plotModuleData.height.data) {
+                const hData = plotModuleData.height;
+                const sp = hData.speciesName || 'Сосна';
+                if (hData.data.averageHeight) {
+                    journalData.heights[sp] = hData.data.averageHeight;
+                }
+            }
+
+            // 2. Подтягиваем диаметры из Мерной Вилки
+            if (plotModuleData.dendrometry && plotModuleData.dendrometry.data) {
+                const dData = plotModuleData.dendrometry;
+                const sp = dData.speciesName || 'Сосна';
+                const stepDiam = dData.data.diameter;
+                
+                if (stepDiam) {
+                    const activeProbeKey = journalData.activeProbe;
+                    initDiameterObject(activeProbeKey, sp, stepDiam);
+                    // Увеличиваем счетчик деловых деревьев
+                    journalData.probes[activeProbeKey][sp][stepDiam].delovie += 1;
+                }
+            }
+            saveData();
         }
 
         function toggleTheme() {
@@ -934,9 +984,8 @@
                             aggregatedData[sp][d] = { delovie: 0, poludel: 0, drova: 0, height: null };
                         }
                         const item = dataStructure.probes[probeKey][sp][d];
-                        if (typeof item === 'number') {
-                            aggregatedData[sp][d].delovie += item;
-                        } else if (item) {
+                        if (typeof item === 'number') aggregatedData[sp][d].delovie += item;
+                        else if (item) {
                             aggregatedData[sp][d].delovie += item.delovie || 0;
                             aggregatedData[sp][d].poludel += item.poludel || 0;
                             aggregatedData[sp][d].drova += item.drova || 0;
@@ -1333,6 +1382,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             updateProjectContextDisplay();
+            loadLinkedDataFromCore();
 
             if(journalData.name) {
                 document.getElementById('tally-name').value = journalData.name;
