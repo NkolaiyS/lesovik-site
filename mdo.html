@@ -4,6 +4,21 @@
     <!-- 1. Единое ядро защиты, блокировки РСЯ и контекста — СТРОГО ПЕРВЫМ! -->
     <script src="lesovik-core.js"></script>
 
+    <!-- 2. PWA МЕТА-ТЕГИ И РЕГИСТРАЦИЯ SERVICE WORKER -->
+    <meta name="application-name" content="Лесовик МДО PRO">
+    <link rel="manifest" href="/mdo.webmanifest">
+    <meta name="theme-color" content="#2D5A27">
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw-mdo.js')
+            .then(reg => console.log('МДО PRO ready for offline:', reg.scope))
+            .catch(err => console.error('SW PRO registration failed:', err));
+        });
+      }
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -118,7 +133,7 @@
             font-family: 'Inter', sans-serif; line-height: 1.5;
             box-sizing: border-box;
             transition: background-color 0.3s, color 0.3s;
-            padding-bottom: 70px !important; /* Отступ под нижнее меню */
+            padding-bottom: 70px !important;
         }
 
         *, *:before, *:after { box-sizing: inherit; }
@@ -164,7 +179,7 @@
         .archive-scroll-container { width: 100%; max-width: 100%; overflow-x: auto; overflow-y: hidden; white-space: nowrap; padding-bottom: 5px; -webkit-overflow-scrolling: touch; box-sizing: border-box; }
         .archive-inner-flex { display: inline-flex; gap: 10px; align-items: center; max-width: none; }
 
-        .passport-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 15px; }
+        .passport-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 15px; }
 
         .grid-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 25px; }
 
@@ -226,7 +241,7 @@
 
 <div class="main-container">
     
-    <!-- 1. КАРТОЧКА УПРАВЛЕНИЯ ПАСПОРТОМ И АРХИВОМ (ЕДИНЫЙ СТИЛЬ С БУССОЛЬЮ) -->
+    <!-- 1. КАРТОЧКА УПРАВЛЕНИЯ ПАСПОРТОМ И АРХИВОМ -->
     <div class="content-card">
         <h2 style="font-size: 18px; color: var(--primary-forest); margin-top: 0; margin-bottom: 6px; font-weight: 700;">
             Управление проектом и паспортом лесосеки (МДО PRO)
@@ -238,25 +253,29 @@
         <div class="passport-grid">
             <div class="form-group">
                 <label>Участковое лесничество:</label>
-                <input type="text" id="mdo-lesnichestvo" value="Важгортское уч. лесничество" onchange="syncPassportToCore()">
+                <input type="text" id="mdo-lesnichestvo" value="Важгортское уч. лесничество" onchange="syncPassportToCore()" onfocus="this.select()">
             </div>
             <div class="form-group">
                 <label>№ Квартала:</label>
-                <input type="text" id="mdo-kvartal" value="312" onchange="syncPassportToCore()">
+                <input type="text" id="mdo-kvartal" value="312" onchange="syncPassportToCore()" onfocus="this.select()">
             </div>
             <div class="form-group">
-                <label>№ Выдела / Делянки:</label>
-                <input type="text" id="mdo-delyanka" value="12" onchange="syncPassportToCore()">
+                <label>№ Делянки:</label>
+                <input type="text" id="mdo-delyanka" value="12" onchange="syncPassportToCore()" onfocus="this.select()">
+            </div>
+            <div class="form-group">
+                <label>№ Выдела:</label>
+                <input type="text" id="mdo-vydel" value="1" onchange="syncPassportToCore()" onfocus="this.select()">
             </div>
             <div class="form-group">
                 <label>Вид мероприятия:</label>
-                <input type="text" id="mdo-target" value="Сплошная рубка" onchange="syncPassportToCore()">
+                <input type="text" id="mdo-target" value="Сплошная рубка" onchange="syncPassportToCore()" onfocus="this.select()">
             </div>
         </div>
 
         <div class="archive-scroll-container">
             <div class="archive-inner-flex">
-                <input type="text" id="mdo-archive-name" placeholder="Название объекта..." value="Кв. 312, Выд. 12" style="width: 180px; padding: 8px 10px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 12px; font-weight: 600; background: var(--input-bg); color: var(--text-main);">
+                <input type="text" id="mdo-archive-name" placeholder="Название объекта..." value="Кв. 312, Выд. 1, Дел. 12" style="width: 180px; padding: 8px 10px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 12px; font-weight: 600; background: var(--input-bg); color: var(--text-main);" onfocus="this.select()">
                 <button class="btn-action-main" onclick="saveMDOToArchive()">💾 Сохранить в архив</button>
                 <select id="mdo-archive-select" onchange="loadMDOFromArchive(this.value)" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-light); font-size: 12px; background: var(--input-bg); color: var(--text-main); font-weight: 600; min-width: 200px;">
                     <option value="">-- Выберите из архива --</option>
@@ -272,7 +291,7 @@
         <a href="index.html" class="btn-back">← На главную</a>
         
         <h1 class="page-title">Инженерный таксационный калькулятор МДО</h1>
-        <p class="page-subtitle">Профессиональная материально-денежная оценка выдела. Поштучный ввод фактических данных в <b>штуках деревьев</b>. Индивидуальные разряды высот элементов леса и **прямой ввод ставок платы** за категории крупности по прейскуранту региона.</p>
+        <p class="page-subtitle">Профессиональная материально-денежная оценка выдела. Поштучный ввод фактических данных в <b>штуках деревьев</b>. Индивидуальные разряды высот элементов леса и прямой ввод ставок платы за категории крупности по прейскуранту региона.</p>
 
         <div class="grid-inputs">
             <div class="form-group">
@@ -287,11 +306,11 @@
             </div>
             <div class="form-group">
                 <label>Общая площадь лесосеки (га)</label>
-                <input type="number" id="mdo-space" value="50.0" step="0.1" onchange="syncPassportToCore()">
+                <input type="number" id="mdo-space" value="50.0" step="0.1" onchange="syncPassportToCore()" onfocus="this.select()">
             </div>
             <div class="form-group">
                 <label>Фактическая площадь перечета (га)</label>
-                <input type="number" id="mdo-sample-space" value="2.0" step="0.01">
+                <input type="number" id="mdo-sample-space" value="2.0" step="0.01" onfocus="this.select()">
                 <small style="color:var(--text-muted); font-size:10px; display:block; margin-top:4px;">*Общая площадь таксационных лент или круговых площадок</small>
             </div>
         </div>
@@ -394,10 +413,11 @@
         const les = document.getElementById('mdo-lesnichestvo').value;
         const kv = document.getElementById('mdo-kvartal').value;
         const del = document.getElementById('mdo-delyanka').value;
+        const vydel = document.getElementById('mdo-vydel').value;
         const target = document.getElementById('mdo-target').value;
         const space = parseFloat(document.getElementById('mdo-space').value) || 0;
 
-        document.getElementById('mdo-archive-name').value = `Кв. ${kv}, Выд. ${del}`;
+        document.getElementById('mdo-archive-name').value = `Кв. ${kv}, Выд. ${vydel}, Дел. ${del}`;
 
         if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
             const activeProj = window.LesovikCore.getActiveProject();
@@ -405,6 +425,7 @@
                 activeProj.passport.lesnichestvo = les;
                 activeProj.passport.kvartal = kv;
                 activeProj.passport.delyanka = del;
+                activeProj.passport.vydel = vydel;
                 activeProj.passport.target = target;
                 if (activeProj.plots.length > 0) {
                     activeProj.plots[0].area = space;
@@ -453,19 +474,19 @@
                     </div>
                     <div class="form-group">
                         <label>Крупная (руб/м³):</label>
-                        <input type="number" class="price-input-large" value="${pLarge}" min="0">
+                        <input type="number" class="price-input-large" value="${pLarge}" min="0" onfocus="this.select()">
                     </div>
                     <div class="form-group">
                         <label>Средняя (руб/м³):</label>
-                        <input type="number" class="price-input-medium" value="${pMedium}" min="0">
+                        <input type="number" class="price-input-medium" value="${pMedium}" min="0" onfocus="this.select()">
                     </div>
                     <div class="form-group">
                         <label>Мелкая (руб/м³):</label>
-                        <input type="number" class="price-input-small" value="${pSmall}" min="0">
+                        <input type="number" class="price-input-small" value="${pSmall}" min="0" onfocus="this.select()">
                     </div>
                     <div class="form-group">
                         <label>Дрова/Тех (руб/м³):</label>
-                        <input type="number" class="price-input-firewood" value="${pFire}" min="0">
+                        <input type="number" class="price-input-firewood" value="${pFire}" min="0" onfocus="this.select()">
                     </div>
                 </div>
 
@@ -481,7 +502,7 @@
             blockHtml += `
                 <div class="step-input-wrapper">
                     <label>${d === 48 ? '48+ см' : d + ' см'}</label>
-                    <input type="number" class="step-tree-input" data-diameter="${d}" value="${defVal}" min="0">
+                    <input type="number" class="step-tree-input" data-diameter="${d}" value="${defVal}" min="0" onfocus="this.select()">
                 </div>
             `;
         });
@@ -687,7 +708,6 @@
         wrapper.style.display = 'block';
     }
 
-    // --- ЛОГИКА АРХИВАЦИИ И ЭКСПОРТА В LOCALSTORAGE ---
     function getMDODataSnapshot() {
         const blocks = document.querySelectorAll('.species-peruchet-block');
         let speciesData = [];
@@ -716,6 +736,7 @@
                 lesnichestvo: document.getElementById('mdo-lesnichestvo').value,
                 kvartal: document.getElementById('mdo-kvartal').value,
                 delyanka: document.getElementById('mdo-delyanka').value,
+                vydel: document.getElementById('mdo-vydel').value,
                 target: document.getElementById('mdo-target').value,
                 totalSpace: document.getElementById('mdo-space').value,
                 sampleSpace: document.getElementById('mdo-sample-space').value,
@@ -760,23 +781,21 @@
         if (!item) return;
 
         if (confirm(`Загрузить расчет МДО "${item.name}"? Текущие заполненные данные будут заменены.`)) {
-            document.getElementById('mdo-lesnichestvo').value = item.passport.lesnichestvo;
-            document.getElementById('mdo-kvartal').value = item.passport.kvartal;
-            document.getElementById('mdo-delyanka').value = item.passport.delyanka;
-            document.getElementById('mdo-target').value = item.passport.target;
-            document.getElementById('mdo-space').value = item.passport.totalSpace;
-            document.getElementById('mdo-sample-space').value = item.passport.sampleSpace;
-            document.getElementById('mdo-region').value = item.passport.region;
+            document.getElementById('mdo-lesnichestvo').value = item.passport.lesnichestvo || '';
+            document.getElementById('mdo-kvartal').value = item.passport.kvartal || '';
+            document.getElementById('mdo-delyanka').value = item.passport.delyanka || '';
+            document.getElementById('mdo-vydel').value = item.passport.vydel || '1';
+            document.getElementById('mdo-target').value = item.passport.target || '';
+            document.getElementById('mdo-space').value = item.passport.totalSpace || '50.0';
+            document.getElementById('mdo-sample-space').value = item.passport.sampleSpace || '2.0';
+            document.getElementById('mdo-region').value = item.passport.region || 'komi';
             document.getElementById('mdo-archive-name').value = item.name;
 
-            // Очищаем текущие блоки
             document.getElementById('peruchet-dynamic-container').innerHTML = '';
             addedSpeciesCodes.clear();
 
-            // Восстанавливаем породы
             item.speciesData.forEach(sp => {
                 const selector = document.getElementById('species-selector');
-                // Ищем соответствующий пункт списка
                 for (let i = 0; i < selector.options.length; i++) {
                     if (selector.options[i].value.startsWith(sp.rawCode + '|')) {
                         selector.selectedIndex = i;
@@ -822,7 +841,7 @@
     function exportMDOToCSV() {
         const snapshot = getMDODataSnapshot();
         let csv = "\uFEFF";
-        csv += `Паспорт делянки;${snapshot.passport.lesnichestvo}; Кв. ${snapshot.passport.kvartal}; Выд. ${snapshot.passport.delyanka}; ${snapshot.passport.target}\n`;
+        csv += `Паспорт делянки;${snapshot.passport.lesnichestvo}; Кв. ${snapshot.passport.kvartal}; Выд. ${snapshot.passport.vydel}; Дел. ${snapshot.passport.delyanka}; ${snapshot.passport.target}\n`;
         csv += `Площадь выдела (га);${snapshot.passport.totalSpace}; Площадь перечета (га);${snapshot.passport.sampleSpace}\n\n`;
         csv += "Порода;Разряд высот;Крупная (руб);Средняя (руб);Мелкая (руб);Дрова (руб);Ступень 16;Ступень 20;Ступень 24;Ступень 28;Ступень 32;Ступень 36;Ступень 40;Ступень 44;Ступень 48+\n";
 
@@ -834,9 +853,9 @@
             csv += "\n";
         });
 
-        const fileName = `МДО_Кв_${snapshot.passport.kvartal}_Выд_${snapshot.passport.delyanka}.xls`;
+        const fileName = `МДО_Кв_${snapshot.passport.kvartal}_Выд_${snapshot.passport.vydel}_Дел_${snapshot.passport.delyanka}.xls`;
         const blob = new Blob([csv], { type: 'application/vnd.ms-excel;charset=utf-8;' });
-        const url = URL.URL.createObjectURL ? URL.createObjectURL(blob) : URL.webkitCreateObjectURL(blob);
+        const url = URL.createObjectURL ? URL.createObjectURL(blob) : URL.webkitCreateObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
         link.setAttribute("download", fileName);
@@ -868,10 +887,12 @@
         if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
             const activeProj = window.LesovikCore.getActiveProject();
             if (activeProj) {
-                document.getElementById('mdo-lesnichestvo').value = activeProj.passport.lesnichestvo || '';
-                document.getElementById('mdo-kvartal').value = activeProj.passport.kvartal || '';
-                document.getElementById('mdo-delyanka').value = activeProj.passport.delyanka || '';
-                document.getElementById('mdo-target').value = activeProj.passport.target || '';
+                const p = activeProj.passport || {};
+                document.getElementById('mdo-lesnichestvo').value = p.lesnichestvo || '';
+                document.getElementById('mdo-kvartal').value = p.kvartal || '';
+                document.getElementById('mdo-delyanka').value = p.delyanka || '';
+                document.getElementById('mdo-vydel').value = p.vydel || '1';
+                document.getElementById('mdo-target').value = p.target || '';
                 if (activeProj.plots.length > 0 && activeProj.plots[0].area) {
                     document.getElementById('mdo-space').value = activeProj.plots[0].area;
                 }
