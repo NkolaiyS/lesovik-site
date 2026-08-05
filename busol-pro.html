@@ -451,6 +451,23 @@
         </div>
     </div>
 
+    <!-- ПОП-АП ФИКСАЦИИ СТАРТОВОЙ ТОЧКИ T1 GPS -->
+    <div id="gps-t1-popup" class="popup-overlay" onclick="closePopupOuter('gps-t1-popup', event)">
+        <div class="popup-window">
+            <button class="popup-close" onclick="closePopup('gps-t1-popup')">&times;</button>
+            <h3>📍 Точка 1 (Т1) Зафиксирована!</h3>
+            <div style="background: rgba(45, 90, 39, 0.06); padding: 12px; border-radius: 8px; font-family: monospace; font-size: 12px; line-height: 1.6; margin: 10px 0;">
+                <b>DMS:</b> <span id="t1-dms-display">--</span><br>
+                <b>DD:</b> <span id="t1-dd-display">--</span><br>
+                <b>Высота:</b> <span id="t1-alt-display">--</span>
+            </div>
+            <p style="font-size: 13px; line-height: 1.4; color: var(--text-graphite);">
+                Стартовый столб успешно записан в память. Теперь пройдите <b>5–10 метров</b> строго по линии визира. Направление вычислится автоматически без участия магнитометра!
+            </p>
+            <button class="btn-action btn-set-zero" style="width: 100%; margin-top: 5px;" onclick="closePopup('gps-t1-popup')">Понятно, иду по линии</button>
+        </div>
+    </div>
+
     <div id="instruction-popup" class="popup-overlay" onclick="closeInstructionOuter(event)">
         <div class="popup-window">
             <button class="popup-close" onclick="closeInstruction()">&times;</button>
@@ -793,7 +810,7 @@
     let lastVibratedSector = -1; 
     let calibrationOffsetDecimal = 0.0;
 
-    // БЕСШУМНОЕ ВСПОМОГАТЕЛЬНОЕ УВЕДОМЛЕНИЕ ВМЕСТО ALERT (ИЗБЕГАЕМ ЗАВИСАНИЙ iOS)
+    // ВСПОМОГАТЕЛЬНОЕ УВЕДОМЛЕНИЕ
     function showToast(msg) {
         const toast = document.getElementById('toast-message');
         if (toast) {
@@ -940,15 +957,45 @@
     }
 
     function startGpsLine() {
-        gpsPoint1 = { lat: currentLat, lng: currentLng };
-        showToast(`📍 Точка 1 зафиксирована! Пройдите 5-10 метров по визиру.`);
-        processGpsHeadingMode();
+        const setPoint1 = (lat, lng, alt) => {
+            gpsPoint1 = { lat: lat, lng: lng, alt: alt };
+            
+            // Заполнение Поп-апа T1 подробными данными
+            document.getElementById('t1-dms-display').innerText = `${decimalToDMS(lat, true)} ${decimalToDMS(lng, false)}`;
+            document.getElementById('t1-dd-display').innerText = `(${lat.toFixed(6)}, ${lng.toFixed(6)})`;
+            document.getElementById('t1-alt-display').innerText = `${alt} м`;
+            
+            // Вызов Поп-апа T1
+            openPopup('gps-t1-popup');
+            
+            processGpsHeadingMode();
+            drawPolygon();
+        };
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    currentLat = pos.coords.latitude;
+                    currentLng = pos.coords.longitude;
+                    currentAltitude = pos.coords.altitude ? Math.round(pos.coords.altitude) : currentAltitude;
+                    setPoint1(currentLat, currentLng, currentAltitude);
+                },
+                (err) => {
+                    // Если точные координаты задерживаются, берем имеющиеся
+                    setPoint1(currentLat, currentLng, currentAltitude);
+                },
+                { enableHighAccuracy: true, timeout: 3000, maximumAge: 0 }
+            );
+        } else {
+            setPoint1(currentLat, currentLng, currentAltitude);
+        }
     }
 
     function resetGpsLine() {
         gpsPoint1 = null;
         calculatedGpsAzimuth = null;
         processGpsHeadingMode();
+        drawPolygon();
     }
 
     function processGpsHeadingMode() {
