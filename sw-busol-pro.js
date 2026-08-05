@@ -1,14 +1,16 @@
 /**
  * ============================================================================
- * SERVICE WORKER — ЕДИНЫЙ ОФЛАЙН-КЕШ ЭКОСИСТЕМЫ «ЛЕСОВИК PRO» (v2.9.0)
+ * SERVICE WORKER — ЕДИНЫЙ ОФЛАЙН-КЕШ ЭКОСИСТЕМЫ «ЛЕСОВИК PRO» (v2.9.2)
  * (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
  * ============================================================================
  */
 
-const PRO_CACHE = 'busol-pro-v2.9.1';
+const PRO_CACHE = 'busol-pro-v2.9.2';
 
 // Единый полный список всех 6 модулей и зависимостей для работы в тайге
 const PRO_ASSETS = [
+  '/',
+  '/index.html',
   '/busol-pro.html',
   '/height.html',
   '/diameter.html',
@@ -31,7 +33,7 @@ const PRO_ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(PRO_CACHE).then((cache) => {
-      console.log('Lesovik PRO: Загрузка всех 6 приложений в офлайн-кеш...');
+      console.log('Lesovik PRO v2.9.2: Загрузка всех 6 приложений в офлайн-кеш...');
       return cache.addAll(PRO_ASSETS);
     })
   );
