@@ -1,4 +1,4 @@
-const PRO_CACHE = 'busol-pro-v2.8.7';
+const PRO_CACHE = 'busol-pro-v2.8.8';
 const PRO_ASSETS = [
   '/busol-pro.html',
   '/lesovik-core.js',
