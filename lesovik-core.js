@@ -3,7 +3,7 @@
  * ЛЕСОВИК-CORE (lesovik-core.js)
  * Центральное ядро экосистемы «Лесовик PRO»
  * ============================================================================
- * Версия: 2.9.5 (Исправлена генерация ID, убраны ошибки вызова функций)
+ * Версия: 2.9.6 (Защита оффлайн-режима, сквозной контроль доступа)
  * Автор / Владелец: Николай Сергеевич Худяков (ИП Худяков Н.С.)
  * Экосистема: РЕСУРС (https://resurs-stretch.ru/)
  * ============================================================================
@@ -78,6 +78,52 @@
 
     const globalAuth = checkLicenseStatus();
 
+    // ------------------------------------------------------------------------
+    // 1.3 АВТОМАТИЧЕСКАЯ ЗАЩИТА ОФФЛАЙН-РЕЖИМА ДЛЯ БЕСПЛАТНЫХ ПОЛЬЗОВАТЕЛЕЙ
+    // ------------------------------------------------------------------------
+    function enforceOfflineProtection() {
+        if (globalAuth.isPro) return; // PRO-пользователям оффлайн доступен полностью
+
+        let blocker = document.getElementById('offline-blocker-screen');
+        if (!blocker) {
+            blocker = document.createElement('div');
+            blocker.id = 'offline-blocker-screen';
+            blocker.style.cssText = `
+                display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+                background: #111815; color: #F9FBF9; z-index: 9999999;
+                flex-direction: column; align-items: center; justify-content: center;
+                text-align: center; padding: 20px; box-sizing: border-box;
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            `;
+            blocker.innerHTML = `
+                <span style="font-size:50px; margin-bottom:15px;">📡</span>
+                <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:10px;">Требуется подключение к сети</h2>
+                <p style="max-width:450px; font-size:13px; opacity:0.85; line-height:1.5; margin-bottom:20px;">
+                    Бесплатные веб-сервисы работают исключительно при активном интернет-соединении.<br><br>
+                    Для автономной работы в глубоком лесу и тайге <b>без доступа к интернету</b> приобретите профессиональное оффлайн-приложение <b>БГ-ХНС PRO 2.6</b>.
+                </p>
+                <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; border:1px solid rgba(143,188,143,0.2); text-align:left; font-size:12px; max-width:450px; width:100%; box-sizing:border-box;">
+                    <b>Контакты для приобретения автономной программы:</b><br>
+                    • Официальный дистрибьютор (ООО ТД «Сателлит»): <a href="mailto:a1983v@yandex.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none;">a1983v@yandex.ru</a><br>
+                    • Разработчик ПО (ИП Худяков Н.С.): <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; font-weight:bold; text-decoration:none;">folgoal@gmail.com</a>
+                </div>
+            `;
+            document.body.appendChild(blocker);
+        }
+
+        const checkStatus = () => {
+            if (!navigator.onLine) {
+                blocker.style.display = 'flex';
+            } else {
+                blocker.style.display = 'none';
+            }
+        };
+
+        window.addEventListener('online', checkStatus);
+        window.addEventListener('offline', checkStatus);
+        checkStatus();
+    }
+
     // --- ФОНОВАЯ ТИХАЯ ПРОВЕРКА ВЕРСИИ ---
     async function checkSilentUpdate() {
         if (!navigator.onLine) return;
@@ -114,10 +160,10 @@
                                 justify-content:center; font-family:'Inter', -apple-system, BlinkMacSystemFont, sans-serif; padding:20px; text-align:center; box-sizing:border-box;">
                         
                         <span style="font-size:50px; margin-bottom:15px;">🔒</span>
-                        <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:10px;">Доступ к «Буссоль PRO» ограничен</h2>
+                        <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:10px;">Доступ к «Буссоль PRO 2.6» ограничен</h2>
                         
                         <p style="max-width:480px; font-size:13px; opacity:0.85; line-height:1.5; margin-bottom:20px;">
-                            Данное устройство не зарегистрировано в реестре лицензий экосистемы «Лесовик PRO».<br><br>
+                            Данное устройство не зарегистрировано в реестре лицензий экосистемы «БГ-ХНС PRO 2.6».<br><br>
                             Ваш родной ID устройства: <b style="color:#8FBC8F; font-family:monospace; font-size:15px;">${globalAuth.currentId}</b>
                         </p>
                         
@@ -147,9 +193,13 @@
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', enforceBusolProAccessControl);
+        document.addEventListener('DOMContentLoaded', () => {
+            enforceBusolProAccessControl();
+            enforceOfflineProtection();
+        });
     } else {
         enforceBusolProAccessControl();
+        enforceOfflineProtection();
     }
 
     // БЛОКИРОВКА РЕКЛАМЫ ТОЛЬКО ДЛЯ ЛИЦЕНЗИОННЫХ УСТРОЙСТВ
@@ -205,7 +255,7 @@
     // 4. ЕДИНЫЙ API LESOVIKCORE
     // ------------------------------------------------------------------------
     window.LesovikCore = {
-        version: '2.9.5-PRO',
+        version: '2.9.6-PRO',
 
         isPro: function () {
             return checkLicenseStatus().isPro;
@@ -604,11 +654,11 @@
                     <button onclick="document.getElementById('pro-promo-modal').style.display='none'" style="position:absolute; top:12px; right:12px; background:transparent; border:none; color:#FFF; font-size:22px; cursor:pointer;">&times;</button>
                     <div style="text-align:center; margin-bottom:15px;">
                         <span style="font-size:40px;">🌲</span>
-                        <h3 style="font-family:'Merriweather',serif; color:#8FBC8F; margin:8px 0 5px 0;">Единая экосистема «Лесовик PRO»</h3>
+                        <h3 style="font-family:'Merriweather',serif; color:#8FBC8F; margin:8px 0 5px 0;">Единая экосистема «БГ-ХНС PRO 2.6»</h3>
                         <span style="font-size:11px; opacity:0.7; text-transform:uppercase;">Сквозной контекст • Бесшовная связка 6 инструментов</span>
                     </div>
                     <p style="font-size:12px; line-height:1.5; opacity:0.9; margin-bottom:15px; text-align:justify;">
-                        Вы используете бесплатную автономную версию калькулятора. В версии <b>PRO</b> все 6 инструментов объединяются в единую сеть без рекламы.
+                        Вы используете бесплатную автономную версию калькулятора. В версии <b>PRO 2.6</b> все 6 инструментов объединяются в единую сеть без рекламы и работают полностью оффлайн в тайге.
                     </p>
                     <div style="background:rgba(255,255,255,0.04); padding:12px 15px; border-radius:8px; border:1px solid rgba(143,188,143,0.25); font-size:12px; margin-bottom:15px;">
                         <span style="display:block; font-size:10px; opacity:0.6; text-transform:uppercase; margin-bottom:6px; font-weight:bold;">Ваш родной ID устройства: <b style="color:#8FBC8F; font-family:monospace;">${currentId}</b></span>
