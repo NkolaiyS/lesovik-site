@@ -2,9 +2,8 @@
  * ============================================================================
  * ЛЕСОВИК-CORE (lesovik-core.js)
  * Центральное ядро экосистемы «Лесовик PRO»
- * Разработка и автоматизация для таксации и отвода лесосек
  * ============================================================================
- * Версия: 2.8.1 (Исправлена синхронизация Паспорта в МДО и локальные поля)
+ * Версия: 2.9.2 (Строгая изоляция родных ID устройств, удален проходной двор с ?key=)
  * Автор / Владелец: Николай Сергеевич Худяков (ИП Худяков Н.С.)
  * Экосистема: РЕСУРС (https://resurs-stretch.ru/)
  * ============================================================================
@@ -14,19 +13,22 @@
     'use strict';
 
     // ------------------------------------------------------------------------
-    // 1. ПРОВЕРКА ЛИЦЕНЗИИ И СТРОГИЙ КОНТРОЛЬ РЕКЛАМЫ (РСЯ)
+    // 1. РЕЕСТР АКТИВИРОВАННЫХ УСТРОЙСТВ И СРОКИ ДЕЙСТВИЯ ЛИЦЕНЗИЙ
     // ------------------------------------------------------------------------
+    // Месяцы в JS: 0-Янв, 1-Фев, 2-Мар, 3-Апр, 4-Май, 5-Июн, 6-Июл, 7-Авг, 8-Сен, 9-Окт, 10-Ноя, 11-Дек
     const licensedDevices = {
-        "HNS-RAL2-45TCN0": new Date(2099, 11, 31),  // Бессрочно (iPhone Яндекс)
-        "HNS-DDFW-V15MN9": new Date(2099, 11, 31),  // Бессрочно (iPhone Safari)
-        "HNS-3SBX-TQMJO7": new Date(2026, 11, 31),  // До 31 декабря 2026 (Ноутбук)
+        "HNS-RAL2-45TCN0": new Date(2099, 11, 31), // Бессрочно (iPhone Яндекс Николай)
+        "HNS-DDFW-V15MN9": new Date(2099, 11, 31), // Бессрочно (iPhone Safari Николай)
+        "HNS-0LE2-PK7CV9": new Date(2099, 11, 31), // Бессрочно (Web Николай)
+        "HNS-3K0F-5IHF3A": new Date(2099, 11, 31), // Бессрочно (Android Николай)
+        "HNS-3SBX-TQMJO7": new Date(2026, 11, 31), // До 31 декабря 2026 (Ноутбук)
         "HNS-MINCIFRA-TEST": new Date(2099, 11, 31),// Доступ экспертов Минцифры
-        "HNS-0LE2-PK7CV9": new Date(2099, 7, 31),   // ТЕСТ ПРО до 31 августа (web Николай)
-        "HNS-8Z8T-R49OSZ": new Date(2026, 7, 31),   // ТЕСТ ПРО до 31 августа (Андрей редми)
-        "HNS-6680-TVK32U": new Date(2099, 7, 5),    // ТЕСТ ПРО до 5 августа (мой хонор 7)
-        "HNS-3T7D-ZJKISD": new Date(2026, 11, 31),  // ТЕСТ ПРО до 31 декабря (Андрей Хуавей)
+        "HNS-8Z8T-R49OSZ": new Date(2026, 11, 31),  // Андрей (Редми) до 31 августа 2026
+        "HNS-3T7D-ZJKISD": new Date(2026, 11, 31), // Андрей (Хуавей) до 31 декабря 2026
+        "HNS-6680-TVK32U": new Date(2099, 7, 5),   // Хонор 7
     };
 
+    // Генератор нерасшифруемого уникального ID для браузера
     function generateWebDeviceId() {
         const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         let segment1 = '', segment2 = '';
@@ -35,16 +37,10 @@
         return `HNS-${segment1}-${segment2}`;
     }
 
+    // ПОЛУЧЕНИЕ СТРОГО РОДНОГО ID УСТРОЙСТВА (БЕЗ ПЕРЕХВАТА ИЗ URL!)
     function getCurrentDeviceId() {
         if (window.device && window.device.uuid) {
             return window.device.uuid;
-        }
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        const keyParam = urlParams.get('key');
-        if (keyParam) {
-            localStorage.setItem('bg_hns_web_id', keyParam);
-            return keyParam;
         }
 
         let webId = localStorage.getItem('bg_hns_web_id');
@@ -65,12 +61,12 @@
                 return { isPro: true, currentId }; // Лицензия активна
             }
         }
-        return { isPro: false, currentId }; // Бесплатный режим
+        return { isPro: false, currentId }; // Ограниченный/Бесплатный режим
     }
 
     const globalAuth = checkLicenseStatus();
 
-    // --- ФОНОВАЯ ТИХАЯ ПРОВЕРКА ВЕРСИИ (SILENT UPDATE) ---
+    // --- ФОНОВАЯ ТИХАЯ ПРОВЕРКА ВЕРСИИ ---
     async function checkSilentUpdate() {
         if (!navigator.onLine) return;
         try {
@@ -86,13 +82,13 @@
                 }
             }
         } catch (e) {
-            // Игнорируем ошибки сети при проверке
+            // Игнорируем ошибки сети
         }
     }
     checkSilentUpdate();
 
     // ------------------------------------------------------------------------
-    // 2. ГЛУХАЯ ЗАГЛУШКА-БЛОКИРОВЩИК ДЛЯ BUSOL-PRO (ЕСЛИ НЕТ ЛИЦЕНЗИИ)
+    // 2. БЛОКИРОВЩИК ЗАКРЫТЫХ МОДУЛЕЙ ДЛЯ НЕАВТОРИЗОВАННЫХ ПОЛЬЗОВАТЕЛЕЙ
     // ------------------------------------------------------------------------
     function enforceBusolProAccessControl() {
         const currentPath = window.location.pathname.toLowerCase();
@@ -109,28 +105,26 @@
                         <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:10px;">Доступ к «Буссоль PRO» ограничен</h2>
                         
                         <p style="max-width:480px; font-size:13px; opacity:0.85; line-height:1.5; margin-bottom:20px;">
-                            Модуль «Буссоль PRO» является закрытым офлайн-инструментом. Период демонстрационной установки завершен или лицензия не активирована.<br><br>
-                            Ваш ID устройства: <b style="color:#8FBC8F; font-family:monospace; font-size:15px;">${globalAuth.currentId}</b>
+                            Данное устройство не зарегистрировано в реестре лицензий экосистемы «Лесовик PRO».<br><br>
+                            Ваш родной ID устройства: <b style="color:#8FBC8F; font-family:monospace; font-size:15px;">${globalAuth.currentId}</b>
                         </p>
                         
                         <div style="background:rgba(255,255,255,0.04); padding:16px 20px; border-radius:10px; border:1px solid rgba(143,188,143,0.25); text-align:left; max-width:480px; width:100%; box-sizing:border-box; margin-bottom:20px;">
-                            <span style="display:block; font-size:11px; opacity:0.6; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; text-align:center; font-weight:bold;">Для приобретения и продления лицензии:</span>
+                            <span style="display:block; font-size:11px; opacity:0.6; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; text-align:center; font-weight:bold;">Для активации доступа передайте ваш ID:</span>
                             
                             <div style="margin-bottom:12px; padding-bottom:10px; border-bottom:1px dashed rgba(255,255,255,0.1);">
-                                <span style="display:block; font-size:12px; font-weight:bold; color:#8FBC8F;">• Официальный дистрибьютор (ООО «Сателлит»):</span>
-                                <span style="display:block; font-size:12px; opacity:0.85; margin-top:2px;">Отдел продаж / Продление ключей:</span>
+                                <span style="display:block; font-size:12px; font-weight:bold; color:#8FBC8F;">• Отдел продаж (ООО «Сателлит»):</span>
                                 <a href="mailto:a1983v@yandex.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none; font-size:13px; display:inline-block; margin-top:3px;">✉️ a1983v@yandex.ru</a>
                             </div>
 
                             <div>
-                                <span style="display:block; font-size:12px; font-weight:bold; color:#8FBC8F;">• Отдел разработки ПО (ИП Худяков Н.С.):</span>
-                                <span style="display:block; font-size:12px; opacity:0.85; margin-top:2px;">Техническая поддержка:</span>
+                                <span style="display:block; font-size:12px; font-weight:bold; color:#8FBC8F;">• Техническая поддержка (ИП Худяков Н.С.):</span>
                                 <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; font-weight:bold; text-decoration:none; font-size:13px; display:inline-block; margin-top:3px;">✉️ folgoal@gmail.com</a>
                             </div>
                         </div>
 
                         <a href="https://lesovik-pro.ru/busol.html" style="background:#2D5A27; color:#FFF; text-decoration:none; padding:12px 24px; border-radius:8px; font-weight:bold; font-size:13px; text-transform:uppercase; box-shadow:0 4px 15px rgba(0,0,0,0.4); display:inline-block;">
-                            🌐 Перейти в бесплатную онлайн-версию
+                            🌐 Перейти в бесплатную версию
                         </a>
                     </div>
                 `;
@@ -146,7 +140,7 @@
         enforceBusolProAccessControl();
     }
 
-    // БЛОКИРУЕМ РЕКЛАМУ ТОЛЬКО ДЛЯ PRO-ПОЛЬЗОВАТЕЛЕЙ
+    // БЛОКИРОВКА РЕКЛАМЫ ТОЛЬКО ДЛЯ ЛИЦЕНЗИОННЫХ УСТРОЙСТВ
     if (globalAuth.isPro) {
         window.yaContextCb = { push: function() { return 0; } };
         const applyAdBlock = () => {
@@ -199,7 +193,7 @@
     // 4. ЕДИНЫЙ API LESOVIKCORE
     // ------------------------------------------------------------------------
     window.LesovikCore = {
-        version: '2.8.1-PRO',
+        version: '2.9.2-PRO',
 
         isPro: function () {
             return checkLicenseStatus().isPro;
@@ -255,7 +249,6 @@
                     const found = projects.find(p => p.id === activeId);
                     if (found) return found;
                 }
-                // Если активный ID не задан или не найден, делаем активным первый проект
                 this.setActiveProject(projects[0].id);
                 return projects[0];
             }
@@ -323,7 +316,6 @@
             this.syncPageFormFields();
         },
 
-        // БЕЗОПАСНАЯ ЗАПИСЬ ДАННЫХ МОДУЛЕЙ (ВЫСОТОМЕР / ВИЛКА)
         updatePlotModuleData: function (plotId, moduleName, payload) {
             try {
                 const projects = this.getProjects();
@@ -348,7 +340,6 @@
             }
         },
 
-        // СИНХРОНИЗАЦИЯ ПОЛЕЙ НА ФОРМАХ СТРАНИЦ С ПАСПОРТОМ ЯДРА
         syncPageFormFields: function () {
             if (!this.isSystemMode()) return;
             const activeProj = this.getActiveProject();
@@ -357,19 +348,15 @@
 
             const fullName = `${p.lesnichestvo || ''} кв.${p.kvartal || ''} выд.${p.vydel || ''} дел.${p.delyanka || ''}`.trim();
 
-            // 1. Полнотомер (bitterlich.html)
             const bitterlichInput = document.getElementById('lesoseka-name');
             if (bitterlichInput) bitterlichInput.value = fullName;
 
-            // 2. Перечетная ведомость / Журнал (journal.html)
             const journalInput = document.getElementById('tally-name');
             if (journalInput) journalInput.value = fullName;
 
-            // 3. Буссоль (busol-pro.html)
             const busolKvartal = document.getElementById('kvartal-input');
             if (busolKvartal) busolKvartal.value = `Кв. ${p.kvartal || ''}, Выд. ${p.vydel || ''}`;
 
-            // 4. Калькулятор МДО (mdo.html)
             const mdoLes = document.getElementById('mdo-lesnichestvo');
             if (mdoLes && p.lesnichestvo) mdoLes.value = p.lesnichestvo;
             const mdoKvk = document.getElementById('mdo-kvartal');
@@ -385,9 +372,6 @@
             if (mdoArchiveName) mdoArchiveName.value = `Кв. ${p.kvartal || ''}, Выд. ${p.vydel || ''}, Дел. ${p.delyanka || ''}`;
         },
 
-        // --------------------------------------------------------------------
-        // 5. ЕДИНОЕ МОДАЛЬНОЕ ОКНО УПРАВЛЕНИЯ «⚙️ ПРОЕКТ» (С ПОЛНЫМ ПАСПОРТОМ)
-        // --------------------------------------------------------------------
         openProjectControlModal: function () {
             let modal = document.getElementById('lesovik-project-control-modal');
             const isPro = this.isPro();
@@ -413,7 +397,6 @@
                             <h3 style="margin:0; color:#8FBC8F; font-size:16px;">Настройка проекта и Паспорт делянки</h3>
                         </div>
 
-                        <!-- ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМА -->
                         <div style="background:rgba(0,0,0,0.25); padding:12px; border-radius:8px; border:1px solid #2e3b44; margin-bottom:15px;">
                             <div style="font-size:11px; color:#b0bec5; margin-bottom:6px; font-weight:bold; text-transform:uppercase;">Режим работы экосистемы:</div>
                             <label style="display:flex; align-items:center; cursor:pointer; font-size:13px; color:#fff;">
@@ -424,7 +407,6 @@
                             </label>
                         </div>
 
-                        <!-- ФОРМА ПАСПОРТА ДЕЛЯНКИ -->
                         <div style="background:rgba(255,255,255,0.03); padding:14px; border-radius:8px; border:1px solid #2e3b44; margin-bottom:15px;">
                             <div style="font-size:12px; color:#8FBC8F; font-weight:bold; margin-bottom:10px; text-transform:uppercase;">📋 Реквизиты объекта (Паспорт):</div>
                             
@@ -488,9 +470,7 @@
             });
         },
 
-        // --------------------------------------------------------------------
-        // 6. ОТРЕСОВКА ПРИЛИПАЮЩЕГО НИЖНЕГО МЕНЮ И КНОПКИ ШАПКИ
-        // --------------------------------------------------------------------
+        // ЧИСТАЯ НАВИГАЦИЯ (БЕЗ ?key= В ССЫЛКАХ)
         renderNavigationUI: function () {
             if (!this.isPro() && window.location.pathname.toLowerCase().includes('busol-pro.html')) {
                 return;
@@ -499,7 +479,6 @@
             const currentFile = window.location.pathname.split('/').pop() || 'busol-pro.html';
             const isPro = this.isPro();
             const isSystemMode = this.isSystemMode();
-            const currentId = getCurrentDeviceId();
 
             let bottomNav = document.getElementById('lesovik-bottom-nav-bar');
             if (!bottomNav) {
@@ -526,11 +505,10 @@
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             `;
 
-            // ФОРМИРОВАНИЕ ССЫЛОК С СОХРАНЕНИЕМ ЛИЦЕНЗИОННОГО КЛЮЧА
+            // ЧИСТЫЕ ПРЯМЫЕ ССЫЛКИ ДЛЯ ПЕРЕХОДА
             bottomNav.innerHTML = SYSTEM_MODULES.map(m => {
                 const isActive = currentFile.includes(m.file.replace('.html', ''));
-                const fileWithKey = `${m.file}?key=${encodeURIComponent(currentId)}`;
-                const linkHref = isPro ? `href="${fileWithKey}"` : `href="javascript:void(0)" onclick="window.showProPromoModal()"`;
+                const linkHref = isPro ? `href="${m.file}"` : `href="javascript:void(0)" onclick="window.showProPromoModal()"`;
                 
                 return `
                     <a ${linkHref} style="
@@ -582,9 +560,6 @@
             this.syncPageFormFields();
         },
 
-        // --------------------------------------------------------------------
-        // 7. ИНИЦИАЛИЗАЦИЯ
-        // --------------------------------------------------------------------
         init: function () {
             if (this.getProjects().length === 0 && this.isPro()) {
                 this.createProject({
@@ -621,10 +596,10 @@
                         <span style="font-size:11px; opacity:0.7; text-transform:uppercase;">Сквозной контекст • Бесшовная связка 6 инструментов</span>
                     </div>
                     <p style="font-size:12px; line-height:1.5; opacity:0.9; margin-bottom:15px; text-align:justify;">
-                        Вы используете бесплатную автономную версию калькулятора. В версии <b>PRO</b> все 6 инструментов объединяются в единую сеть: чертеж делянки, площади и породы передаются между калькуляторами без рекламы.
+                        Вы используете бесплатную автономную версию калькулятора. В версии <b>PRO</b> все 6 инструментов объединяются в единую сеть без рекламы.
                     </p>
                     <div style="background:rgba(255,255,255,0.04); padding:12px 15px; border-radius:8px; border:1px solid rgba(143,188,143,0.25); font-size:12px; margin-bottom:15px;">
-                        <span style="display:block; font-size:10px; opacity:0.6; text-transform:uppercase; margin-bottom:6px; font-weight:bold;">Ваш ID устройства: <b style="color:#8FBC8F; font-family:monospace;">${currentId}</b></span>
+                        <span style="display:block; font-size:10px; opacity:0.6; text-transform:uppercase; margin-bottom:6px; font-weight:bold;">Ваш родной ID устройства: <b style="color:#8FBC8F; font-family:monospace;">${currentId}</b></span>
                         <div style="margin-bottom:8px;">
                             <span style="font-weight:bold; color:#8FBC8F;">• ООО «Сателлит» (Отдел продаж):</span><br>
                             <a href="mailto:a1983v@yandex.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none;">✉️ a1983v@yandex.ru</a>
