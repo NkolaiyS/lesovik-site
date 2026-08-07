@@ -249,6 +249,38 @@
 
         #result-box { display: none; background: var(--forest-light); color: #111; text-align: center; padding: 12px; border-radius: 8px; font-size: 18px; font-weight: bold; margin-bottom: 12px; }
 
+        /* ПЛАШКА СРЕДНИХ ДИАМЕТРОВ ПО ПОРОДАМ */
+        .species-summary-card {
+            background: rgba(45, 90, 39, 0.06);
+            border: 1px solid var(--forest-green);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            font-size: 12px;
+        }
+        .species-summary-card h4 {
+            margin: 0 0 6px 0;
+            font-size: 12px;
+            color: var(--forest-green);
+            text-transform: uppercase;
+            font-family: 'Merriweather', serif;
+        }
+        .species-summary-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .species-summary-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
         .calibration-panel { display: none; background: rgba(59, 130, 246, 0.08); border: 1px dashed #3B82F6; border-radius: 8px; padding: 10px; margin-top: 8px; }
 
         #start-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-paper); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; text-align: center; }
@@ -412,6 +444,14 @@
 
                 <div id="result-box">Диаметр ствола: 0.0 см</div>
 
+                <!-- ПЛАШКА РАСЧЕТА СРЕДНЕГО ДИАМЕТРА ПО ПОРОДАМ -->
+                <div class="species-summary-card">
+                    <h4>📊 Средний диаметр по породам (Текущий объект):</h4>
+                    <div class="species-summary-list" id="species-summary-list">
+                        <span style="opacity:0.6; font-size:11px;">Замеров пока нет</span>
+                    </div>
+                </div>
+
                 <div class="input-group">
                     <label for="distance">Дистанция до дерева (м):</label>
                     <input type="number" id="distance" value="2.0" step="0.1" min="0" onfocus="this.select()">
@@ -497,6 +537,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         updateProjectContextDisplay();
         renderArchiveTable();
+        renderSpeciesSummary();
     });
 
     function updateProjectContextDisplay() {
@@ -658,32 +699,85 @@
             
             let isLinkedSaved = false;
 
-            // 1. ПЕРЕДАЧА ДАННЫХ В ЕДИНУЮ СИСТЕМУ LESOVIKCORE
+            // 1. ПЕРЕДАЧА ДАННЫХ В ЕДИНУЮ СИСТЕМУ LESOVIKCORE (ЕСЛИ В СВЯЗКЕ)
             if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
                 const activeProj = window.LesovikCore.getActiveProject();
                 if (activeProj && activeProj.plots && activeProj.plots.length > 0) {
                     const plotId = activeProj.plots[0].id;
-                    window.LesovikCore.updatePlotModuleData(plotId, 'dendrometry', {
-                        speciesName: selectedSpecies,
-                        data: {
-                            diameter: stepDiameter
-                        }
-                    });
+                    const currentPlot = activeProj.plots[0];
+                    const existingDendroData = (currentPlot.moduleData && currentPlot.moduleData.dendrometry) ? currentPlot.moduleData.dendrometry : { speciesData: {} };
+                    
+                    if (!existingDendroData.speciesData) existingDendroData.speciesData = {};
+                    if (!existingDendroData.speciesData[selectedSpecies]) existingDendroData.speciesData[selectedSpecies] = [];
+                    
+                    // Записываем новое точное значение диаметра в массив соответствующей породы
+                    existingDendroData.speciesData[selectedSpecies].push(exactDiameter);
+
+                    window.LesovikCore.updatePlotModuleData(plotId, 'dendrometry', existingDendroData);
                     isLinkedSaved = true;
                 }
             }
 
-            // 2. СОХРАНЕНИЕ В ЛОКАЛЬНЫЙ АРХИВ
+            // 2. СОХРАНЕНИЕ В ЛОКАЛЬНЫЙ АРХИВ ТЕКУЩЕЙ СЕССИИ
             saveToLocalArchive(selectedSpecies, exactDiameter, stepDiameter, distance);
 
+            // 3. ОБНОВЛЕНИЕ ПЛАШКИ СРЕДНИХ ДИАМЕТРОВ ПО ПОРОДАМ
+            renderSpeciesSummary();
+
             resultBox.innerText = `Диаметр (${selectedSpecies}): ${exactDiameter} см (Ступень: ${stepDiameter} см)`;
-            if (isLinkedSaved) resultBox.innerText += ' 🔗 (Сохранено в МДО)';
+            if (isLinkedSaved) resultBox.innerText += ' 🔗 (Передано в МДО/Перечет)';
             resultBox.style.background = 'var(--forest-light)';
 
         } else {
             resultBox.innerText = `Ошибка расчета`;
             resultBox.style.background = '#FCA5A5';
         }
+    }
+
+    // --- РАСЧЕТ И ОТОБРАЖЕНИЕ СРЕДНИХ ДИАМЕТРОВ ПО ПОРОДАМ НА ЭКРАНЕ ---
+    function renderSpeciesSummary() {
+        const summaryListEl = document.getElementById('species-summary-list');
+        if (!summaryListEl) return;
+
+        let speciesMap = {};
+
+        // 1. Проверяем данные из LesovikCore (если работаем в связке)
+        if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
+            const activeProj = window.LesovikCore.getActiveProject();
+            if (activeProj && activeProj.plots && activeProj.plots[0] && activeProj.plots[0].moduleData && activeProj.plots[0].moduleData.dendrometry) {
+                speciesMap = activeProj.plots[0].moduleData.dendrometry.speciesData || {};
+            }
+        }
+
+        // 2. Если связки нет или она пустая, собираем данные из локального архива
+        if (Object.keys(speciesMap).length === 0) {
+            const archive = getLocalArchive();
+            archive.forEach(item => {
+                if (!speciesMap[item.species]) speciesMap[item.species] = [];
+                speciesMap[item.species].push(item.exactDiameter);
+            });
+        }
+
+        const speciesKeys = Object.keys(speciesMap);
+        if (speciesKeys.length === 0) {
+            summaryListEl.innerHTML = '<span style="opacity:0.6; font-size:11px;">Замеров пока нет</span>';
+            return;
+        }
+
+        // Вычисляем средний диаметр для каждой породы: Сумма / Количество
+        summaryListEl.innerHTML = speciesKeys.map(sp => {
+            const arr = speciesMap[sp];
+            if (!arr || arr.length === 0) return '';
+            const sum = arr.reduce((acc, val) => acc + parseFloat(val), 0);
+            const avg = (sum / arr.length).toFixed(1);
+            return `
+                <div class="species-summary-item">
+                    <b>${sp}:</b>
+                    <span style="color:var(--forest-green); font-weight:bold;">${avg} см</span>
+                    <span style="opacity:0.5; font-size:10px;">(${arr.length} шт)</span>
+                </div>
+            `;
+        }).join('');
     }
 
     // --- ЛОКАЛЬНЫЙ АРХИВ И ЭКСПОРТ CSV ---
@@ -736,6 +830,7 @@
         if (confirm('Очистить весь локальный журнал замеров мерной вилки?')) {
             localStorage.removeItem(ARCHIVE_STORAGE_KEY);
             renderArchiveTable();
+            renderSpeciesSummary();
         }
     }
 
