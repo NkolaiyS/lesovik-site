@@ -29,28 +29,32 @@
     };
 
     // Генератор нерасшифруемого уникального ID для браузера
-    function generateWebDeviceId() {
-        const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        let segment1 = '', segment2 = '';
-        for (let i = 0; i < 4; i++) segment1 += chars.charAt(Math.floor(Math.random() * chars.length));
-        for (let i = 0; i < 6; i++) segment2 += chars.charAt(Math.floor(Math.random() * chars.length));
-        return `HNS-${segment1}-${segment2}`;
-    }
-
-    // ПОЛУЧЕНИЕ СТРОГО РОДНОГО ID УСТРОЙСТВА (БЕЗ ПЕРЕХВАТА ИЗ URL!)
     function getCurrentDeviceId() {
-        if (window.device && window.device.uuid) {
-            return window.device.uuid;
-        }
-
-        let webId = localStorage.getItem('bg_hns_web_id');
-        if (!webId) {
-            webId = generateWebDeviceId();
-            localStorage.setItem('bg_hns_web_id', webId);
-        }
-        return webId;
+    if (window.device && window.device.uuid) {
+        return window.device.uuid;
     }
 
+    // 1. ПРИНУДИТЕЛЬНЫЙ ОДНОРАЗОВЫЙ СБРОС ДЛЯ ВСЕХ ПРИ ОБНОВЛЕНИИ НА 2.9.3
+    // (Сработает даже при запуске со значка на рабочем столе)
+    if (!localStorage.getItem('lesovik_reset_v293')) {
+        localStorage.removeItem('bg_hns_web_id');
+        localStorage.setItem('lesovik_reset_v293', 'true');
+    }
+
+    // 2. Если пользователь зашёл по старой ссылке с ?key= — очищаем адресную строку
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('key')) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    // 3. Генерация или получение строго родного ID устройства
+    let webId = localStorage.getItem('bg_hns_web_id');
+    if (!webId) {
+        webId = generateWebDeviceId();
+        localStorage.setItem('bg_hns_web_id', webId);
+    }
+    return webId;
+}
     function checkLicenseStatus() {
         const currentId = getCurrentDeviceId();
         const now = Date.now();
