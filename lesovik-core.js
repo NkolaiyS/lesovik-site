@@ -3,7 +3,7 @@
  * ЛЕСОВИК-CORE (lesovik-core.js)
  * Центральное ядро экосистемы «Лесовик PRO»
  * ============================================================================
- * Версия: 2.9.2 (Строгая изоляция родных ID устройств, удален проходной двор с ?key=)
+ * Версия: 2.9.3 (Исправлена генерация ID, убраны ошибки вызова функций)
  * Автор / Владелец: Николай Сергеевич Худяков (ИП Худяков Н.С.)
  * Экосистема: РЕСУРС (https://resurs-stretch.ru/)
  * ============================================================================
@@ -23,38 +23,46 @@
         "HNS-3K0F-5IHF3A": new Date(2099, 11, 31), // Бессрочно (Android Николай)
         "HNS-3SBX-TQMJO7": new Date(2026, 11, 31), // До 31 декабря 2026 (Ноутбук)
         "HNS-MINCIFRA-TEST": new Date(2099, 11, 31),// Доступ экспертов Минцифры
-        "HNS-8Z8T-R49OSZ": new Date(2026, 11, 31),  // Андрей (Редми) до 31 августа 2026
+        "HNS-8Z8T-R49OSZ": new Date(2026, 11, 31),  // Андрей (Редми) до 31 декабря 2026
         "HNS-3T7D-ZJKISD": new Date(2026, 11, 31), // Андрей (Хуавей) до 31 декабря 2026
         "HNS-6680-TVK32U": new Date(2099, 7, 5),   // Хонор 7
     };
 
-    // Генератор нерасшифруемого уникального ID для браузера
+    // 1.1 Генератор нерасшифруемого уникального ID (ОБЪЯВЛЕН СТРОГО ПЕРВЫМ!)
+    function generateWebDeviceId() {
+        const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        let segment1 = '', segment2 = '';
+        for (let i = 0; i < 4; i++) segment1 += chars.charAt(Math.floor(Math.random() * chars.length));
+        for (let i = 0; i < 6; i++) segment2 += chars.charAt(Math.floor(Math.random() * chars.length));
+        return `HNS-${segment1}-${segment2}`;
+    }
+
+    // 1.2 Получение строго родного ID устройства
     function getCurrentDeviceId() {
-    if (window.device && window.device.uuid) {
-        return window.device.uuid;
+        if (window.device && window.device.uuid) {
+            return window.device.uuid;
+        }
+
+        // ПРИНУДИТЕЛЬНЫЙ СБРОС СТАРЫХ КЛЮЧЕЙ С ВЕРСИИ 2.9.3
+        if (!localStorage.getItem('lesovik_reset_v293')) {
+            localStorage.removeItem('bg_hns_web_id');
+            localStorage.setItem('lesovik_reset_v293', 'true');
+        }
+
+        // Очищаем адресную строку от устаревших ссылок ?key=
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('key')) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        let webId = localStorage.getItem('bg_hns_web_id');
+        if (!webId) {
+            webId = generateWebDeviceId();
+            localStorage.setItem('bg_hns_web_id', webId);
+        }
+        return webId;
     }
 
-    // 1. ПРИНУДИТЕЛЬНЫЙ ОДНОРАЗОВЫЙ СБРОС ДЛЯ ВСЕХ ПРИ ОБНОВЛЕНИИ НА 2.9.3
-    // (Сработает даже при запуске со значка на рабочем столе)
-    if (!localStorage.getItem('lesovik_reset_v293')) {
-        localStorage.removeItem('bg_hns_web_id');
-        localStorage.setItem('lesovik_reset_v293', 'true');
-    }
-
-    // 2. Если пользователь зашёл по старой ссылке с ?key= — очищаем адресную строку
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('key')) {
-        window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
-    // 3. Генерация или получение строго родного ID устройства
-    let webId = localStorage.getItem('bg_hns_web_id');
-    if (!webId) {
-        webId = generateWebDeviceId();
-        localStorage.setItem('bg_hns_web_id', webId);
-    }
-    return webId;
-}
     function checkLicenseStatus() {
         const currentId = getCurrentDeviceId();
         const now = Date.now();
@@ -197,7 +205,7 @@
     // 4. ЕДИНЫЙ API LESOVIKCORE
     // ------------------------------------------------------------------------
     window.LesovikCore = {
-        version: '2.9.2-PRO',
+        version: '2.9.3-PRO',
 
         isPro: function () {
             return checkLicenseStatus().isPro;
