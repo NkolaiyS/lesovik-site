@@ -709,12 +709,18 @@
                 const activeProj = window.LesovikCore.getActiveProject();
                 if (activeProj && activeProj.plots && activeProj.plots.length > 0) {
                     const plotId = activeProj.plots[0].id;
-                    window.LesovikCore.updatePlotModuleData(plotId, 'height', {
-                        speciesName: selectedSpecies,
-                        data: {
-                            averageHeight: calculatedHeight
-                        }
-                    });
+                    
+                    // Получаем существующую структуру модуля Высота или создаем новую
+                    const currentPlot = activeProj.plots[0];
+                    const existingHeightData = (currentPlot.moduleData && currentPlot.moduleData.height) ? currentPlot.moduleData.height : { speciesData: {} };
+                    
+                    if (!existingHeightData.speciesData) existingHeightData.speciesData = {};
+                    if (!existingHeightData.speciesData[selectedSpecies]) existingHeightData.speciesData[selectedSpecies] = [];
+                    
+                    // Записываем новый замер высоты в массив данной породы
+                    existingHeightData.speciesData[selectedSpecies].push(calculatedHeight);
+
+                    window.LesovikCore.updatePlotModuleData(plotId, 'height', existingHeightData);
                     isLinkedSaved = true;
                 }
             }
