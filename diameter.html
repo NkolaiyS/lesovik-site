@@ -826,9 +826,22 @@
         `).join('');
     }
 
+    // ОБНОВЛЕННАЯ ФУНКЦИЯ ОЧИСТКИ: ОЧИЩАЕТ ЛОКАЛЬНЫЙ ЖУРНАЛ И СТРУКТУРУ LESOVIKCORE
     function clearDiametersArchive() {
-        if (confirm('Очистить весь локальный журнал замеров мерной вилки?')) {
+        if (confirm('Очистить весь локальный журнал замеров мерной вилки и сбросить средние диаметры проекта?')) {
+            // 1. Очищаем локальный журнал сессии
             localStorage.removeItem(ARCHIVE_STORAGE_KEY);
+
+            // 2. Очищаем структуру в LesovikCore (если работаем в связке)
+            if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
+                const activeProj = window.LesovikCore.getActiveProject();
+                if (activeProj && activeProj.plots && activeProj.plots.length > 0) {
+                    const plotId = activeProj.plots[0].id;
+                    window.LesovikCore.updatePlotModuleData(plotId, 'dendrometry', { speciesData: {} });
+                }
+            }
+
+            // 3. Перерисовываем интерфейс
             renderArchiveTable();
             renderSpeciesSummary();
         }
