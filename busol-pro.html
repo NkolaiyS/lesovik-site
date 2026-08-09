@@ -715,7 +715,7 @@
                 <div class="canvas-container">
                     <span style="font-weight: 700; color: var(--forest-green); font-size: 13px; margin-bottom: 5px; align-self: flex-start;">📐 ЧЕРТЕЖ И КАРТА СТОРОН СВЕТА:</span>
                     
-                    <!-- КНОПКИ ЗУМА И ЦЕНТРИРОВАНИЯ (Я ЗДЕСЬ) НА ЧЕРТЕЖЕ -->
+                    <!-- КНОПКИ МАСШТАБИРОВАНИЯ И НАВИГАЦИИ НА ЧЕРТЕЖЕ -->
                     <div class="canvas-zoom-controls">
                         <button class="btn-canvas-ctrl" onclick="zoomCanvas(1.25)" title="Увеличить чертеж">+</button>
                         <button class="btn-canvas-ctrl" onclick="zoomCanvas(0.8)" title="Уменьшить чертеж">−</button>
@@ -817,7 +817,7 @@
     let uploadedKmlPolygon = null; // Векторный контур KML
 
     // ПЕРЕМЕННЫЕ МАСШТАБИРОВАНИЯ И СДВИГА ЧЕРТЕЖА ПАЛЬЦЕМ/МЫШКОЙ (PAN/DRAG)
-    let canvasZoomMultiplier = 1.0;
+    let canvasZoomMultiplier = 1.8; // Увеличенный стартовый зум!
     let isFollowUser = false;
     let panOffsetX = 0;
     let panOffsetY = 0;
@@ -848,7 +848,7 @@
 
     function recenterCanvasOnUser() {
         isFollowUser = false;
-        canvasZoomMultiplier = 1.0;
+        canvasZoomMultiplier = 1.8;
         panOffsetX = 0;
         panOffsetY = 0;
         showToast("📐 Автоцентрирование делянки восстановлено");
@@ -1848,11 +1848,18 @@
             points.push({ x: currentX, y: currentY });
         });
 
-        let startLat = gpsPoint1 ? gpsPoint1.lat : (measurementsLog[0] ? measurementsLog[0].lat : currentLat);
-        let startLng = gpsPoint1 ? gpsPoint1.lng : (measurementsLog[0] ? measurementsLog[0].lng : currentLng);
+        // 1. ИСПРАВЛЕНИЕ СДВИГА КУРСОРA: Точка отсчета берется от КОНЦА ПОСЛЕДНЕЙ ЛИНИИ!
+        let lastIndex = measurementsLog.length - 1;
+        let startLat = gpsPoint1 ? gpsPoint1.lat : (lastIndex >= 0 && measurementsLog[lastIndex].lat ? measurementsLog[lastIndex].lat : currentLat);
+        let startLng = gpsPoint1 ? gpsPoint1.lng : (lastIndex >= 0 && measurementsLog[lastIndex].lng ? measurementsLog[lastIndex].lng : currentLng);
 
-        let userDx = calculateDistance(startLat, startLng, startLat, currentLng) * (currentLng >= startLng ? 1 : -1);
-        let userDy = calculateDistance(startLat, startLng, currentLat, startLng) * (currentLat >= startLat ? 1 : -1);
+        let lastPoint = points[points.length - 1]; // Координаты последней точки на холсте
+
+        let relativeDx = calculateDistance(startLat, startLng, startLat, currentLng) * (currentLng >= startLng ? 1 : -1);
+        let relativeDy = calculateDistance(startLat, startLng, currentLat, startLng) * (currentLat >= startLat ? 1 : -1);
+
+        let userDx = lastPoint.x + relativeDx;
+        let userDy = lastPoint.y + relativeDy;
 
         let allX = points.map(p => p.x);
         let allY = points.map(p => p.y);
@@ -1867,7 +1874,8 @@
         let minY = Math.min(...allY);
         let maxY = Math.max(...allY);
 
-        let baseScale = (width - 80) / Math.max(maxX - minX, maxY - minY, 10);
+        // 2. ИСПРАВЛЕНИЕ ЗУМА: Минимальный охват уменьшен до 2 метров для крупного масштаба
+        let baseScale = (width - 80) / Math.max(maxX - minX, maxY - minY, 2.0);
         let scale = baseScale * canvasZoomMultiplier;
 
         let centerCenterX = (maxX + minX) / 2;
@@ -1945,7 +1953,7 @@
             });
         }
 
-        // 4. Отрисовка текущего положения таксатора (Динамический зеленый треугольник)
+        // 4. Отрисовка текущего положения таксатора (Динамический зеленый треугольник строго от конца линии!)
         if (gpsPoint1 || measurementsLog.length > 0) {
             let userPixel = toPixel({ x: userDx, y: userDy });
 
@@ -2127,7 +2135,7 @@
         polygonCoords.push(`${lng.toFixed(6)},${lat.toFixed(6)},0`);
 
         // 1. Создаем метку для первого столба (Точка 1)
-        kml += `<Placemark>\n<name>Столб №1 (Старт)</name>\n<description>Координаты: ${decimalToDMS(lat, true)} ${decimalToDMS(lng, false)} (${lat.toFixed(6)}, ${lng.toFixed(6)})\nВысота: ${currentAltitude} м</description>\n<Point><coordinates>${lng.toFixed(6)},${lat.toFixed(6)},0</coordinates></Point>\n</Placemark>\n`;
+        kml += `<Placemark>\n<name>Столб №1 (Старт)</name>\n<description>Координаты: ${decimalToDMS(lat, true)} ${decimalToDMS(lng, false)}\nВысота: ${currentAltitude} м</description>\n<Point><coordinates>${lng.toFixed(6)},${lat.toFixed(6)},0</coordinates></Point>\n</Placemark>\n`;
 
         measurementsLog.forEach((m, idx) => {
             let angleRad = (m.azimuth * Math.PI) / 180;
