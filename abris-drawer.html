@@ -28,8 +28,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Чертёжник Абрисов Лесосек Онлайн | Лесовик</title>
-    <meta name="description" content="Профессиональный онлайн-чертёжник абрисов делянок по данным буссольного хода с паспортом участка. Наложение на планшет, выгрузка KML, расчет площади и точная печать.">
-    <meta name="keywords" content="чертежник абрисов, начертить делянку, паспорт участка лесосека, буссольный ход онлайн, выгрузка kml, планшет лесничества, печать абриса масштаб">
+    <meta name="description" content="Профессиональный онлайн-чертёжник абрисов делянок по данным буссольного хода и ручным координатам. Наложение на планшет, выгрузка KML, расчет площади и печать.">
+    <meta name="keywords" content="чертежник абрисов, начертить делянку, координаты x y, паспорт участка лесосека, буссольный ход онлайн, выгрузка kml, планшет лесничества, печать абриса масштаб">
     <link rel="canonical" href="https://lesovik-pro.ru/abris-drawer.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
 
@@ -124,7 +124,7 @@
         .btn-nav:hover { background-color: var(--forest-green); color: var(--bg-paper); }
 
         .main-workspace {
-            display: grid; grid-template-columns: 420px 1fr; gap: 20px;
+            display: grid; grid-template-columns: 440px 1fr; gap: 20px;
             max-width: 1500px; margin: 20px auto; padding: 0 20px; flex: 1; width: 100%; box-sizing: border-box;
         }
 
@@ -150,15 +150,16 @@
             width: 100%; overflow-x: auto; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 8px;
         }
 
-        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 360px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 380px; }
         .data-table th, .data-table td { padding: 5px; border: 1px solid var(--border-color); text-align: center; }
         .data-table th { background-color: var(--forest-green); color: white; font-size: 11px; white-space: nowrap; }
         .data-table input { width: 100%; box-sizing: border-box; padding: 4px; border: none; background: transparent; color: inherit; text-align: center; }
+        .data-table input:disabled { opacity: 0.6; background-color: rgba(0,0,0,0.05); }
 
-        .col-num { width: 80px; min-width: 75px; font-weight: bold; }
+        .col-num { width: 75px; min-width: 70px; font-weight: bold; }
         .col-azimuth { width: 65px; }
         .col-length { width: 65px; }
-        .col-coord { width: 75px; color: #666; font-size: 11px; }
+        .col-coord { width: 85px; }
 
         .btn-action {
             background-color: var(--forest-green); color: white; border: none; padding: 10px;
@@ -190,6 +191,9 @@
             background-color: var(--bg-paper); border: 1px dashed var(--forest-green);
             padding: 10px; border-radius: 8px; font-size: 12px; line-height: 1.5;
         }
+
+        .dms-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+        .dms-inputs input { text-align: center; padding: 6px; }
 
         footer { background-color: var(--footer-bg); color: #E0E0E0; padding: 30px 20px 80px; font-size: 13px; }
         .footer-bottom { text-align: center; opacity: 0.6; }
@@ -226,7 +230,7 @@
         <!-- ПАНЕЛЬ УПРАВЛЕНИЯ -->
         <div class="control-panel">
             
-            <!-- БЛОК: ПАСПОРТ УЧАСТКА -->
+            <!-- БЛОК 1: ПАСПОРТ УЧАСТКА -->
             <div>
                 <div class="panel-section-title">1. Паспорт участка</div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
@@ -249,9 +253,53 @@
                 </div>
             </div>
 
-            <!-- БЛОК: НАСТРОЙКИ -->
+            <!-- БЛОК 2: НАЧАЛЬНАЯ ГЕО-ПРИВЯЗКА (ДЛЯ KML И КАРТ) -->
             <div>
-                <div class="panel-section-title">2. Настройки отображения</div>
+                <div class="panel-section-title">2. Привязка первой точки (GPS)</div>
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <label>Формат GPS координат</label>
+                    <select id="gps-format" onchange="toggleGpsFormat()">
+                        <option value="decimal">Десятичные градусы (например, 61.668793)</option>
+                        <option value="dms">Градусы, Минуты, Секунды (Гр° Мин' Сек")</option>
+                    </select>
+                </div>
+
+                <!-- ДЕСЯТИЧНЫЙ ВВОД -->
+                <div id="gps-decimal-block" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div class="form-group">
+                        <label>Широта (Lat)</label>
+                        <input type="number" id="base-lat" value="61.668793" step="0.000001" onfocus="this.select()" oninput="drawAbris()">
+                    </div>
+                    <div class="form-group">
+                        <label>Долгота (Lon)</label>
+                        <input type="number" id="base-lon" value="50.836399" step="0.000001" onfocus="this.select()" oninput="drawAbris()">
+                    </div>
+                </div>
+
+                <!-- ВВОД ГРАДУСЫ/МИНУТЫ/СЕКУНДЫ -->
+                <div id="gps-dms-block" style="display: none; flex-direction: column; gap: 8px;">
+                    <div class="form-group">
+                        <label>Широта (Гр° Мин' Сек")</label>
+                        <div class="dms-inputs">
+                            <input type="number" id="lat-deg" value="61" placeholder="Гр" onfocus="this.select()" oninput="syncDmsToDecimal()">
+                            <input type="number" id="lat-min" value="40" placeholder="Мин" onfocus="this.select()" oninput="syncDmsToDecimal()">
+                            <input type="number" id="lat-sec" value="7.65" placeholder="Сек" onfocus="this.select()" oninput="syncDmsToDecimal()">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Долгота (Гр° Мин' Сек")</label>
+                        <div class="dms-inputs">
+                            <input type="number" id="lon-deg" value="50" placeholder="Гр" onfocus="this.select()" oninput="syncDmsToDecimal()">
+                            <input type="number" id="lon-min" value="50" placeholder="Мин" onfocus="this.select()" oninput="syncDmsToDecimal()">
+                            <input type="number" id="lon-sec" value="11.03" placeholder="Сек" onfocus="this.select()" oninput="syncDmsToDecimal()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- БЛОК 3: НАСТРОЙКИ ОТОБРАЖЕНИЯ -->
+            <div>
+                <div class="panel-section-title">3. Настройки отображения</div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                     <div class="form-group">
                         <label>Масштаб</label>
@@ -263,9 +311,9 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Координаты</label>
+                        <label>Вид координат</label>
                         <select id="coord-format" onchange="drawAbris()">
-                            <option value="decimal">Десятичные (0.00)</option>
+                            <option value="decimal">Метры (0.00)</option>
                             <option value="dms">Гр°Мин'Сек"</option>
                         </select>
                     </div>
@@ -277,10 +325,18 @@
                 </div>
             </div>
 
-            <!-- БЛОК: ХОД БУССОЛИ -->
+            <!-- БЛОК 4: ВВОД ДАННЫХ (БУССОЛЬ ИЛИ РУЧНЫЕ КООРДИНАТЫ) -->
             <div>
-                <div class="panel-section-title">3. Ход буссоли (Таблица точек)</div>
+                <div class="panel-section-title">4. Данные участков</div>
                 
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <label>Режим ввода данных</label>
+                    <select id="input-mode" onchange="switchInputMode()">
+                        <option value="bussol">По буссоли (Азимут + Длина)</option>
+                        <option value="manual">Ручной ввод координат (X, Y в метрах)</option>
+                    </select>
+                </div>
+
                 <div class="table-scroll-container">
                     <table class="data-table">
                         <thead>
@@ -297,29 +353,29 @@
                                 <td class="col-num">1-2</td>
                                 <td class="col-azimuth"><input type="number" value="45" class="inp-azimuth" onfocus="this.select()" oninput="drawAbris()"></td>
                                 <td class="col-length"><input type="number" value="150" class="inp-length" onfocus="this.select()" oninput="drawAbris()"></td>
-                                <td class="col-coord res-x">0.00</td>
-                                <td class="col-coord res-y">0.00</td>
+                                <td class="col-coord"><input type="number" value="0.00" class="inp-x" disabled onfocus="this.select()" oninput="drawAbris()"></td>
+                                <td class="col-coord"><input type="number" value="0.00" class="inp-y" disabled onfocus="this.select()" oninput="drawAbris()"></td>
                             </tr>
                             <tr>
                                 <td class="col-num">2-3</td>
                                 <td class="col-azimuth"><input type="number" value="135" class="inp-azimuth" onfocus="this.select()" oninput="drawAbris()"></td>
                                 <td class="col-length"><input type="number" value="200" class="inp-length" onfocus="this.select()" oninput="drawAbris()"></td>
-                                <td class="col-coord res-x">0.00</td>
-                                <td class="col-coord res-y">0.00</td>
+                                <td class="col-coord"><input type="number" value="0.00" class="inp-x" disabled onfocus="this.select()" oninput="drawAbris()"></td>
+                                <td class="col-coord"><input type="number" value="0.00" class="inp-y" disabled onfocus="this.select()" oninput="drawAbris()"></td>
                             </tr>
                             <tr>
                                 <td class="col-num">3-4</td>
                                 <td class="col-azimuth"><input type="number" value="225" class="inp-azimuth" onfocus="this.select()" oninput="drawAbris()"></td>
                                 <td class="col-length"><input type="number" value="160" class="inp-length" onfocus="this.select()" oninput="drawAbris()"></td>
-                                <td class="col-coord res-x">0.00</td>
-                                <td class="col-coord res-y">0.00</td>
+                                <td class="col-coord"><input type="number" value="0.00" class="inp-x" disabled onfocus="this.select()" oninput="drawAbris()"></td>
+                                <td class="col-coord"><input type="number" value="0.00" class="inp-y" disabled onfocus="this.select()" oninput="drawAbris()"></td>
                             </tr>
                             <tr>
                                 <td class="col-num">4-1</td>
                                 <td class="col-azimuth"><input type="number" value="315" class="inp-azimuth" onfocus="this.select()" oninput="drawAbris()"></td>
                                 <td class="col-length"><input type="number" value="190" class="inp-length" onfocus="this.select()" oninput="drawAbris()"></td>
-                                <td class="col-coord res-x">0.00</td>
-                                <td class="col-coord res-y">0.00</td>
+                                <td class="col-coord"><input type="number" value="0.00" class="inp-x" disabled onfocus="this.select()" oninput="drawAbris()"></td>
+                                <td class="col-coord"><input type="number" value="0.00" class="inp-y" disabled onfocus="this.select()" oninput="drawAbris()"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -350,7 +406,7 @@
 
         </div>
 
-        <!-- ХОЛСТ И ГРАФИКА (С ПОДДЕРЖКОЙ ПЕРЕТАСКИВАНИЯ) -->
+        <!-- ХОЛСТ И ГРАФИКА -->
         <div class="canvas-container" id="canvas-wrapper">
             <div class="canvas-toolbar">
                 <button onclick="zoomCanvas(1.1)">🔍 +</button>
@@ -429,15 +485,89 @@
             drawAbris();
         }
 
+        function toggleGpsFormat() {
+            const fmt = document.getElementById('gps-format').value;
+            if (fmt === 'dms') {
+                document.getElementById('gps-decimal-block').style.display = 'none';
+                document.getElementById('gps-dms-block').style.display = 'flex';
+                syncDecimalToDms();
+            } else {
+                document.getElementById('gps-decimal-block').style.display = 'grid';
+                document.getElementById('gps-dms-block').style.display = 'none';
+                syncDmsToDecimal();
+            }
+        }
+
+        function syncDecimalToDms() {
+            const lat = parseFloat(document.getElementById('base-lat').value) || 0;
+            const lon = parseFloat(document.getElementById('base-lon').value) || 0;
+
+            const latDeg = Math.floor(lat);
+            const latMinFloat = (lat - latDeg) * 60;
+            const latMin = Math.floor(latMinFloat);
+            const latSec = ((latMinFloat - latMin) * 60).toFixed(2);
+
+            const lonDeg = Math.floor(lon);
+            const lonMinFloat = (lon - lonDeg) * 60;
+            const lonMin = Math.floor(lonMinFloat);
+            const lonSec = ((lonMinFloat - lonMin) * 60).toFixed(2);
+
+            document.getElementById('lat-deg').value = latDeg;
+            document.getElementById('lat-min').value = latMin;
+            document.getElementById('lat-sec').value = latSec;
+
+            document.getElementById('lon-deg').value = lonDeg;
+            document.getElementById('lon-min').value = lonMin;
+            document.getElementById('lon-sec').value = lonSec;
+        }
+
+        function syncDmsToDecimal() {
+            const latD = parseFloat(document.getElementById('lat-deg').value) || 0;
+            const latM = parseFloat(document.getElementById('lat-min').value) || 0;
+            const latS = parseFloat(document.getElementById('lat-sec').value) || 0;
+
+            const lonD = parseFloat(document.getElementById('lon-deg').value) || 0;
+            const lonM = parseFloat(document.getElementById('lon-min').value) || 0;
+            const lonS = parseFloat(document.getElementById('lon-sec').value) || 0;
+
+            document.getElementById('base-lat').value = (latD + latM / 60 + latS / 3600).toFixed(6);
+            document.getElementById('base-lon').value = (lonD + lonM / 60 + lonS / 3600).toFixed(6);
+            drawAbris();
+        }
+
+        function switchInputMode() {
+            const mode = document.getElementById('input-mode').value;
+            const azInputs = document.querySelectorAll('.inp-azimuth');
+            const lenInputs = document.querySelectorAll('.inp-length');
+            const xInputs = document.querySelectorAll('.inp-x');
+            const yInputs = document.querySelectorAll('.inp-y');
+
+            if (mode === 'manual') {
+                azInputs.forEach(i => i.disabled = true);
+                lenInputs.forEach(i => i.disabled = true);
+                xInputs.forEach(i => i.disabled = false);
+                yInputs.forEach(i => i.disabled = false);
+            } else {
+                azInputs.forEach(i => i.disabled = false);
+                lenInputs.forEach(i => i.disabled = false);
+                xInputs.forEach(i => i.disabled = true);
+                yInputs.forEach(i => i.disabled = true);
+            }
+            drawAbris();
+        }
+
         function addRow() {
             const tbody = document.getElementById('lines-body');
             const tr = document.createElement('tr');
+            const mode = document.getElementById('input-mode').value;
+            const isManual = (mode === 'manual');
+
             tr.innerHTML = `
                 <td class="col-num">0-0</td>
-                <td class="col-azimuth"><input type="number" value="0" class="inp-azimuth" onfocus="this.select()" oninput="drawAbris()"></td>
-                <td class="col-length"><input type="number" value="100" class="inp-length" onfocus="this.select()" oninput="drawAbris()"></td>
-                <td class="col-coord res-x">0.00</td>
-                <td class="col-coord res-y">0.00</td>
+                <td class="col-azimuth"><input type="number" value="0" class="inp-azimuth" ${isManual ? 'disabled' : ''} onfocus="this.select()" oninput="drawAbris()"></td>
+                <td class="col-length"><input type="number" value="100" class="inp-length" ${isManual ? 'disabled' : ''} onfocus="this.select()" oninput="drawAbris()"></td>
+                <td class="col-coord"><input type="number" value="0.00" class="inp-x" ${isManual ? '' : 'disabled'} onfocus="this.select()" oninput="drawAbris()"></td>
+                <td class="col-coord"><input type="number" value="0.00" class="inp-y" ${isManual ? '' : 'disabled'} onfocus="this.select()" oninput="drawAbris()"></td>
             `;
             tbody.appendChild(tr);
             updateLabels();
@@ -500,7 +630,6 @@
             ctx.strokeStyle = '#2D5A27';
             ctx.lineWidth = 1.5;
 
-            // Компактный штамп для смартфонов
             const boxWidth = 220;
             const boxHeight = 75;
             const posX = 12;
@@ -533,31 +662,62 @@
                 ctx.globalAlpha = 1.0;
             }
 
+            const mode = document.getElementById('input-mode').value;
             const coordFormat = document.getElementById('coord-format').value;
-            const azimuths = Array.from(document.querySelectorAll('.inp-azimuth')).map(i => parseFloat(i.value) || 0);
-            const lengths = Array.from(document.querySelectorAll('.inp-length')).map(i => parseFloat(i.value) || 0);
+
+            const azInputs = document.querySelectorAll('.inp-azimuth');
+            const lenInputs = document.querySelectorAll('.inp-length');
+            const xInputs = document.querySelectorAll('.inp-x');
+            const yInputs = document.querySelectorAll('.inp-y');
 
             let points = [{ x: 0, y: 0 }];
-            let currentX = 0, currentY = 0;
+            let azimuths = [];
+            let lengths = [];
             let totalLength = 0;
 
-            const resXCells = document.querySelectorAll('.res-x');
-            const resYCells = document.querySelectorAll('.res-y');
+            if (mode === 'manual') {
+                points = [{ x: 0, y: 0 }];
+                for (let i = 0; i < xInputs.length; i++) {
+                    const xVal = parseFloat(xInputs[i].value) || 0;
+                    const yVal = parseFloat(yInputs[i].value) || 0;
+                    points.push({ x: xVal, y: yVal });
+                }
 
-            for (let i = 0; i < azimuths.length; i++) {
-                const rad = (azimuths[i] * Math.PI) / 180;
-                const dx = lengths[i] * Math.sin(rad);
-                const dy = -lengths[i] * Math.cos(rad);
-                currentX += dx;
-                currentY += dy;
-                points.push({ x: currentX, y: currentY });
-                totalLength += lengths[i];
+                // Расчет азимутов и длин по ручным координатам
+                for (let i = 0; i < points.length - 1; i++) {
+                    const dx = points[i+1].x - points[i].x;
+                    const dy = points[i+1].y - points[i].y;
+                    const len = Math.sqrt(dx * dx + dy * dy);
+                    let az = (Math.atan2(dx, -dy) * 180) / Math.PI;
+                    if (az < 0) az += 360;
 
-                if (resXCells[i]) resXCells[i].innerText = formatCoordValue(currentX, coordFormat);
-                if (resYCells[i]) resYCells[i].innerText = formatCoordValue(Math.abs(currentY), coordFormat);
+                    azimuths.push(Math.round(az));
+                    lengths.push(Math.round(len));
+                    totalLength += len;
+
+                    if (azInputs[i]) azInputs[i].value = Math.round(az);
+                    if (lenInputs[i]) lenInputs[i].value = Math.round(len);
+                }
+            } else {
+                azimuths = Array.from(azInputs).map(i => parseFloat(i.value) || 0);
+                lengths = Array.from(lenInputs).map(i => parseFloat(i.value) || 0);
+
+                let currentX = 0, currentY = 0;
+                for (let i = 0; i < azimuths.length; i++) {
+                    const rad = (azimuths[i] * Math.PI) / 180;
+                    const dx = lengths[i] * Math.sin(rad);
+                    const dy = -lengths[i] * Math.cos(rad);
+                    currentX += dx;
+                    currentY += dy;
+                    points.push({ x: currentX, y: currentY });
+                    totalLength += lengths[i];
+
+                    if (xInputs[i]) xInputs[i].value = currentX.toFixed(2);
+                    if (yInputs[i]) yInputs[i].value = Math.abs(currentY).toFixed(2);
+                }
             }
 
-            const closureError = Math.sqrt(currentX * currentX + currentY * currentY);
+            const closureError = Math.sqrt(points[points.length-1].x * points[points.length-1].x + points[points.length-1].y * points[points.length-1].y);
             let area = 0;
             for (let i = 0; i < points.length - 1; i++) {
                 area += (points[i].x * points[i+1].y) - (points[i+1].x * points[i].y);
@@ -585,7 +745,7 @@
             const offsetX = (canvas.width - polyWidth * scale) / 2 - minX * scale + panX;
             const offsetY = (canvas.height - polyHeight * scale) / 2 - minY * scale + 25 + panY;
 
-            // Отрисовка линий и подписей
+            // РИСОВАНИЕ ЛИНИЙ И ПОДПИСЕЙ ВДОЛЬ ЛИНИЙ
             for (let i = 0; i < points.length - 1; i++) {
                 const p1 = points[i];
                 const p2 = points[i+1];
@@ -616,11 +776,11 @@
                 ctx.fillStyle = '#2D5A27';
                 ctx.font = 'bold 10px Inter';
                 ctx.textAlign = 'center';
-                ctx.fillText(`${azimuths[i]}° / ${lengths[i]}м`, 0, -4);
+                ctx.fillText(`${azimuths[i] || 0}° / ${lengths[i] || 0}м`, 0, -4);
                 ctx.restore();
             }
 
-            // Отрисовка точек
+            // РИСОВАНИЕ ТОЧЕК И КООРДИНАТ
             points.slice(0, -1).forEach((p, idx) => {
                 const screenX = p.x * scale + offsetX;
                 const screenY = p.y * scale + offsetY;
@@ -657,12 +817,13 @@
             const del = document.getElementById('p-delyanka').value || '';
             const vyd = document.getElementById('p-vydel').value || '';
 
+            const baseLat = parseFloat(document.getElementById('base-lat').value) || 61.668793;
+            const baseLon = parseFloat(document.getElementById('base-lon').value) || 50.836399;
+
             const azimuths = Array.from(document.querySelectorAll('.inp-azimuth')).map(i => parseFloat(i.value) || 0);
             const lengths = Array.from(document.querySelectorAll('.inp-length')).map(i => parseFloat(i.value) || 0);
 
-            let lat = 61.668793;
-            let lon = 50.836399;
-            let coordsList = [`${lon},${lat},0`];
+            let coordsList = [`${baseLon},${baseLat},0`];
 
             let curX = 0, curY = 0;
             for (let i = 0; i < azimuths.length; i++) {
@@ -671,8 +832,8 @@
                 curY += lengths[i] * Math.cos(rad);
 
                 const dLat = curY / 111111;
-                const dLon = curX / (111111 * Math.cos(lat * Math.PI / 180));
-                coordsList.push(`${(lon + dLon).toFixed(6)},${(lat + dLat).toFixed(6)},0`);
+                const dLon = curX / (111111 * Math.cos(baseLat * Math.PI / 180));
+                coordsList.push(`${(baseLon + dLon).toFixed(6)},${(baseLat + dLat).toFixed(6)},0`);
             }
 
             const kmlContent = `<?xml version="1.0" encoding="UTF-8"?>
@@ -707,11 +868,16 @@
                 les: document.getElementById('p-lesnichestvo').value,
                 kv: document.getElementById('p-kvartal').value,
                 del: document.getElementById('p-delyanka').value,
-                vyd: document.getElementById('p-vydel').value
+                vyd: document.getElementById('p-vydel').value,
+                lat: document.getElementById('base-lat').value,
+                lon: document.getElementById('base-lon').value
             };
             const azimuths = Array.from(document.querySelectorAll('.inp-azimuth')).map(i => i.value);
             const lengths = Array.from(document.querySelectorAll('.inp-length')).map(i => i.value);
-            const archiveData = { passport, azimuths, lengths, date: new Date().toLocaleString('ru-RU') };
+            const xVals = Array.from(document.querySelectorAll('.inp-x')).map(i => i.value);
+            const yVals = Array.from(document.querySelectorAll('.inp-y')).map(i => i.value);
+
+            const archiveData = { passport, azimuths, lengths, xVals, yVals, mode: document.getElementById('input-mode').value, date: new Date().toLocaleString('ru-RU') };
 
             localStorage.setItem('lesovik_abris_saved', JSON.stringify(archiveData));
             alert('Чертеж и паспорт участка успешно сохранены в память устройства!');
@@ -730,6 +896,13 @@
                 document.getElementById('p-kvartal').value = data.passport.kv || '';
                 document.getElementById('p-delyanka').value = data.passport.del || '';
                 document.getElementById('p-vydel').value = data.passport.vyd || '';
+                if(data.passport.lat) document.getElementById('base-lat').value = data.passport.lat;
+                if(data.passport.lon) document.getElementById('base-lon').value = data.passport.lon;
+            }
+
+            if (data.mode) {
+                document.getElementById('input-mode').value = data.mode;
+                switchInputMode();
             }
 
             const tbody = document.getElementById('lines-body');
@@ -741,12 +914,13 @@
                     <td class="col-num">${i + 1}-${i + 1 === data.azimuths.length ? 1 : i + 2}</td>
                     <td class="col-azimuth"><input type="number" value="${data.azimuths[i]}" class="inp-azimuth" onfocus="this.select()" oninput="drawAbris()"></td>
                     <td class="col-length"><input type="number" value="${data.lengths[i]}" class="inp-length" onfocus="this.select()" oninput="drawAbris()"></td>
-                    <td class="col-coord res-x">0.00</td>
-                    <td class="col-coord res-y">0.00</td>
+                    <td class="col-coord"><input type="number" value="${data.xVals ? data.xVals[i] : '0.00'}" class="inp-x" onfocus="this.select()" oninput="drawAbris()"></td>
+                    <td class="col-coord"><input type="number" value="${data.yVals ? data.yVals[i] : '0.00'}" class="inp-y" onfocus="this.select()" oninput="drawAbris()"></td>
                 `;
                 tbody.appendChild(tr);
             }
             updateLabels();
+            switchInputMode();
             resetCenterView();
             alert(`Загружен чертеж от ${data.date}`);
         }
@@ -759,6 +933,9 @@
                 document.getElementById('p-kvartal').value = '32';
                 document.getElementById('p-delyanka').value = '2';
                 document.getElementById('p-vydel').value = '2, 3, 4';
+                document.getElementById('base-lat').value = '61.668793';
+                document.getElementById('base-lon').value = '50.836399';
+                document.getElementById('input-mode').value = 'bussol';
 
                 const tbody = document.getElementById('lines-body');
                 tbody.innerHTML = `
@@ -766,25 +943,26 @@
                         <td class="col-num">1-2</td>
                         <td class="col-azimuth"><input type="number" value="0" class="inp-azimuth" onfocus="this.select()" oninput="drawAbris()"></td>
                         <td class="col-length"><input type="number" value="100" class="inp-length" onfocus="this.select()" oninput="drawAbris()"></td>
-                        <td class="col-coord res-x">0.00</td>
-                        <td class="col-coord res-y">0.00</td>
+                        <td class="col-coord"><input type="number" value="0.00" class="inp-x" disabled onfocus="this.select()" oninput="drawAbris()"></td>
+                        <td class="col-coord"><input type="number" value="0.00" class="inp-y" disabled onfocus="this.select()" oninput="drawAbris()"></td>
                     </tr>
                     <tr>
                         <td class="col-num">2-3</td>
                         <td class="col-azimuth"><input type="number" value="90" class="inp-azimuth" onfocus="this.select()" oninput="drawAbris()"></td>
                         <td class="col-length"><input type="number" value="100" class="inp-length" onfocus="this.select()" oninput="drawAbris()"></td>
-                        <td class="col-coord res-x">0.00</td>
-                        <td class="col-coord res-y">0.00</td>
+                        <td class="col-coord"><input type="number" value="0.00" class="inp-x" disabled onfocus="this.select()" oninput="drawAbris()"></td>
+                        <td class="col-coord"><input type="number" value="0.00" class="inp-y" disabled onfocus="this.select()" oninput="drawAbris()"></td>
                     </tr>
                     <tr>
                         <td class="col-num">3-4</td>
                         <td class="col-azimuth"><input type="number" value="180" class="inp-azimuth" onfocus="this.select()" oninput="drawAbris()"></td>
                         <td class="col-length"><input type="number" value="100" class="inp-length" onfocus="this.select()" oninput="drawAbris()"></td>
-                        <td class="col-coord res-x">0.00</td>
-                        <td class="col-coord res-y">0.00</td>
+                        <td class="col-coord"><input type="number" value="0.00" class="inp-x" disabled onfocus="this.select()" oninput="drawAbris()"></td>
+                        <td class="col-coord"><input type="number" value="0.00" class="inp-y" disabled onfocus="this.select()" oninput="drawAbris()"></td>
                     </tr>
                 `;
                 updateLabels();
+                switchInputMode();
                 resetCenterView();
             }
         }
