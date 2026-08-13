@@ -172,14 +172,15 @@
         .canvas-container {
             background-color: var(--card-bg); border: 1px solid var(--border-color);
             border-radius: 12px; padding: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            position: relative; overflow: hidden; min-height: 550px;
+            position: relative; overflow: hidden; min-height: 550px; cursor: grab; touch-action: none;
         }
+        .canvas-container:active { cursor: grabbing; }
 
-        #abris-canvas { background-color: #FFFFFF; border: 1px solid #CCC; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        #abris-canvas { background-color: #FFFFFF; border: 1px solid #CCC; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 100%; }
 
         .canvas-toolbar {
-            position: absolute; top: 25px; right: 25px; display: flex; gap: 8px; background: rgba(255,255,255,0.9);
-            padding: 6px; border-radius: 8px; border: 1px solid #DDD; z-index: 10;
+            position: absolute; top: 25px; right: 25px; display: flex; gap: 6px; background: rgba(255,255,255,0.95);
+            padding: 6px; border-radius: 8px; border: 1px solid #DDD; z-index: 10; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         .canvas-toolbar button {
             background: white; border: 1px solid #CCC; border-radius: 4px; padding: 6px 10px; cursor: pointer; font-weight: bold; font-size: 12px;
@@ -196,6 +197,7 @@
         @media (max-width: 950px) {
             .main-workspace { grid-template-columns: 1fr; }
             .control-panel { max-height: none; }
+            #abris-canvas { width: 100% !important; height: auto !important; }
         }
 
         @media print {
@@ -214,7 +216,7 @@
             <h1>Чертёжник Абрисов</h1>
         </a>
         <div class="header-right">
-            <a href="tools.html" class="btn-nav">Инструменты</a>
+            <a href="tools.html" class="btn-nav">← Инструменты</a>
             <button class="btn-nav" onclick="toggleTheme()">Тема</button>
         </div>
     </header>
@@ -348,12 +350,12 @@
 
         </div>
 
-        <!-- ХОЛСТ И ГРАФИКА -->
-        <div class="canvas-container">
+        <!-- ХОЛСТ И ГРАФИКА (С ПОДДЕРЖКОЙ ПЕРЕТАСКИВАНИЯ) -->
+        <div class="canvas-container" id="canvas-wrapper">
             <div class="canvas-toolbar">
                 <button onclick="zoomCanvas(1.1)">🔍 +</button>
                 <button onclick="zoomCanvas(0.9)">🔍 -</button>
-                <button onclick="resetCanvas()">🔄 Сброс вида</button>
+                <button onclick="resetCenterView()">🎯 В центр</button>
             </div>
             <canvas id="abris-canvas" width="850" height="700"></canvas>
         </div>
@@ -369,8 +371,63 @@
     <script>
         const canvas = document.getElementById('abris-canvas');
         const ctx = canvas.getContext('2d');
+        const wrapper = document.getElementById('canvas-wrapper');
+
         let bgImage = null;
         let zoomLevel = 1.0;
+        let panX = 0;
+        let panY = 0;
+
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+
+        // ПЕРЕТАСКИВАНИЕ ЧЕРТЕЖА ПАЛЬЦЕМ / МЫШЬЮ
+        wrapper.addEventListener('mousedown', startPan);
+        wrapper.addEventListener('mousemove', movePan);
+        window.addEventListener('mouseup', endPan);
+
+        wrapper.addEventListener('touchstart', startPanTouch, { passive: false });
+        wrapper.addEventListener('touchmove', movePanTouch, { passive: false });
+        window.addEventListener('touchend', endPan);
+
+        function startPan(e) {
+            isDragging = true;
+            startX = e.clientX - panX;
+            startY = e.clientY - panY;
+        }
+
+        function movePan(e) {
+            if (!isDragging) return;
+            panX = e.clientX - startX;
+            panY = e.clientY - startY;
+            drawAbris();
+        }
+
+        function startPanTouch(e) {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                startX = e.touches[0].clientX - panX;
+                startY = e.touches[0].clientY - panY;
+            }
+        }
+
+        function movePanTouch(e) {
+            if (!isDragging || e.touches.length !== 1) return;
+            e.preventDefault();
+            panX = e.touches[0].clientX - startX;
+            panY = e.touches[0].clientY - startY;
+            drawAbris();
+        }
+
+        function endPan() { isDragging = false; }
+
+        function resetCenterView() {
+            zoomLevel = 1.0;
+            panX = 0;
+            panY = 0;
+            drawAbris();
+        }
 
         function addRow() {
             const tbody = document.getElementById('lines-body');
@@ -439,30 +496,30 @@
             const scale = document.getElementById('map-scale').value;
 
             ctx.save();
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
             ctx.strokeStyle = '#2D5A27';
             ctx.lineWidth = 1.5;
 
-            const boxWidth = 260;
-            const boxHeight = 85;
-            const posX = 15;
-            const posY = 15;
+            // Компактный штамп для смартфонов
+            const boxWidth = 220;
+            const boxHeight = 75;
+            const posX = 12;
+            const posY = 12;
 
             ctx.fillRect(posX, posY, boxWidth, boxHeight);
             ctx.strokeRect(posX, posY, boxWidth, boxHeight);
 
             ctx.fillStyle = '#2D5A27';
-            ctx.font = 'bold 12px Inter';
-            ctx.fillText(les, posX + 10, posY + 20);
+            ctx.font = 'bold 11px Inter';
+            ctx.fillText(les.length > 28 ? les.substring(0,25) + '...' : les, posX + 8, posY + 18);
 
             ctx.fillStyle = '#333';
-            ctx.font = '11px Inter';
-            ctx.fillText(`Квартал: ${kv} | Делянка: ${del}`, posX + 10, posY + 40);
-            ctx.fillText(`Выдел(ы): ${vyd}`, posX + 10, posY + 58);
+            ctx.font = '10px Inter';
+            ctx.fillText(`Кв.: ${kv} | Дел.: ${del} | Выд.: ${vyd}`, posX + 8, posY + 36);
             
             ctx.fillStyle = '#666';
             ctx.font = 'italic 10px Inter';
-            ctx.fillText(`Масштаб 1:${scale}`, posX + 10, posY + 74);
+            ctx.fillText(`Масштаб 1:${scale}`, posX + 8, posY + 54);
 
             ctx.restore();
         }
@@ -470,10 +527,9 @@
         function drawAbris() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 1. Отрисовка подложки
             if (bgImage) {
                 ctx.globalAlpha = 0.4;
-                ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+                ctx.drawImage(bgImage, panX, panY, canvas.width, canvas.height);
                 ctx.globalAlpha = 1.0;
             }
 
@@ -501,7 +557,6 @@
                 if (resYCells[i]) resYCells[i].innerText = formatCoordValue(Math.abs(currentY), coordFormat);
             }
 
-            // Невязка и площадь
             const closureError = Math.sqrt(currentX * currentX + currentY * currentY);
             let area = 0;
             for (let i = 0; i < points.length - 1; i++) {
@@ -515,7 +570,6 @@
                 Невязка: <b>${closureError.toFixed(2)} м</b>
             `;
 
-            // Масштабирование
             const minX = Math.min(...points.map(p => p.x));
             const maxX = Math.max(...points.map(p => p.x));
             const minY = Math.min(...points.map(p => p.y));
@@ -528,10 +582,10 @@
             const scaleY = (canvas.height - 180) / polyHeight;
             const scale = Math.min(scaleX, scaleY) * zoomLevel;
 
-            const offsetX = (canvas.width - polyWidth * scale) / 2 - minX * scale;
-            const offsetY = (canvas.height - polyHeight * scale) / 2 - minY * scale + 25;
+            const offsetX = (canvas.width - polyWidth * scale) / 2 - minX * scale + panX;
+            const offsetY = (canvas.height - polyHeight * scale) / 2 - minY * scale + 25 + panY;
 
-            // РИСОВАНИЕ ЛИНИЙ И ПОДПИСЕЙ ВДОЛЬ ЛИНИЙ
+            // Отрисовка линий и подписей
             for (let i = 0; i < points.length - 1; i++) {
                 const p1 = points[i];
                 const p2 = points[i+1];
@@ -541,7 +595,6 @@
                 const sX2 = p2.x * scale + offsetX;
                 const sY2 = p2.y * scale + offsetY;
 
-                // Линия
                 ctx.beginPath();
                 ctx.moveTo(sX1, sY1);
                 ctx.lineTo(sX2, sY2);
@@ -549,7 +602,6 @@
                 ctx.strokeStyle = '#2D5A27';
                 ctx.stroke();
 
-                // Подпись азимута и длины параллельно линии
                 const midX = (sX1 + sX2) / 2;
                 const midY = (sY1 + sY2) / 2;
                 let angle = Math.atan2(sY2 - sY1, sX2 - sX1);
@@ -562,41 +614,40 @@
                 ctx.translate(midX, midY);
                 ctx.rotate(angle);
                 ctx.fillStyle = '#2D5A27';
-                ctx.font = 'bold 11px Inter';
+                ctx.font = 'bold 10px Inter';
                 ctx.textAlign = 'center';
-                ctx.fillText(`${azimuths[i]}° / ${lengths[i]}м`, 0, -5);
+                ctx.fillText(`${azimuths[i]}° / ${lengths[i]}м`, 0, -4);
                 ctx.restore();
             }
 
-            // РИСОВАНИЕ ТОЧЕК И КООРДИНАТ (БЕЗ БУКВЫ "Т.")
+            // Отрисовка точек
             points.slice(0, -1).forEach((p, idx) => {
                 const screenX = p.x * scale + offsetX;
                 const screenY = p.y * scale + offsetY;
                 
                 ctx.beginPath();
-                ctx.arc(screenX, screenY, 5, 0, Math.PI * 2);
+                ctx.arc(screenX, screenY, 4, 0, Math.PI * 2);
                 ctx.fillStyle = '#D9534F';
                 ctx.fill();
 
                 ctx.fillStyle = '#111';
-                ctx.font = 'bold 11px Inter';
+                ctx.font = 'bold 10px Inter';
                 const coordStr = `(${formatCoordValue(p.x, coordFormat)}, ${formatCoordValue(Math.abs(p.y), coordFormat)})`;
-                ctx.fillText(`${idx + 1} ${coordStr}`, screenX + 8, screenY - 8);
+                ctx.fillText(`${idx + 1} ${coordStr}`, screenX + 6, screenY - 6);
             });
 
-            // РИСОВАНИЕ ШТАМПА И СТРЕЛКИ СЕВЕРА
             drawPassportStamp();
             drawNorthArrow();
         }
 
         function drawNorthArrow() {
             ctx.save();
-            ctx.translate(canvas.width - 45, 50);
+            ctx.translate(canvas.width - 35, 45);
             ctx.beginPath();
-            ctx.moveTo(0, 0); ctx.lineTo(-8, 20); ctx.lineTo(0, 15); ctx.lineTo(8, 20);
+            ctx.moveTo(0, 0); ctx.lineTo(-7, 18); ctx.lineTo(0, 13); ctx.lineTo(7, 18);
             ctx.closePath();
             ctx.fillStyle = '#2D5A27'; ctx.fill();
-            ctx.font = 'bold 11px Inter'; ctx.fillText('Сек', -4, -6);
+            ctx.font = 'bold 10px Inter'; ctx.fillText('Сек', -4, -5);
             ctx.restore();
         }
 
@@ -609,7 +660,6 @@
             const azimuths = Array.from(document.querySelectorAll('.inp-azimuth')).map(i => parseFloat(i.value) || 0);
             const lengths = Array.from(document.querySelectorAll('.inp-length')).map(i => parseFloat(i.value) || 0);
 
-            // Базовая условная точка в Сыктывкаре (61.668793, 50.836399) для привязки к KML
             let lat = 61.668793;
             let lon = 50.836399;
             let coordsList = [`${lon},${lat},0`];
@@ -697,7 +747,7 @@
                 tbody.appendChild(tr);
             }
             updateLabels();
-            drawAbris();
+            resetCenterView();
             alert(`Загружен чертеж от ${data.date}`);
         }
 
@@ -735,12 +785,11 @@
                     </tr>
                 `;
                 updateLabels();
-                drawAbris();
+                resetCenterView();
             }
         }
 
         function zoomCanvas(factor) { zoomLevel *= factor; drawAbris(); }
-        function resetCanvas() { zoomLevel = 1.0; drawAbris(); }
         function toggleTheme() {
             const body = document.documentElement;
             if (body.getAttribute('data-theme') === 'dark') body.removeAttribute('data-theme');
