@@ -550,7 +550,7 @@
             if (mode === 'gps_all') {
                 declBlock.style.display = 'none';
                 desc.innerText = 'Режим: GPS координаты каждого столба (авто-расчет азимутов)';
-                rows.forEach((row, i) => {
+                rows.forEach(row => {
                     toggleRowInputs(row, true, false);
                 });
             } else if (mode === 'bussol') {
@@ -756,7 +756,7 @@
             let lengths = [];
 
             if (mode === 'bussol') {
-                // РЕЖИМ 2: Буссольный ход от точки 1
+                // РЕЖИМ 2: Буссольный ход
                 const firstRow = rows[0];
                 let baseLat = 0, baseLon = 0;
 
@@ -777,40 +777,31 @@
                 let curLon = baseLon;
 
                 rows.forEach((row, i) => {
-                    if (i < rows.length - 1) {
+                    if (i < rows.length) {
                         const az = parseFloat(row.querySelector('.inp-azimuth').value) || 0;
                         const len = parseFloat(row.querySelector('.inp-length').value) || 0;
                         azimuths.push(az);
                         lengths.push(len);
 
-                        // Учет магнитного склонения
                         const trueAz = (az + declination) % 360;
                         const nextPt = getPointFromAzimuthAndDistance(curLat, curLon, trueAz, len);
-                        rawCoords.push(nextPt);
+                        
+                        if (i < rows.length - 1) {
+                            rawCoords.push(nextPt);
+                            curLat = nextPt.lat;
+                            curLon = nextPt.lon;
 
-                        curLat = nextPt.lat;
-                        curLon = nextPt.lon;
-
-                        // Авто-заполнение GPS координат в следующих строках таблицы
-                        const nextRow = rows[i + 1];
-                        if (nextRow) {
-                            nextRow.querySelector('.inp-lat-dec').value = nextPt.lat.toFixed(6);
-                            nextRow.querySelector('.inp-lon-dec').value = nextPt.lon.toFixed(6);
-
-                            const latDms = decToDmsObj(nextPt.lat);
-                            const lonDms = decToDmsObj(nextPt.lon);
-
-                            const latInps = nextRow.querySelector('.inp-lat-dms').querySelectorAll('input');
-                            const lonInps = nextRow.querySelector('.inp-lon-dms').querySelectorAll('input');
-
-                            latInps[0].value = latDms.d; latInps[1].value = latDms.m; latInps[2].value = latDms.s;
-                            lonInps[0].value = lonDms.d; lonInps[1].value = lonDms.m; lonInps[2].value = lonDms.s;
+                            const nextRow = rows[i + 1];
+                            if (nextRow) {
+                                nextRow.querySelector('.inp-lat-dec').value = nextPt.lat.toFixed(6);
+                                nextRow.querySelector('.inp-lon-dec').value = nextPt.lon.toFixed(6);
+                            }
                         }
                     }
                 });
 
             } else {
-                // РЕЖИМ 1 и РЕЖИМ 3: GPS координаты каждого столба или Ручной
+                // РЕЖИМ 1 и 3: GPS координаты каждого столба
                 rows.forEach(row => {
                     let lat = 0, lon = 0;
                     if (gpsFmt === 'dms') {
@@ -825,8 +816,9 @@
                     rawCoords.push({ lat, lon });
                 });
 
-                for (let i = 0; i < rawCoords.length - 1; i++) {
-                    const calc = getGpsDistanceAndAzimuth(rawCoords[i].lat, rawCoords[i].lon, rawCoords[i+1].lat, rawCoords[i+1].lon);
+                for (let i = 0; i < rawCoords.length; i++) {
+                    const nextIdx = (i + 1 === rawCoords.length) ? 0 : i + 1;
+                    const calc = getGpsDistanceAndAzimuth(rawCoords[i].lat, rawCoords[i].lon, rawCoords[nextIdx].lat, rawCoords[nextIdx].lon);
                     
                     if (mode === 'gps_all') {
                         azimuths.push(calc.azimuth);
@@ -836,7 +828,6 @@
                             rows[i].querySelector('.inp-length').value = calc.distance;
                         }
                     } else {
-                        // Ручной режим
                         azimuths.push(parseFloat(rows[i].querySelector('.inp-azimuth').value) || calc.azimuth);
                         lengths.push(parseFloat(rows[i].querySelector('.inp-length').value) || calc.distance);
                     }
@@ -859,7 +850,6 @@
 
             lengths.forEach(l => totalLength += l);
 
-            // Оценка невязки (расстояние между первой и последней точкой)
             const firstPt = rawCoords[0];
             const lastPt = rawCoords[rawCoords.length - 1];
             const closureCalc = getGpsDistanceAndAzimuth(lastPt.lat, lastPt.lon, firstPt.lat, firstPt.lon);
@@ -884,17 +874,31 @@
             const minY = Math.min(...points.map(p => p.y));
             const maxY = Math.max(...points.map(p => p.y));
 
-            const polyWidth = maxX - minX || 1;
-            const polyHeight = maxY - minY || 1;
+            const polyWidth = (maxX - minX) || 50;
+            const polyHeight = (maxY - minY) || 50;
 
-            const scaleX = (canvas.width - 180) / polyWidth;
-            const scaleY = (canvas.height - 200) / polyHeight;
-            const scale = Math.min(scaleX, scaleY) * zoomLevel;
+            const scaleX = (canvas.width - 240) / polyWidth;
+            const scaleY = (canvas.height - 240) / polyHeight;
+            let scale = Math.min(scaleX, scaleY) * zoomLevel;
+
+            if (scale <= 0 || !isFinite(scale)) scale = 1.0;
 
             const offsetX = (canvas.width - polyWidth * scale) / 2 - minX * scale + panX;
-            const offsetY = (canvas.height - polyHeight * scale) / 2 - minY * scale + 25 + panY;
+            const offsetY = (canvas.height - polyHeight * scale) / 2 - minY * scale + 30 + panY;
 
-            // РИСОВАНИЕ ЛИНИЙ И ПОДПИСЕЙ ВДОЛЬ ЛИНИЙ
+            // 1. Отрисовка закрашенного полигона
+            ctx.beginPath();
+            points.forEach((p, idx) => {
+                const sX = p.x * scale + offsetX;
+                const sY = p.y * scale + offsetY;
+                if (idx === 0) ctx.moveTo(sX, sY);
+                else ctx.lineTo(sX, sY);
+            });
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(45, 90, 39, 0.12)';
+            ctx.fill();
+
+            // 2. Отрисовка линий и подписей
             for (let i = 0; i < points.length; i++) {
                 const nextIdx = (i + 1 === points.length) ? 0 : i + 1;
                 const p1 = points[i];
@@ -908,7 +912,7 @@
                 ctx.beginPath();
                 ctx.moveTo(sX1, sY1);
                 ctx.lineTo(sX2, sY2);
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 2.5;
                 ctx.strokeStyle = '#2D5A27';
                 ctx.stroke();
 
@@ -923,27 +927,30 @@
                     ctx.translate(midX, midY);
                     ctx.rotate(angle);
                     ctx.fillStyle = '#2D5A27';
-                    ctx.font = 'bold 10px Inter';
+                    ctx.font = 'bold 11px Inter';
                     ctx.textAlign = 'center';
-                    ctx.fillText(`${azimuths[i]}° / ${lengths[i]}м`, 0, -4);
+                    ctx.fillText(`${azimuths[i] || 0}° / ${lengths[i] || 0}м`, 0, -5);
                     ctx.restore();
                 }
             }
 
-            // РИСОВАНИЕ ТОЧЕК И КООРДИНАТ
+            // 3. Отрисовка вершин и координат
             points.forEach((p, idx) => {
                 const screenX = p.x * scale + offsetX;
                 const screenY = p.y * scale + offsetY;
                 
                 ctx.beginPath();
-                ctx.arc(screenX, screenY, 4, 0, Math.PI * 2);
+                ctx.arc(screenX, screenY, 5, 0, Math.PI * 2);
                 ctx.fillStyle = '#D9534F';
                 ctx.fill();
+                ctx.strokeStyle = '#FFF';
+                ctx.lineWidth = 1;
+                ctx.stroke();
 
                 ctx.fillStyle = '#111';
-                ctx.font = 'bold 10px Inter';
+                ctx.font = 'bold 11px Inter';
                 const coordStr = `(${formatCoordValue(rawCoords[idx].lat, coordDisplayFmt)}, ${formatCoordValue(rawCoords[idx].lon, coordDisplayFmt)})`;
-                ctx.fillText(`${idx + 1} ${coordStr}`, screenX + 6, screenY - 6);
+                ctx.fillText(`${idx + 1} ${coordStr}`, screenX + 8, screenY - 6);
             });
 
             drawPassportStamp();
