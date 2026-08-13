@@ -28,8 +28,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Чертёжник Абрисов Лесосек Онлайн | Лесовик</title>
-    <meta name="description" content="Профессиональный онлайн-чертёжник абрисов делянок по географическим GPS координатам с навигатора и данным буссоли. Наложение на планшет, выгрузка KML и печать.">
-    <meta name="keywords" content="чертежник абрисов, координаты с навигатора, градусы минуты секунды, паспорт участка лесосека, буссольный ход онлайн, выгрузка kml, планшет лесничества">
+    <meta name="description" content="Профессиональный онлайн-чертёжник абрисов делянок по GPS координатам с навигатора и буссольному ходу. Наложение на планшет, выгрузка KML, расчет площади и печать.">
+    <meta name="keywords" content="чертежник абрисов, начертить делянку, координаты gps, паспорт участка лесосека, буссольный ход онлайн, выгрузка kml, планшет лесничества">
     <link rel="canonical" href="https://lesovik-pro.ru/abris-drawer.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
 
@@ -124,8 +124,8 @@
         .btn-nav:hover { background-color: var(--forest-green); color: var(--bg-paper); }
 
         .main-workspace {
-            display: grid; grid-template-columns: 460px 1fr; gap: 20px;
-            max-width: 1600px; margin: 20px auto; padding: 0 20px; flex: 1; width: 100%; box-sizing: border-box;
+            display: grid; grid-template-columns: 480px 1fr; gap: 20px;
+            max-width: 1650px; margin: 20px auto; padding: 0 20px; flex: 1; width: 100%; box-sizing: border-box;
         }
 
         .control-panel {
@@ -150,16 +150,16 @@
             width: 100%; overflow-x: auto; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 8px;
         }
 
-        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 420px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 440px; }
         .data-table th, .data-table td { padding: 5px; border: 1px solid var(--border-color); text-align: center; }
         .data-table th { background-color: var(--forest-green); color: white; font-size: 11px; white-space: nowrap; }
         .data-table input { width: 100%; box-sizing: border-box; padding: 4px; border: none; background: transparent; color: inherit; text-align: center; }
-        .data-table input:disabled { opacity: 0.6; background-color: rgba(0,0,0,0.05); }
+        .data-table input:disabled { opacity: 0.5; background-color: rgba(0,0,0,0.04); }
 
-        .col-num { width: 60px; font-weight: bold; }
-        .col-coord-input { width: 110px; }
-        .col-azimuth { width: 65px; color: #666; font-size: 11px; }
-        .col-length { width: 65px; color: #666; font-size: 11px; }
+        .col-num { width: 55px; font-weight: bold; }
+        .col-coord-input { width: 115px; }
+        .col-azimuth { width: 70px; }
+        .col-length { width: 70px; }
 
         .dms-box { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; }
         .dms-box input { font-size: 10px; padding: 2px; }
@@ -195,10 +195,14 @@
             padding: 10px; border-radius: 8px; font-size: 12px; line-height: 1.5;
         }
 
+        .mode-badge {
+            font-size: 11px; padding: 4px 8px; border-radius: 4px; background: rgba(45,90,39,0.1); color: var(--forest-green); font-weight: bold; margin-bottom: 8px; text-align: center;
+        }
+
         footer { background-color: var(--footer-bg); color: #E0E0E0; padding: 30px 20px 80px; font-size: 13px; }
         .footer-bottom { text-align: center; opacity: 0.6; }
 
-        @media (max-width: 950px) {
+        @media (max-width: 1000px) {
             .main-workspace { grid-template-columns: 1fr; }
             .control-panel { max-height: none; }
             #abris-canvas { width: 100% !important; height: auto !important; }
@@ -253,10 +257,25 @@
                 </div>
             </div>
 
-            <!-- БЛОК 2: НАСТРОЙКИ -->
+            <!-- БЛОК 2: ВЫБОР РЕЖИМА И ФОРМАТА -->
             <div>
-                <div class="panel-section-title">2. Настройки отображения</div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div class="panel-section-title">2. Режим работы и Масштаб</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Способ ввода данных</label>
+                        <select id="input-mode" onchange="switchInputMode()">
+                            <option value="gps_all">Вариант 1: GPS координаты каждого столба (с навигатора)</option>
+                            <option value="bussol">Вариант 2: Буссольный ход (1 точка GPS + Азимуты и Длины)</option>
+                            <option value="manual">Вариант 3: Полностью ручной ввод / Редактирование</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Формат GPS</label>
+                        <select id="gps-input-format" onchange="switchGpsFormat()">
+                            <option value="decimal">Десятичные (61.6687)</option>
+                            <option value="dms">Гр° Мин' Сек"</option>
+                        </select>
+                    </div>
                     <div class="form-group">
                         <label>Масштаб</label>
                         <select id="map-scale" onchange="drawAbris()">
@@ -266,42 +285,27 @@
                             <option value="2000">1:2 000</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label>Вид на чертеже</label>
-                        <select id="coord-format" onchange="drawAbris()">
-                            <option value="decimal">Десятичные (0.0000)</option>
-                            <option value="dms">Гр°Мин'Сек"</option>
-                        </select>
-                    </div>
                 </div>
 
-                <div class="form-group" style="margin-top: 8px;">
+                <!-- ПОПРАВКА НА МАГНИТНОЕ СКЛОНЕНИЕ ДЛЯ БУССОЛИ -->
+                <div id="declination-block" class="form-group" style="display:none; margin-bottom: 8px;">
+                    <label>Магнитное склонение (для Коми: +14°)</label>
+                    <input type="number" id="mag-declination" value="14" step="0.5" onfocus="this.select()" oninput="drawAbris()">
+                </div>
+
+                <div class="form-group">
                     <label>Подложка (Планшет лесничества)</label>
                     <input type="file" id="bg-file" accept="image/*" onchange="loadBackgroundImage(event)">
                 </div>
             </div>
 
-            <!-- БЛОК 3: ВВОД ТОЧЕК (С НАВИГАТОРА ИЛИ БУССОЛИ) -->
+            <!-- БЛОК 3: ТАБЛИЦА ВВОДА ТОЧЕК -->
             <div>
-                <div class="panel-section-title">3. Данные точек с навигатора</div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-                    <div class="form-group">
-                        <label>Режим ввода</label>
-                        <select id="input-mode" onchange="switchInputMode()">
-                            <option value="gps">GPS координаты с навигатора</option>
-                            <option value="bussol">По буссоли (Азимут + Длина)</option>
-                        </select>
-                    </div>
-                    <div class="form-group" id="gps-fmt-group">
-                        <label>Формат GPS</label>
-                        <select id="gps-input-format" onchange="switchGpsFormat()">
-                            <option value="decimal">Десятичные (61.6687)</option>
-                            <option value="dms">Гр° Мин' Сек"</option>
-                        </select>
-                    </div>
+                <div class="panel-section-title">3. Ведомость точек и ходов</div>
+                <div id="mode-description" class="mode-badge">
+                    Режим: GPS координаты каждого столба
                 </div>
-
+                
                 <div class="table-scroll-container">
                     <table class="data-table">
                         <thead>
@@ -333,8 +337,8 @@
                                         <input type="number" value="11.03" placeholder='"' class="dms-sec" onfocus="this.select()" oninput="drawAbris()">
                                     </div>
                                 </td>
-                                <td class="col-azimuth res-az">-</td>
-                                <td class="col-length res-len">-</td>
+                                <td class="col-azimuth"><input type="number" value="45" class="inp-azimuth" disabled onfocus="this.select()" oninput="drawAbris()"></td>
+                                <td class="col-length"><input type="number" value="150" class="inp-length" disabled onfocus="this.select()" oninput="drawAbris()"></td>
                             </tr>
                             <!-- ТОЧКА 2 -->
                             <tr class="point-row">
@@ -355,8 +359,8 @@
                                         <input type="number" value="18.16" placeholder='"' class="dms-sec" onfocus="this.select()" oninput="drawAbris()">
                                     </div>
                                 </td>
-                                <td class="col-azimuth res-az">-</td>
-                                <td class="col-length res-len">-</td>
+                                <td class="col-azimuth"><input type="number" value="135" class="inp-azimuth" disabled onfocus="this.select()" oninput="drawAbris()"></td>
+                                <td class="col-length"><input type="number" value="200" class="inp-length" disabled onfocus="this.select()" oninput="drawAbris()"></td>
                             </tr>
                             <!-- ТОЧКА 3 -->
                             <tr class="point-row">
@@ -377,8 +381,8 @@
                                         <input type="number" value="24.43" placeholder='"' class="dms-sec" onfocus="this.select()" oninput="drawAbris()">
                                     </div>
                                 </td>
-                                <td class="col-azimuth res-az">-</td>
-                                <td class="col-length res-len">-</td>
+                                <td class="col-azimuth"><input type="number" value="225" class="inp-azimuth" disabled onfocus="this.select()" oninput="drawAbris()"></td>
+                                <td class="col-length"><input type="number" value="160" class="inp-length" disabled onfocus="this.select()" oninput="drawAbris()"></td>
                             </tr>
                             <!-- ТОЧКА 4 -->
                             <tr class="point-row">
@@ -399,15 +403,15 @@
                                         <input type="number" value="13.38" placeholder='"' class="dms-sec" onfocus="this.select()" oninput="drawAbris()">
                                     </div>
                                 </td>
-                                <td class="col-azimuth res-az">-</td>
-                                <td class="col-length res-len">-</td>
+                                <td class="col-azimuth"><input type="number" value="315" class="inp-azimuth" disabled onfocus="this.select()" oninput="drawAbris()"></td>
+                                <td class="col-length"><input type="number" value="190" class="inp-length" disabled onfocus="this.select()" oninput="drawAbris()"></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
                 
                 <div style="display: flex; gap: 8px; margin-top: 8px;">
-                    <button class="btn-action btn-secondary" onclick="addRow()">+ Точка GPS</button>
+                    <button class="btn-action btn-secondary" onclick="addRow()">+ Точка</button>
                     <button class="btn-action btn-secondary" onclick="removeRow()">- Удалить</button>
                 </div>
             </div>
@@ -463,7 +467,7 @@
         let startX = 0;
         let startY = 0;
 
-        // ПЕРЕТАСКИВАНИЕ ПАЛЬЦЕМ / МЫШЬЮ
+        // ПЕРЕТАСКИВАНИЕ ХОЛСТА ПАЛЬЦЕМ И МЫШЬЮ
         wrapper.addEventListener('mousedown', startPan);
         wrapper.addEventListener('mousemove', movePan);
         window.addEventListener('mouseup', endPan);
@@ -479,49 +483,6 @@
         function endPan() { isDragging = false; }
 
         function resetCenterView() { zoomLevel = 1.0; panX = 0; panY = 0; drawAbris(); }
-
-        function switchGpsFormat() {
-            const fmt = document.getElementById('gps-input-format').value;
-            const rows = document.querySelectorAll('.point-row');
-
-            rows.forEach(row => {
-                const decLat = row.querySelector('.inp-lat-dec');
-                const dmsLat = row.querySelector('.inp-lat-dms');
-                const decLon = row.querySelector('.inp-lon-dec');
-                const dmsLon = row.querySelector('.inp-lon-dms');
-
-                if (fmt === 'dms') {
-                    // Конвертация Decimal -> DMS
-                    const latVal = parseFloat(decLat.value) || 0;
-                    const lonVal = parseFloat(decLon.value) || 0;
-
-                    const latDms = decToDmsObj(latVal);
-                    const lonDms = decToDmsObj(lonVal);
-
-                    dmsLat.querySelectorAll('input')[0].value = latDms.d;
-                    dmsLat.querySelectorAll('input')[1].value = latDms.m;
-                    dmsLat.querySelectorAll('input')[2].value = latDms.s;
-
-                    dmsLon.querySelectorAll('input')[0].value = lonDms.d;
-                    dmsLon.querySelectorAll('input')[1].value = lonDms.m;
-                    dmsLon.querySelectorAll('input')[2].value = lonDms.s;
-
-                    decLat.style.display = 'none'; dmsLat.style.display = 'grid';
-                    decLon.style.display = 'none'; dmsLon.style.display = 'grid';
-                } else {
-                    // Конвертация DMS -> Decimal
-                    const latInputs = dmsLat.querySelectorAll('input');
-                    const lonInputs = dmsLon.querySelectorAll('input');
-
-                    decLat.value = dmsToDec(latInputs[0].value, latInputs[1].value, latInputs[2].value);
-                    decLon.value = dmsToDec(lonInputs[0].value, lonInputs[1].value, lonInputs[2].value);
-
-                    decLat.style.display = 'block'; dmsLat.style.display = 'none';
-                    decLon.style.display = 'block'; dmsLon.style.display = 'none';
-                }
-            });
-            drawAbris();
-        }
 
         function decToDmsObj(val) {
             const absVal = Math.abs(val);
@@ -539,15 +500,94 @@
             return (deg + min / 60 + sec / 3600).toFixed(6);
         }
 
+        function switchGpsFormat() {
+            const fmt = document.getElementById('gps-input-format').value;
+            const rows = document.querySelectorAll('.point-row');
+
+            rows.forEach(row => {
+                const decLat = row.querySelector('.inp-lat-dec');
+                const dmsLat = row.querySelector('.inp-lat-dms');
+                const decLon = row.querySelector('.inp-lon-dec');
+                const dmsLon = row.querySelector('.inp-lon-dms');
+
+                if (fmt === 'dms') {
+                    const latVal = parseFloat(decLat.value) || 0;
+                    const lonVal = parseFloat(decLon.value) || 0;
+
+                    const latDms = decToDmsObj(latVal);
+                    const lonDms = decToDmsObj(lonVal);
+
+                    dmsLat.querySelectorAll('input')[0].value = latDms.d;
+                    dmsLat.querySelectorAll('input')[1].value = latDms.m;
+                    dmsLat.querySelectorAll('input')[2].value = latDms.s;
+
+                    dmsLon.querySelectorAll('input')[0].value = lonDms.d;
+                    dmsLon.querySelectorAll('input')[1].value = lonDms.m;
+                    dmsLon.querySelectorAll('input')[2].value = lonDms.s;
+
+                    decLat.style.display = 'none'; dmsLat.style.display = 'grid';
+                    decLon.style.display = 'none'; dmsLon.style.display = 'grid';
+                } else {
+                    const latInputs = dmsLat.querySelectorAll('input');
+                    const lonInputs = dmsLon.querySelectorAll('input');
+
+                    decLat.value = dmsToDec(latInputs[0].value, latInputs[1].value, latInputs[2].value);
+                    decLon.value = dmsToDec(lonInputs[0].value, lonInputs[1].value, lonInputs[2].value);
+
+                    decLat.style.display = 'block'; dmsLat.style.display = 'none';
+                    decLon.style.display = 'block'; dmsLon.style.display = 'none';
+                }
+            });
+            drawAbris();
+        }
+
         function switchInputMode() {
             const mode = document.getElementById('input-mode').value;
-            const gpsFmtGroup = document.getElementById('gps-fmt-group');
-            if(mode === 'bussol') {
-                gpsFmtGroup.style.display = 'none';
-            } else {
-                gpsFmtGroup.style.display = 'flex';
+            const declBlock = document.getElementById('declination-block');
+            const desc = document.getElementById('mode-description');
+            const rows = document.querySelectorAll('.point-row');
+
+            if (mode === 'gps_all') {
+                declBlock.style.display = 'none';
+                desc.innerText = 'Режим: GPS координаты каждого столба (авто-расчет азимутов)';
+                rows.forEach((row, i) => {
+                    toggleRowInputs(row, true, false);
+                });
+            } else if (mode === 'bussol') {
+                declBlock.style.display = 'flex';
+                desc.innerText = 'Режим: Буссольный ход (GPS точка 1 + Азимуты и Длины)';
+                rows.forEach((row, i) => {
+                    if (i === 0) {
+                        toggleRowInputs(row, true, false);
+                    } else {
+                        toggleRowInputs(row, false, true);
+                    }
+                });
+            } else if (mode === 'manual') {
+                declBlock.style.display = 'none';
+                desc.innerText = 'Режим: Полностью ручной ввод / Свободное редактирование';
+                rows.forEach(row => {
+                    toggleRowInputs(row, true, true);
+                });
             }
             drawAbris();
+        }
+
+        function toggleRowInputs(row, enableGps, enableBussol) {
+            const latDec = row.querySelector('.inp-lat-dec');
+            const lonDec = row.querySelector('.inp-lon-dec');
+            const latDmsInps = row.querySelector('.inp-lat-dms').querySelectorAll('input');
+            const lonDmsInps = row.querySelector('.inp-lon-dms').querySelectorAll('input');
+            const azInp = row.querySelector('.inp-azimuth');
+            const lenInp = row.querySelector('.inp-length');
+
+            latDec.disabled = !enableGps;
+            lonDec.disabled = !enableGps;
+            latDmsInps.forEach(i => i.disabled = !enableGps);
+            lonDmsInps.forEach(i => i.disabled = !enableGps);
+
+            azInp.disabled = !enableBussol;
+            lenInp.disabled = !enableBussol;
         }
 
         function addRow() {
@@ -575,12 +615,12 @@
                         <input type="number" value="9.60" placeholder='"' class="dms-sec" onfocus="this.select()" oninput="drawAbris()">
                     </div>
                 </td>
-                <td class="col-azimuth res-az">-</td>
-                <td class="col-length res-len">-</td>
+                <td class="col-azimuth"><input type="number" value="0" class="inp-azimuth" onfocus="this.select()" oninput="drawAbris()"></td>
+                <td class="col-length"><input type="number" value="100" class="inp-length" onfocus="this.select()" oninput="drawAbris()"></td>
             `;
             tbody.appendChild(tr);
             updateLabels();
-            drawAbris();
+            switchInputMode();
         }
 
         function removeRow() {
@@ -588,7 +628,7 @@
             if (tbody.children.length > 3) {
                 tbody.removeChild(tbody.lastChild);
                 updateLabels();
-                drawAbris();
+                switchInputMode();
             }
         }
 
@@ -660,9 +700,8 @@
             ctx.restore();
         }
 
-        // РАСЧЕТ РАСТАЯНИЯ И АЗИМУТА МЕЖДУ GPS ТОЧКАМИ
         function getGpsDistanceAndAzimuth(lat1, lon1, lat2, lon2) {
-            const R = 6371000; // Радиус Земли в метрах
+            const R = 6371000;
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
 
@@ -681,6 +720,23 @@
             return { distance: Math.round(distance), azimuth: Math.round(azimuth) };
         }
 
+        function getPointFromAzimuthAndDistance(lat1, lon1, azimuthDeg, distanceM) {
+            const R = 6371000;
+            const brng = azimuthDeg * Math.PI / 180;
+            const lat1Rad = lat1 * Math.PI / 180;
+            const lon1Rad = lon1 * Math.PI / 180;
+
+            const lat2Rad = Math.asin(Math.sin(lat1Rad) * Math.cos(distanceM / R) +
+                            Math.cos(lat1Rad) * Math.sin(distanceM / R) * Math.cos(brng));
+            const lon2Rad = lon1Rad + Math.atan2(Math.sin(brng) * Math.sin(distanceM / R) * Math.cos(lat1Rad),
+                            Math.cos(distanceM / R) - Math.sin(lat1Rad) * Math.sin(lat2Rad));
+
+            return {
+                lat: lat2Rad * 180 / Math.PI,
+                lon: lon2Rad * 180 / Math.PI
+            };
+        }
+
         function drawAbris() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
@@ -690,62 +746,123 @@
                 ctx.globalAlpha = 1.0;
             }
 
+            const mode = document.getElementById('input-mode').value;
             const gpsFmt = document.getElementById('gps-input-format').value;
             const coordDisplayFmt = document.getElementById('coord-format').value;
             const rows = document.querySelectorAll('.point-row');
 
             let rawCoords = [];
+            let azimuths = [];
+            let lengths = [];
 
-            // Сбор координат
-            rows.forEach(row => {
-                let lat = 0, lon = 0;
+            if (mode === 'bussol') {
+                // РЕЖИМ 2: Буссольный ход от точки 1
+                const firstRow = rows[0];
+                let baseLat = 0, baseLon = 0;
+
                 if (gpsFmt === 'dms') {
-                    const latInps = row.querySelector('.inp-lat-dms').querySelectorAll('input');
-                    const lonInps = row.querySelector('.inp-lon-dms').querySelectorAll('input');
-                    lat = parseFloat(dmsToDec(latInps[0].value, latInps[1].value, latInps[2].value));
-                    lon = parseFloat(dmsToDec(lonInps[0].value, lonInps[1].value, lonInps[2].value));
+                    const latInps = firstRow.querySelector('.inp-lat-dms').querySelectorAll('input');
+                    const lonInps = firstRow.querySelector('.inp-lon-dms').querySelectorAll('input');
+                    baseLat = parseFloat(dmsToDec(latInps[0].value, latInps[1].value, latInps[2].value));
+                    baseLon = parseFloat(dmsToDec(lonInps[0].value, lonInps[1].value, lonInps[2].value));
                 } else {
-                    lat = parseFloat(row.querySelector('.inp-lat-dec').value) || 0;
-                    lon = parseFloat(row.querySelector('.inp-lon-dec').value) || 0;
+                    baseLat = parseFloat(firstRow.querySelector('.inp-lat-dec').value) || 0;
+                    baseLon = parseFloat(firstRow.querySelector('.inp-lon-dec').value) || 0;
                 }
-                rawCoords.push({ lat, lon });
-            });
+
+                const declination = parseFloat(document.getElementById('mag-declination').value) || 0;
+                rawCoords.push({ lat: baseLat, lon: baseLon });
+
+                let curLat = baseLat;
+                let curLon = baseLon;
+
+                rows.forEach((row, i) => {
+                    if (i < rows.length - 1) {
+                        const az = parseFloat(row.querySelector('.inp-azimuth').value) || 0;
+                        const len = parseFloat(row.querySelector('.inp-length').value) || 0;
+                        azimuths.push(az);
+                        lengths.push(len);
+
+                        // Учет магнитного склонения
+                        const trueAz = (az + declination) % 360;
+                        const nextPt = getPointFromAzimuthAndDistance(curLat, curLon, trueAz, len);
+                        rawCoords.push(nextPt);
+
+                        curLat = nextPt.lat;
+                        curLon = nextPt.lon;
+
+                        // Авто-заполнение GPS координат в следующих строках таблицы
+                        const nextRow = rows[i + 1];
+                        if (nextRow) {
+                            nextRow.querySelector('.inp-lat-dec').value = nextPt.lat.toFixed(6);
+                            nextRow.querySelector('.inp-lon-dec').value = nextPt.lon.toFixed(6);
+
+                            const latDms = decToDmsObj(nextPt.lat);
+                            const lonDms = decToDmsObj(nextPt.lon);
+
+                            const latInps = nextRow.querySelector('.inp-lat-dms').querySelectorAll('input');
+                            const lonInps = nextRow.querySelector('.inp-lon-dms').querySelectorAll('input');
+
+                            latInps[0].value = latDms.d; latInps[1].value = latDms.m; latInps[2].value = latDms.s;
+                            lonInps[0].value = lonDms.d; lonInps[1].value = lonDms.m; lonInps[2].value = lonDms.s;
+                        }
+                    }
+                });
+
+            } else {
+                // РЕЖИМ 1 и РЕЖИМ 3: GPS координаты каждого столба или Ручной
+                rows.forEach(row => {
+                    let lat = 0, lon = 0;
+                    if (gpsFmt === 'dms') {
+                        const latInps = row.querySelector('.inp-lat-dms').querySelectorAll('input');
+                        const lonInps = row.querySelector('.inp-lon-dms').querySelectorAll('input');
+                        lat = parseFloat(dmsToDec(latInps[0].value, latInps[1].value, latInps[2].value));
+                        lon = parseFloat(dmsToDec(lonInps[0].value, lonInps[1].value, lonInps[2].value));
+                    } else {
+                        lat = parseFloat(row.querySelector('.inp-lat-dec').value) || 0;
+                        lon = parseFloat(row.querySelector('.inp-lon-dec').value) || 0;
+                    }
+                    rawCoords.push({ lat, lon });
+                });
+
+                for (let i = 0; i < rawCoords.length - 1; i++) {
+                    const calc = getGpsDistanceAndAzimuth(rawCoords[i].lat, rawCoords[i].lon, rawCoords[i+1].lat, rawCoords[i+1].lon);
+                    
+                    if (mode === 'gps_all') {
+                        azimuths.push(calc.azimuth);
+                        lengths.push(calc.distance);
+                        if (rows[i]) {
+                            rows[i].querySelector('.inp-azimuth').value = calc.azimuth;
+                            rows[i].querySelector('.inp-length').value = calc.distance;
+                        }
+                    } else {
+                        // Ручной режим
+                        azimuths.push(parseFloat(rows[i].querySelector('.inp-azimuth').value) || calc.azimuth);
+                        lengths.push(parseFloat(rows[i].querySelector('.inp-length').value) || calc.distance);
+                    }
+                }
+            }
 
             if (rawCoords.length < 2) return;
 
-            // Расчет локальных метрических точек от Т.1 (0,0)
             const baseLat = rawCoords[0].lat;
             const baseLon = rawCoords[0].lon;
 
             let points = [];
-            let azimuths = [];
-            let lengths = [];
             let totalLength = 0;
 
-            const resAzCells = document.querySelectorAll('.res-az');
-            const resLenCells = document.querySelectorAll('.res-len');
-
             for (let i = 0; i < rawCoords.length; i++) {
-                // Прямоугольные локальные метры
                 const dLat = (rawCoords[i].lat - baseLat) * 111111;
                 const dLon = (rawCoords[i].lon - baseLon) * (111111 * Math.cos(baseLat * Math.PI / 180));
-                points.push({ x: dLon, y: -dLat }); // y инвертирован для экрана
+                points.push({ x: dLon, y: -dLat });
             }
 
-            // Расчет азимутов и расстояний между соседними точками
-            for (let i = 0; i < rawCoords.length; i++) {
-                const nextIdx = (i + 1 === rawCoords.length) ? 0 : i + 1;
-                const calc = getGpsDistanceAndAzimuth(rawCoords[i].lat, rawCoords[i].lon, rawCoords[nextIdx].lat, rawCoords[nextIdx].lon);
+            lengths.forEach(l => totalLength += l);
 
-                if (i < rawCoords.length - 1) {
-                    azimuths.push(calc.azimuth);
-                    lengths.push(calc.distance);
-                    totalLength += calc.distance;
-
-                    if (resAzCells[i]) resAzCells[i].innerText = `${calc.azimuth}°`;
-                    if (resLenCells[i]) resLenCells[i].innerText = `${calc.distance}м`;
-                }
-            }
+            // Оценка невязки (расстояние между первой и последней точкой)
+            const firstPt = rawCoords[0];
+            const lastPt = rawCoords[rawCoords.length - 1];
+            const closureCalc = getGpsDistanceAndAzimuth(lastPt.lat, lastPt.lon, firstPt.lat, firstPt.lon);
 
             // Площадь по Гауссу
             let area = 0;
@@ -758,7 +875,7 @@
             document.getElementById('calc-info').innerHTML = `
                 Площадь: <b>${area.toFixed(2)} га</b><br>
                 Периметр: <b>${Math.round(totalLength)} м</b><br>
-                Точек GPS: <b>${rawCoords.length}</b>
+                Невязка: <b>${closureCalc.distance} м</b>
             `;
 
             // Масштабирование
@@ -777,7 +894,7 @@
             const offsetX = (canvas.width - polyWidth * scale) / 2 - minX * scale + panX;
             const offsetY = (canvas.height - polyHeight * scale) / 2 - minY * scale + 25 + panY;
 
-            // РИСОВАНИЕ ЛИНИЙ
+            // РИСОВАНИЕ ЛИНИЙ И ПОДПИСЕЙ ВДОЛЬ ЛИНИЙ
             for (let i = 0; i < points.length; i++) {
                 const nextIdx = (i + 1 === points.length) ? 0 : i + 1;
                 const p1 = points[i];
@@ -813,7 +930,7 @@
                 }
             }
 
-            // РИСОВАНИЕ ТОЧЕК И РЕАЛЬНЫХ GPS КООРДИНАТ
+            // РИСОВАНИЕ ТОЧЕК И КООРДИНАТ
             points.forEach((p, idx) => {
                 const screenX = p.x * scale + offsetX;
                 const screenY = p.y * scale + offsetY;
@@ -868,7 +985,6 @@
                 coordsList.push(`${lon},${lat},0`);
             });
 
-            // Замыкаем контур для KML
             if(coordsList.length > 0) coordsList.push(coordsList[0]);
 
             const kmlContent = `<?xml version="1.0" encoding="UTF-8"?>
@@ -911,14 +1027,16 @@
             rows.forEach(row => {
                 coordsData.push({
                     latDec: row.querySelector('.inp-lat-dec').value,
-                    lonDec: row.querySelector('.inp-lon-dec').value
+                    lonDec: row.querySelector('.inp-lon-dec').value,
+                    az: row.querySelector('.inp-azimuth').value,
+                    len: row.querySelector('.inp-length').value
                 });
             });
 
-            const archiveData = { passport, coordsData, date: new Date().toLocaleString('ru-RU') };
+            const archiveData = { passport, coordsData, mode: document.getElementById('input-mode').value, date: new Date().toLocaleString('ru-RU') };
 
             localStorage.setItem('lesovik_abris_saved', JSON.stringify(archiveData));
-            alert('Чертеж и GPS точки с навигатора сохранены в память устройства!');
+            alert('Чертеж и все данные успешно сохранены в память устройства!');
         }
 
         function loadFromLocalArchive() {
@@ -931,6 +1049,10 @@
                 document.getElementById('p-kvartal').value = data.passport.kv || '';
                 document.getElementById('p-delyanka').value = data.passport.del || '';
                 document.getElementById('p-vydel').value = data.passport.vyd || '';
+            }
+
+            if (data.mode) {
+                document.getElementById('input-mode').value = data.mode;
             }
 
             if (data.coordsData) {
@@ -958,13 +1080,14 @@
                                 <input type="number" value="0.00" placeholder='"' class="dms-sec" onfocus="this.select()" oninput="drawAbris()">
                             </div>
                         </td>
-                        <td class="col-azimuth res-az">-</td>
-                        <td class="col-length res-len">-</td>
+                        <td class="col-azimuth"><input type="number" value="${pt.az || 0}" class="inp-azimuth" onfocus="this.select()" oninput="drawAbris()"></td>
+                        <td class="col-length"><input type="number" value="${pt.len || 100}" class="inp-length" onfocus="this.select()" oninput="drawAbris()"></td>
                     `;
                     tbody.appendChild(tr);
                 });
             }
             updateLabels();
+            switchInputMode();
             resetCenterView();
             alert(`Загружен чертеж от ${data.date}`);
         }
@@ -977,6 +1100,8 @@
                 document.getElementById('p-kvartal').value = '32';
                 document.getElementById('p-delyanka').value = '2';
                 document.getElementById('p-vydel').value = '2, 3, 4';
+                document.getElementById('input-mode').value = 'gps_all';
+                switchInputMode();
                 resetCenterView();
             }
         }
@@ -988,7 +1113,7 @@
             else body.setAttribute('data-theme', 'dark');
         }
 
-        window.onload = function() { drawAbris(); };
+        window.onload = function() { switchInputMode(); drawAbris(); };
     </script>
 </body>
 </html>
