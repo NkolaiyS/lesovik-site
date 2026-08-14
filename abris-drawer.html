@@ -1,3 +1,10 @@
+<!-- 
+  (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
+  Свидетельство ИНН: 111801576622.
+  Программное обеспечение: «Чертёжник Абрисов Лесосек Онлайн (Лесовик ПРО)» (Версия 2.6).
+  Правообладатель: Худяков Николай Сергеевич.
+  Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
+-->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -634,7 +641,7 @@
             }
         }
 
-        // ОФИЦИАЛЬНЫЙ ШТАМП ПАСПОРТА С ПОДПИСЬЮ НА ХОЛСТЕ
+        // ОФИЦИАЛЬНЫЙ ШТАМП ПАСПОРТА С ПОДПИСЬЮ НА ХОЛСТЕ (С ОТСТУПОМ СЛЕВА ДЛЯ ПОДШИВКИ)
         function drawPassportStamp() {
             const les = document.getElementById('p-lesnichestvo').value || 'Лесничество: не указано';
             const kv = document.getElementById('p-kvartal').value || '-';
@@ -653,8 +660,8 @@
 
             const boxWidth = 255;
             const boxHeight = 120;
-            const posX = 15;
-            const posY = 15;
+            const posX = 35; // Отступ слева под дырокол/подшивку в дело
+            const posY = 25; // Отступ сверху от края листа
 
             ctx.fillRect(posX, posY, boxWidth, boxHeight);
             ctx.strokeRect(posX, posY, boxWidth, boxHeight);
@@ -680,7 +687,7 @@
         // ЧЁТКАЯ СТРЕЛКА СЕВЕРА
         function drawNorthArrow() {
             ctx.save();
-            ctx.translate(canvas.width - 40, 45);
+            ctx.translate(canvas.width - 45, 45);
             ctx.beginPath();
             ctx.moveTo(0, 0); ctx.lineTo(-8, 22); ctx.lineTo(0, 16); ctx.lineTo(8, 22);
             ctx.closePath();
@@ -710,7 +717,7 @@
             return { distance: Math.round(distance), azimuth: Math.round(azimuth) };
         }
 
-        // ОСНОВНАЯ НАДЁЖНАЯ ОТРИСОВКА
+        // ОСНОВНАЯ НАДЁЖНАЯ ОТРИСОВКА (ЦЕНТРИРОВАНИЕ ДЕЛЯНКИ)
         function drawAbris() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
@@ -741,7 +748,6 @@
             let baseLon = lonInputs[0] ? parseNum(lonInputs[0].value) || 50.836399 : 50.836399;
 
             if (mode === 'gps_all') {
-                // ВАРИАНТ 2: Расчет азимутов и длин по введенным GPS координатам
                 let coords = [];
                 rows.forEach(r => {
                     coords.push({
@@ -777,7 +783,6 @@
                 points.push({ x: currentX, y: currentY });
                 totalLength += lengths[i];
 
-                // Авторасчет широты и долготы для следующих точек в режиме 1
                 if (mode === 'bussol' && i < azimuths.length - 1 && latInputs[i+1] && lonInputs[i+1]) {
                     const dLat = -currentY / 111111;
                     const dLon = currentX / (111111 * Math.cos(baseLat * Math.PI / 180));
@@ -807,14 +812,15 @@
             const polyWidth = maxX - minX || 1;
             const polyHeight = maxY - minY || 1;
 
-            const scaleX = (canvas.width - 200) / polyWidth;
-            const scaleY = (canvas.height - 220) / polyHeight;
+            const scaleX = (canvas.width - 220) / polyWidth;
+            const scaleY = (canvas.height - 240) / polyHeight;
             const scale = Math.min(scaleX, scaleY) * zoomLevel;
 
+            // Центрирование контура в рабочей зоне
             const offsetX = (canvas.width - polyWidth * scale) / 2 - minX * scale + panX;
-            const offsetY = (canvas.height - polyHeight * scale) / 2 - minY * scale + 35 + panY;
+            const offsetY = (canvas.height - polyHeight * scale) / 2 - minY * scale + 40 + panY;
 
-            // 1. Отрисовка закрашенного полигона
+            // 1. Закраска делянки
             ctx.beginPath();
             points.forEach((p, idx) => {
                 const sX = p.x * scale + offsetX;
@@ -826,7 +832,7 @@
             ctx.fillStyle = 'rgba(45, 90, 39, 0.1)';
             ctx.fill();
 
-            // 2. Отрисовка линий и подписей
+            // 2. Линии и подписи
             for (let i = 0; i < points.length - 1; i++) {
                 const p1 = points[i];
                 const p2 = points[i+1];
@@ -861,7 +867,7 @@
                 ctx.restore();
             }
 
-            // 3. Отрисовка точек
+            // 3. Вершины
             points.slice(0, -1).forEach((p, idx) => {
                 const screenX = p.x * scale + offsetX;
                 const screenY = p.y * scale + offsetY;
