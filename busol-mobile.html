@@ -12,7 +12,6 @@
     // --- БЛОК АВТОНОМНОЙ ЗАЩИТЫ ЛИЦЕНЗИИ ДЛЯ ЗАКАЗЧИКА ---
     (function() {
         // --- СПИСОК УСТРОЙСТВ С ИНДИВИДУАЛЬНЫМИ СРОКАМИ ЛИЦЕНЗИИ ---
-        // Месяцы в JS: 0 - Янв, 1 - Фев, 2 - Мар, 3 - Апр, 4 - Май, 5 - Июн, 6 - Июл, 7 - Авг, 8 - Сен, 9 - Окт, 10 - Ноя, 11 - Дек
         const licensedDevices = {
             "HNS-4L1E-25O9U6": new Date(2026, 7, 30),  // До 30 августа 2026 Хонор 7 
             "HNS-RAL2-45TCN0": new Date(2099, 11, 31), // Бессрочно (Мой телефон Айфон) Яндекс
@@ -21,15 +20,15 @@
             "HNS-5V40-G89K6X": new Date(2026, 6, 25),  // До 25 июля 2026 Андрей Сателлит
             "HNS-6BS0-ZIHISC": new Date(2026, 6, 25),  // До 25 июля 2026 Паша брат
             "HNS-MINCIFRA-TEST": new Date(2099, 11, 31),// Доступ экспертов Минцифры
-            "HNS-3T7D-ZJKISD": new Date(2027, 6, 30),  // До 30 июля 2026 Андрей Красноярск Хуавей (яндекс лайт)
-            "HNS-J8WX-53VKRC": new Date(2027, 6, 31),  // До 30 июля 2026 Андрей Красноярск Хуавей (яндекс старт)
+            "HNS-3T7D-ZJKISD": new Date(2027, 6, 30),  // До 30 июля 2027 Андрей Красноярск Хуавей (яндекс лайт)
+            "HNS-J8WX-53VKRC": new Date(2027, 6, 31),  // До 30 июля 2027 Андрей Красноярск Хуавей (яндекс старт)
             "HNS-3K0F-5IHF3A": new Date(2099, 11, 31), // Бессрочно (Мой телефон Андройд)
             "HNS-SZ5W-35QREE": new Date(2026, 8, 28), // Доступ на 60 дней Вячеслав (оплата 2000)
             "HNS-Y9XZ-C9GPXR": new Date(2026, 7, 6),   // До 6 августа 2026 (Иван, Магадан)
             "HNS-LNJN-1QUI2D": new Date(2026, 7, 6),   // До 6 августа 2026 (Николай Safari)
-    };
+        };
 
-        // Общая дата окончания бесплатного периода для ВСЕХ остальных пользователей (21 июля 2026)
+        // Общая дата окончания бесплатного периода для ВСЕХ остальных пользователей
         const defaultLicenseExpirationDate = new Date(2026, 6, 21); 
 
         // Генератор безопасного ID для браузера
@@ -41,44 +40,60 @@
             return `HNS-${segment1}-${segment2}`;
         }
 
-        // Функция получения текущего ID (С ПЕРЕХВАТОМ КЛЮЧА ДЛЯ МИНЦИФРЫ)
+        // Функция получения текущего ID
         function getCurrentDeviceId() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const keyParam = urlParams.get('key');
+                if (keyParam) {
+                    try { localStorage.setItem('bg_hns_web_id', keyParam); } catch(e) {}
+                    return keyParam;
+                }
+            } catch(e) {}
+
             if (window.device && window.device.uuid) {
                 return window.device.uuid;
             }
 
-            // --- ПЕРЕХВАТ КЛЮЧА ИЗ ССЫЛКИ ДЛЯ МИНЦИФРЫ ---
-            const urlParams = new URLSearchParams(window.location.search);
-            const keyParam = urlParams.get('key');
-            if (keyParam) {
-                localStorage.setItem('bg_hns_web_id', keyParam);
-                return keyParam;
-            }
-            // ----------------------------------------------
-
-            let webId = localStorage.getItem('bg_hns_web_id');
-            if (!webId) {
+            let webId = null;
+            try {
+                webId = localStorage.getItem('bg_hns_web_id');
+                if (!webId) {
+                    webId = generateWebDeviceId();
+                    localStorage.setItem('bg_hns_web_id', webId);
+                }
+            } catch(e) {
                 webId = generateWebDeviceId();
-                localStorage.setItem('bg_hns_web_id', webId);
             }
             return webId;
         }
 
         function runLicenseCheck() {
-            const currentId = getCurrentDeviceId();
-            const now = Date.now();
+            // ПРЯМОЙ БЕЗУСЛОВНЫЙ ПРОПУСК ДЛЯ МИНЦИФРЫ
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const keyParam = urlParams.get('key');
+                if (keyParam === 'HNS-MINCIFRA-TEST' || urlParams.get('test') === 'mincifra') {
+                    return; // Полный доступ без блокировок
+                }
+            } catch(e) {}
 
+            const currentId = getCurrentDeviceId();
+            if (currentId === 'HNS-MINCIFRA-TEST') {
+                return;
+            }
+
+            const now = Date.now();
             let isBlocked = false;
 
             // 1. Проверяем, есть ли устройство в персональном списке
             if (licensedDevices.hasOwnProperty(currentId)) {
                 const deviceExpirationDate = licensedDevices[currentId];
-                // Если индивидуальная дата истекла — блокируем
                 if (now > deviceExpirationDate.getTime()) {
                     isBlocked = true;
                 }
             } else {
-                // 2. Если устройства нет в списке — проверяем по общей дате массы
+                // 2. Если устройства нет в списке — проверяем по общей дате
                 if (now > defaultLicenseExpirationDate.getTime()) {
                     isBlocked = true;
                 }
@@ -118,7 +133,6 @@
             }
         }
 
-        // Безопасный запуск: проверяем Cordova deviceready, либо падаем на DOMContentLoaded
         document.addEventListener('deviceready', runLicenseCheck, false);
         document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
@@ -172,12 +186,9 @@
     <meta name="geo.region" content="RU-KO">
     <meta name="geo.placename" content="Сыктывкар">
 
-    <!-- ================= ВСТАВЛЯТЬ СЮДА ================= -->
-    <!-- Ссылка на индивидуальный манифест -->
     <link rel="manifest" href="/busol.webmanifest">
     <meta name="theme-color" content="#2D5A27">
 
-    <!-- Регистрация Service Worker -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
@@ -187,7 +198,6 @@
         });
       }
     </script>
-    <!-- =================================================== -->
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
@@ -704,7 +714,7 @@
                         </select>
                     </div>
 
-                    <!-- ЛОГИКА ЮСТИРОВКИ / ПОПРАВКИ (АНДРЕЙ САТЕЛЛИТ) -->
+                    <!-- ЛОГИКА ЮСТИРОВКИ / ПОПРАВКИ -->
                     <div class="calibration-offset-wrapper">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <label style="font-weight:700; color:var(--forest-green);">🎯 Юстировочная поправка (Магнитное склонение):</label>
@@ -821,6 +831,39 @@
             </div>
         </div>
 
+        <!-- ОФИЦИАЛЬНАЯ ДОКУМЕНТАЦИЯ ПО П. 4 «Ж» И П. 11 «Д» МИНЦИФРЫ -->
+        <div class="card" style="margin-top: 25px; border-left: 4px solid var(--forest-green);" id="docs-registry">
+            <h2>Официальная документация программного обеспечения «Электронная буссоль БГ-ХНС»</h2>
+            <div class="subtitle">Документация размещена в соответствии с требованиями п. 4 «ж» и п. 11 «д» Правил формирования и ведения реестра российского ПО:</div>
+            
+            <ul style="font-size: 13px; line-height: 1.8; margin: 10px 0; padding-left: 20px;">
+                <li>
+                    📄 <strong>Описание функциональных характеристик:</strong><br>
+                    <a href="/docs/описание функциональных характеристик.pdf" target="_blank" style="color: var(--forest-green); font-weight: bold; text-decoration: underline;">
+                        Скачать: Документация, содержащая описание функциональных характеристик ПО (PDF)
+                    </a>
+                </li>
+                <li style="margin-top: 8px;">
+                    ⚙️ <strong>Информация, необходимая для установки ПО:</strong><br>
+                    <a href="/docs/Инструкция_по_установке_ПО_Электронная_буссоль_БГ_ХНС.pdf" target="_blank" style="color: var(--forest-green); font-weight: bold; text-decoration: underline;">
+                        Скачать: Инструкция по установке и развертыванию программного обеспечения (PDF)
+                    </a>
+                </li>
+                <li style="margin-top: 8px;">
+                    📖 <strong>Информация, необходимая для эксплуатации ПО:</strong><br>
+                    <a href="/docs/Руководство пользователя.pdf" target="_blank" style="color: var(--forest-green); font-weight: bold; text-decoration: underline;">
+                        Скачать: Руководство пользователя / Инструкция по эксплуатации ПО (PDF)
+                    </a>
+                </li>
+                <li style="margin-top: 8px;">
+                    🔄 <strong>Жизненный цикл и поддержка:</strong><br>
+                    <a href="/docs/Описание процессов жизненного цикла.pdf" target="_blank" style="color: var(--forest-green); font-weight: bold; text-decoration: underline;">
+                        Скачать: Описание процессов поддержания жизненного цикла ПО (PDF)
+                    </a>
+                </li>
+            </ul>
+        </div>
+
         <section class="seo-info-section">
             <h2>Отвод лесосек и измерение углов электронной буссолью</h2>
             <p><strong>Буссоль в лесоустройстве</strong> — это базовый геодезический инструмент, применяемый инженерами и лесничими для таксации, отвода лесосек, замера направлений ходовых линий (визиров) и определения внутренних углов делянок. Точность построения полигона делянки напрямую влияет на правильность исчисления площадей выдела и корректность отображения квартальных сеток во ФГИС ЛК.</p>
@@ -848,6 +891,18 @@
                 <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 16px;">БГ-ХНС 1.2</div>
                 <div style="font-size: 12px; margin-top: 5px; opacity: 0.8;">Цифровой инструмент таксатора. База знаний, калькуляторы и профильные статьи для специалистов леса.</div>
             </div>
+            
+            <!-- СЕКЦИЯ ДОКУМЕНТАЦИИ В ПОДВАЛЕ -->
+            <div class="footer-column">
+                <h4>Документация реестра Минцифры</h4>
+                <div style="font-size: 12px; line-height: 1.8;">
+                    <div>• <a href="/docs-busol.html" style="color: #8FBC8F; text-decoration: none; font-weight: bold;">Страница документации ПО</a></div>
+                    <div>• <a href="/docs/описание функциональных характеристик.pdf" target="_blank" style="color: #E0E0E0; text-decoration: underline;">Функциональные характеристики</a></div>
+                    <div>• <a href="/docs/Инструкция_по_установке_ПО_Электронная_буссоль_БГ_ХНС.pdf" target="_blank" style="color: #E0E0E0; text-decoration: underline;">Инструкция по установке ПО</a></div>
+                    <div>• <a href="/docs/Руководство пользователя.pdf" target="_blank" style="color: #E0E0E0; text-decoration: underline;">Руководство по эксплуатации</a></div>
+                </div>
+            </div>
+
             <div class="footer-column">
                 <h4>Правовая информация</h4>
                 <div style="font-size: 12px; line-height: 1.5; opacity: 0.8;">
@@ -898,8 +953,7 @@
 
     let lastVibratedSector = -1; 
 
-    // --- ПЕРЕМЕННАЯ И ЛОГИКА ЮСТИРОВОЧНОЙ ПОПРАВКИ ---
-    let calibrationOffsetDecimal = 0.0; // Поправка в десятичных градусах
+    let calibrationOffsetDecimal = 0.0;
 
     function updateOffsetFromUI() {
         const sign = document.getElementById('offset-sign-select').value;
@@ -1887,12 +1941,10 @@
             });
         });
 
-        // Расширение .xls форсирует открытие в Excel на мобильных ОС
         const fileName = "Архив_полевых_съемок_БГ_ХНС_1_2.xls";
         const isHuawei = /huawei|harmonyos/i.test(navigator.userAgent);
 
         if (isHuawei) {
-            // Прямой метод Data URI для обхода ограничений WebView Huawei
             const encodedUri = "data:application/vnd.ms-excel;charset=utf-8," + encodeURIComponent(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
@@ -1901,7 +1953,6 @@
             link.click();
             document.body.removeChild(link);
         } else {
-            // Стандартный Blob-метод для Samsung, Redmi, iPhone и ПК
             const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
