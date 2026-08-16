@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Лесной очиститель и нормализатор координат и ведомостей (Лесовик ПРО)» (Версия 2.6).
+  Программное обеспечение: «Лесной очиститель, нормализатор координат и конструктор документов (Лесовик ПРО)» (Версия 2.9).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -34,9 +34,9 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Очиститель и Нормализатор координат и ведомостей онлайн | Лесовик</title>
-    <meta name="description" content="Бесплатный онлайн-инструмент для очистки и форматирования лесных координат и ведомостей. Автозамена запятых, извлечение координат из текста, смена Lat/Lon и подготовка для Excel и ГИС.">
-    <meta name="keywords" content="очистить координаты делянки, нормализация координат онлайн, поменять широту и долготу местами, замена запятой на точку координаты, лесовик про, форматирование ведомости">
+    <title>Очиститель координат, проверка орфографии и конструктор заявлений онлайн | Лесовик</title>
+    <meta name="description" content="Бесплатный конструктор лесных заявлений, писем и актов по правилам делопроизводства, проверка орфографии русского языка, нормализация и конвертация координат (DD ↔ DMS).">
+    <meta name="keywords" content="составить заявление в лесничество, конструктор заявлений онлайн, проверка орфографии русский язык, конвертер dms в dd, координаты делянки проверка, нормализация координат, лесовик про">
     <link rel="canonical" href="https://lesovik-pro.ru/text-cleaner.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
 
@@ -88,6 +88,7 @@
             --glass-bg: rgba(249, 251, 249, 0.85);
             --footer-bg: #2C3531;
             --danger: #DC2626;
+            --warning: #D97706;
             --overlay-bg: rgba(0, 0, 0, 0.6);
         }
 
@@ -155,8 +156,27 @@
         }
         .btn-help-icon:hover { background: var(--forest-green); color: #FFF; }
 
+        /* ВКЛАДКИ РЕЖИМОВ */
+        .mode-tabs {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: rgba(0,0,0,0.04); padding: 4px; border-radius: 8px;
+        }
+        .mode-tab-btn {
+            background: transparent; border: none; padding: 8px 10px; border-radius: 6px; font-weight: bold; font-size: 13px;
+            cursor: pointer; color: var(--text-graphite); transition: 0.2s; text-align: center;
+        }
+        .mode-tab-btn.active {
+            background: var(--forest-green); color: #FFFFFF;
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-size: 11px; font-weight: 700; color: var(--forest-green); text-transform: uppercase; }
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px;
+            background-color: var(--bg-paper); color: var(--text-graphite); font-family: 'Inter', sans-serif; font-size: 13px;
+        }
+
         .quick-ops-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 8px;
         }
 
         .btn-op {
@@ -167,9 +187,18 @@
         .btn-op:hover {
             border-color: var(--forest-green); color: var(--forest-green); background: rgba(45,90,39,0.06);
         }
+        .btn-op-highlight {
+            border-color: var(--forest-green); color: var(--forest-green); background: rgba(45,90,39,0.08); font-weight: bold;
+        }
+        .btn-op-spell {
+            border-color: #2D5A27; background: #2D5A27; color: #FFF; font-weight: bold;
+        }
+        .btn-op-spell:hover {
+            opacity: 0.9; background: #1a3617;
+        }
 
         .text-area-box {
-            width: 100%; height: 360px; box-sizing: border-box; padding: 12px; border: 1px solid var(--border-color);
+            width: 100%; height: 270px; box-sizing: border-box; padding: 12px; border: 1px solid var(--border-color);
             border-radius: 8px; font-family: monospace; font-size: 13px; line-height: 1.5; resize: vertical;
             background-color: var(--bg-paper); color: var(--text-graphite);
         }
@@ -181,6 +210,43 @@
             background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 6px; padding: 6px; text-align: center; font-size: 11px;
         }
         .stat-badge b { font-size: 13px; color: var(--forest-green); display: block; }
+
+        /* БЛОК ПРОВЕРКИ ОШИБОК И ПРАВОПИСАНИЯ */
+        .validation-box {
+            background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.5; max-height: 120px; overflow-y: auto;
+        }
+        .val-header {
+            font-weight: bold; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+        }
+        .val-success { color: var(--forest-green); }
+        .val-error { color: var(--danger); }
+        .val-warning { color: var(--warning); }
+
+        /* СТИЛИ БЛАНКА А4 ДЛЯ ЗАЯВЛЕНИЙ */
+        .a4-doc-sheet {
+            background: #FFFFFF; color: #111111; width: 100%; min-height: 520px; box-sizing: border-box;
+            border: 1px solid #CCC; border-radius: 8px; padding: 35px 40px; font-family: 'Times New Roman', serif;
+            line-height: 1.5; font-size: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        }
+        .doc-header-right {
+            margin-left: 50%; text-align: left; font-size: 13px; margin-bottom: 25px; line-height: 1.4;
+        }
+        .doc-title-center {
+            text-align: center; font-weight: bold; font-size: 16px; text-transform: uppercase; margin: 20px 0 15px 0; letter-spacing: 0.5px;
+        }
+        .doc-passport-table {
+            width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 13px;
+        }
+        .doc-passport-table th, .doc-passport-table td {
+            border: 1px solid #333; padding: 6px 8px; text-align: center;
+        }
+        .doc-passport-table th { background: #F2F2F2; font-weight: bold; }
+        .doc-body-text {
+            text-indent: 30px; text-align: justify; white-space: pre-wrap; font-size: 14px; margin-bottom: 30px;
+        }
+        .doc-footer-signature {
+            display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; padding-top: 15px; font-size: 14px;
+        }
 
         .btn-action {
             background-color: var(--forest-green); color: white; border: none; padding: 10px;
@@ -217,8 +283,22 @@
         footer { background-color: var(--footer-bg); color: #E0E0E0; padding: 30px 20px 80px; font-size: 13px; margin-top: auto; }
         .footer-bottom { text-align: center; opacity: 0.6; }
 
-        @media (max-width: 900px) {
+        @media (max-width: 950px) {
             .main-workspace { grid-template-columns: 1fr; }
+            .doc-header-right { margin-left: 0; }
+        }
+
+        /* ЧИСТАЯ ПЕЧАТЬ В PDF */
+        @page {
+            margin: 15mm;
+            size: A4 portrait;
+        }
+        @media print {
+            html, body { background: #FFF !important; color: #000 !important; margin: 0 !important; padding: 0 !important; }
+            .glass-header, .tool-card:first-child, .manual-section, footer, #help-popup, .panel-section-title, .quick-ops-grid, .btn-action, .btn-secondary, .btn-danger { display: none !important; }
+            .main-workspace { display: block !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+            .tool-card { border: none !important; padding: 0 !important; background: transparent !important; box-shadow: none !important; }
+            .a4-doc-sheet { border: none !important; box-shadow: none !important; padding: 0 !important; width: 100% !important; }
         }
     </style>
 </head>
@@ -227,7 +307,7 @@
     <header class="glass-header">
         <a href="tools.html" class="logo-container">
             <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
-            <h1>Очиститель Текста и Координат</h1>
+            <h1>Очиститель и Конструктор Документов</h1>
         </a>
         <div class="header-right">
             <a href="tools.html" class="btn-nav">← Инструменты</a>
@@ -237,20 +317,123 @@
 
     <div class="main-workspace">
 
-        <!-- ЛЕВАЯ КОЛОНКА: ИСХОДНЫЙ ТЕКСТ -->
+        <!-- ЛЕВАЯ КОЛОНКА: ВВОД ДАННЫХ И НАСТРОЙКИ -->
         <div class="tool-card">
-            <div class="panel-section-title">
-                <span>1. Исходный «грязный» текст / выписка</span>
-                <button class="btn-help-icon" onclick="openHelp('input')">?</button>
+            
+            <!-- ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ -->
+            <div>
+                <div class="mode-tabs">
+                    <button id="tab-cleaner" class="mode-tab-btn active" onclick="switchAppMode('cleaner')">1. Очиститель и Координаты</button>
+                    <button id="tab-doc-builder" class="mode-tab-btn" onclick="switchAppMode('builder')">2. Конструктор Заявлений</button>
+                </div>
             </div>
 
-            <textarea id="src-text-input" class="text-area-box" placeholder="Вставьте сюда любой скопированный текст, выписку или сырые координаты:&#10;&#10;Точка 1: 61,668793   50,836399&#10;Точка 2: 61,669750   50,838380&#10;Точка 3: 61,668480   50,840120" oninput="updateSourceStats()"></textarea>
+            <!-- БЛОК ДЛЯ РЕЖИМА 1: ОЧИСТИТЕЛЬ -->
+            <div id="section-cleaner-input">
+                <div class="panel-section-title">
+                    <span>Исходный текст / координаты</span>
+                    <button class="btn-help-icon" onclick="openHelp('input')">?</button>
+                </div>
 
-            <div class="stats-badge-grid">
-                <div class="stat-badge">Символов:<b id="src-stat-chars">0</b></div>
-                <div class="stat-badge">Слов:<b id="src-stat-words">0</b></div>
-                <div class="stat-badge">Строк:<b id="src-stat-lines">0</b></div>
-                <div class="stat-badge">Точек:<b id="src-stat-coords">0</b></div>
+                <textarea id="src-text-input" class="text-area-box" placeholder="Вставьте сюда любой текст отчета, выписку из договора или координаты:&#10;&#10;Выписка: Участковое лесничество сыктывкарское,кв.32 дел. 2.&#10;Столб 1: 61,668793  50,836399&#10;Столб 2: 61°40'11.10&quot;  50°50'18.17&quot;" oninput="runFullAnalysis()"></textarea>
+
+                <div class="stats-badge-grid" style="margin-top: 10px;">
+                    <div class="stat-badge">Символов:<b id="src-stat-chars">0</b></div>
+                    <div class="stat-badge">Слов:<b id="src-stat-words">0</b></div>
+                    <div class="stat-badge">Строк:<b id="src-stat-lines">0</b></div>
+                    <div class="stat-badge">Точек:<b id="src-stat-coords">0</b></div>
+                </div>
+            </div>
+
+            <!-- БЛОК ДЛЯ РЕЖИМА 2: КОНСТРУКТОР ЗАЯВЛЕНИЙ ПО ГОСТ -->
+            <div id="section-builder-input" style="display: none; display: flex; flex-direction: column; gap: 12px;">
+                <div class="panel-section-title">
+                    <span>Реквизиты делопроизводства (ГОСТ)</span>
+                    <button class="btn-help-icon" onclick="openHelp('builder_help')">?</button>
+                </div>
+
+                <div class="form-group">
+                    <label>Кому (Должность, орган, ФИО адресата):</label>
+                    <textarea id="doc-to" rows="2" placeholder="Руководителю ГКУ РК «Сыктывкарское лесничество»&#10;Иванову И.И." onfocus="this.select()" oninput="renderDocPreview()">Руководителю ГКУ РК «Сыктывкарское лесничество»&#10;Иванову И.И.</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>От кого (Организация / ИП / Гражданин, адрес, телефон):</label>
+                    <textarea id="doc-from" rows="2" placeholder="От ИП Худякова Николая Сергеевича&#10;ИНН: 111801576622, тел. +7 (900) 000-00-00" onfocus="this.select()" oninput="renderDocPreview()">От ИП Худякова Николая Сергеевича&#10;ИНН: 111801576622, тел. +7 (900) 000-00-00</textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div class="form-group">
+                        <label>Тип документа:</label>
+                        <select id="doc-type-title" onchange="renderDocPreview()">
+                            <option value="ЗАЯВЛЕНИЕ" selected>ЗАЯВЛЕНИЕ</option>
+                            <option value="УВЕДОМЛЕНИЕ">УВЕДОМЛЕНИЕ</option>
+                            <option value="АКТ НАТУРНОГО ОСМОТРА">АКТ НАТУРНОГО ОСМОТРА</option>
+                            <option value="СЛУЖЕБНАЯ ЗАПИСКА">СЛУЖЕБНАЯ ЗАПИСКА</option>
+                            <option value="ХОДАТАЙСТВО">ХОДАТАЙСТВО</option>
+                            <option value="ПОЯСНИТЕЛЬНАЯ ЗАПИСКА">ПОЯСНИТЕЛЬНАЯ ЗАПИСКА</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Дата составления:</label>
+                        <input type="date" id="doc-date" onfocus="this.select()" oninput="renderDocPreview()">
+                    </div>
+                </div>
+
+                <!-- ГАЛОЧКА: ПАСПОРТ УЧАСТКА -->
+                <div style="background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px;">
+                    <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: bold; cursor: pointer; color: var(--forest-green);">
+                        <input type="checkbox" id="check-include-passport" onchange="togglePassportFields(); renderDocPreview();" checked>
+                        <span>Включить паспорт лесного участка</span>
+                    </label>
+
+                    <div id="passport-input-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px;">
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Участковое лесничество:</label>
+                            <input type="text" id="doc-p-les" value="Сыктывкарское уч. лес-во" onfocus="this.select()" oninput="renderDocPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Квартал (кв.):</label>
+                            <input type="text" id="doc-p-kv" value="32" onfocus="this.select()" oninput="renderDocPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Делянка (дел.):</label>
+                            <input type="text" id="doc-p-del" value="2" onfocus="this.select()" oninput="renderDocPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Выдел(ы):</label>
+                            <input type="text" id="doc-p-vyd" value="2, 3, 4" onfocus="this.select()" oninput="renderDocPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Площадь (га):</label>
+                            <input type="text" id="doc-p-area" value="4.8 га" onfocus="this.select()" oninput="renderDocPreview()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Текст обращения / заявления:</label>
+                    <textarea id="doc-main-text" rows="5" placeholder="Изложите суть заявления или обращения..." oninput="renderDocPreview()">Прошу Вас согласовать проведение натурного осмотра и отвода лесосеки под заготовку древесины на вышеуказанном лесном участке в соответствии с поданной лесной декларацией.</textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div class="form-group">
+                        <label>Должность составителя:</label>
+                        <input type="text" id="doc-sign-pos" value="Индивидуальный предприниматель" onfocus="this.select()" oninput="renderDocPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>ФИО составителя:</label>
+                        <input type="text" id="doc-sign-fio" value="Худяков Н.С." onfocus="this.select()" oninput="renderDocPreview()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- БЛОК ПРОВЕРКИ НА ОШИБКИ И ОРФОГРАФИЮ -->
+            <div class="validation-box" id="val-box">
+                <div class="val-header val-success" id="val-status-header">
+                    <span>✔️ Ошибок не обнаружено</span>
+                </div>
+                <div id="val-details" style="color: #666;">Введите текст для проверки орфографии и правил делопроизводства.</div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
@@ -259,34 +442,45 @@
             </div>
         </div>
 
-        <!-- ПРАВАЯ КОЛОНКА: ОПЕРАЦИИ И РЕЗУЛЬТАТ -->
+        <!-- ПРАВАЯ КОЛОНКА: РЕЗУЛЬТАТ / БЛАНК ДОКУМЕНТА -->
         <div class="tool-card">
             <div class="panel-section-title">
-                <span>2. Операции нормализации</span>
+                <span>2. Операции и Обработка</span>
                 <button class="btn-help-icon" onclick="openHelp('ops')">?</button>
             </div>
 
-            <!-- БЫСТРЫЕ ОПЕРАЦИИ В 1 КЛИК -->
+            <!-- БЫСТРЫЕ ОПЕРАЦИИ -->
             <div class="quick-ops-grid">
-                <button class="btn-op" onclick="opExtractCoordsOnly()">📍 Только пары координат</button>
-                <button class="btn-op" onclick="opReplaceCommas()">🔄 Запятые в точки ( , ➔ . )</button>
+                <button class="btn-op btn-op-spell" onclick="opCheckAndFixRussianSpelling()">✨ Проверить орфографию РФ</button>
+                <button class="btn-op btn-op-highlight" onclick="opConvertToDMS()">🌐 В Градусы° Мин' Сек"</button>
+                <button class="btn-op btn-op-highlight" onclick="opConvertToDD()">📍 В Десятичные (0.00)</button>
+                <button class="btn-op" onclick="opExtractCoordsOnly()">🎯 Только пары чисел</button>
                 <button class="btn-op" onclick="opSwapLatLon()">⇄ Поменять Lat ↔ Lon</button>
                 <button class="btn-op" onclick="opFormatCsvSemicolon()">📊 Разделитель « ; » (Excel)</button>
-                <button class="btn-op" onclick="opFormatCsvComma()">🌐 Разделитель « , » (ГИС)</button>
-                <button class="btn-op" onclick="opRemoveEmptyLines()">✂️ Убрать пустые строки</button>
-                <button class="btn-op" onclick="opTrimSpaces()">🧹 Лишние пробелы</button>
-                <button class="btn-op" onclick="opAddPointNumbers()">🔢 Добавить Т.1, Т.2...</button>
+                <button class="btn-op" onclick="opFixTypography()">✍️ Исправить пунктуацию</button>
+                <button class="btn-op" onclick="opReplaceCommas()">🔄 Запятые в точки ( . )</button>
             </div>
 
             <div class="panel-section-title" style="margin-top: 5px;">
-                <span>3. Чистый результат</span>
+                <span id="output-title">3. Чистый результат / Бланк А4</span>
             </div>
 
-            <textarea id="res-text-output" class="text-area-box" placeholder="Здесь появится обработанный и отформатированный результат..."></textarea>
+            <!-- ВИД 1: ТЕКСТОВОЕ ПОЛЕ РЕЗУЛЬТАТА (ДЛЯ РЕЖИМА ОЧИСТИТЕЛЯ) -->
+            <div id="section-cleaner-output">
+                <textarea id="res-text-output" class="text-area-box" style="height: 340px;" placeholder="Здесь появится обработанный результат..."></textarea>
+            </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                <button class="btn-action" onclick="copyResultClipboard()">📋 Скопировать</button>
-                <button class="btn-action btn-secondary" onclick="downloadResultTxt()">💾 Скачать .TXT</button>
+            <!-- ВИД 2: ОФОРМЛЕННЫЙ БЛАНК ДОКУМЕНТА A4 (ДЛЯ РЕЖИМА ЗАЯВЛЕНИЙ) -->
+            <div id="section-builder-output" style="display: none;">
+                <div class="a4-doc-sheet" id="printable-statement-doc">
+                    <!-- JS генерирует официальный бланк -->
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                <button class="btn-action" onclick="copyResultClipboard()">📋 Копировать</button>
+                <button class="btn-action btn-secondary" onclick="exportWordDocument()">📝 В Word (.doc)</button>
+                <button class="btn-action btn-secondary" onclick="window.print()">🖨️ Печать / PDF</button>
             </div>
         </div>
 
@@ -295,23 +489,23 @@
     <!-- ПОДРОБНОЕ РУКОВОДСТВО ВНИЗУ -->
     <div class="manual-section">
         <div class="manual-card">
-            <h2>Руководство по нормализации и очистке лесных координат</h2>
+            <h2>Руководство по делопроизводству, составлению заявлений и нормализации координат</h2>
             <div class="manual-grid">
                 <div class="manual-step">
-                    <h4>1. Очистка выписок из PDF и договоров</h4>
-                    <p>При копировании координат из сканированных актов или PDF часто копируется лишний текст («Точка №1», «с.ш.», «в.д.»). Нажмите <b>«Только пары координат»</b>, чтобы моментально отфильтровать чистый список чисел.</p>
+                    <h4>1. Составление заявлений по ГОСТ Р 7.0.97-2016</h4>
+                    <p>Перейдите во вкладку <b>«Конструктор Заявлений»</b>. Заполните поля «Кому» и «От кого». При необходимости включите галочку «Паспорт участка» для автоматической вставки таблицы лесничества, квартала и выдела.</p>
                 </div>
                 <div class="manual-step">
-                    <h4>2. Замена русских запятых ( , ➔ . )</h4>
-                    <p>Программы Google Earth, QGIS и веб-калькуляторы требуют десятичную точку вместо запятой. Операция <b>«Запятые в точки»</b> автоматически подготовит файл к импорту в навигаторы и ГИС.</p>
+                    <h4>2. Проверка орфографии и пунктуации русского языка</h4>
+                    <p>Кнопка <b>«Проверить орфографию РФ»</b> автоматически выявляет опечатки, неправильные падежные окончания, пропущенные пробелы после знаков препинания и заменяет ошибочные слова на грамотные лексические формы.</p>
                 </div>
                 <div class="manual-step">
-                    <h4>3. Смена порядка Широта ↔ Долгота</h4>
-                    <p>Разные лесные программы требуют разный порядок осей: одни ждут <code>Широта, Долгота (Y, X)</code>, другие — <code>Долгота, Широта (X, Y)</code>. Кнопка <b>«Поменять Lat ↔ Lon»</b> меняет местами столбцы во всем списке за долю секунды.</p>
+                    <h4>3. Конвертация координат (DD ↔ DMS)</h4>
+                    <p>Переводит координаты из навигаторов (<code>61.668793</code>) в официальный формат лесоустроительных актов (<code>61°40'07.65"</code>) и обратно с защитой от русских запятых.</p>
                 </div>
                 <div class="manual-step">
-                    <h4>4. Подготовка для Microsoft Excel</h4>
-                    <p>Кнопка <b>«Разделитель ; (Excel)»</b> преобразует текст в формат CSV. При открытии такого файла в Excel каждая координата сразу попадает в свою отдельную ячейку таблицы без слияния.</p>
+                    <h4>4. Выгрузка в Word и чистая печать в PDF</h4>
+                    <p>Кнопка <b>«В Word (.doc)»</b> сохраняет готовое заявление со всеми отступами для открытия в Microsoft Word, а кнопка <b>«Печать / PDF»</b> формирует официальный бумажный лист с местом для подписи без браузерных колонтитулов.</p>
                 </div>
             </div>
         </div>
@@ -329,138 +523,454 @@
 
     <footer>
         <div class="footer-bottom">
-            &copy; <script>document.write(new Date().getFullYear())</script> Лесовик ПРО. Модуль нормализации пространственных данных лесного фонда.
+            &copy; <script>document.write(new Date().getFullYear())</script> Лесовик ПРО. Модуль делопроизводства и нормализации данных лесного фонда.
         </div>
     </footer>
 
     <script>
-        function updateSourceStats() {
-            const text = document.getElementById('src-text-input').value;
+        let currentAppMode = 'cleaner';
+
+        function switchAppMode(mode) {
+            currentAppMode = mode;
+            document.getElementById('tab-cleaner').classList.toggle('active', mode === 'cleaner');
+            document.getElementById('tab-doc-builder').classList.toggle('active', mode === 'builder');
+
+            document.getElementById('section-cleaner-input').style.display = (mode === 'cleaner') ? 'block' : 'none';
+            document.getElementById('section-builder-input').style.display = (mode === 'builder') ? 'flex' : 'none';
+
+            document.getElementById('section-cleaner-output').style.display = (mode === 'cleaner') ? 'block' : 'none';
+            document.getElementById('section-builder-output').style.display = (mode === 'builder') ? 'block' : 'none';
+
+            document.getElementById('output-title').innerText = (mode === 'cleaner') ? '3. Чистый результат' : '3. Официальный бланк заявления (А4)';
+
+            if (mode === 'builder') {
+                renderDocPreview();
+            } else {
+                runFullAnalysis();
+            }
+        }
+
+        function togglePassportFields() {
+            const isChecked = document.getElementById('check-include-passport').checked;
+            document.getElementById('passport-input-grid').style.display = isChecked ? 'grid' : 'none';
+        }
+
+        // ОТРИСОВКА БЛАНКА ЗАЯВЛЕНИЯ A4
+        function renderDocPreview() {
+            const toVal = document.getElementById('doc-to').value.replace(/\n/g, '<br>');
+            const fromVal = document.getElementById('doc-from').value.replace(/\n/g, '<br>');
+            const docTitle = document.getElementById('doc-type-title').value;
+            const docDate = document.getElementById('doc-date').value || new Date().toLocaleDateString('ru-RU');
+            const mainText = document.getElementById('doc-main-text').value;
+            const signPos = document.getElementById('doc-sign-pos').value || 'Составитель';
+            const signFio = document.getElementById('doc-sign-fio').value || 'Худяков Н.С.';
+
+            const includePassport = document.getElementById('check-include-passport').checked;
+            let passportTableHtml = '';
+
+            if (includePassport) {
+                const les = document.getElementById('doc-p-les').value || '-';
+                const kv = document.getElementById('doc-p-kv').value || '-';
+                const del = document.getElementById('doc-p-del').value || '-';
+                const vyd = document.getElementById('doc-p-vyd').value || '-';
+                const area = document.getElementById('doc-p-area').value || '-';
+
+                passportTableHtml = `
+                    <table class="doc-passport-table">
+                        <thead>
+                            <tr>
+                                <th>Участковое лесничество</th>
+                                <th>Квартал</th>
+                                <th>Выдел</th>
+                                <th>Делянка</th>
+                                <th>Площадь</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>${les}</td>
+                                <td>${kv}</td>
+                                <td>${vyd}</td>
+                                <td>${del}</td>
+                                <td><b>${area}</b></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                `;
+            }
+
+            const sheet = document.getElementById('printable-statement-doc');
+            sheet.innerHTML = `
+                <div class="doc-header-right">
+                    <b>Кому:</b><br>${toVal}<br><br>
+                    <b>От кого:</b><br>${fromVal}
+                </div>
+
+                <div class="doc-title-center">${docTitle}</div>
+
+                ${passportTableHtml}
+
+                <div class="doc-body-text">${mainText}</div>
+
+                <div class="doc-footer-signature">
+                    <div><b>Дата:</b> ${docDate} г.</div>
+                    <div style="text-align: right;">
+                        <div>${signPos}</div>
+                        <div style="margin-top: 8px;">Подпись: _______________ / <b>${signFio}</b></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // АНАЛИЗ И СТАТИСТИКА
+        function runFullAnalysis() {
+            const text = (currentAppMode === 'cleaner') 
+                ? document.getElementById('src-text-input').value 
+                : document.getElementById('doc-main-text').value;
+
             document.getElementById('src-stat-chars').innerText = text.length;
             document.getElementById('src-stat-words').innerText = text.trim() ? text.trim().split(/\s+/).length : 0;
             document.getElementById('src-stat-lines').innerText = text ? text.split('\n').length : 0;
 
-            // Поиск координат
-            const pairs = extractCoordPairs(text);
+            const pairs = extractAnyCoords(text);
             document.getElementById('src-stat-coords').innerText = pairs.length;
+
+            validateAllData(pairs, text);
         }
 
-        function extractCoordPairs(text) {
+        function extractAnyCoords(text) {
             const lines = text.split('\n');
             const result = [];
-            lines.forEach(line => {
-                const clean = line.replace(/,/g, '.');
-                const matches = clean.match(/[-+]?[0-9]*\.?[0-9]+/g);
-                if (matches && matches.length >= 2) {
-                    const lat = parseFloat(matches[0]);
-                    const lon = parseFloat(matches[1]);
-                    if (!isNaN(lat) && !isNaN(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180) {
-                        result.push({ lat: matches[0], lon: matches[1] });
+
+            lines.forEach((line, lineIdx) => {
+                const clean = line.trim();
+                if (!clean) return;
+
+                const dmsMatches = clean.match(/(\d{1,3})[°\s](\d{1,2})['\s](\d{1,2}(?:[.,]\d+)?)["]?/g);
+                if (dmsMatches && dmsMatches.length >= 2) {
+                    const lat = parseDmsToDd(dmsMatches[0]);
+                    const lon = parseDmsToDd(dmsMatches[1]);
+                    if (lat !== null && lon !== null) {
+                        result.push({ lat, lon, lineNum: lineIdx + 1, raw: clean, type: 'dms' });
+                        return;
+                    }
+                }
+
+                const cleanNumStr = clean.replace(/,/g, '.');
+                const numMatches = cleanNumStr.match(/[-+]?[0-9]*\.?[0-9]+/g);
+                if (numMatches && numMatches.length >= 2) {
+                    const lat = parseFloat(numMatches[0]);
+                    const lon = parseFloat(numMatches[1]);
+                    if (!isNaN(lat) && !isNaN(lon)) {
+                        result.push({ lat, lon, lineNum: lineIdx + 1, raw: clean, type: 'dd' });
                     }
                 }
             });
+
             return result;
         }
 
-        // ОПЕРАЦИИ
-        function opExtractCoordsOnly() {
-            const text = document.getElementById('src-text-input').value;
-            const pairs = extractCoordPairs(text);
-            if (pairs.length === 0) {
-                alert("Пары координат не найдены!");
-                return;
-            }
-            const out = pairs.map(p => `${p.lat} ${p.lon}`).join('\n');
-            document.getElementById('res-text-output').value = out;
+        function parseDmsToDd(dmsStr) {
+            const clean = dmsStr.replace(/,/g, '.');
+            const parts = clean.match(/(\d+(?:\.\d+)?)/g);
+            if (!parts || parts.length < 2) return null;
+            const d = parseFloat(parts[0]) || 0;
+            const m = parseFloat(parts[1]) || 0;
+            const s = parseFloat(parts[2]) || 0;
+            return d + (m / 60) + (s / 3600);
         }
 
-        function opReplaceCommas() {
-            const text = document.getElementById('src-text-input').value;
-            document.getElementById('res-text-output').value = text.replace(/,/g, '.');
+        function formatDdToDms(val, isLat) {
+            const absVal = Math.abs(val);
+            const deg = Math.floor(absVal);
+            const minFloat = (absVal - deg) * 60;
+            const min = Math.floor(minFloat);
+            const sec = ((minFloat - min) * 60).toFixed(2);
+            const suffix = isLat ? (val >= 0 ? 'с.ш.' : 'ю.ш.') : (val >= 0 ? 'в.д.' : 'з.д.');
+            return `${deg}°${min < 10 ? '0' : ''}${min}'${sec < 10 ? '0' : ''}${sec}" ${suffix}`;
+        }
+
+        function validateAllData(pairs, rawText) {
+            const header = document.getElementById('val-status-header');
+            const details = document.getElementById('val-details');
+
+            if (!rawText.trim()) {
+                header.className = 'val-header val-warning';
+                header.innerHTML = '<span>⚠️ Текст или координаты не введены</span>';
+                details.innerText = 'Вставьте текст для проверки орфографии и правил делопроизводства.';
+                return;
+            }
+
+            const errors = [];
+            const warnings = [];
+
+            if (pairs.length > 0) {
+                pairs.forEach((p) => {
+                    if (Math.abs(p.lat) > 90) errors.push(`Строка ${p.lineNum}: Широта (${p.lat}) выходит за ±90°`);
+                    if (Math.abs(p.lon) > 180) errors.push(`Строка ${p.lineNum}: Долгота (${p.lon}) выходит за ±180°`);
+                    if (p.lat < 40 && p.lon > 40 && p.lon < 90) {
+                        warnings.push(`Строка ${p.lineNum}: Возможно, широта и долгота перепутаны местами`);
+                    }
+                });
+
+                for (let i = 0; i < pairs.length - 1; i++) {
+                    if (Math.abs(pairs[i].lat - pairs[i+1].lat) < 0.000001 && Math.abs(pairs[i].lon - pairs[i+1].lon) < 0.000001) {
+                        warnings.push(`Строки ${pairs[i].lineNum} и ${pairs[i+1].lineNum}: Дублирующаяся точка подряд`);
+                    }
+                }
+            }
+
+            if (/([а-яёa-zА-ЯЁA-Z]),([а-яёa-zА-ЯЁA-Z])/.test(rawText)) {
+                warnings.push('В тексте найдены пропущенные пробелы после запятых');
+            }
+            if (/\s{2,}/.test(rawText)) {
+                warnings.push('В тексте обнаружены лишние двойные пробелы');
+            }
+            if (/\b([а-яёА-ЯЁ]+)\s+\1\b/i.test(rawText)) {
+                warnings.push('Обнаружены повторяющиеся слова подряд');
+            }
+
+            if (errors.length > 0) {
+                header.className = 'val-header val-error';
+                header.innerHTML = `<span>❌ Критических ошибок: ${errors.length}</span>`;
+                details.innerHTML = errors.map(e => `• ${e}`).join('<br>');
+            } else if (warnings.length > 0) {
+                header.className = 'val-header val-warning';
+                header.innerHTML = `<span>⚠️ Замечания (Предупреждений: ${warnings.length})</span>`;
+                details.innerHTML = warnings.map(w => `• ${w}`).join('<br>');
+            } else {
+                header.className = 'val-header val-success';
+                header.innerHTML = `<span>✔️ Текст и координаты корректны</span>`;
+                details.innerText = pairs.length > 0 ? `Распознано ${pairs.length} точек. Ошибок не обнаружено.` : 'Текст чистый, правила документооборота и пунктуация соблюдены.';
+            }
+        }
+
+        // ОПЕРАЦИЯ: ПРОВЕРКА ОРФОГРАФИИ
+        async function opCheckAndFixRussianSpelling() {
+            const inputField = (currentAppMode === 'cleaner') 
+                ? document.getElementById('src-text-input') 
+                : document.getElementById('doc-main-text');
+
+            let text = inputField.value;
+            if (!text.trim()) { alert("Введите текст для проверки орфографии!"); return; }
+
+            const header = document.getElementById('val-status-header');
+            const details = document.getElementById('val-details');
+            header.className = 'val-header val-warning';
+            header.innerHTML = '<span>⏳ Проверяем орфографию русского языка...</span>';
+
+            text = text.replace(/,([^\s0-9])/g, ', $1');
+            text = text.replace(/\.([^\s0-9])/g, '. $1');
+            text = text.replace(/\s{2,}/g, ' ');
+
+            try {
+                const response = await fetch(`https://speller.yandex.net/services/spellservice.json/checkText?text=${encodeURIComponent(text)}&lang=ru&options=518`);
+                const errors = await response.json();
+
+                let fixedText = text;
+                const errLog = [];
+
+                if (errors && errors.length > 0) {
+                    errors.forEach(err => {
+                        if (err.s && err.s.length > 0) {
+                            const correctWord = err.s[0];
+                            const reg = new RegExp(`\\b${err.word}\\b`, 'g');
+                            fixedText = fixedText.replace(reg, correctWord);
+                            errLog.push(`Опечатка <b>"${err.word}"</b> ➔ заменено на <b>"${correctWord}"</b>`);
+                        }
+                    });
+
+                    header.className = 'val-header val-success';
+                    header.innerHTML = `<span>✨ Исправлено ошибок правописания: ${errors.length}</span>`;
+                    details.innerHTML = errLog.join('<br>');
+                } else {
+                    header.className = 'val-header val-success';
+                    header.innerHTML = '<span>✔️ Орфографических ошибок не найдено</span>';
+                    details.innerText = 'Все русские слова написаны грамотно, пунктуация и пробелы выровнены.';
+                }
+
+                if (currentAppMode === 'cleaner') {
+                    document.getElementById('res-text-output').value = fixedText;
+                } else {
+                    inputField.value = fixedText;
+                    renderDocPreview();
+                }
+            } catch (e) {
+                opFixTypography();
+                header.className = 'val-header val-success';
+                header.innerHTML = '<span>✍️ Выполнено локальное исправление пунктуации</span>';
+                details.innerText = 'Расставлены пробелы после знаков препинания и удалены повторы.';
+            }
+        }
+
+        function opFixTypography() {
+            const inputField = (currentAppMode === 'cleaner') 
+                ? document.getElementById('src-text-input') 
+                : document.getElementById('doc-main-text');
+
+            let text = inputField.value;
+            if (!text.trim()) return;
+
+            text = text.replace(/,([^\s0-9])/g, ', $1');
+            text = text.replace(/\.([а-яёА-ЯЁa-zA-Z])/g, '. $1');
+            text = text.replace(/\s{2,}/g, ' ');
+            text = text.replace(/\b([а-яёА-ЯЁ]+)\s+\1\b/gi, '$1');
+            text = text.replace(/(^\s*|[.!?]\s+)([а-яё])/g, (m, p1, p2) => p1 + p2.toUpperCase());
+
+            if (currentAppMode === 'cleaner') {
+                document.getElementById('res-text-output').value = text;
+            } else {
+                inputField.value = text;
+                renderDocPreview();
+            }
+        }
+
+        function opConvertToDMS() {
+            const text = (currentAppMode === 'cleaner') ? document.getElementById('src-text-input').value : document.getElementById('doc-main-text').value;
+            const pairs = extractAnyCoords(text);
+            if (pairs.length === 0) { alert("Координаты не найдены!"); return; }
+
+            const out = pairs.map((p, i) => {
+                const dmsLat = formatDdToDms(p.lat, true);
+                const dmsLon = formatDdToDms(p.lon, false);
+                return `Т.${i+1}: ${dmsLat}   ${dmsLon}`;
+            }).join('\n');
+
+            document.getElementById('res-text-output').value = out;
+            if (currentAppMode === 'builder') switchAppMode('cleaner');
+        }
+
+        function opConvertToDD() {
+            const text = (currentAppMode === 'cleaner') ? document.getElementById('src-text-input').value : document.getElementById('doc-main-text').value;
+            const pairs = extractAnyCoords(text);
+            if (pairs.length === 0) { alert("Координаты не найдены!"); return; }
+
+            const out = pairs.map(p => `${p.lat.toFixed(6)} ${p.lon.toFixed(6)}`).join('\n');
+            document.getElementById('res-text-output').value = out;
+            if (currentAppMode === 'builder') switchAppMode('cleaner');
+        }
+
+        function opExtractCoordsOnly() {
+            const text = (currentAppMode === 'cleaner') ? document.getElementById('src-text-input').value : document.getElementById('doc-main-text').value;
+            const pairs = extractAnyCoords(text);
+            if (pairs.length === 0) { alert("Координаты не найдены!"); return; }
+            const out = pairs.map(p => `${p.lat.toFixed(6)} ${p.lon.toFixed(6)}`).join('\n');
+            document.getElementById('res-text-output').value = out;
+            if (currentAppMode === 'builder') switchAppMode('cleaner');
         }
 
         function opSwapLatLon() {
-            const text = document.getElementById('src-text-input').value;
-            const pairs = extractCoordPairs(text);
-            if (pairs.length === 0) {
-                alert("Координаты для смены порядка не найдены!");
-                return;
-            }
-            const out = pairs.map(p => `${p.lon} ${p.lat}`).join('\n');
+            const text = (currentAppMode === 'cleaner') ? document.getElementById('src-text-input').value : document.getElementById('doc-main-text').value;
+            const pairs = extractAnyCoords(text);
+            if (pairs.length === 0) { alert("Координаты не найдены!"); return; }
+            const out = pairs.map(p => `${p.lon.toFixed(6)} ${p.lat.toFixed(6)}`).join('\n');
             document.getElementById('res-text-output').value = out;
+            if (currentAppMode === 'builder') switchAppMode('cleaner');
         }
 
         function opFormatCsvSemicolon() {
-            const text = document.getElementById('src-text-input').value;
-            const pairs = extractCoordPairs(text);
-            if (pairs.length === 0) {
-                alert("Координаты не найдены!");
-                return;
-            }
-            const out = pairs.map((p, i) => `Т.${i+1};${p.lat};${p.lon}`).join('\n');
+            const text = (currentAppMode === 'cleaner') ? document.getElementById('src-text-input').value : document.getElementById('doc-main-text').value;
+            const pairs = extractAnyCoords(text);
+            if (pairs.length === 0) { alert("Координаты не найдены!"); return; }
+            const out = pairs.map((p, i) => `Т.${i+1};${p.lat.toFixed(6)};${p.lon.toFixed(6)}`).join('\n');
             document.getElementById('res-text-output').value = out;
+            if (currentAppMode === 'builder') switchAppMode('cleaner');
         }
 
-        function opFormatCsvComma() {
-            const text = document.getElementById('src-text-input').value;
-            const pairs = extractCoordPairs(text);
-            if (pairs.length === 0) {
-                alert("Координаты не найдены!");
-                return;
-            }
-            const out = pairs.map((p, i) => `Т.${i+1}, ${p.lat}, ${p.lon}`).join('\n');
-            document.getElementById('res-text-output').value = out;
-        }
-
-        function opRemoveEmptyLines() {
-            const text = document.getElementById('src-text-input').value;
-            const out = text.split('\n').map(l => l.trim()).filter(l => l.length > 0).join('\n');
-            document.getElementById('res-text-output').value = out;
-        }
-
-        function opTrimSpaces() {
-            const text = document.getElementById('src-text-input').value;
-            const out = text.split('\n').map(l => l.trim().replace(/\s+/g, ' ')).join('\n');
-            document.getElementById('res-text-output').value = out;
-        }
-
-        function opAddPointNumbers() {
-            const text = document.getElementById('src-text-input').value;
-            const lines = text.split('\n').filter(l => l.trim().length > 0);
-            const out = lines.map((l, i) => `Т.${i+1} ${l.trim()}`).join('\n');
-            document.getElementById('res-text-output').value = out;
+        function opReplaceCommas() {
+            const text = (currentAppMode === 'cleaner') ? document.getElementById('src-text-input').value : document.getElementById('doc-main-text').value;
+            document.getElementById('res-text-output').value = text.replace(/,/g, '.');
+            if (currentAppMode === 'builder') switchAppMode('cleaner');
         }
 
         function loadSampleText() {
-            document.getElementById('src-text-input').value = 
-`Выписка из акта отвода делянки № 2:
-Столб 1: N 61,668793°   E 50,836399°
-Столб 2: N 61,669750°   E 50,838380°
-Столб 3: N 61,668480°   E 50,840120°
-Столб 4: N 61,667520°   E 50,837050°`;
-            updateSourceStats();
-            opExtractCoordsOnly();
+            if (currentAppMode === 'cleaner') {
+                document.getElementById('src-text-input').value = 
+`Выписка из акта натурного обследования лесосеки:
+произведен отвод делянки,в квартале 32 выдел 2. преобладающая порода сосна,состояние насаждения удовлитворительное.
+Столб 1: 61°40'07.65" с.ш.   50°50'11.04" в.д.
+Столб 2: 61°40'11.10" с.ш.   50°50'18.17" в.д.
+Столб 3: 61,668480           50,840120
+Столб 4: 61.667520           50.837050`;
+                runFullAnalysis();
+                opCheckAndFixRussianSpelling();
+            } else {
+                document.getElementById('doc-main-text').value = "Прошу Вас направить представителя лесничества для проведения совместного натурного освидетельствования мест рубок и составления акта проверки соблюдения лесоводственных требований на вышеуказанном лесном участке.";
+                renderDocPreview();
+            }
         }
 
         function clearSourceText() {
-            document.getElementById('src-text-input').value = '';
-            document.getElementById('res-text-output').value = '';
-            updateSourceStats();
+            if (currentAppMode === 'cleaner') {
+                document.getElementById('src-text-input').value = '';
+                document.getElementById('res-text-output').value = '';
+            } else {
+                document.getElementById('doc-main-text').value = '';
+                renderDocPreview();
+            }
+            runFullAnalysis();
         }
 
         function copyResultClipboard() {
-            const val = document.getElementById('res-text-output').value;
-            if (!val) { alert("Поле результата пусто!"); return; }
-            navigator.clipboard.writeText(val).then(() => alert("Результат скопирован в буфер обмена!"));
+            if (currentAppMode === 'cleaner') {
+                const val = document.getElementById('res-text-output').value;
+                if (!val) { alert("Поле результата пусто!"); return; }
+                navigator.clipboard.writeText(val).then(() => alert("Результат скопирован в буфер обмена!"));
+            } else {
+                const sheetText = document.getElementById('printable-statement-doc').innerText;
+                navigator.clipboard.writeText(sheetText).then(() => alert("Текст заявления скопирован в буфер обмена!"));
+            }
         }
 
         function downloadResultTxt() {
-            const val = document.getElementById('res-text-output').value;
+            const val = (currentAppMode === 'cleaner') 
+                ? document.getElementById('res-text-output').value 
+                : document.getElementById('printable-statement-doc').innerText;
+
             if (!val) { alert("Нет данных для скачивания!"); return; }
             const blob = new Blob([val], { type: 'text/plain;charset=utf-8;' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = `cleaned_coords_lesovik.txt`;
+            a.download = (currentAppMode === 'cleaner') ? `cleaned_coords_lesovik.txt` : `zayavlenie_lesovik.txt`;
+            a.click();
+        }
+
+        // ЭКСПОРТ В MICROSOFT WORD (.DOC)
+        function exportWordDocument() {
+            if (currentAppMode === 'cleaner') {
+                const text = document.getElementById('res-text-output').value;
+                if (!text) { alert("Нет данных для экспорта!"); return; }
+                const blob = new Blob([text], { type: 'application/msword;charset=utf-8' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `Vypiska_lesovik.doc`;
+                a.click();
+                return;
+            }
+
+            const content = document.getElementById('printable-statement-doc').innerHTML;
+            const docTitle = document.getElementById('doc-type-title').value;
+
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' "+
+                "xmlns:w='urn:schemas-microsoft-com:office:word' "+
+                "xmlns='http://www.w3.org/TR/REC-html40'>"+
+                "<head><meta charset='utf-8'><title>Заявление</title><style>"+
+                "body { font-family: 'Times New Roman', serif; font-size: 14pt; line-height: 1.5; }"+
+                ".doc-header-right { margin-left: 50%; font-size: 13pt; margin-bottom: 25pt; line-height: 1.3; }"+
+                ".doc-title-center { text-align: center; font-weight: bold; font-size: 16pt; margin: 20pt 0 15pt 0; }"+
+                "table { width: 100%; border-collapse: collapse; margin: 15pt 0; }"+
+                "th, td { border: 1px solid black; padding: 6pt; text-align: center; font-size: 12pt; }"+
+                "th { background-color: #f2f2f2; }"+
+                ".doc-body-text { text-indent: 30pt; text-align: justify; margin-bottom: 30pt; }"+
+                ".doc-footer-signature { margin-top: 30pt; }"+
+                "</style></head><body>";
+            const footer = "</body></html>";
+            const sourceHTML = header + content + footer;
+
+            const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
+            const a = document.createElement("a");
+            a.href = source;
+            a.download = `${docTitle}_lesovik.doc`;
             a.click();
         }
 
@@ -470,15 +980,21 @@
             const content = document.getElementById('help-content');
 
             if (type === 'input') {
-                title.innerText = 'Исходный текст';
-                content.innerHTML = `<p>Вставляйте сюда любые «грязные» тексты из сканов, договоров, полевых журналов или мессенджеров. Парсер автоматически распознает числовые координаты среди текста.</p>`;
-            } else if (type === 'ops') {
-                title.innerText = 'Операции нормализации';
+                title.innerText = 'Исходный текст и проверка';
+                content.innerHTML = `<p>Вставляйте сюда любые тексты отчетов, лесных деклараций, договоров или сырых координат. Система автоматически проверит орфографию русского языка и геодезическую корректность точек.</p>`;
+            } else if (type === 'builder_help') {
+                title.innerText = 'Конструктор заявлений по ГОСТ';
                 content.innerHTML = `
-                    <p><b>Только координаты:</b> Удаляет весь посторонний текст, оставляя чистые числа.</p>
-                    <p><b>Запятые в точки:</b> Готовит числа под стандарт геодезических программ.</p>
-                    <p><b>Поменять Lat ↔ Lon:</b> Меняет местами широту и долготу.</p>
-                    <p><b>Разделители CSV:</b> Форматирует таблицу для открытия в Microsoft Excel.</p>
+                    <p>Позволяет быстро составить официальное заявление в лесничество или Министерство по правилам делопроизводства.</p>
+                    <p>Включает шапку «Кому / От кого», дату, место для подписи и опциональную таблицу паспорта лесного участка.</p>
+                `;
+            } else if (type === 'ops') {
+                title.innerText = 'Операции обработки';
+                content.innerHTML = `
+                    <p><b>Проверить орфографию РФ:</b> Находит и автоматически исправляет грамматические ошибки в словах.</p>
+                    <p><b>В Градусы° Мин' Сек":</b> Переводит десятичные координаты (61.668793) в формат градусов (61°40'07.65").</p>
+                    <p><b>В Десятичные:</b> Переводит градусы/минуты в десятичный вид для навигаторов и ГИС.</p>
+                    <p><b>В Word (.doc):</b> Выгружает оформленный документ со всеми реквизитами для Microsoft Word.</p>
                 `;
             }
 
@@ -495,7 +1011,9 @@
         }
 
         window.onload = function() {
-            updateSourceStats();
+            document.getElementById('doc-date').value = new Date().toISOString().split('T')[0];
+            runFullAnalysis();
+            renderDocPreview();
         };
     </script>
 </body>
