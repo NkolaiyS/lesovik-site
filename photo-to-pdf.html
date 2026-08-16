@@ -1,0 +1,609 @@
+<!-- 
+  (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
+  Свидетельство ИНН: 111801576622.
+  Программное обеспечение: «Генератор полевых фотоотчётов Фото в PDF (Лесовик ПРО)» (Версия 2.6).
+  Правообладатель: Худяков Николай Сергеевич.
+  Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
+-->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <script type="text/javascript">
+        // --- ПЕРЕХВАТ БОТОВ ДЛЯ SEO-ПРЕВЬЮ ---
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const postSlug = urlParams.get('post');
+            const userAgent = (navigator.userAgent || '').toLowerCase();
+            const isBot = /telegrambot|vkshare|facebookexternalhit|twitterbot|slackbot|whatsapp|viber/i.test(userAgent);
+            if (postSlug && isBot) {
+                window.location.href = 'https://functions.yandexcloud.net/d4ecn5ag33dcdd2deivd?post=' + encodeURIComponent(postSlug);
+            }
+        })();
+
+        // --- ЯНДЕКС МЕТРИКА ---
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109130409', 'ym');
+
+        ym(109130409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Фотоотчет лесосеки в PDF онлайн: создание фототаблицы делянки | Лесовик</title>
+    <meta name="description" content="Бесплатный онлайн-генератор фотоотчетов и фототаблиц делянок в PDF. Создание официальных актов фотофиксации столбов, лесосек и рубок с GPS-координатами и паспортом участка.">
+    <meta name="keywords" content="фотоотчет делянки pdf, фототаблица лесосеки, фотофиксация столбов в pdf, акт натурного освидетельствования фото, лесовик про, фотоотчет лесничество">
+    <link rel="canonical" href="https://lesovik-pro.ru/photo-to-pdf.html">
+    <link rel="icon" type="image/jpeg" href="logo.jpeg">
+
+    <!-- РЕКЛАМА РСЯ (ЯНДЕКС) -->
+    <script>window.yaContextCb=window.yaContextCb||[]</script>
+    <script src="https://yandex.ru/ads/system/context.js" async></script>
+
+    <script>
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-2",
+                "type": "fullscreen",
+                "platform": "touch"
+            })
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-1",
+                "type": "floorAd",
+                "platform": "touch"
+            })
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-3",
+                "type": "fullscreen",
+                "platform": "desktop"
+            })
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-4",
+                "type": "floorAd",
+                "platform": "desktop"
+            })
+        });
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --bg-paper: #F9FBF9;
+            --text-graphite: #333333;
+            --forest-green: #2D5A27;
+            --forest-light: #8FBC8F;
+            --border-color: #E0E0E0;
+            --card-bg: #FFFFFF;
+            --glass-bg: rgba(249, 251, 249, 0.85);
+            --footer-bg: #2C3531;
+            --danger: #DC2626;
+            --overlay-bg: rgba(0, 0, 0, 0.6);
+        }
+
+        [data-theme="dark"] {
+            --bg-paper: #1A2421;
+            --text-graphite: #F9FBF9;
+            --forest-green: #8FBC8F;
+            --forest-light: #2D5A27;
+            --border-color: #3A4F46;
+            --card-bg: #22302B;
+            --glass-bg: rgba(26, 36, 33, 0.85);
+            --footer-bg: #111815;
+            --overlay-bg: rgba(0, 0, 0, 0.8);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-paper);
+            color: var(--text-graphite);
+            margin: 0; padding: 0;
+            line-height: 1.5;
+            display: flex; flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .glass-header {
+            position: sticky; top: 0; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 30px; background: var(--glass-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .header-logo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--forest-green); }
+        .glass-header h1 { font-family: 'Merriweather', serif; color: var(--forest-green); margin: 0; font-size: 20px; }
+
+        .header-right { display: flex; align-items: center; gap: 10px; }
+        .btn-nav {
+            background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green);
+            padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;
+            text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; height: 36px;
+        }
+        .btn-nav:hover { background-color: var(--forest-green); color: var(--bg-paper); }
+
+        .main-workspace {
+            display: grid; grid-template-columns: 480px 1fr; gap: 20px;
+            max-width: 1650px; margin: 20px auto; padding: 0 20px; flex: 1; width: 100%; box-sizing: border-box;
+        }
+
+        .control-panel {
+            background-color: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 16px;
+            max-height: 90vh; overflow-y: auto;
+        }
+
+        .panel-section-title {
+            font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 15px; margin: 0 0 10px 0;
+            border-bottom: 1px solid var(--border-color); padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .btn-help-icon {
+            background: rgba(45,90,39,0.12); border: none; width: 20px; height: 20px; border-radius: 50%;
+            font-size: 11px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center;
+            justify-content: center; color: var(--forest-green); padding: 0; transition: 0.2s;
+        }
+        .btn-help-icon:hover { background: var(--forest-green); color: #FFF; }
+
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-size: 11px; font-weight: 700; color: var(--forest-green); text-transform: uppercase; }
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px;
+            background-color: var(--bg-paper); color: var(--text-graphite); font-family: 'Inter', sans-serif; font-size: 13px;
+        }
+
+        .photo-list-manager {
+            display: flex; flex-direction: column; gap: 12px; max-height: 280px; overflow-y: auto; padding-right: 4px;
+        }
+
+        .photo-item-card {
+            background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px;
+            display: grid; grid-template-columns: 70px 1fr 28px; gap: 10px; align-items: center;
+        }
+        .photo-thumb-img {
+            width: 70px; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid #CCC;
+        }
+        .btn-del-photo {
+            background: rgba(220, 38, 38, 0.1); color: var(--danger); border: none; border-radius: 6px;
+            cursor: pointer; font-weight: bold; height: 28px; width: 28px; display: flex; align-items: center; justify-content: center;
+        }
+        .btn-del-photo:hover { background: var(--danger); color: #FFF; }
+
+        .btn-action {
+            background-color: var(--forest-green); color: white; border: none; padding: 10px;
+            border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 12px; text-transform: uppercase;
+            transition: all 0.2s; width: 100%; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .btn-action:hover { opacity: 0.9; }
+        .btn-secondary { background-color: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); }
+        .btn-danger { background-color: var(--danger); color: white; border: none; }
+
+        /* ОБЛАСТЬ ПРЕДВАРИТЕЛЬНОГО ПРОСМОТРА ДОКУМЕНТА */
+        .preview-wrapper {
+            background-color: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 25px; display: flex; flex-direction: column; align-items: center;
+            position: relative; overflow-y: auto; min-height: 600px;
+        }
+
+        .pdf-page {
+            background: #FFFFFF; color: #111111; width: 100%; max-width: 800px; min-height: 1050px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 40px 45px; box-sizing: border-box;
+            border: 1px solid #E0E0E0; font-family: 'Times New Roman', serif; line-height: 1.4; margin-bottom: 25px;
+            display: flex; flex-direction: column;
+        }
+
+        .report-header { text-align: center; margin-bottom: 15px; }
+        .report-header h3 { margin: 0 0 5px 0; font-size: 18px; text-transform: uppercase; }
+        .report-header p { margin: 0; font-size: 13px; font-style: italic; color: #555; }
+
+        .report-passport {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; margin-bottom: 20px;
+            border: 1px solid #333; padding: 8px 12px;
+        }
+
+        .photos-grid-1 { display: flex; flex-direction: column; gap: 15px; flex: 1; justify-content: center; }
+        .photos-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; flex: 1; align-items: start; }
+        .photos-grid-4 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1; }
+
+        .photo-card-a4 {
+            border: 1px solid #CCC; padding: 8px; background: #FAFAFA; display: flex; flex-direction: column;
+            align-items: center; text-align: center; box-sizing: border-box;
+        }
+        .photo-card-a4 img {
+            width: 100%; max-height: 360px; object-fit: contain; background: #000; border-radius: 4px;
+        }
+        .photos-grid-4 .photo-card-a4 img { max-height: 200px; }
+        .photo-card-a4 .photo-title { font-weight: bold; font-size: 13px; margin: 6px 0 2px 0; }
+        .photo-card-a4 .photo-meta { font-size: 11px; color: #444; }
+
+        .report-footer {
+            display: flex; justify-content: space-between; font-size: 13px; margin-top: auto; padding-top: 20px;
+            border-top: 1px solid #333;
+        }
+
+        /* ПОП-АПЫ СПРАВКИ */
+        .popup-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--overlay-bg);
+            z-index: 2000; display: none; align-items: center; justify-content: center; padding: 15px; box-sizing: border-box;
+        }
+        .popup-window {
+            background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+            max-width: 520px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); position: relative;
+        }
+        .popup-close { position: absolute; top: 12px; right: 12px; background: transparent; border: none; font-size: 22px; cursor: pointer; color: var(--text-graphite); }
+        .popup-window h3 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 17px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .popup-window p, .popup-window ul { font-size: 13px; line-height: 1.6; }
+        .popup-window ul { padding-left: 18px; }
+
+        /* РУКОВОДСТВО */
+        .manual-section { max-width: 1650px; margin: 30px auto; padding: 0 20px; width: 100%; box-sizing: border-box; }
+        .manual-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; }
+        .manual-card h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; }
+        .manual-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 15px; }
+        .manual-step { background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; }
+        .manual-step h4 { color: var(--forest-green); margin-top: 0; font-size: 15px; margin-bottom: 8px; }
+        .manual-step p { font-size: 13px; line-height: 1.5; margin: 0; }
+
+        footer { background-color: var(--footer-bg); color: #E0E0E0; padding: 30px 20px 80px; font-size: 13px; margin-top: auto; }
+        .footer-bottom { text-align: center; opacity: 0.6; }
+
+        @media (max-width: 1000px) {
+            .main-workspace { grid-template-columns: 1fr; }
+            .control-panel { max-height: none; }
+            .pdf-page { padding: 20px; }
+        }
+
+        /* ЧИСТАЯ ПЕЧАТЬ В PDF */
+        @page {
+            margin: 10mm;
+            size: A4 portrait;
+        }
+        @media print {
+            html, body { background: #FFF !important; color: #000 !important; margin: 0 !important; padding: 0 !important; }
+            .glass-header, .control-panel, .manual-section, footer, #help-popup { display: none !important; }
+            .main-workspace { display: block !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+            .preview-wrapper { border: none !important; padding: 0 !important; background: transparent !important; box-shadow: none !important; }
+            .pdf-page { box-shadow: none !important; border: none !important; width: 100% !important; max-width: 100% !important; padding: 0 !important; margin: 0 0 20px 0 !important; page-break-after: always; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="glass-header">
+        <a href="tools.html" class="logo-container">
+            <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
+            <h1>Фотоотчёт в PDF</h1>
+        </a>
+        <div class="header-right">
+            <a href="tools.html" class="btn-nav">← Инструменты</a>
+            <button class="btn-nav" onclick="toggleTheme()">Тема</button>
+        </div>
+    </header>
+
+    <div class="main-workspace">
+
+        <!-- ПАНЕЛЬ УПРАВЛЕНИЯ -->
+        <div class="control-panel">
+            
+            <!-- ПАСПОРТ ЛЕСОСЕКИ -->
+            <div>
+                <div class="panel-section-title">
+                    <span>1. Паспорт объекта для отчёта</span>
+                    <button class="btn-help-icon" onclick="openHelp('passport')">?</button>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Лесничество</label>
+                        <input type="text" id="p-les" value="Сыктывкарское уч. лес-во" onfocus="this.select()" oninput="renderDocPages()">
+                    </div>
+                    <div class="form-group">
+                        <label>Квартал (кв.)</label>
+                        <input type="text" id="p-kv" value="32" onfocus="this.select()" oninput="renderDocPages()">
+                    </div>
+                    <div class="form-group">
+                        <label>Делянка (дел.)</label>
+                        <input type="text" id="p-del" value="2" onfocus="this.select()" oninput="renderDocPages()">
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Выдел(ы)</label>
+                        <input type="text" id="p-vyd" value="2, 3, 4" onfocus="this.select()" oninput="renderDocPages()">
+                    </div>
+                    <div class="form-group">
+                        <label>Должность</label>
+                        <input type="text" id="p-pos" value="Таксатор" onfocus="this.select()" oninput="renderDocPages()">
+                    </div>
+                    <div class="form-group">
+                        <label>ФИО составителя</label>
+                        <input type="text" id="p-fio" value="Худяков Н.С." onfocus="this.select()" oninput="renderDocPages()">
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Дата составления</label>
+                        <input type="date" id="p-date" onfocus="this.select()" oninput="renderDocPages()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- НАСТРОЙКА РАСКЛАДКИ -->
+            <div>
+                <div class="panel-section-title">
+                    <span>2. Раскладка снимков на листе</span>
+                    <button class="btn-help-icon" onclick="openHelp('layout')">?</button>
+                </div>
+                <div class="form-group">
+                    <label>Количество фото на одну страницу А4:</label>
+                    <select id="layout-select" onchange="renderDocPages()">
+                        <option value="2" selected>2 фото на страницу (Стандарт лесоустройства)</option>
+                        <option value="1">1 фото на страницу (Крупный план столбов)</option>
+                        <option value="4">4 фото на страницу (Компактный фотоакт)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- ЗАГРУЗКА И СПИСОК ФОТО -->
+            <div>
+                <div class="panel-section-title">
+                    <span>3. Фотографии делянки (<span id="photo-count-label">0</span>)</span>
+                    <button class="btn-help-icon" onclick="openHelp('photos')">?</button>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label>Добавить фото (.jpg, .png):</label>
+                    <input type="file" id="photo-upload-input" accept="image/*" multiple onchange="handlePhotosUploaded(event)">
+                </div>
+
+                <div class="photo-list-manager" id="photo-items-container">
+                    <p style="color:gray; font-size:12px; text-align:center; margin:15px 0;">Снимки ещё не добавлены</p>
+                </div>
+            </div>
+
+            <!-- ДЕЙСТВИЯ -->
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button class="btn-action" onclick="window.print()">🖨️ Сохранить / Распечатать в PDF</button>
+                <button class="btn-action btn-danger" onclick="clearAllPhotos()">🧹 Очистить все фото</button>
+            </div>
+
+        </div>
+
+        <!-- ЛИСТ ПРЕДВАРИТЕЛЬНОГО ПРОСМОТРА -->
+        <div class="preview-wrapper" id="pdf-doc-container">
+            <!-- JS сгенерирует страницы А4 -->
+        </div>
+
+    </div>
+
+    <!-- ПОДРОБНОЕ РУКОВОДСТВО ВНИЗУ -->
+    <div class="manual-section">
+        <div class="manual-card">
+            <h2>Руководство по составлению полевых фотоотчётов и актов в PDF</h2>
+            <div class="manual-grid">
+                <div class="manual-step">
+                    <h4>1. Пакетная загрузка снимков</h4>
+                    <p>Вы можете выбрать сразу несколько фотографий (поворотные столбы, лесосечные знаки, визиры, общий вид насаждения). Сервис автоматически создаст карточку для каждого снимка.</p>
+                </div>
+                <div class="manual-step">
+                    <h4>2. Подписи и координаты GPS</h4>
+                    <p>Для каждого снимка укажите название объекта (например, <i>«Столб №1 (северо-запад)»</i>) и GPS-координаты. Данные сразу отобразятся в аккуратной подписи под фотографией на листе.</p>
+                </div>
+                <div class="manual-step">
+                    <h4>3. Автоматическая разбивка по страницам А4</h4>
+                    <p>В зависимости от выбранной раскладки (1, 2 или 4 фото на страницу) программа сама создаст нужное количество страниц А4 с сохранением титульного паспорта и подписей.</p>
+                </div>
+                <div class="manual-step">
+                    <h4>4. Официальный экспорт в PDF</h4>
+                    <p>Нажмите «Сохранить / Распечатать в PDF» и выберите в диалоге печати пункт «Сохранить как PDF». Документ готов для прикрепления к лесной декларации или акту натурного осмотра.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ПОП-АПЫ СПРАВКИ -->
+    <div id="help-popup" class="popup-overlay" onclick="closeHelpOuter(event)">
+        <div class="popup-window">
+            <button class="popup-close" onclick="closeHelp()">&times;</button>
+            <h3 id="help-title">Справка</h3>
+            <div id="help-content"></div>
+            <button class="btn-action" style="margin-top: 15px;" onclick="closeHelp()">Понятно</button>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-bottom">
+            &copy; <script>document.write(new Date().getFullYear())</script> Лесовик ПРО. Генератор полевых фототаблиц для органов лесного надзора.
+        </div>
+    </footer>
+
+    <script>
+        let photosList = [
+            {
+                id: 1,
+                src: 'logo.jpeg',
+                title: 'Столб №1 (Северо-западный угол)',
+                meta: 'GPS: 61.668793, 50.836399 | Азимут визира: 45°'
+            },
+            {
+                id: 2,
+                src: 'logo.jpeg',
+                title: 'Столб №2 (Северо-восточный угол)',
+                meta: 'GPS: 61.669750, 50.838380 | Азимут визира: 135°'
+            }
+        ];
+
+        function handlePhotosUploaded(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+
+            Array.from(files).forEach((file, idx) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    photosList.push({
+                        id: Date.now() + idx,
+                        src: e.target.result,
+                        title: `Столб / Объект №${photosList.length + 1}`,
+                        meta: `Снимок делянки | Файл: ${file.name}`
+                    });
+                    renderPhotoManagerList();
+                    renderDocPages();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function renderPhotoManagerList() {
+            const container = document.getElementById('photo-items-container');
+            document.getElementById('photo-count-label').innerText = photosList.length;
+
+            if (photosList.length === 0) {
+                container.innerHTML = `<p style="color:gray; font-size:12px; text-align:center; margin:15px 0;">Снимки ещё не добавлены</p>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            photosList.forEach((p, index) => {
+                container.innerHTML += `
+                    <div class="photo-item-card">
+                        <img src="${p.src}" class="photo-thumb-img" alt="Превью">
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <input type="text" value="${p.title}" placeholder="Наименование объекта" onfocus="this.select()" oninput="updatePhotoTitle(${index}, this.value)" style="font-weight:bold; font-size:12px; padding:4px 6px; border:1px solid #CCC; border-radius:4px;">
+                            <input type="text" value="${p.meta}" placeholder="GPS координаты и примечание" onfocus="this.select()" oninput="updatePhotoMeta(${index}, this.value)" style="font-size:11px; padding:4px 6px; border:1px solid #CCC; border-radius:4px; color:#555;">
+                        </div>
+                        <button class="btn-del-photo" onclick="deletePhoto(${index})">✕</button>
+                    </div>
+                `;
+            });
+        }
+
+        function updatePhotoTitle(index, val) { photosList[index].title = val; renderDocPages(); }
+        function updatePhotoMeta(index, val) { photosList[index].meta = val; renderDocPages(); }
+
+        function deletePhoto(index) {
+            photosList.splice(index, 1);
+            renderPhotoManagerList();
+            renderDocPages();
+        }
+
+        function clearAllPhotos() {
+            if (confirm('Удалить все добавленные фотографии?')) {
+                photosList = [];
+                renderPhotoManagerList();
+                renderDocPages();
+            }
+        }
+
+        // ГЕНЕРАЦИЯ СТРАНИЦ А4
+        function renderDocPages() {
+            const container = document.getElementById('pdf-doc-container');
+            const les = document.getElementById('p-les').value || '-';
+            const kv = document.getElementById('p-kv').value || '-';
+            const del = document.getElementById('p-del').value || '-';
+            const vyd = document.getElementById('p-vyd').value || '-';
+            const pos = document.getElementById('p-pos').value || 'Таксатор';
+            const fio = document.getElementById('p-fio').value || 'Худяков Н.С.';
+            const dateVal = document.getElementById('p-date').value || new Date().toLocaleDateString('ru-RU');
+            const perPage = parseInt(document.getElementById('layout-select').value) || 2;
+
+            if (photosList.length === 0) {
+                container.innerHTML = `
+                    <div class="pdf-page" style="justify-content:center; align-items:center; text-align:center;">
+                        <h3 style="color:var(--forest-green); font-family:'Merriweather',serif;">ФОТОТАБЛИЦА ПУСТА</h3>
+                        <p style="color:#666;">Загрузите фотографии столбов и делянки в левой панели.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            const totalPages = Math.ceil(photosList.length / perPage);
+
+            for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
+                const pagePhotos = photosList.slice(pageIdx * perPage, (pageIdx + 1) * perPage);
+                let gridClass = `photos-grid-${perPage}`;
+
+                let photosHtml = '';
+                pagePhotos.forEach(p => {
+                    photosHtml += `
+                        <div class="photo-card-a4">
+                            <img src="${p.src}" alt="${p.title}">
+                            <div class="photo-title">${p.title}</div>
+                            <div class="photo-meta">${p.meta}</div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML += `
+                    <div class="pdf-page">
+                        <div class="report-header">
+                            <h3>ФОТОТАБЛИЦА НАТУРНОГО ОСВИДЕТЕЛЬСТВОВАНИЯ</h3>
+                            <p>Приложение к акту отвода и таксации лесосеки (Лист ${pageIdx + 1} из ${totalPages})</p>
+                        </div>
+
+                        <div class="report-passport">
+                            <div><b>Лесничество:</b> ${les}</div>
+                            <div><b>Квартал:</b> ${kv} | <b>Делянка:</b> ${del}</div>
+                            <div><b>Выдел(ы):</b> ${vyd}</div>
+                            <div><b>Дата фиксации:</b> ${dateVal}</div>
+                        </div>
+
+                        <div class="${gridClass}">
+                            ${photosHtml}
+                        </div>
+
+                        <div class="report-footer">
+                            <div><b>Составитель:</b> ${pos} / ${fio}</div>
+                            <div><b>Подпись:</b> ____________________</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // СПРАВОЧНЫЕ ПОП-АПЫ
+        function openHelp(type) {
+            const title = document.getElementById('help-title');
+            const content = document.getElementById('help-content');
+
+            if (type === 'passport') {
+                title.innerText = 'Паспорт объекта';
+                content.innerHTML = `<p>Указанные реквизиты (лесничество, квартал, делянка, дата и составитель) автоматически выводятся в шапке каждой страницы PDF-отчёта.</p>`;
+            } else if (type === 'layout') {
+                title.innerText = 'Раскладка на листе';
+                content.innerHTML = `
+                    <p><b>2 фото на лист:</b> Оптимальный стандарт для большинства лесничеств (высокая детализация и читаемость надписей на столбах).</p>
+                    <p><b>1 фото на лист:</b> Для макросъёмки клейм, повреждений древесины и маркировочных знаков.</p>
+                    <p><b>4 фото на лист:</b> Экономичный вариант для больших обзорных актов.</p>
+                `;
+            } else if (type === 'photos') {
+                title.innerText = 'Управление фотоснимками';
+                content.innerHTML = `<p>Загружайте любое количество фото. В карточках справа вы можете легко изменить название столба и вписать точные координаты GPS с навигатора.</p>`;
+            }
+
+            document.getElementById('help-popup').style.display = 'flex';
+        }
+
+        function closeHelp() { document.getElementById('help-popup').style.display = 'none'; }
+        function closeHelpOuter(e) { if (e.target.id === 'help-popup') closeHelp(); }
+
+        function toggleTheme() {
+            const body = document.documentElement;
+            if (body.getAttribute('data-theme') === 'dark') body.removeAttribute('data-theme');
+            else body.setAttribute('data-theme', 'dark');
+        }
+
+        window.onload = function() {
+            document.getElementById('p-date').value = new Date().toISOString().split('T')[0];
+            renderPhotoManagerList();
+            renderDocPages();
+        };
+    </script>
+</body>
+</html>
