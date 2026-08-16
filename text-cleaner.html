@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Лесной очиститель, нормализатор координат и конструктор документов (Лесовик ПРО)» (Версия 2.9).
+  Программное обеспечение: «Лесной очиститель, нормализатор координат и конструктор документов (Лесовик ПРО)» (Версия 3.0).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -35,8 +35,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Очиститель координат, проверка орфографии и конструктор заявлений онлайн | Лесовик</title>
-    <meta name="description" content="Бесплатный конструктор лесных заявлений, писем и актов по правилам делопроизводства, проверка орфографии русского языка, нормализация и конвертация координат (DD ↔ DMS).">
-    <meta name="keywords" content="составить заявление в лесничество, конструктор заявлений онлайн, проверка орфографии русский язык, конвертер dms в dd, координаты делянки проверка, нормализация координат, лесовик про">
+    <meta name="description" content="Бесплатный конструктор лесных заявлений, писем и актов для Word, МойОфис и Excel, проверка орфографии русского языка, нормализация и конвертация координат (DD ↔ DMS).">
+    <meta name="keywords" content="составить заявление в лесничество, конструктор заявлений онлайн, заявление мой офис ворд, проверка орфографии русский язык, конвертер dms в dd, координаты делянки, лесовик про">
     <link rel="canonical" href="https://lesovik-pro.ru/text-cleaner.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
 
@@ -156,7 +156,6 @@
         }
         .btn-help-icon:hover { background: var(--forest-green); color: #FFF; }
 
-        /* ВКЛАДКИ РЕЖИМОВ */
         .mode-tabs {
             display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: rgba(0,0,0,0.04); padding: 4px; border-radius: 8px;
         }
@@ -211,7 +210,6 @@
         }
         .stat-badge b { font-size: 13px; color: var(--forest-green); display: block; }
 
-        /* БЛОК ПРОВЕРКИ ОШИБОК И ПРАВОПИСАНИЯ */
         .validation-box {
             background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.5; max-height: 120px; overflow-y: auto;
         }
@@ -222,7 +220,7 @@
         .val-error { color: var(--danger); }
         .val-warning { color: var(--warning); }
 
-        /* СТИЛИ БЛАНКА А4 ДЛЯ ЗАЯВЛЕНИЙ */
+        /* ОФИЦИАЛЬНЫЙ БЛАНК А4 */
         .a4-doc-sheet {
             background: #FFFFFF; color: #111111; width: 100%; min-height: 520px; box-sizing: border-box;
             border: 1px solid #CCC; border-radius: 8px; padding: 35px 40px; font-family: 'Times New Roman', serif;
@@ -288,17 +286,40 @@
             .doc-header-right { margin-left: 0; }
         }
 
-        /* ЧИСТАЯ ПЕЧАТЬ В PDF */
+        /* ЧИСТАЯ ПЕЧАТЬ В PDF БЕЗ ДАТЫ, URL И КОЛОНТИТУЛОВ */
         @page {
-            margin: 15mm;
+            margin: 0;
             size: A4 portrait;
         }
         @media print {
-            html, body { background: #FFF !important; color: #000 !important; margin: 0 !important; padding: 0 !important; }
-            .glass-header, .tool-card:first-child, .manual-section, footer, #help-popup, .panel-section-title, .quick-ops-grid, .btn-action, .btn-secondary, .btn-danger { display: none !important; }
-            .main-workspace { display: block !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
-            .tool-card { border: none !important; padding: 0 !important; background: transparent !important; box-shadow: none !important; }
-            .a4-doc-sheet { border: none !important; box-shadow: none !important; padding: 0 !important; width: 100% !important; }
+            html, body {
+                background: #FFFFFF !important;
+                color: #000000 !important;
+                margin: 0 !important;
+                padding: 15mm 20mm !important; /* Отступы листа без включения колонтитулов браузера */
+            }
+            .glass-header, .tool-card:first-child, .manual-section, footer, #help-popup, .panel-section-title, .quick-ops-grid, .btn-action, .btn-secondary, .btn-danger {
+                display: none !important;
+            }
+            .main-workspace {
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+            }
+            .tool-card {
+                border: none !important;
+                padding: 0 !important;
+                background: transparent !important;
+                box-shadow: none !important;
+            }
+            .a4-doc-sheet {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                width: 100% !important;
+                page-break-inside: avoid !important;
+            }
         }
     </style>
 </head>
@@ -346,7 +367,7 @@
             </div>
 
             <!-- БЛОК ДЛЯ РЕЖИМА 2: КОНСТРУКТОР ЗАЯВЛЕНИЙ ПО ГОСТ -->
-            <div id="section-builder-input" style="display: none; display: flex; flex-direction: column; gap: 12px;">
+            <div id="section-builder-input" style="display: none; flex-direction: column; gap: 12px;">
                 <div class="panel-section-title">
                     <span>Реквизиты делопроизводства (ГОСТ)</span>
                     <button class="btn-help-icon" onclick="openHelp('builder_help')">?</button>
@@ -405,7 +426,7 @@
                             <input type="text" id="doc-p-vyd" value="2, 3, 4" onfocus="this.select()" oninput="renderDocPreview()">
                         </div>
                         <div class="form-group">
-                            <label>Площадь (га):</label>
+                            <label>Площадь:</label>
                             <input type="text" id="doc-p-area" value="4.8 га" onfocus="this.select()" oninput="renderDocPreview()">
                         </div>
                     </div>
@@ -462,7 +483,7 @@
             </div>
 
             <div class="panel-section-title" style="margin-top: 5px;">
-                <span id="output-title">3. Чистый результат / Бланк А4</span>
+                <span id="output-title">3. Чистый результат</span>
             </div>
 
             <!-- ВИД 1: ТЕКСТОВОЕ ПОЛЕ РЕЗУЛЬТАТА (ДЛЯ РЕЖИМА ОЧИСТИТЕЛЯ) -->
@@ -477,9 +498,10 @@
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px;">
                 <button class="btn-action" onclick="copyResultClipboard()">📋 Копировать</button>
-                <button class="btn-action btn-secondary" onclick="exportWordDocument()">📝 В Word (.doc)</button>
+                <button class="btn-action btn-secondary" onclick="exportWordDocument()">📝 В Word / МойОфис</button>
+                <button class="btn-action btn-secondary" onclick="exportExcelDocument()">📊 В Excel / Таблицу</button>
                 <button class="btn-action btn-secondary" onclick="window.print()">🖨️ Печать / PDF</button>
             </div>
         </div>
@@ -496,16 +518,16 @@
                     <p>Перейдите во вкладку <b>«Конструктор Заявлений»</b>. Заполните поля «Кому» и «От кого». При необходимости включите галочку «Паспорт участка» для автоматической вставки таблицы лесничества, квартала и выдела.</p>
                 </div>
                 <div class="manual-step">
-                    <h4>2. Проверка орфографии и пунктуации русского языка</h4>
+                    <h4>2. Полная совместимость с Word, МойОфис и Excel</h4>
+                    <p>Документы формируются со строгой кодировкой UTF-8 и XML-разметкой. Они на 100% корректно открываются в <b>Microsoft Word</b>, <b>МойОфис Текст</b>, <b>Р7-Офис</b>, <b>Excel</b> и <b>МойОфис Таблица</b>.</p>
+                </div>
+                <div class="manual-step">
+                    <h4>3. Проверка орфографии и пунктуации</h4>
                     <p>Кнопка <b>«Проверить орфографию РФ»</b> автоматически выявляет опечатки, неправильные падежные окончания, пропущенные пробелы после знаков препинания и заменяет ошибочные слова на грамотные лексические формы.</p>
                 </div>
                 <div class="manual-step">
-                    <h4>3. Конвертация координат (DD ↔ DMS)</h4>
-                    <p>Переводит координаты из навигаторов (<code>61.668793</code>) в официальный формат лесоустроительных актов (<code>61°40'07.65"</code>) и обратно с защитой от русских запятых.</p>
-                </div>
-                <div class="manual-step">
-                    <h4>4. Выгрузка в Word и чистая печать в PDF</h4>
-                    <p>Кнопка <b>«В Word (.doc)»</b> сохраняет готовое заявление со всеми отступами для открытия в Microsoft Word, а кнопка <b>«Печать / PDF»</b> формирует официальный бумажный лист с местом для подписи без браузерных колонтитулов.</p>
+                    <h4>4. Чистая печать в PDF без колонтитулов</h4>
+                    <p>Кнопка <b>«Печать / PDF»</b> формирует официальный документ без даты, ссылок сайта и номеров страниц браузера — строго чистый бланк формата А4 с местом для личной подписи.</p>
                 </div>
             </div>
         </div>
@@ -745,7 +767,7 @@
             }
         }
 
-        // ОПЕРАЦИЯ: ПРОВЕРКА ОРФОГРАФИИ
+        // ПРОВЕРКА ОРФОГРАФИИ
         async function opCheckAndFixRussianSpelling() {
             const inputField = (currentAppMode === 'cleaner') 
                 ? document.getElementById('src-text-input') 
@@ -922,55 +944,102 @@
             }
         }
 
-        function downloadResultTxt() {
-            const val = (currentAppMode === 'cleaner') 
-                ? document.getElementById('res-text-output').value 
-                : document.getElementById('printable-statement-doc').innerText;
-
-            if (!val) { alert("Нет данных для скачивания!"); return; }
-            const blob = new Blob([val], { type: 'text/plain;charset=utf-8;' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = (currentAppMode === 'cleaner') ? `cleaned_coords_lesovik.txt` : `zayavlenie_lesovik.txt`;
-            a.click();
-        }
-
-        // ЭКСПОРТ В MICROSOFT WORD (.DOC)
+        // ЭКСПОРТ В WORD И МОЙОФИС (.DOC)
         function exportWordDocument() {
+            let content = '';
+            let filename = 'dokument_lesovik.doc';
+
             if (currentAppMode === 'cleaner') {
-                const text = document.getElementById('res-text-output').value;
+                const text = document.getElementById('res-text-output').value || document.getElementById('src-text-input').value;
                 if (!text) { alert("Нет данных для экспорта!"); return; }
-                const blob = new Blob([text], { type: 'application/msword;charset=utf-8' });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `Vypiska_lesovik.doc`;
-                a.click();
-                return;
+                content = `<p style="white-space: pre-wrap; font-family:'Times New Roman',serif; font-size:12pt;">${text}</p>`;
+                filename = 'vypiska_koordinat_lesovik.doc';
+            } else {
+                content = document.getElementById('printable-statement-doc').innerHTML;
+                const docTitle = document.getElementById('doc-type-title').value;
+                filename = `${docTitle}_lesovik.doc`;
             }
 
-            const content = document.getElementById('printable-statement-doc').innerHTML;
-            const docTitle = document.getElementById('doc-type-title').value;
-
-            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' "+
+            const header = "\uFEFF<html xmlns:o='urn:schemas-microsoft-com:office:office' "+
                 "xmlns:w='urn:schemas-microsoft-com:office:word' "+
                 "xmlns='http://www.w3.org/TR/REC-html40'>"+
-                "<head><meta charset='utf-8'><title>Заявление</title><style>"+
-                "body { font-family: 'Times New Roman', serif; font-size: 14pt; line-height: 1.5; }"+
+                "<head><meta charset='utf-8'><title>Документ</title><style>"+
+                "body { font-family: 'Times New Roman', serif; font-size: 14pt; line-height: 1.5; margin: 20mm; }"+
                 ".doc-header-right { margin-left: 50%; font-size: 13pt; margin-bottom: 25pt; line-height: 1.3; }"+
-                ".doc-title-center { text-align: center; font-weight: bold; font-size: 16pt; margin: 20pt 0 15pt 0; }"+
+                ".doc-title-center { text-align: center; font-weight: bold; font-size: 16pt; margin: 20pt 0 15pt 0; text-transform: uppercase; }"+
                 "table { width: 100%; border-collapse: collapse; margin: 15pt 0; }"+
                 "th, td { border: 1px solid black; padding: 6pt; text-align: center; font-size: 12pt; }"+
                 "th { background-color: #f2f2f2; }"+
-                ".doc-body-text { text-indent: 30pt; text-align: justify; margin-bottom: 30pt; }"+
+                ".doc-body-text { text-indent: 30pt; text-align: justify; margin-bottom: 30pt; font-size: 14pt; }"+
                 ".doc-footer-signature { margin-top: 30pt; }"+
                 "</style></head><body>";
             const footer = "</body></html>";
             const sourceHTML = header + content + footer;
 
-            const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
+            const blob = new Blob([sourceHTML], { type: 'application/msword;charset=utf-8' });
             const a = document.createElement("a");
-            a.href = source;
-            a.download = `${docTitle}_lesovik.doc`;
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            a.click();
+        }
+
+        // ЭКСПОРТ В EXCEL И МОЙОФИС ТАБЛИЦА (.XLS / .CSV)
+        function exportExcelDocument() {
+            if (currentAppMode === 'cleaner') {
+                const text = document.getElementById('res-text-output').value || document.getElementById('src-text-input').value;
+                const pairs = extractAnyCoords(text);
+                if (pairs.length === 0) { alert("Координаты не найдены!"); return; }
+
+                let csv = "\uFEFF№;Широта (Lat);Долгота (Lon)\n";
+                pairs.forEach((p, i) => {
+                    csv += `Т.${i+1};${p.lat.toFixed(6)};${p.lon.toFixed(6)}\n`;
+                });
+
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `koordinaty_excel_lesovik.csv`;
+                a.click();
+                return;
+            }
+
+            // Экспорт заявления в Excel / МойОфис Таблица
+            const toVal = document.getElementById('doc-to').value;
+            const fromVal = document.getElementById('doc-from').value;
+            const docTitle = document.getElementById('doc-type-title').value;
+            const docDate = document.getElementById('doc-date').value || new Date().toLocaleDateString('ru-RU');
+            const mainText = document.getElementById('doc-main-text').value;
+            const signPos = document.getElementById('doc-sign-pos').value;
+            const signFio = document.getElementById('doc-sign-fio').value;
+
+            const les = document.getElementById('doc-p-les').value || '-';
+            const kv = document.getElementById('doc-p-kv').value || '-';
+            const del = document.getElementById('doc-p-del').value || '-';
+            const vyd = document.getElementById('doc-p-vyd').value || '-';
+            const area = document.getElementById('doc-p-area').value || '-';
+
+            const excelHtml = `\uFEFF<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head><meta charset="utf-8"><style>td { font-family:'Times New Roman'; font-size:12pt; padding:5px; } th { font-family:'Times New Roman'; font-weight:bold; background:#eee; border:1px solid #000; } .bordered td { border:1px solid #000; text-align:center; }</style></head>
+            <body>
+            <table>
+                <tr><td colspan="3"></td><td colspan="2"><b>Кому:</b> ${toVal.replace(/\n/g, ' ')}</td></tr>
+                <tr><td colspan="3"></td><td colspan="2"><b>От кого:</b> ${fromVal.replace(/\n/g, ' ')}</td></tr>
+                <tr></tr>
+                <tr><td colspan="5" style="text-align:center; font-size:14pt; font-weight:bold;">${docTitle}</td></tr>
+                <tr></tr>
+                <tr class="bordered"><th>Участковое лесничество</th><th>Квартал</th><th>Выдел</th><th>Делянка</th><th>Площадь</th></tr>
+                <tr class="bordered"><td>${les}</td><td>${kv}</td><td>${vyd}</td><td>${del}</td><td>${area}</td></tr>
+                <tr></tr>
+                <tr><td colspan="5" style="text-align:justify;">${mainText}</td></tr>
+                <tr></tr>
+                <tr><td colspan="2"><b>Дата:</b> ${docDate} г.</td><td colspan="3" style="text-align:right;">${signPos}: _________________ / ${signFio}</td></tr>
+            </table>
+            </body></html>`;
+
+            const blob = new Blob([excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `${docTitle}_lesovik.xls`;
             a.click();
         }
 
@@ -986,7 +1055,7 @@
                 title.innerText = 'Конструктор заявлений по ГОСТ';
                 content.innerHTML = `
                     <p>Позволяет быстро составить официальное заявление в лесничество или Министерство по правилам делопроизводства.</p>
-                    <p>Включает шапку «Кому / От кого», дату, место для подписи и опциональную таблицу паспорта лесного участка.</p>
+                    <p>Файлы поддерживают экспорт в Word, МойОфис, Excel и чистую печать в PDF без колонтитулов браузера.</p>
                 `;
             } else if (type === 'ops') {
                 title.innerText = 'Операции обработки';
@@ -994,7 +1063,6 @@
                     <p><b>Проверить орфографию РФ:</b> Находит и автоматически исправляет грамматические ошибки в словах.</p>
                     <p><b>В Градусы° Мин' Сек":</b> Переводит десятичные координаты (61.668793) в формат градусов (61°40'07.65").</p>
                     <p><b>В Десятичные:</b> Переводит градусы/минуты в десятичный вид для навигаторов и ГИС.</p>
-                    <p><b>В Word (.doc):</b> Выгружает оформленный документ со всеми реквизитами для Microsoft Word.</p>
                 `;
             }
 
