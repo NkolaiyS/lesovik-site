@@ -1,0 +1,733 @@
+<!-- 
+  (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
+  Свидетельство ИНН: 111801576622.
+  Программное обеспечение: «Тактический калькулятор лесных пожаров и сил тушения (Лесовик ПРО)» (Версия 2.6).
+  Правообладатель: Худяков Николай Сергеевич.
+  Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
+-->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <script type="text/javascript">
+        // --- ПЕРЕХВАТ БОТОВ ДЛЯ SEO-ПРЕВЬЮ ---
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const postSlug = urlParams.get('post');
+            const userAgent = (navigator.userAgent || '').toLowerCase();
+            const isBot = /telegrambot|vkshare|facebookexternalhit|twitterbot|slackbot|whatsapp|viber/i.test(userAgent);
+            if (postSlug && isBot) {
+                window.location.href = 'https://functions.yandexcloud.net/d4ecn5ag33dcdd2deivd?post=' + encodeURIComponent(postSlug);
+            }
+        })();
+
+        // --- ЯНДЕКС МЕТРИКА ---
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109130409', 'ym');
+
+        ym(109130409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Калькулятор лесных пожаров: Динамика кромки и расчёт сил тушения ЛПЦ | Лесовик</title>
+    <meta name="description" content="Тактический калькулятор лесопожарного центра: расчет класса пожарной опасности по Нестерову, скорости распространения кромки, площади пожара и потребности в силах тушения (РЛО, цистерны, мотопомпы, опашка).">
+    <meta name="keywords" content="калькулятор лесного пожара, расчет скорости кромки пожара, пожарная опасность по нестерову, расчет сил и средств пожаротушения лесопожарный центр, лесовик про, авиалесоохрана">
+    <link rel="canonical" href="https://lesovik-pro.ru/fire-calc.html">
+    <link rel="icon" type="image/jpeg" href="logo.jpeg">
+
+    <!-- РЕКЛАМА РСЯ (ЯНДЕКС) -->
+    <script>window.yaContextCb=window.yaContextCb||[]</script>
+    <script src="https://yandex.ru/ads/system/context.js" async></script>
+
+    <script>
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-2",
+                "type": "fullscreen",
+                "platform": "touch"
+            })
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-1",
+                "type": "floorAd",
+                "platform": "touch"
+            })
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-3",
+                "type": "fullscreen",
+                "platform": "desktop"
+            })
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-4",
+                "type": "floorAd",
+                "platform": "desktop"
+            })
+        });
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --bg-paper: #F9FBF9;
+            --text-graphite: #333333;
+            --forest-green: #2D5A27;
+            --forest-light: #8FBC8F;
+            --border-color: #E0E0E0;
+            --card-bg: #FFFFFF;
+            --glass-bg: rgba(249, 251, 249, 0.85);
+            --footer-bg: #2C3531;
+            --danger: #DC2626;
+            --warning: #D97706;
+            --fire-orange: #EA580C;
+            --overlay-bg: rgba(0, 0, 0, 0.6);
+        }
+
+        [data-theme="dark"] {
+            --bg-paper: #1A2421;
+            --text-graphite: #F9FBF9;
+            --forest-green: #8FBC8F;
+            --forest-light: #2D5A27;
+            --border-color: #3A4F46;
+            --card-bg: #22302B;
+            --glass-bg: rgba(26, 36, 33, 0.85);
+            --footer-bg: #111815;
+            --overlay-bg: rgba(0, 0, 0, 0.8);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-paper);
+            color: var(--text-graphite);
+            margin: 0; padding: 0;
+            line-height: 1.5;
+            display: flex; flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .glass-header {
+            position: sticky; top: 0; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 20px; background: var(--glass-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .header-logo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--forest-green); }
+        .glass-header h1 { font-family: 'Merriweather', serif; color: var(--forest-green); margin: 0; font-size: 18px; }
+
+        .header-right { display: flex; align-items: center; gap: 8px; }
+        .btn-nav {
+            background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green);
+            padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600;
+            text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; height: 34px;
+        }
+        .btn-nav:hover { background-color: var(--forest-green); color: var(--bg-paper); }
+
+        .main-workspace {
+            display: grid; grid-template-columns: 480px 1fr; gap: 20px;
+            max-width: 1650px; margin: 20px auto; padding: 0 15px; flex: 1; width: 100%;
+        }
+
+        .tool-card {
+            background-color: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px;
+            min-width: 0;
+        }
+
+        .panel-section-title {
+            font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 15px; margin: 0;
+            border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .btn-help-icon {
+            background: rgba(45,90,39,0.12); border: none; width: 20px; height: 20px; border-radius: 50%;
+            font-size: 11px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center;
+            justify-content: center; color: var(--forest-green); padding: 0; transition: 0.2s;
+        }
+        .btn-help-icon:hover { background: var(--forest-green); color: #FFF; }
+
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-size: 11px; font-weight: 700; color: var(--forest-green); text-transform: uppercase; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px;
+            background-color: var(--bg-paper); color: var(--text-graphite); font-family: 'Inter', sans-serif; font-size: 13px;
+        }
+
+        .kppo-badge-box {
+            border-radius: 8px; padding: 12px; text-align: center; color: #FFF; font-weight: bold; font-size: 14px;
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .kppo-val-num { font-size: 24px; font-weight: 800; font-family: 'Inter', sans-serif; }
+
+        /* БЛОК СВОДКИ РАСЧЕТА */
+        .doc-sheet-a4 {
+            background: #FFFFFF; color: #111111; width: 100%; min-height: 520px;
+            border: 1px solid #CCC; border-radius: 8px; padding: 30px 35px; font-family: 'Times New Roman', serif;
+            line-height: 1.45; font-size: 13px; box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        }
+
+        .report-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 15px; }
+        .report-header h3 { margin: 0 0 4px 0; font-size: 16px; text-transform: uppercase; }
+        .report-header p { margin: 0; font-size: 12px; font-style: italic; color: #555; }
+
+        .metrics-grid-3 {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px;
+        }
+        .metric-card {
+            background: #F9FBF9; border: 1px solid #CCC; border-radius: 6px; padding: 8px; text-align: center;
+        }
+        .metric-card span { font-size: 11px; color: #555; display: block; font-family: 'Inter', sans-serif; }
+        .metric-card b { font-size: 15px; color: var(--forest-green); font-family: 'Inter', sans-serif; }
+
+        .table-custom {
+            width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px;
+        }
+        .table-custom th, .table-custom td {
+            border: 1px solid #333; padding: 6px 8px; text-align: center;
+        }
+        .table-custom th { background: #F0F0F0; font-weight: bold; }
+
+        .action-buttons-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px;
+        }
+
+        .btn-action {
+            background-color: var(--forest-green); color: white; border: none; padding: 9px 4px;
+            border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 11px; text-transform: uppercase;
+            transition: all 0.2s; width: 100%; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+        }
+        .btn-action:hover { opacity: 0.9; }
+        .btn-secondary { background-color: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); }
+        .btn-danger { background-color: var(--danger); color: white; border: none; }
+
+        /* ПОП-АПЫ */
+        .popup-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--overlay-bg);
+            z-index: 2000; display: none; align-items: center; justify-content: center; padding: 15px;
+        }
+        .popup-window {
+            background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+            max-width: 520px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); position: relative;
+        }
+        .popup-close { position: absolute; top: 12px; right: 12px; background: transparent; border: none; font-size: 22px; cursor: pointer; color: var(--text-graphite); }
+        .popup-window h3 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 17px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .popup-window p, .popup-window ul { font-size: 13px; line-height: 1.6; }
+        .popup-window ul { padding-left: 18px; }
+
+        /* РУКОВОДСТВО */
+        .manual-section { max-width: 1650px; margin: 30px auto; padding: 0 15px; width: 100%; }
+        .manual-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; }
+        .manual-card h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 18px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; }
+        .manual-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 12px; }
+        .manual-step { background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; }
+        .manual-step h4 { color: var(--forest-green); margin-top: 0; font-size: 14px; margin-bottom: 6px; }
+        .manual-step p { font-size: 12px; line-height: 1.45; margin: 0; }
+
+        footer { background-color: var(--footer-bg); color: #E0E0E0; padding: 25px 15px 70px; font-size: 12px; margin-top: auto; }
+        .footer-bottom { text-align: center; opacity: 0.6; }
+
+        @media (max-width: 950px) {
+            .main-workspace { grid-template-columns: 1fr; }
+            .action-buttons-grid { grid-template-columns: 1fr 1fr; }
+            .metrics-grid-3 { grid-template-columns: 1fr; }
+            .doc-sheet-a4 { padding: 20px 15px; }
+        }
+
+        /* ЧИСТАЯ ПЕЧАТЬ В PDF РОВНО НА 1 ЛИСТ */
+        @page {
+            margin: 0;
+            size: A4 portrait;
+        }
+        @media print {
+            body { background: #FFFFFF !important; color: #000000 !important; margin: 0 !important; padding: 0 !important; }
+            .glass-header, .tool-card:first-child, .manual-section, footer, #help-popup, .panel-section-title, .action-buttons-grid, .btn-action, .btn-secondary, .btn-danger {
+                display: none !important;
+            }
+            .main-workspace, .tool-card {
+                display: block !important; margin: 0 !important; padding: 0 !important; border: none !important; box-shadow: none !important; width: 100% !important;
+            }
+            #printable-fire-report {
+                display: block !important; width: 100% !important; margin: 0 !important; padding: 12mm 15mm !important; border: none !important; box-shadow: none !important;
+                page-break-inside: avoid !important; page-break-after: avoid !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="glass-header">
+        <a href="tools.html" class="logo-container">
+            <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
+            <h1>Калькулятор Лесных Пожаров</h1>
+        </a>
+        <div class="header-right">
+            <a href="tools.html" class="btn-nav">← Инструменты</a>
+            <button class="btn-nav" onclick="toggleTheme()">Тема</button>
+        </div>
+    </header>
+
+    <div class="main-workspace">
+
+        <!-- ЛЕВАЯ КОЛОНКА: ВВОД ПАРАМЕТРОВ -->
+        <div class="tool-card">
+            
+            <!-- 1. ПОЖАРНАЯ ОПАСНОСТЬ ПО НЕСТЕРОВУ -->
+            <div>
+                <div class="panel-section-title">
+                    <span>1. Погода и шкала Нестерова (КППО)</span>
+                    <button class="btn-help-icon" onclick="openHelp('nesterov')">?</button>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+                    <div class="form-group">
+                        <label>Температура в 13:00 (°C):</label>
+                        <input type="number" step="1" id="f-temp" value="26" onfocus="this.select()" oninput="calculateFireDynamics()">
+                    </div>
+                    <div class="form-group">
+                        <label>Точка росы (°C):</label>
+                        <input type="number" step="1" id="f-dew" value="12" onfocus="this.select()" oninput="calculateFireDynamics()">
+                    </div>
+                    <div class="form-group">
+                        <label>Дней без осадков (&gt;3мм):</label>
+                        <input type="number" step="1" id="f-days" value="8" onfocus="this.select()" oninput="calculateFireDynamics()">
+                    </div>
+                    <div class="form-group">
+                        <label>Скорость ветра (м/с):</label>
+                        <input type="number" step="0.5" id="f-wind" value="4.5" onfocus="this.select()" oninput="calculateFireDynamics()">
+                    </div>
+                </div>
+
+                <div id="kppo-badge" class="kppo-badge-box" style="margin-top: 10px; background: var(--fire-orange);">
+                    <span>Класс пожарной опасности в лесах:</span>
+                    <div class="kppo-val-num" id="kppo-class-label">IV КЛАСС (Высокая)</div>
+                    <span id="kppo-index-label">Индекс Нестерова: 2 912 ед.</span>
+                </div>
+            </div>
+
+            <!-- 2. ХАРАКТЕРИСТИКА НАСАЖДЕНИЯ И ОЧАГА -->
+            <div>
+                <div class="panel-section-title">
+                    <span>2. Тип леса и очага</span>
+                    <button class="btn-help-icon" onclick="openHelp('forest_type')">?</button>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                    <div class="form-group">
+                        <label>Тип леса / горючие материалы:</label>
+                        <select id="f-forest-type" onchange="calculateFireDynamics()">
+                            <option value="pine_lichen" selected>Сосняк лишайниковый / брусничник (Высокая горимость)</option>
+                            <option value="pine_moss">Сосняк черничный / долгомошный (Средняя горимость)</option>
+                            <option value="spruce_moist">Ельник сфагновый / сырой (Слабая горимость)</option>
+                            <option value="slash_felling">Свежая вырубка с порубочными остатками (Экстремальная)</option>
+                            <option value="birch_grass">Березняк разнотравный (Лиственный)</option>
+                            <option value="peatland">Торфяник / осушенный болотный массив</option>
+                        </select>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div class="form-group">
+                            <label>Вид пожара:</label>
+                            <select id="f-fire-type" onchange="calculateFireDynamics()">
+                                <option value="surface_run" selected>Низовой беглый</option>
+                                <option value="surface_steady">Низовой устойчивый</option>
+                                <option value="crown">Верховой повальный</option>
+                                <option value="ground_peat">Почвенный / торфяной</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Уклон рельефа местности:</label>
+                            <select id="f-slope" onchange="calculateFireDynamics()">
+                                <option value="0" selected>Равнина (0°)</option>
+                                <option value="10">Подъём 10° (+30% к скорости)</option>
+                                <option value="20">Крутой склон 20° (+100%)</option>
+                                <option value="-10">Спуск под уклон (-20%)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. ДЕЙСТВИЯ -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <button class="btn-action btn-secondary" onclick="loadStandardScenario()">🌲 Пример: Сосняк Коми</button>
+                <button class="btn-action btn-danger" onclick="resetInputs()">🧹 Сбросить</button>
+            </div>
+
+        </div>
+
+        <!-- ПРАВАЯ КОЛОНКА: РАСЧЕТ ДИНАМИКИ И СИЛ ТУШЕНИЯ -->
+        <div class="tool-card">
+            
+            <div class="panel-section-title">
+                <span>Тактическое решение РТП и прогноз распространения</span>
+                <button class="btn-help-icon" onclick="openHelp('forces')">?</button>
+            </div>
+
+            <div class="doc-sheet-a4" id="printable-fire-report">
+                
+                <div class="report-header">
+                    <h3>ОПЕРАТИВНЫЙ РАСЧЁТ СИЛ И СРЕДСТВ ТУШЕНИЯ ЛЕСНОГО ПОЖАРА</h3>
+                    <p>Лесопожарный центр / Региональная диспетчерская служба (РДС)</p>
+                </div>
+
+                <!-- МЕТРИКИ СКОРОСТИ -->
+                <div class="metrics-grid-3">
+                    <div class="metric-card">
+                        <span>Скорость головы (Vгол):</span>
+                        <b id="res-v-head">3.8 м/мин (228 м/ч)</b>
+                    </div>
+                    <div class="metric-card">
+                        <span>Скорость флангов (Vфл):</span>
+                        <b id="res-v-flank">1.9 м/мин</b>
+                    </div>
+                    <div class="metric-card">
+                        <span>Скорость тыла (Vтыл):</span>
+                        <b id="res-v-rear">0.8 м/мин</b>
+                    </div>
+                </div>
+
+                <!-- ТАБЛИЦА ДИНАМИКИ ПО ВРЕМЕНИ -->
+                <h4 style="margin: 10px 0 4px 0; font-size: 13px; font-family:'Inter',sans-serif; color:var(--forest-green);">1. Прогноз динамики площади и периметра:</h4>
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th>Период развития</th>
+                            <th>Длина пожара (м)</th>
+                            <th>Периметр кромки (P, м)</th>
+                            <th>Площадь очага (S, га)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>Через 1 час</b></td>
+                            <td id="res-l-1h">228 м</td>
+                            <td id="res-p-1h">612 м</td>
+                            <td id="res-s-1h"><b>1.8 га</b></td>
+                        </tr>
+                        <tr>
+                            <td><b>Через 2 часа</b></td>
+                            <td id="res-l-2h">456 м</td>
+                            <td id="res-p-2h">1 224 м</td>
+                            <td id="res-s-2h"><b>7.2 га</b></td>
+                        </tr>
+                        <tr>
+                            <td><b>Через 4 часа</b></td>
+                            <td id="res-l-4h">912 м</td>
+                            <td id="res-p-4h">2 448 м</td>
+                            <td id="res-s-4h"><b>28.8 га</b></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- ПОТРЕБНОСТЬ В СИЛАХ И СРЕДСТВАХ -->
+                <h4 style="margin: 14px 0 4px 0; font-size: 13px; font-family:'Inter',sans-serif; color:var(--forest-green);">2. Расчёт сил и средств для локализации (к 2 часам развития):</h4>
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th>Вид техники / средства</th>
+                            <th>Расчётная потребность</th>
+                            <th>Назначение</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>Пожарные / Десантники (РЛО)</b></td>
+                            <td id="res-req-men"><b>12 чел.</b></td>
+                            <td>Тушение кромки ранцевыми огнетушителями</td>
+                        </tr>
+                        <tr>
+                            <td><b>Трактор с плугом (ПКЛ-70)</b></td>
+                            <td id="res-req-dozer"><b>1 ед.</b></td>
+                            <td>Минерализованная полоса (1 224 м)</td>
+                        </tr>
+                        <tr>
+                            <td><b>Пожарные автоцистерны (АЦ-40)</b></td>
+                            <td id="res-req-trucks"><b>2 ед. (6.8 м³ воды)</b></td>
+                            <td>Заливка кромки и опорной полосы</td>
+                        </tr>
+                        <tr>
+                            <td><b>Мотопомпы выс. давления</b></td>
+                            <td id="res-req-pumps"><b>2 компл. (600м рукавов)</b></td>
+                            <td>Подача воды от ближайшего водоисточника</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="display: flex; justify-content: space-between; font-size: 12px; margin-top: 20px; border-top: 1px solid #333; padding-top: 10px;">
+                    <div><b>Руководитель тушения (РТП):</b> _________________</div>
+                    <div><b>Дата/время расчёта:</b> <span id="report-timestamp">17.08.2026 14:00</span></div>
+                </div>
+
+            </div>
+
+            <div class="action-buttons-grid">
+                <button class="btn-action" onclick="copySummaryText()">📋 Копировать</button>
+                <button class="btn-action btn-secondary" onclick="exportWordDoc()">📝 В Word / МойОфис</button>
+                <button class="btn-action btn-secondary" onclick="exportExcelDoc()">📊 В Excel</button>
+                <button class="btn-action btn-secondary" onclick="window.print()">🖨️ Печать / PDF</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ПОДРОБНОЕ РУКОВОДСТВО ВНИЗУ -->
+    <div class="manual-section">
+        <div class="manual-card">
+            <h2>Руководство по тактическим расчётам лесных пожаров для РТП и диспетчеров ЛПЦ</h2>
+            <div class="manual-grid">
+                <div class="manual-step">
+                    <h4>1. Шкала Нестерова (Комплексный показатель)</h4>
+                    <p>Вычисляется по формуле $K = \sum (t \times (t - \tau) \times n)$, где $t$ — температура в 13:00, $\tau$ — точка росы, $n$ — дни без осадков. Класс IV (от 1001 до 4000 ед.) и класс V (&gt;4000 ед.) требуют максимальной готовности сил ЛПЦ.</p>
+                </div>
+                <div class="manual-step">
+                    <h4>2. Форма пожара и динамика периметра</h4>
+                    <p>При ветре лесной пожар принимает форму вытянутого эллипса. Скорость головы пожара в 2–4 раза превышает фланговую. Площадь очага нарастает пропорционально квадрату времени ($t^2$).</p>
+                </div>
+                <div class="manual-step">
+                    <h4>3. Нормативы локализации кромки</h4>
+                    <p>Один лесной пожарный с РЛО обрабатывает в среднем <b>1.5–2.0 метра кромки в минуту</b>. Опашка трактором типа ТЛТ-100 с плугом ПКЛ-70 выполняется со скоростью <b>1.5–2.5 км/ч</b>.</p>
+                </div>
+                <div class="manual-step">
+                    <h4>4. Официальная отчётность</h4>
+                    <p>Результаты расчёта выводятся в форме готового боевого донесения для передачи в Региональную диспетчерскую службу (РДС) и штаб МЧС.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ПОП-АПЫ СПРАВКИ -->
+    <div id="help-popup" class="popup-overlay" onclick="closeHelpOuter(event)">
+        <div class="popup-window">
+            <button class="popup-close" onclick="closeHelp()">&times;</button>
+            <h3 id="help-title">Справка</h3>
+            <div id="help-content"></div>
+            <button class="btn-action" style="margin-top: 15px;" onclick="closeHelp()">Понятно</button>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-bottom">
+            &copy; <script>document.write(new Date().getFullYear())</script> Лесовик ПРО. Модуль оперативно-тактических расчётов лесопожарного центра.
+        </div>
+    </footer>
+
+    <script>
+        function calculateFireDynamics() {
+            const temp = parseFloat(document.getElementById('f-temp').value) || 20;
+            const dew = parseFloat(document.getElementById('f-dew').value) || 10;
+            const days = parseInt(document.getElementById('f-days').value) || 1;
+            const wind = parseFloat(document.getElementById('f-wind').value) || 2;
+            const forestType = document.getElementById('f-forest-type').value;
+            const fireType = document.getElementById('f-fire-type').value;
+            const slope = parseFloat(document.getElementById('f-slope').value) || 0;
+
+            // 1. Расчет показателя Нестерова
+            const diff = Math.max(1, temp - dew);
+            const kppo = Math.round(temp * diff * days);
+
+            let kppoClass = 'I КЛАСС (Отсутствует)';
+            let kppoColor = '#2D5A27';
+
+            if (kppo > 4000) {
+                kppoClass = 'V КЛАСС (Чрезвычайная)';
+                kppoColor = '#7F1D1D';
+            } else if (kppo > 1000) {
+                kppoClass = 'IV КЛАСС (Высокая)';
+                kppoColor = '#DC2626';
+            } else if (kppo > 300) {
+                kppoClass = 'III КЛАСС (Средняя)';
+                kppoColor = '#EA580C';
+            } else if (kppo > 100) {
+                kppoClass = 'II КЛАСС (Малая)';
+                kppoColor = '#D97706';
+            }
+
+            const badge = document.getElementById('kppo-badge');
+            badge.style.background = kppoColor;
+            document.getElementById('kppo-class-label').innerText = kppoClass;
+            document.getElementById('kppo-index-label').innerText = `Индекс Нестерова: ${kppo.toLocaleString('ru-RU')} ед.`;
+
+            // 2. Базовая скорость распространения (м/мин)
+            let baseSpeed = 1.2; // м/мин для сосняка брусничника
+            if (forestType === 'pine_lichen') baseSpeed = 2.0;
+            else if (forestType === 'pine_moss') baseSpeed = 1.0;
+            else if (forestType === 'spruce_moist') baseSpeed = 0.5;
+            else if (forestType === 'slash_felling') baseSpeed = 3.5;
+            else if (forestType === 'birch_grass') baseSpeed = 0.8;
+            else if (forestType === 'peatland') baseSpeed = 0.15; // торф медленный, но устойчивый
+
+            // Множитель вида пожара
+            let fireMult = 1.0;
+            if (fireType === 'surface_run') fireMult = 1.4;
+            else if (fireType === 'surface_steady') fireMult = 0.8;
+            else if (fireType === 'crown') fireMult = 4.5;
+            else if (fireType === 'ground_peat') fireMult = 0.1;
+
+            // Влияние ветра: V = V0 * (1 + 0.3 * w^1.5)
+            const windMult = 1 + 0.25 * Math.pow(wind, 1.4);
+
+            // Влияние уклона
+            let slopeMult = 1.0;
+            if (slope > 0) slopeMult = 1 + (slope * 0.04);
+            else if (slope < 0) slopeMult = Math.max(0.6, 1 + (slope * 0.02));
+
+            // Скорость головы, флангов и тыла
+            const vHead = baseSpeed * fireMult * windMult * slopeMult; // м/мин
+            const vFlank = vHead * 0.5; // м/мин
+            const vRear = vHead * 0.2; // м/мин
+
+            const vHeadMh = vHead * 60; // м/ч
+
+            document.getElementById('res-v-head').innerText = `${vHead.toFixed(1)} м/мин (${Math.round(vHeadMh)} м/ч)`;
+            document.getElementById('res-v-flank').innerText = `${vFlank.toFixed(1)} м/мин (${Math.round(vFlank * 60)} м/ч)`;
+            document.getElementById('res-v-rear').innerText = `${vRear.toFixed(1)} м/мин (${Math.round(vRear * 60)} м/ч)`;
+
+            // 3. Расчет площади и периметра по часам (форма эллипса)
+            // L = (vHead + vRear) * t, B = 2 * vFlank * t
+            // Периметр P ≈ π * (1.5*(a+b) - sqrt(a*b)), Площадь S ≈ π * a * b
+            [1, 2, 4].forEach(hours => {
+                const tMin = hours * 60;
+                const a = ((vHead + vRear) * tMin) / 2; // большая полуось
+                const b = (vFlank * tMin); // малая полуось
+                const lengthM = Math.round(2 * a);
+                const perimeterM = Math.round(Math.PI * (1.5 * (a + b) - Math.sqrt(a * b)));
+                const areaHa = ((Math.PI * a * b) / 10000).toFixed(1);
+
+                document.getElementById(`res-l-${hours}h`).innerText = `${lengthM} м`;
+                document.getElementById(`res-p-${hours}h`).innerText = `${perimeterM.toLocaleString('ru-RU')} м`;
+                document.getElementById(`res-s-${hours}h`).innerText = `${areaHa} га`;
+
+                if (hours === 2) {
+                    // Расчет сил и средств под 2 часа развития
+                    // 1 пожарный локализует 1.8 м/мин кромки
+                    const reqMen = Math.max(4, Math.ceil(perimeterM / (1.8 * 60)));
+                    document.getElementById('res-req-men').innerText = `${reqMen} чел.`;
+
+                    // Опашка: 1 трактор делает ~2 км/ч минполосы
+                    const reqDozers = Math.max(1, Math.ceil(perimeterM / 4000));
+                    document.getElementById('res-req-dozer').innerText = `${reqDozers} ед.`;
+
+                    // Вода: ~5.5 литров на метр кромки
+                    const waterM3 = ((perimeterM * 5.5) / 1000).toFixed(1);
+                    const reqTrucks = Math.max(1, Math.ceil(waterM3 / 4.0));
+                    document.getElementById('res-req-trucks').innerText = `${reqTrucks} ед. (${waterM3} м³ воды)`;
+
+                    // Мотопомпы
+                    const reqPumps = Math.max(1, Math.ceil(reqTrucks));
+                    document.getElementById('res-req-pumps').innerText = `${reqPumps} компл. (${reqPumps * 300}м рукавов)`;
+                }
+            });
+
+            document.getElementById('report-timestamp').innerText = new Date().toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' });
+        }
+
+        function loadStandardScenario() {
+            document.getElementById('f-temp').value = 28;
+            document.getElementById('f-dew').value = 11;
+            document.getElementById('f-days').value = 12;
+            document.getElementById('f-wind').value = 5.0;
+            document.getElementById('f-forest-type').value = 'pine_lichen';
+            document.getElementById('f-fire-type').value = 'surface_run';
+            document.getElementById('f-slope').value = '0';
+            calculateFireDynamics();
+        }
+
+        function resetInputs() {
+            document.getElementById('f-temp').value = 20;
+            document.getElementById('f-dew').value = 10;
+            document.getElementById('f-days').value = 3;
+            document.getElementById('f-wind').value = 2.0;
+            document.getElementById('f-forest-type').value = 'pine_moss';
+            document.getElementById('f-fire-type').value = 'surface_run';
+            document.getElementById('f-slope').value = '0';
+            calculateFireDynamics();
+        }
+
+        function copySummaryText() {
+            const reportText = document.getElementById('printable-fire-report').innerText;
+            navigator.clipboard.writeText(reportText).then(() => alert("Сводка решения РТП скопирована в буфер обмена!"));
+        }
+
+        function exportWordDoc() {
+            const content = document.getElementById('printable-fire-report').innerHTML;
+            const header = "\uFEFF<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>"+
+                "<head><meta charset='utf-8'><title>Расчёт пожара</title><style>body { font-family:'Times New Roman',serif; font-size:12pt; } table { width:100%; border-collapse:collapse; margin:10pt 0; } th, td { border:1px solid black; padding:5pt; text-align:center; }</style></head><body>";
+            const footer = "</body></html>";
+            const blob = new Blob([header + content + footer], { type: 'application/msword;charset=utf-8' });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = `Reshenie_RTP_LPC_Lesovik.doc`;
+            a.click();
+        }
+
+        function exportExcelDoc() {
+            const content = document.getElementById('printable-fire-report').innerHTML;
+            const excelHtml = `\uFEFF<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head><meta charset="utf-8"><style>td, th { font-family:'Times New Roman'; padding:5px; border:1px solid #000; text-align:center; } th { background:#eee; font-weight:bold; }</style></head>
+            <body>${content}</body></html>`;
+            const blob = new Blob([excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `Dinamika_pozhara_excel.xls`;
+            a.click();
+        }
+
+        // СПРАВКА
+        function openHelp(type) {
+            const title = document.getElementById('help-title');
+            const content = document.getElementById('help-content');
+
+            if (type === 'nesterov') {
+                title.innerText = 'Пожарная опасность по Нестерову';
+                content.innerHTML = `
+                    <p>Комплексный показатель Нестерова (КППО) оценивает степень высыхания напочвенного покрова:</p>
+                    <ul>
+                        <li><b>I класс (0–300 ед.):</b> Опасность отсутствует.</li>
+                        <li><b>II класс (301–1000 ед.):</b> Малая опасность.</li>
+                        <li><b>III класс (1001–3000 ед.):</b> Средняя опасность.</li>
+                        <li><b>IV класс (3001–10000 ед.):</b> Высокая опасность (наземное патрулирование 2-3 раза в день).</li>
+                        <li><b>V класс (&gt;10000 ед.):</b> Чрезвычайная опасность (запрет посещения лесов).</li>
+                    </ul>
+                `;
+            } else if (type === 'forest_type') {
+                title.innerText = 'Влияние типа леса и рельефа';
+                content.innerHTML = `<p>Сухие лишайниковые и брусничные сосняки содержат быстросохнущие мхи и хвою, способствуя распространению огня в 2–3 раза быстрее, чем во влажных ельниках. При движении вверх по склону 20° пламя нагревает впереди стоящие деревья, удваивая скорость фронта.</p>`;
+            } else if (type === 'forces') {
+                title.innerText = 'Нормативы сил и средств тушения';
+                content.innerHTML = `<p>Расчёт основан на нормативах Авиалесоохраны и Рослесхоза. Своевременное создание минерализованной полосы трактором ПКЛ-70 и локализация кромки силами лесопожарных бригад с РЛО до наступления темноты позволяет ликвидировать пожар на минимальной площади.</p>`;
+            }
+
+            document.getElementById('help-popup').style.display = 'flex';
+        }
+
+        function closeHelp() { document.getElementById('help-popup').style.display = 'none'; }
+        function closeHelpOuter(e) { if (e.target.id === 'help-popup') closeHelp(); }
+
+        function toggleTheme() {
+            const body = document.documentElement;
+            if (body.getAttribute('data-theme') === 'dark') body.removeAttribute('data-theme');
+            else body.setAttribute('data-theme', 'dark');
+        }
+
+        window.onload = function() {
+            calculateFireDynamics();
+        };
+    </script>
+</body>
+</html>
