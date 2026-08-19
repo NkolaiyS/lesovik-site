@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Лесной конвертер и генератор ведомостей Excel ↔ Word/PDF (Лесовик ПРО)» (Версия 2.6).
+  Программное обеспечение: «Лесной конвертер и генератор ведомостей Excel ↔ Word/PDF (Лесовик ПРО)» (Версия 2.8).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -46,32 +46,16 @@
 
     <script>
         window.yaContextCb.push(() => {
-            Ya.Context.AdvManager.render({
-                "blockId": "R-A-19250236-2",
-                "type": "fullscreen",
-                "platform": "touch"
-            })
+            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-2", "type": "fullscreen", "platform": "touch" });
         });
         window.yaContextCb.push(() => {
-            Ya.Context.AdvManager.render({
-                "blockId": "R-A-19250236-1",
-                "type": "floorAd",
-                "platform": "touch"
-            })
+            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-1", "type": "floorAd", "platform": "touch" });
         });
         window.yaContextCb.push(() => {
-            Ya.Context.AdvManager.render({
-                "blockId": "R-A-19250236-3",
-                "type": "fullscreen",
-                "platform": "desktop"
-            })
+            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-3", "type": "fullscreen", "platform": "desktop" });
         });
         window.yaContextCb.push(() => {
-            Ya.Context.AdvManager.render({
-                "blockId": "R-A-19250236-4",
-                "type": "floorAd",
-                "platform": "desktop"
-            })
+            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-4", "type": "floorAd", "platform": "desktop" });
         });
     </script>
 
@@ -247,15 +231,15 @@
 
         /* ЧИСТАЯ ПЕЧАТЬ В PDF */
         @page {
-            margin: 10mm;
+            margin: 0;
             size: A4 portrait;
         }
         @media print {
-            html, body { background: #FFF !important; color: #000 !important; margin: 0 !important; padding: 0 !important; }
+            html, body { background: #FFF !important; color: #000 !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
             .glass-header, .control-panel, .manual-section, footer, #help-popup { display: none !important; }
             .main-workspace { display: block !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
-            .doc-preview-container { border: none !important; padding: 0 !important; background: transparent !important; box-shadow: none !important; }
-            .a4-sheet { box-shadow: none !important; border: none !important; width: 100% !important; max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+            .doc-preview-container { border: none !important; padding: 0 !important; background: transparent !important; box-shadow: none !important; width: 100% !important; }
+            .a4-sheet { box-shadow: none !important; border: none !important; width: 100% !important; max-width: 100% !important; padding: 15mm 20mm !important; margin: 0 !important; page-break-inside: avoid !important; }
         }
     </style>
 </head>
@@ -347,7 +331,7 @@
                 </div>
             </div>
 
-            <!-- ТАБЛИЧНАЯ СЕТКА ДАННЫХ СО СТРЕЛОЧКАМИ И АВТОВЫДЕЛЕНИЕМ -->
+            <!-- ТАБЛИЧНАЯ СЕТКА ДАННЫХ -->
             <div>
                 <div class="panel-section-title">
                     <span id="table-title">Данные перечёта деревьев</span>
@@ -356,12 +340,8 @@
                 
                 <div class="table-scroll-container">
                     <table class="data-table" id="input-data-table">
-                        <thead id="input-thead">
-                            <!-- JS сгенерирует шапку под шаблон -->
-                        </thead>
-                        <tbody id="input-tbody">
-                            <!-- JS сгенерирует строки -->
-                        </tbody>
+                        <thead id="input-thead"></thead>
+                        <tbody id="input-tbody"></tbody>
                     </table>
                 </div>
 
@@ -373,9 +353,9 @@
 
             <!-- КНОПКИ ЭКСПОРТА -->
             <div style="display: flex; flex-direction: column; gap: 8px;">
-                <button class="btn-action" onclick="exportWordDoc()">📝 Скачать Word (.docx)</button>
+                <button class="btn-action" onclick="exportWordDoc()">📝 Скачать Word (.doc)</button>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                    <button class="btn-action btn-secondary" onclick="exportExcelCsv()">📊 Скачать Excel (.csv)</button>
+                    <button class="btn-action btn-secondary" onclick="exportFormattedExcel()">📊 Скачать Excel (.xls)</button>
                     <button class="btn-action btn-secondary" onclick="window.print()">🖨️ Печать / PDF</button>
                 </div>
                 <button class="btn-action btn-danger" onclick="resetTemplateData()">🧹 Сбросить форму</button>
@@ -385,9 +365,7 @@
 
         <!-- ЛИСТ ПРЕДВАРИТЕЛЬНОГО ПРОСМОТРА А4 -->
         <div class="doc-preview-container">
-            <div class="a4-sheet" id="printable-doc">
-                <!-- JS вставляет оформленный документ -->
-            </div>
+            <div class="a4-sheet" id="printable-doc"></div>
         </div>
 
     </div>
@@ -399,7 +377,7 @@
             <div class="manual-grid">
                 <div class="manual-step">
                     <h4>1. Выбор готового отраслевого бланка</h4>
-                    <p>Сервис содержит официальные шаблоны: <b>Перечётную ведомость</b> по ступеням толщины (деловые, дровяные), <b>Ведомость МДО</b> с выходом деловой древесины по категориям крупности и <b>Акт натурного отвода</b> с привязкой визиров.</p>
+                    <p>Сервис содержит официальные шаблоны: <b>Перечётную ведомость</b> по ступеням толщины, <b>Ведомость МДО</b> с выходом деловой древесины и <b>Акт натурного отвода</b> с привязкой визиров.</p>
                 </div>
                 <div class="manual-step">
                     <h4>2. Прямой импорт из полевых навигаторов и Excel</h4>
@@ -407,11 +385,11 @@
                 </div>
                 <div class="manual-step">
                     <h4>3. Автоматический расчёт итогов</h4>
-                    <p>Калькулятор автоматически суммирует количество стволов, кубатуру по ГОСТ 2708-75, процент деловой древесины и выводит готовый лист к заверению подписью.</p>
+                    <p>Калькулятор автоматически суммирует количество стволов, процент деловой древесины и выводит готовый лист к заверению подписью.</p>
                 </div>
                 <div class="manual-step">
-                    <h4>4. Чистый экспорт в Word (.docx) и печать</h4>
-                    <p>Скачивайте редактируемые документы Microsoft Word или печатайте готовые листы А4 в PDF без водяных знаков и браузерного мусора.</p>
+                    <h4>4. Чистый экспорт в Excel (.xls), Word и PDF</h4>
+                    <p>Скачивайте оформленные таблицы Excel с шапкой и границами, редактируемые документы Microsoft Word или сохраняйте чистые PDF-листы А4.</p>
                 </div>
             </div>
         </div>
@@ -434,7 +412,6 @@
     </footer>
 
     <script>
-        // ИСХОДНЫЕ ДАННЫЕ ДЛЯ ШАБЛОНОВ
         let currentTemplate = 'perechet';
 
         let perechetData = [
@@ -488,7 +465,7 @@
                     </tr>
                 `;
                 tbody.innerHTML = '';
-                perechetData.forEach((row, idx) => {
+                perechetData.forEach((row) => {
                     tbody.innerHTML += `
                         <tr class="data-row">
                             <td><input type="number" step="2" value="${row.d}" class="inp-val-0" onfocus="this.select()" oninput="updateDataFromTable()"></td>
@@ -508,7 +485,7 @@
                     </tr>
                 `;
                 tbody.innerHTML = '';
-                mdoData.forEach((row, idx) => {
+                mdoData.forEach((row) => {
                     tbody.innerHTML += `
                         <tr class="data-row">
                             <td><input type="text" value="${row.category}" class="inp-val-0" onfocus="this.select()" oninput="updateDataFromTable()"></td>
@@ -528,7 +505,7 @@
                     </tr>
                 `;
                 tbody.innerHTML = '';
-                otvodData.forEach((row, idx) => {
+                otvodData.forEach((row) => {
                     tbody.innerHTML += `
                         <tr class="data-row">
                             <td><input type="text" value="${row.line}" class="inp-val-0" onfocus="this.select()" oninput="updateDataFromTable()"></td>
@@ -614,7 +591,6 @@
             if (currentTemplate === 'perechet') {
                 docTitle = 'ПЕРЕЧЁТНАЯ ВЕДОМОСТЬ ДЕРЕВЬЕВ, НАЗНАЧЕННЫХ В РУБКУ';
                 let totalDel = 0, totalPol = 0, totalDrov = 0;
-
                 let trs = '';
                 perechetData.forEach(r => {
                     totalDel += r.del; totalPol += r.pol; totalDrov += r.drov;
@@ -629,7 +605,6 @@
                         </tr>
                     `;
                 });
-
                 const grandTotal = totalDel + totalPol + totalDrov;
 
                 tableHtml = `
@@ -659,7 +634,6 @@
                 docTitle = 'ВЕДОМОСТЬ МАТЕРИАЛЬНО-ДЕНЕЖНОЙ ОЦЕНКИ (МДО)';
                 let totalPct = 0, totalVol = 0;
                 let trs = '';
-
                 mdoData.forEach(r => {
                     totalPct += r.percent; totalVol += r.volume;
                     trs += `
@@ -694,7 +668,6 @@
                 docTitle = 'АКТ НАТУРНОГО ОТВОДА И ТАКСАЦИИ ЛЕСОСЕКИ';
                 let totalMeters = 0;
                 let trs = '';
-
                 otvodData.forEach(r => {
                     totalMeters += r.len;
                     trs += `
@@ -752,7 +725,7 @@
             `;
         }
 
-        // ЭКСПОРТ В MICROSOFT WORD (.DOCX ЧЕРЕЗ HTML BLOB)
+        // ЭКСПОРТ В MICROSOFT WORD (.DOC)
         function exportWordDoc() {
             const content = document.getElementById('printable-doc').innerHTML;
             const kv = document.getElementById('p-kv').value || '-';
@@ -762,50 +735,153 @@
                 "xmlns:w='urn:schemas-microsoft-com:office:word' "+
                 "xmlns='http://www.w3.org/TR/REC-html40'>"+
                 "<head><meta charset='utf-8'><title>Лесная ведомость</title><style>"+
-                "body { font-family: 'Times New Roman', serif; font-size: 12pt; }"+
-                "table { border-collapse: collapse; width: 100%; }"+
-                "th, td { border: 1px solid black; padding: 6px; text-align: center; }"+
-                "th { background-color: #f2f2f2; }"+
-                ".a4-passport-grid { border: 1px solid black; padding: 10px; margin-bottom: 20px; }"+
-                ".a4-signatures { margin-top: 40px; }"+
+                "body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.4; padding: 20mm; }"+
+                "table { border-collapse: collapse; width: 100%; margin-bottom: 20pt; }"+
+                "th, td { border: 1px solid black; padding: 6pt; text-align: center; font-size: 11pt; }"+
+                "th { background-color: #f2f2f2; font-weight: bold; }"+
+                ".a4-header { text-align: center; margin-bottom: 15pt; }"+
+                ".a4-passport-grid { border: 1px solid black; padding: 8pt; margin-bottom: 15pt; }"+
+                ".a4-signatures { margin-top: 30pt; }"+
                 "</style></head><body>";
             const footer = "</body></html>";
             const sourceHTML = header + content + footer;
 
-            const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
+            const blob = new Blob(['\uFEFF' + sourceHTML], { type: 'application/msword;charset=utf-8' });
             const a = document.createElement("a");
-            a.href = source;
+            a.href = URL.createObjectURL(blob);
             a.download = `Vedomost_kv${kv}_del${del}.doc`;
             a.click();
         }
 
-        // ЭКСПОРТ В EXCEL / CSV
-        function exportExcelCsv() {
-            let csv = "\uFEFF";
+        // КРАСИВЫЙ ОФОРМЛЕННЫЙ ЭКСПОРТ В EXCEL (.XLS)
+        function exportFormattedExcel() {
             const kv = document.getElementById('p-kv').value || '-';
             const del = document.getElementById('p-del').value || '-';
+            const les = document.getElementById('p-les').value || '-';
+            const vyd = document.getElementById('p-vyd').value || '-';
+            const area = document.getElementById('p-area').value || '-';
+            const pos = document.getElementById('p-pos').value || 'Таксатор';
+            const fio = document.getElementById('p-fio').value || 'Худяков Н.С.';
+            const dateVal = document.getElementById('p-date').value || new Date().toLocaleDateString('ru-RU');
+
+            let docTitle = 'ПЕРЕЧЕТНАЯ ВЕДОМОСТЬ ДЕРЕВЬЕВ';
+            let tableInner = '';
 
             if (currentTemplate === 'perechet') {
-                csv += "Ступень толщины (см);Деловые (шт);Полуделовые (шт);Дровяные (шт);Итого (шт)\n";
+                docTitle = 'ПЕРЕЧЕТНАЯ ВЕДОМОСТЬ ДЕРЕВЬЕВ, НАЗНАЧЕННЫХ В РУБКУ';
+                tableInner = `
+                    <tr style="background:#2D5A27; color:#FFFFFF; font-weight:bold;">
+                        <th style="border:1px solid #000; padding:6px;">Ступень толщины (см)</th>
+                        <th style="border:1px solid #000; padding:6px;">Деловые (шт)</th>
+                        <th style="border:1px solid #000; padding:6px;">Полуделовые (шт)</th>
+                        <th style="border:1px solid #000; padding:6px;">Дровяные (шт)</th>
+                        <th style="border:1px solid #000; padding:6px;">Итого стволов (шт)</th>
+                    </tr>
+                `;
+                let tDel = 0, tPol = 0, tDrov = 0;
                 perechetData.forEach(r => {
-                    csv += `${r.d};${r.del};${r.pol};${r.drov};${r.del + r.pol + r.drov}\n`;
+                    tDel += r.del; tPol += r.pol; tDrov += r.drov;
+                    tableInner += `
+                        <tr>
+                            <td style="border:1px solid #000; text-align:center; font-weight:bold;">${r.d}</td>
+                            <td style="border:1px solid #000; text-align:center;">${r.del}</td>
+                            <td style="border:1px solid #000; text-align:center;">${r.pol}</td>
+                            <td style="border:1px solid #000; text-align:center;">${r.drov}</td>
+                            <td style="border:1px solid #000; text-align:center; font-weight:bold;">${r.del + r.pol + r.drov}</td>
+                        </tr>
+                    `;
                 });
+                tableInner += `
+                    <tr style="background:#EEEEEE; font-weight:bold;">
+                        <td style="border:1px solid #000; text-align:center;">ИТОГО:</td>
+                        <td style="border:1px solid #000; text-align:center;">${tDel}</td>
+                        <td style="border:1px solid #000; text-align:center;">${tPol}</td>
+                        <td style="border:1px solid #000; text-align:center;">${tDrov}</td>
+                        <td style="border:1px solid #000; text-align:center;">${tDel + tPol + tDrov}</td>
+                    </tr>
+                `;
             } else if (currentTemplate === 'mdo') {
-                csv += "Категория сортимента;Выход (%);Объем (м3)\n";
+                docTitle = 'ВЕДОМОСТЬ МАТЕРИАЛЬНО-ДЕНЕЖНОЙ ОЦЕНКИ (МДО)';
+                tableInner = `
+                    <tr style="background:#2D5A27; color:#FFFFFF; font-weight:bold;">
+                        <th style="border:1px solid #000; padding:6px;">Категория сортимента</th>
+                        <th style="border:1px solid #000; padding:6px;">Выход (%)</th>
+                        <th style="border:1px solid #000; padding:6px;">Объем (м³)</th>
+                    </tr>
+                `;
+                let tPct = 0, tVol = 0;
                 mdoData.forEach(r => {
-                    csv += `"${r.category}";${r.percent};${r.volume}\n`;
+                    tPct += r.percent; tVol += r.volume;
+                    tableInner += `
+                        <tr>
+                            <td style="border:1px solid #000; padding:4px 8px;">${r.category}</td>
+                            <td style="border:1px solid #000; text-align:center;">${r.percent}%</td>
+                            <td style="border:1px solid #000; text-align:center; font-weight:bold;">${r.volume.toFixed(1)}</td>
+                        </tr>
+                    `;
                 });
+                tableInner += `
+                    <tr style="background:#EEEEEE; font-weight:bold;">
+                        <td style="border:1px solid #000; padding:4px 8px;">ИТОГО ЛИКВИДНЫЙ ЗАПАС:</td>
+                        <td style="border:1px solid #000; text-align:center;">${tPct}%</td>
+                        <td style="border:1px solid #000; text-align:center;">${tVol.toFixed(1)}</td>
+                    </tr>
+                `;
             } else if (currentTemplate === 'otvod') {
-                csv += "Линия;Азимут (град);Протяженность (м);Румб\n";
+                docTitle = 'АКТ НАТУРНОГО ОТВОДА И ТАКСАЦИИ ЛЕСОСЕКИ';
+                tableInner = `
+                    <tr style="background:#2D5A27; color:#FFFFFF; font-weight:bold;">
+                        <th style="border:1px solid #000; padding:6px;">Номер визира (линии)</th>
+                        <th style="border:1px solid #000; padding:6px;">Магнитный азимут (°)</th>
+                        <th style="border:1px solid #000; padding:6px;">Геодезический румб</th>
+                        <th style="border:1px solid #000; padding:6px;">Протяженность (м)</th>
+                    </tr>
+                `;
+                let tMeters = 0;
                 otvodData.forEach(r => {
-                    csv += `"${r.line}";${r.az};${r.len};"${r.rumb}"\n`;
+                    tMeters += r.len;
+                    tableInner += `
+                        <tr>
+                            <td style="border:1px solid #000; text-align:center; font-weight:bold;">${r.line}</td>
+                            <td style="border:1px solid #000; text-align:center;">${r.az}°</td>
+                            <td style="border:1px solid #000; text-align:center;">${r.rumb}</td>
+                            <td style="border:1px solid #000; text-align:center; font-weight:bold;">${r.len}</td>
+                        </tr>
+                    `;
                 });
+                tableInner += `
+                    <tr style="background:#EEEEEE; font-weight:bold;">
+                        <td colspan="3" style="border:1px solid #000; text-align:right; padding-right:8px;">ОБЩИЙ ПЕРИМЕТР ОТВОДА:</td>
+                        <td style="border:1px solid #000; text-align:center;">${tMeters} м</td>
+                    </tr>
+                `;
             }
 
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const excelTemplate = `\uFEFF<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head><meta charset="utf-8">
+            <style>
+                td, th { font-family: 'Times New Roman', serif; font-size: 11pt; }
+                .title-row { font-size: 14pt; font-weight: bold; text-align: center; }
+                .pass-cell { border: 1px solid #000; background: #FAFDF9; padding: 4px 6px; }
+            </style></head>
+            <body>
+            <table>
+                <tr><td colspan="5" class="title-row">${docTitle}</td></tr>
+                <tr><td colspan="5" style="text-align:center; font-style:italic; color:#555;">Оформлено в цифровом комплексе «Лесовик ПРО»</td></tr>
+                <tr></tr>
+                <tr><td colspan="2" class="pass-cell"><b>Лесничество:</b> ${les}</td><td colspan="3" class="pass-cell"><b>Квартал:</b> ${kv} | <b>Делянка:</b> ${del}</td></tr>
+                <tr><td colspan="2" class="pass-cell"><b>Выдел(ы):</b> ${vyd}</td><td colspan="3" class="pass-cell"><b>Площадь:</b> ${area} га | <b>Дата:</b> ${dateVal}</td></tr>
+                <tr></tr>
+                ${tableInner}
+                <tr></tr>
+                <tr><td colspan="2"><b>Составил:</b> ${pos} / ${fio}</td><td colspan="3" style="text-align:right;"><b>Подпись:</b> ____________________</td></tr>
+            </table>
+            </body></html>`;
+
+            const blob = new Blob([excelTemplate], { type: 'application/vnd.ms-excel;charset=utf-8' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = `Vedomost_kv${kv}_del${del}.csv`;
+            a.download = `Vedomost_kv${kv}_del${del}.xls`;
             a.click();
         }
 
