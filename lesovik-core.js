@@ -3,7 +3,7 @@
  * ЛЕСОВИК-CORE (lesovik-core.js)
  * Центральное ядро экосистемы «Лесовик PRO»
  * ============================================================================
- * Версия: 2.9.8 (Постоянное хранение IndexedDB, Self-healing, Защита офлайна)
+ * Версия: 2.9.8 (Постоянное хранение IndexedDB + Cookies + LocalStorage, Self-healing, Защита офлайна)
  * Автор / Владелец: Николай Сергеевич Худяков (ИП Худяков Н.С.)
  * Экосистема: РЕСУРС (https://resurs-stretch.ru/)
  * ============================================================================
@@ -38,13 +38,33 @@
         return `HNS-${segment1}-${segment2}`;
     }
 
-    // 1.2 Асинхронное постоянное хранилище IndexedDB (Несгораемая память)
+    // ------------------------------------------------------------------------
+    // 1.2 АСИНХРОННОЕ ПОСТОЯННОЕ ХРАНИЛИЩЕ IndexedDB И COOKIES (Несгораемая память)
+    // ------------------------------------------------------------------------
     const DB_NAME = 'LesovikSecurityDB';
     const DB_VERSION = 1;
     const DB_STORE = 'device_identity';
+    const STORAGE_ID_KEY = 'bg_hns_web_id';
+
+    function setPersistentCookie(name, value) {
+        const d = new Date();
+        d.setTime(d.getTime() + (3650 * 24 * 60 * 60 * 1000)); // ~10 лет
+        document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/;SameSite=Lax`;
+    }
+
+    function getPersistentCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
 
     function openIDB() {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             if (!window.indexedDB) {
                 resolve(null);
                 return;
@@ -57,7 +77,7 @@
                 }
             };
             req.onsuccess = function (e) { resolve(e.target.result); };
-            req.onerror = function (e) { resolve(null); };
+            req.onerror = function () { resolve(null); };
         });
     }
 
@@ -92,7 +112,7 @@
         }).catch(() => {});
     }
 
-    // 1.3 Получение строго родного ID устройства с механизмом Self-Healing
+    // 1.3 Получение строго родного ID устройства с механизмом Self-Healing (localStorage + IDB + Cookie)
     function getCurrentDeviceId() {
         if (window.device && window.device.uuid) {
             return window.device.uuid;
@@ -106,28 +126,42 @@
             }
         } catch (e) {}
 
-        let webId = localStorage.getItem('bg_hns_web_id');
+        let webId = localStorage.getItem(STORAGE_ID_KEY);
+        
+        // Если в localStorage пусто, ищем в Cookie
+        if (!webId) {
+            webId = getPersistentCookie(STORAGE_ID_KEY);
+        }
+
         if (!webId) {
             webId = generateWebDeviceId();
-            localStorage.setItem('bg_hns_web_id', webId);
-            setIDBValue('bg_hns_web_id', webId);
-        } else {
-            setIDBValue('bg_hns_web_id', webId);
         }
+
+        // Синхронизируем во все три хранилища
+        localStorage.setItem(STORAGE_ID_KEY, webId);
+        setPersistentCookie(STORAGE_ID_KEY, webId);
+        setIDBValue(STORAGE_ID_KEY, webId);
+
         return webId;
     }
 
-    // Фоновое восстановление ID из IndexedDB, если localStorage был очищен
+    // Фоновое восстановление ID из защищенных хранилищ (IndexedDB / Cookie)
     (async function selfHealIdentity() {
         try {
-            const localId = localStorage.getItem('bg_hns_web_id');
-            const idbId = await getIDBValue('bg_hns_web_id');
-            if (!localId && idbId) {
-                localStorage.setItem('bg_hns_web_id', idbId);
-                console.log('[Lesovik Core] ID восстановлен из защищенной памяти IndexedDB:', idbId);
-                location.reload();
-            } else if (localId && !idbId) {
-                await setIDBValue('bg_hns_web_id', localId);
+            const localId = localStorage.getItem(STORAGE_ID_KEY);
+            const cookieId = getPersistentCookie(STORAGE_ID_KEY);
+            const idbId = await getIDBValue(STORAGE_ID_KEY);
+
+            let masterId = localId || cookieId || idbId;
+
+            if (masterId) {
+                if (localId !== masterId) {
+                    localStorage.setItem(STORAGE_ID_KEY, masterId);
+                    console.log('[Lesovik Core] ID восстановлен из защищенной памяти:', masterId);
+                    location.reload();
+                }
+                if (cookieId !== masterId) setPersistentCookie(STORAGE_ID_KEY, masterId);
+                if (idbId !== masterId) await setIDBValue(STORAGE_ID_KEY, masterId);
             }
         } catch (e) {}
     })();
