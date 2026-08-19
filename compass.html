@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Профессиональный лесной компас-визир (Лесовик ПРО)» (Версия 2.6).
+  Программное обеспечение: «Профессиональный лесной компас-визир (Лесовик ПРО)» (Версия 2.8).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -34,9 +34,9 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Лесной Компас Онлайн: Азимуты, GPS-навигация и AR-визир | Лесовик</title>
-    <meta name="description" content="Профессиональный электронный компас для лесников и таксаторов. Измерение магнитных и истинных азимутов, фиксация створов визиров, GPS-координаты и камера-видоискатель.">
-    <meta name="keywords" content="компас онлайн, лесной компас для смартфона, азимут визира, точный компас с gps, геодезический компас, лесовик про, буссоль">
+    <title>Лесной Компас Онлайн: Азимуты, GPS-навигация и Памятка выживания | Лесовик</title>
+    <meta name="description" content="Профессиональный электронный лесной компас с механическим лимбом, GPS-координатами, полноэкранным режимом и подробной памяткой ориентирования в тайге.">
+    <meta name="keywords" content="компас онлайн, лесной компас для смартфона, азимут визира, точный компас с gps, геодезический компас, выживание в тайге, лесовик про">
     <link rel="canonical" href="https://lesovik-pro.ru/compass.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
 
@@ -46,32 +46,16 @@
 
     <script>
         window.yaContextCb.push(() => {
-            Ya.Context.AdvManager.render({
-                "blockId": "R-A-19250236-2",
-                "type": "fullscreen",
-                "platform": "touch"
-            })
+            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-2", "type": "fullscreen", "platform": "touch" });
         });
         window.yaContextCb.push(() => {
-            Ya.Context.AdvManager.render({
-                "blockId": "R-A-19250236-1",
-                "type": "floorAd",
-                "platform": "touch"
-            })
+            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-1", "type": "floorAd", "platform": "touch" });
         });
         window.yaContextCb.push(() => {
-            Ya.Context.AdvManager.render({
-                "blockId": "R-A-19250236-3",
-                "type": "fullscreen",
-                "platform": "desktop"
-            })
+            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-3", "type": "fullscreen", "platform": "desktop" });
         });
         window.yaContextCb.push(() => {
-            Ya.Context.AdvManager.render({
-                "blockId": "R-A-19250236-4",
-                "type": "floorAd",
-                "platform": "desktop"
-            })
+            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-4", "type": "floorAd", "platform": "desktop" });
         });
     </script>
 
@@ -90,7 +74,7 @@
             --danger: #DC2626;
             --accent: #E67E22;
             --compass-bg: #1A2421;
-            --overlay-bg: rgba(0, 0, 0, 0.7);
+            --overlay-bg: rgba(0, 0, 0, 0.75);
         }
 
         [data-theme="dark"] {
@@ -103,7 +87,7 @@
             --glass-bg: rgba(18, 26, 23, 0.9);
             --footer-bg: #0C1210;
             --compass-bg: #0A0F0D;
-            --overlay-bg: rgba(0, 0, 0, 0.85);
+            --overlay-bg: rgba(0, 0, 0, 0.88);
         }
 
         * { box-sizing: border-box; }
@@ -139,7 +123,7 @@
         .btn-nav:hover { background-color: var(--forest-green); color: var(--bg-paper); }
 
         .main-workspace {
-            display: grid; grid-template-columns: 460px 1fr; gap: 20px;
+            display: grid; grid-template-columns: 440px 1fr; gap: 20px;
             max-width: 1600px; margin: 20px auto; padding: 0 15px; flex: 1; width: 100%;
         }
 
@@ -177,40 +161,49 @@
         .btn-secondary { background-color: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); }
         .btn-danger { background-color: var(--danger); color: white; border: none; }
         .btn-lock { background-color: var(--accent); color: white; }
+        .btn-sos { background: #B91C1C; color: #FFF; font-size: 13px; }
 
-        /* ОБЛАСТЬ 3D-КОМПАСА И КАМЕРЫ */
+        /* ОБЛАСТЬ КОМПАСА */
         .compass-stage-container {
             background-color: var(--compass-bg); border: 1px solid var(--border-color);
             border-radius: 16px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            position: relative; overflow: hidden; min-height: 600px; box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
+            position: relative; overflow: hidden; min-height: 620px; box-shadow: inset 0 0 50px rgba(0,0,0,0.6);
         }
 
-        #camera-feed {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;
-            opacity: 0.35; z-index: 1; display: none;
+        /* ПОЛНОЭКРАННЫЙ РЕЖИМ */
+        .compass-stage-container:fullscreen,
+        .compass-stage-container:-webkit-full-screen {
+            width: 100vw !important;
+            height: 100vh !important;
+            border-radius: 0 !important;
+            border: none !important;
+            padding: 15px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
         }
 
         .compass-main-wrapper {
-            position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%;
+            position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%;
         }
 
         .azimuth-display {
             text-align: center; color: #FFFFFF; text-shadow: 0 2px 10px rgba(0,0,0,0.8);
         }
         .azimuth-deg-num {
-            font-size: 54px; font-weight: 800; font-family: 'Inter', sans-serif; line-height: 1; letter-spacing: -1px;
+            font-size: 56px; font-weight: 800; font-family: 'Inter', sans-serif; line-height: 1; letter-spacing: -1px;
             color: #8FBC8F;
         }
         .azimuth-rumb-text {
             font-size: 18px; font-weight: 700; text-transform: uppercase; color: #E0E0E0; margin-top: 4px;
         }
 
-        /* КРУГЛАЯ ШКАЛА КОМПАСА */
+        /* МЕХАНИЧЕСКИЙ ЛИМБ КОМПАСА */
         .compass-dial-container {
-            position: relative; width: 320px; height: 320px; max-width: 80vw; max-height: 80vw;
-            border-radius: 50%; border: 4px solid rgba(143, 188, 143, 0.4);
-            box-shadow: 0 0 30px rgba(45, 90, 39, 0.3), inset 0 0 20px rgba(0,0,0,0.8);
-            background: radial-gradient(circle, rgba(26,36,33,0.9) 0%, rgba(10,15,13,0.95) 100%);
+            position: relative; width: 320px; height: 320px; max-width: 82vw; max-height: 82vw;
+            border-radius: 50%; border: 6px solid #2D3E36;
+            box-shadow: 0 0 35px rgba(45, 90, 39, 0.35), inset 0 0 25px rgba(0,0,0,0.9);
+            background: radial-gradient(circle, #18231F 0%, #080D0B 100%);
             display: flex; align-items: center; justify-content: center;
         }
 
@@ -219,18 +212,53 @@
             transition: transform 0.1s cubic-bezier(0.1, 0.9, 0.2, 1);
         }
 
+        /* МЕХАНИЧЕСКИЕ РИСКИ (ТИКИ) ГРАДУСОВ */
+        .tick {
+            position: absolute;
+            top: 4px;
+            left: 50%;
+            width: 1px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            transform-origin: 50% 156px;
+        }
+        .tick.major {
+            width: 2px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.75);
+        }
+        .tick.cardinal {
+            width: 3px;
+            height: 16px;
+            background: #8FBC8F;
+        }
+        .tick.north {
+            background: #DC2626;
+        }
+
+        .deg-label {
+            position: absolute;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.6);
+            transform-origin: 50% 142px;
+        }
+
         .compass-needle-north {
-            position: absolute; top: 25px; left: 50%; transform: translateX(-50%);
+            position: absolute; top: 28px; left: 50%; transform: translateX(-50%);
             width: 0; height: 0;
-            border-left: 10px solid transparent; border-right: 10px solid transparent;
-            border-bottom: 110px solid #DC2626;
+            border-left: 9px solid transparent; border-right: 9px solid transparent;
+            border-bottom: 105px solid #DC2626;
             filter: drop-shadow(0 0 6px rgba(220,38,38,0.6));
         }
         .compass-needle-south {
-            position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
+            position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
             width: 0; height: 0;
-            border-left: 10px solid transparent; border-right: 10px solid transparent;
-            border-top: 110px solid #FFFFFF;
+            border-left: 9px solid transparent; border-right: 9px solid transparent;
+            border-top: 105px solid #FFFFFF;
             filter: drop-shadow(0 0 4px rgba(255,255,255,0.4));
         }
 
@@ -246,13 +274,13 @@
         }
         .crosshair-line-h {
             position: absolute; top: 50%; left: 0; width: 100%; height: 2px;
-            background: rgba(143, 188, 143, 0.4); transform: translateY(-50%); pointer-events: none; z-index: 3;
+            background: rgba(143, 188, 143, 0.35); transform: translateY(-50%); pointer-events: none; z-index: 3;
         }
 
         /* БЕЙДЖИ ДАННЫХ GPS */
         .gps-overlay-grid {
             display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 500px;
-            margin-top: 10px; z-index: 2;
+            margin-top: 8px; z-index: 2;
         }
         .gps-badge {
             background: rgba(0, 0, 0, 0.75); border: 1px solid rgba(143, 188, 143, 0.3);
@@ -262,9 +290,22 @@
 
         .target-lock-indicator {
             background: rgba(230, 126, 34, 0.2); border: 1px solid var(--accent);
-            border-radius: 8px; padding: 8px 12px; color: #FFF; font-size: 12px; text-align: center;
+            border-radius: 8px; padding: 6px 12px; color: #FFF; font-size: 12px; text-align: center;
             display: none; width: 100%; max-width: 380px; z-index: 2;
         }
+
+        /* ПАНЕЛЬ БЫСТРЫХ КНОПОК ВНУТРИ ЭКРАНА КОМПАСА */
+        .stage-quick-bar {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 500px;
+            margin-top: 10px; z-index: 10;
+        }
+        .btn-screen-bar {
+            background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.25); color: #FFF; font-weight: bold;
+            font-size: 11px; padding: 10px 6px; border-radius: 8px; cursor: pointer; text-align: center;
+            text-transform: uppercase; transition: 0.2s;
+        }
+        .btn-screen-bar:hover { background: rgba(255, 255, 255, 0.25); }
 
         /* ПОП-АПЫ */
         .popup-overlay {
@@ -273,11 +314,13 @@
         }
         .popup-window {
             background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
-            max-width: 520px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative;
+            max-width: 600px; width: 100%; max-height: 88vh; overflow-y: auto; padding: 22px; box-shadow: 0 10px 35px rgba(0,0,0,0.4); position: relative;
         }
-        .popup-close { position: absolute; top: 12px; right: 12px; background: transparent; border: none; font-size: 22px; cursor: pointer; color: var(--text-graphite); }
-        .popup-window h3 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 17px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
-        .popup-window p, .popup-window ul { font-size: 13px; line-height: 1.6; }
+        .popup-close { position: absolute; top: 12px; right: 12px; background: transparent; border: none; font-size: 24px; cursor: pointer; color: var(--text-graphite); }
+        .popup-window h3 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .popup-window h4 { color: var(--forest-green); margin: 14px 0 6px 0; font-size: 14px; }
+        .popup-window p, .popup-window ul { font-size: 13px; line-height: 1.6; margin: 6px 0; }
+        .popup-window ul { padding-left: 20px; }
 
         /* РУКОВОДСТВО */
         .manual-section { max-width: 1600px; margin: 30px auto; padding: 0 15px; width: 100%; }
@@ -293,7 +336,7 @@
 
         @media (max-width: 950px) {
             .main-workspace { grid-template-columns: 1fr; }
-            .compass-stage-container { min-height: 520px; }
+            .compass-stage-container { min-height: 540px; }
         }
     </style>
 </head>
@@ -302,7 +345,7 @@
     <header class="glass-header">
         <a href="tools.html" class="logo-container">
             <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
-            <h1>Лесной Компас-Визир</h1>
+            <h1>Лесной Компас</h1>
         </a>
         <div class="header-right">
             <a href="tools.html" class="btn-nav">← Инструменты</a>
@@ -315,6 +358,11 @@
         <!-- ПАНЕЛЬ УПРАВЛЕНИЯ -->
         <div class="control-panel">
             
+            <!-- ПАМЯТКА ТАКСАТОРА И ВЫЖИВАНИЯ -->
+            <div>
+                <button class="btn-action btn-sos" onclick="openHelp('survival_guide')">🆘 Инструкция: Как не пропасть в тайге</button>
+            </div>
+
             <!-- РЕЖИМ СЕВЕРА И ДЕКЛИНАЦИЯ -->
             <div>
                 <div class="panel-section-title">
@@ -331,7 +379,7 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Склонение (Магн. поправка):</label>
+                        <label>Склонение (°):</label>
                         <input type="number" step="0.1" id="declination-input" value="13.2" onfocus="this.select()" oninput="updateCompassReading()">
                     </div>
                 </div>
@@ -350,16 +398,15 @@
                 </div>
             </div>
 
-            <!-- ДОПОЛНИТЕЛЬНЫЕ РЕЖИМЫ (AR КАМЕРА) -->
+            <!-- ДАТЧИКИ И ПОЛНЫЙ ЭКРАН -->
             <div>
                 <div class="panel-section-title">
-                    <span>3. Оптический прицел (Камера)</span>
-                    <button class="btn-help-icon" onclick="openHelp('camera')">?</button>
+                    <span>3. Управление экраном</span>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
-                    <button id="btn-camera-toggle" class="btn-action btn-secondary" onclick="toggleCameraView()">📷 Включить видоискатель</button>
-                    <button class="btn-action btn-secondary" onclick="requestDeviceOrientationPermission()">🧭 Калибровать датчик</button>
+                    <button class="btn-action" onclick="toggleCompassFullscreen()">⛶ На весь экран</button>
+                    <button class="btn-action btn-secondary" onclick="requestDeviceOrientationPermission()">🧭 Калибровать</button>
                 </div>
             </div>
 
@@ -379,8 +426,7 @@
         </div>
 
         <!-- СЦЕНА 3D-КОМПАСА -->
-        <div class="compass-stage-container">
-            <video id="camera-feed" autoplay playsinline></video>
+        <div class="compass-stage-container" id="compass-stage">
             <div class="crosshair-line-v"></div>
             <div class="crosshair-line-h"></div>
 
@@ -397,15 +443,18 @@
 
                 <div class="compass-dial-container">
                     <div class="compass-bezel" id="compass-bezel-disc">
+                        <!-- Механические риски лимба генерируются через JS -->
+                        <div id="ticks-container"></div>
+
                         <div class="compass-needle-north"></div>
                         <div class="compass-needle-south"></div>
                         <div class="compass-center-pin"></div>
                         
                         <!-- Метки сторон света -->
-                        <span style="position: absolute; top: 8px; left: 50%; transform: translateX(-50%); color: #DC2626; font-weight: 800; font-size: 18px;">С</span>
-                        <span style="position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); color: #FFFFFF; font-weight: 800; font-size: 18px;">Ю</span>
-                        <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #FFFFFF; font-weight: 800; font-size: 18px;">В</span>
-                        <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #FFFFFF; font-weight: 800; font-size: 18px;">З</span>
+                        <span style="position: absolute; top: 12px; left: 50%; transform: translateX(-50%); color: #DC2626; font-weight: 800; font-size: 16px;">С</span>
+                        <span style="position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); color: #FFFFFF; font-weight: 800; font-size: 16px;">Ю</span>
+                        <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #FFFFFF; font-weight: 800; font-size: 16px;">В</span>
+                        <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #FFFFFF; font-weight: 800; font-size: 16px;">З</span>
                     </div>
                 </div>
 
@@ -413,6 +462,13 @@
                     <div class="gps-badge">Широта (Lat):<b id="gps-lat-label">61.668793°</b></div>
                     <div class="gps-badge">Долгота (Lon):<b id="gps-lon-label">50.836399°</b></div>
                     <div class="gps-badge">Высота / Точность:<b id="gps-alt-label">142 м (±3м)</b></div>
+                </div>
+
+                <!-- ДУБЛИРУЮЩИЕ КНОПКИ ПРЯМО НА ЭКРАНЕ КОМПАСА -->
+                <div class="stage-quick-bar">
+                    <button class="btn-screen-bar" onclick="toggleLockTarget()">🎯 Зафиксировать</button>
+                    <button class="btn-screen-bar" onclick="saveCurrentPost()">📍 Сохранить точку</button>
+                    <button class="btn-screen-bar" onclick="toggleCompassFullscreen()">⛶ Экран</button>
                 </div>
 
             </div>
@@ -434,18 +490,18 @@
                     <p>Нажмите <b>«Зафиксировать азимут»</b> при взгляде на следующий столб. Инструмент залочит направление и будет сигнализировать об отклонении влево или вправо при движении по тайге.</p>
                 </div>
                 <div class="manual-step">
-                    <h4>3. Оптический видоискатель через камеру</h4>
-                    <p>Включите камеру для наведения красного перекрестия визира прямо на верхушку дерева или грань столба, исключая параллакс и ошибки глазомера.</p>
+                    <h4>3. Механический лимб и деления</h4>
+                    <p>Шкала снабжена миллиметровыми засечками с шагом 5° и 30° для удобного снятия отсчетов по принципу классической горной буссоли.</p>
                 </div>
                 <div class="manual-step">
                     <h4>4. 100% автономность без связи</h4>
-                    <p>Компас считывает встроенные аппаратные датчики магнитометра (Hall sensor) и спутники ГЛОНАСС/GPS напрямую без использования интернета.</p>
+                    <p>Компас считывает встроенные аппаратные датчики магнитометра и спутники ГЛОНАСС/GPS напрямую без использования интернета.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ПОП-АПЫ СПРАВКИ -->
+    <!-- ПОП-АПЫ СПРАВКИ И ПАМЯТКИ -->
     <div id="help-popup" class="popup-overlay" onclick="closeHelpOuter(event)">
         <div class="popup-window">
             <button class="popup-close" onclick="closeHelp()">&times;</button>
@@ -464,13 +520,42 @@
     <script>
         let currentAzimuth = 0;
         let lockedTargetAzimuth = null;
-        let isCameraActive = false;
         let postCount = 0;
 
         let currentLat = 61.668793;
         let currentLon = 50.836399;
         let currentAlt = 142;
         let currentAcc = 3;
+
+        // ГЕНЕРАЦИЯ МЕХАНИЧЕСКИХ ДЕЛЕНИЙ (ТИКОВ) НА ЛИМБЕ
+        function buildCompassTicks() {
+            const container = document.getElementById('ticks-container');
+            container.innerHTML = '';
+            
+            for (let deg = 0; deg < 360; deg += 5) {
+                const tick = document.createElement('div');
+                tick.className = 'tick';
+                
+                if (deg % 90 === 0) {
+                    tick.className += ' cardinal';
+                    if (deg === 0) tick.className += ' north';
+                } else if (deg % 30 === 0) {
+                    tick.className += ' major';
+                }
+
+                tick.style.transform = `rotate(${deg}deg)`;
+                container.appendChild(tick);
+
+                // Подписи каждые 30 градусов
+                if (deg % 30 === 0 && deg % 90 !== 0) {
+                    const label = document.createElement('div');
+                    label.className = 'deg-label';
+                    label.innerText = deg;
+                    label.style.transform = `rotate(${deg}deg)`;
+                    container.appendChild(label);
+                }
+            }
+        }
 
         // РАСЧЕТ РУМБА
         function getRumbString(deg) {
@@ -527,7 +612,7 @@
             }
         }
 
-        // ПОДКЛЮЧЕНИЕ ДАТЧИКОВ ОРИЕНТАЦИИ (ГИРОСКОП / МАГНИТОМЕТР)
+        // ДАТЧИКИ ОРИЕНТАЦИИ
         function handleOrientation(event) {
             let heading = null;
 
@@ -560,7 +645,7 @@
             }
         }
 
-        // ПОДКЛЮЧЕНИЕ GPS
+        // GPS
         function initGPS() {
             if ("geolocation" in navigator) {
                 navigator.geolocation.watchPosition(
@@ -580,11 +665,11 @@
             }
         }
 
-        // ФИКСАЦИЯ СТВОРА ВИЗИРА
+        // ФИКСАЦИЯ СТВОРА
         function toggleLockTarget() {
             const displayed = parseInt(document.getElementById('azimuth-deg-label').innerText);
             lockedTargetAzimuth = displayed;
-            document.getElementById('btn-lock-azimuth').innerText = `🎯 Створ залочен: ${lockedTargetAzimuth}°`;
+            document.getElementById('btn-lock-azimuth').innerText = `🎯 Створ: ${lockedTargetAzimuth}°`;
             updateCompassReading();
         }
 
@@ -594,35 +679,25 @@
             document.getElementById('target-deviation-badge').style.display = 'none';
         }
 
-        // ВКЛЮЧЕНИЕ КАМЕРЫ (AR-ВИДОИСКАТЕЛЬ)
-        async function toggleCameraView() {
-            const video = document.getElementById('camera-feed');
-            const btn = document.getElementById('btn-camera-toggle');
-
-            if (!isCameraActive) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: 'environment' }
-                    });
-                    video.srcObject = stream;
-                    video.style.display = 'block';
-                    isCameraActive = true;
-                    btn.innerText = '📷 Выключить видоискатель';
-                } catch (e) {
-                    alert("Не удалось получить доступ к камере для видоискателя.");
+        // ПОЛНОЭКРАННЫЙ РЕЖИМ
+        function toggleCompassFullscreen() {
+            const stage = document.getElementById('compass-stage');
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                if (stage.requestFullscreen) {
+                    stage.requestFullscreen();
+                } else if (stage.webkitRequestFullscreen) {
+                    stage.webkitRequestFullscreen();
                 }
             } else {
-                const stream = video.srcObject;
-                if (stream) {
-                    stream.getTracks().forEach(track => track.stop());
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
                 }
-                video.style.display = 'none';
-                isCameraActive = false;
-                btn.innerText = '📷 Включить видоискатель';
             }
         }
 
-        // СОХРАНЕНИЕ СТОЛБА В ЖУРНАЛ
+        // СОХРАНЕНИЕ ТОЧКИ
         function saveCurrentPost() {
             postCount++;
             const logBox = document.getElementById('post-log-container');
@@ -635,20 +710,58 @@
             logBox.innerHTML = `<div><b>Столб №${postCount}</b> (${time}) | Аз: <b>${az}</b> (${rumb}) | Lat: ${currentLat.toFixed(6)}, Lon: ${currentLon.toFixed(6)}</div>` + logBox.innerHTML;
         }
 
-        // СПРАВКА
+        // СПРАВКА И ПОДРОБНАЯ ПАМЯТКА
         function openHelp(type) {
             const title = document.getElementById('help-title');
             const content = document.getElementById('help-content');
 
-            if (type === 'declination') {
+            if (type === 'survival_guide') {
+                title.innerText = '🌲 Памятка: Как выжить и выйти из леса';
+                content.innerHTML = `
+                    <h4>1. Главное правило — ОСТАНОВИТЕСЬ</h4>
+                    <p>Если поняли, что потерялись — не бегите в панике! Паника тратит силы и загоняет глубже в болото. Сделайте глубокий вдох и оставайтесь на месте.</p>
+                    
+                    <h4>2. Куда и как звонить (Службы спасения)</h4>
+                    <ul>
+                        <li><b>Единый номер спасения:</b> Звоните <b>112</b> (работает даже без SIM-карты, без денег и при слабом сигнале любого оператора).</li>
+                        <li><b>Лесная охрана / МЧС:</b> <b>8-800-100-94-00</b>.</li>
+                        <li><b>Как передать координаты:</b> Четко продиктуйте цифры с экрана компаса в блоке GPS: <code>Широта (Lat): ${currentLat.toFixed(6)}</code>, <code>Долгота (Lon): ${currentLon.toFixed(6)}</code>. Это сократит время поиска с суток до 1 часа!</li>
+                    </ul>
+
+                    <h4>3. Если нет сил или связь пропала</h4>
+                    <ul>
+                        <li><b>Не уходите в глубь чащи:</b> Оставайтесь на сухом возвышенном месте, рядом с тропой, просекой или поляной.</li>
+                        <li><b>Обозначьте себя:</b> Развесьте на ветках яркие вещи (пакеты, куртку), выложите крест из веток на открытом месте.</li>
+                        <li><b>Подавайте звуковые сигналы:</b> Стучите сухой палкой по живому дереву (звук слышен за километр), кричите тройными короткими выкриками с паузами.</li>
+                    </ul>
+
+                    <h4>4. Ориентирование по карте и компасу</h4>
+                    <ul>
+                        <li><b>Линейные ориентиры:</b> Идите вдоль ЛЭП, просек, лесных дорог, рек или ручьев (ручей всегда ведет к реке, а река — к людям).</li>
+                        <li><b>Движение по азимуту:</b> Выберите ориентир по компасу в створе (заметное дерево) и идите строго до него, затем берите следующий. Не петляйте!</li>
+                        <li><b>Квартальные столбы:</b> Ребро между двумя наименьшими цифрами на столбе всегда указывает строго на <b>СЕВЕР</b>.</li>
+                    </ul>
+
+                    <h4>5. Встреча с медведем, волком или лосем</h4>
+                    <ul>
+                        <li><b>Никогда не бегите!</b> У любого хищника мгновенно срабатывает инстинкт преследования. Медведь бегает со скоростью 60 км/ч.</li>
+                        <li><b>Не смотрите в глаза:</b> Это воспринимается как вызов и прямая агрессия.</li>
+                        <li><b>Увеличьте свой размер:</b> Поднимите рюкзак или куртку над головой, говорите спокойным, уверенным, низким голосом и медленно отступайте назад, не поворачиваясь спиной.</li>
+                    </ul>
+
+                    <h4>6. Как развести спасительный костер</h4>
+                    <ul>
+                        <li><b>Сухая растопка:</b> Лучшее средство в сыром лесу — береста (горит даже мокрая) и мелкие сухие еловые веточки у самого ствола под кроной (там всегда сухо).</li>
+                        <li><b>Подложка:</b> Никогда не разжигайте огонь прямо на влажном мху или снегу — сначала выложите настил из бревен («подушку»).</li>
+                        <li><b>Дымный костер для спасателей:</b> Когда костер разгорится, набросайте сверху свежий зеленый лапник или влажный мох — пойдет густой белый столб дыма, видимый с вертолета.</li>
+                    </ul>
+                `;
+            } else if (type === 'declination') {
                 title.innerText = 'Магнитное склонение';
                 content.innerHTML = `<p>Указывает угол между направлением на магнитный и географический северный полюс. Позволяет точно привязать съемку делянки к спутниковым картам и лесоустроительным планшетам.</p>`;
             } else if (type === 'target_lock') {
                 title.innerText = 'Фиксация створа визира';
                 content.innerHTML = `<p>Нажмите «Зафиксировать», наведя компас на столб. При движении компас будет информировать вас о смещении вправо/влево от прямой линии прорубки.</p>`;
-            } else if (type === 'camera') {
-                title.innerText = 'Оптический визир';
-                content.innerHTML = `<p>Включает камеру заднего вида телефона в качестве полупрозрачного фона, позволяя визировать верхушки столбов и деревьев через центральное перекрестие.</p>`;
             }
 
             document.getElementById('help-popup').style.display = 'flex';
@@ -664,6 +777,7 @@
         }
 
         window.onload = function() {
+            buildCompassTicks();
             requestDeviceOrientationPermission();
             initGPS();
             updateCompassReading();
