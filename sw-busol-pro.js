@@ -1,13 +1,12 @@
 /**
  * ============================================================================
- * SERVICE WORKER — ЕДИНЫЙ ОФЛАЙН-КЕШ ЭКОСИСТЕМЫ «ЛЕСОВИК PRO» (v2.9.5)
+ * SERVICE WORKER — ЕДИНЫЙ ОФФЛАЙН-КЕШ ЭКОСИСТЕМЫ «ЛЕСОВИК PRO» (v2.9.8)
  * (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
  * ============================================================================
  */
 
-const PRO_CACHE = 'busol-pro-v2.9.7';
+const PRO_CACHE = 'busol-pro-v2.9.8';
 
-// Единый полный список всех 6 модулей и зависимостей для работы в тайге
 const PRO_ASSETS = [
   '/',
   '/index.html',
@@ -26,14 +25,13 @@ const PRO_ASSETS = [
   '/bitterlich.webmanifest',
   '/journal.webmanifest',
   '/mdo.webmanifest',
-  // Автономная библиотека Excel (SheetJS)
   'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.mini.min.js'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(PRO_CACHE).then((cache) => {
-      console.log('Lesovik PRO v2.9.2: Загрузка всех 6 приложений в офлайн-кеш...');
+      console.log('[Lesovik PRO SW] Кэширование 6 автономных инструментов PRO...');
       return cache.addAll(PRO_ASSETS);
     })
   );
@@ -52,24 +50,25 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Игнорируем сетевые метрики и рекламу при отсутствии сети
+  const url = event.request.url;
+
+  // Игнорируем сетевые метрики и рекламу (пропускаем мимо кэша)
   if (
-    event.request.url.includes('mc.yandex.ru') ||
-    event.request.url.includes('google-analytics') ||
-    event.request.url.includes('yandex.ru/ads')
+    url.includes('mc.yandex.ru') ||
+    url.includes('google-analytics') ||
+    url.includes('yandex.ru/ads') ||
+    url.includes('an.yandex.ru')
   ) {
     return;
   }
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      // 1. Если файл есть в кеше телефона — отдаем моментально без интернета
       if (cachedResponse) {
         return cachedResponse;
       }
-      // 2. Если файла нет в кеше — пробуем сетевой запрос
       return fetch(event.request).catch(() => {
-        // Если сети нет и запрашивается HTML страница — открываем Главную Буссоль
+        // Если сети нет и запрашивается страница — открываем строго Буссоль PRO
         if (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html')) {
           return caches.match('/busol-pro.html');
         }
