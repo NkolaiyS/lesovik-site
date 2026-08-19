@@ -3,7 +3,7 @@
  * ЛЕСОВИК-CORE (lesovik-core.js)
  * Центральное ядро экосистемы «Лесовик PRO»
  * ============================================================================
- * Версия: 2.9.7 (Защита оффлайн-режима, сквозной контроль доступа)
+ * Версия: 2.9.8 (Постоянное хранение IndexedDB, Self-healing, Защита офлайна)
  * Автор / Владелец: Николай Сергеевич Худяков (ИП Худяков Н.С.)
  * Экосистема: РЕСУРС (https://resurs-stretch.ru/)
  * ============================================================================
@@ -29,7 +29,7 @@
         "HNS-YU2O-2MRLAE": new Date(2099, 11, 31), // Бессрочно (Android Павел брат)
     };
 
-    // 1.1 Генератор нерасшифруемого уникального ID (ОБЪЯВЛЕН СТРОГО ПЕРВЫМ!)
+    // 1.1 Генератор уникального ID
     function generateWebDeviceId() {
         const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         let segment1 = '', segment2 = '';
@@ -38,31 +38,99 @@
         return `HNS-${segment1}-${segment2}`;
     }
 
-    // 1.2 Получение строго родного ID устройства
+    // 1.2 Асинхронное постоянное хранилище IndexedDB (Несгораемая память)
+    const DB_NAME = 'LesovikSecurityDB';
+    const DB_VERSION = 1;
+    const DB_STORE = 'device_identity';
+
+    function openIDB() {
+        return new Promise((resolve, reject) => {
+            if (!window.indexedDB) {
+                resolve(null);
+                return;
+            }
+            const req = window.indexedDB.open(DB_NAME, DB_VERSION);
+            req.onupgradeneeded = function (e) {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(DB_STORE)) {
+                    db.createObjectStore(DB_STORE, { keyPath: 'id' });
+                }
+            };
+            req.onsuccess = function (e) { resolve(e.target.result); };
+            req.onerror = function (e) { resolve(null); };
+        });
+    }
+
+    async function getIDBValue(key) {
+        const db = await openIDB();
+        if (!db) return null;
+        return new Promise((resolve) => {
+            try {
+                const tx = db.transaction(DB_STORE, 'readonly');
+                const store = tx.objectStore(DB_STORE);
+                const req = store.get(key);
+                req.onsuccess = () => resolve(req.result ? req.result.value : null);
+                req.onerror = () => resolve(null);
+            } catch (e) { resolve(null); }
+        });
+    }
+
+    async function setIDBValue(key, value) {
+        const db = await openIDB();
+        if (!db) return;
+        try {
+            const tx = db.transaction(DB_STORE, 'readwrite');
+            const store = tx.objectStore(DB_STORE);
+            store.put({ id: key, value: value });
+        } catch (e) {}
+    }
+
+    // Запрос на запрет очистки памяти системой Android
+    if (navigator.storage && navigator.storage.persist) {
+        navigator.storage.persist().then(persistent => {
+            if (persistent) console.log('[Lesovik Core] Хранилище защищено от очистки Android.');
+        }).catch(() => {});
+    }
+
+    // 1.3 Получение строго родного ID устройства с механизмом Self-Healing
     function getCurrentDeviceId() {
         if (window.device && window.device.uuid) {
             return window.device.uuid;
         }
 
-        // ПРИНУДИТЕЛЬНЫЙ СБРОС СТАРЫХ КЛЮЧЕЙ С ВЕРСИИ 2.9.3
-        if (!localStorage.getItem('lesovik_reset_v293')) {
-            localStorage.removeItem('bg_hns_web_id');
-            localStorage.setItem('lesovik_reset_v293', 'true');
-        }
-
         // Очищаем адресную строку от устаревших ссылок ?key=
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('key')) {
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('key')) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        } catch (e) {}
 
         let webId = localStorage.getItem('bg_hns_web_id');
         if (!webId) {
             webId = generateWebDeviceId();
             localStorage.setItem('bg_hns_web_id', webId);
+            setIDBValue('bg_hns_web_id', webId);
+        } else {
+            setIDBValue('bg_hns_web_id', webId);
         }
         return webId;
     }
+
+    // Фоновое восстановление ID из IndexedDB, если localStorage был очищен
+    (async function selfHealIdentity() {
+        try {
+            const localId = localStorage.getItem('bg_hns_web_id');
+            const idbId = await getIDBValue('bg_hns_web_id');
+            if (!localId && idbId) {
+                localStorage.setItem('bg_hns_web_id', idbId);
+                console.log('[Lesovik Core] ID восстановлен из защищенной памяти IndexedDB:', idbId);
+                location.reload();
+            } else if (localId && !idbId) {
+                await setIDBValue('bg_hns_web_id', localId);
+            }
+        } catch (e) {}
+    })();
 
     function checkLicenseStatus() {
         const currentId = getCurrentDeviceId();
@@ -80,7 +148,7 @@
     const globalAuth = checkLicenseStatus();
 
     // ------------------------------------------------------------------------
-    // 1.3 АВТОМАТИЧЕСКАЯ ЗАЩИТА ОФФЛАЙН-РЕЖИМА ДЛЯ БЕСПЛАТНЫХ ПОЛЬЗОВАТЕЛЕЙ
+    // 1.4 АВТОМАТИЧЕСКАЯ ЗАЩИТА ОФФЛАЙН-РЕЖИМА ДЛЯ БЕСПЛАТНЫХ ПОЛЬЗОВАТЕЛЕЙ
     // ------------------------------------------------------------------------
     function enforceOfflineProtection() {
         if (globalAuth.isPro) return; // PRO-пользователям оффлайн доступен полностью
@@ -256,7 +324,7 @@
     // 4. ЕДИНЫЙ API LESOVIKCORE
     // ------------------------------------------------------------------------
     window.LesovikCore = {
-        version: '2.9.6-PRO',
+        version: '2.9.8-PRO',
 
         isPro: function () {
             return checkLicenseStatus().isPro;
@@ -568,7 +636,6 @@
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             `;
 
-            // ЧИСТЫЕ ПРЯМЫЕ ССЫЛКИ ДЛЯ ПЕРЕХОДА
             bottomNav.innerHTML = SYSTEM_MODULES.map(m => {
                 const isActive = currentFile.includes(m.file.replace('.html', ''));
                 const linkHref = isPro ? `href="${m.file}"` : `href="javascript:void(0)" onclick="window.showProPromoModal()"`;
