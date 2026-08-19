@@ -18,13 +18,13 @@
     // Месяцы в JS: 0-Янв, 1-Фев, 2-Мар, 3-Апр, 4-Май, 5-Июн, 6-Июл, 7-Авг, 8-Сен, 9-Окт, 10-Ноя, 11-Дек
     const licensedDevices = {
         "HNS-I6UX-FQXE0J": new Date(2099, 11, 31), // Бессрочно (iPhone Яндекс Николай)
-        "HNS-3T7D-ZJKISD": new Date(2099, 11, 31), // Бессрочно (iPhone Safari Николай)
+        "HNS-BDSE-8ZMQTS": new Date(2099, 11, 31), // Бессрочно (iPhone Safari Николай)
         "HNS-0EEC-NJR6JS": new Date(2099, 11, 31), // Бессрочно (Web Николай)
         "HNS-3K0F-5IHF3A": new Date(2099, 11, 31), // Бессрочно (Android Николай)
         "HNS-3SBX-TQMJO7": new Date(2026, 11, 31), // До 31 декабря 2026 (Ноутбук)
         "HNS-MINCIFRA-TEST": new Date(2099, 11, 31),// Доступ экспертов Минцифры
         "HNS-HS86-KK7HRA": new Date(2026, 11, 31),  // Андрей (Редми) до 31 декабря 2026
-        "HNS-YSXJ-TBINAL": new Date(2026, 11, 31), // Андрей (Хуавей) до 31 декабря 2026
+        "HNS-0I3Y-3IUWWY": new Date(2026, 11, 31), // Андрей (Хуавей) до 31 декабря 2026
         "HNS-4L1E-25O9U6": new Date(2026, 7, 31),   // Хонор 7 до 31 августа 2026
         "HNS-YU2O-2MRLAE": new Date(2099, 11, 31), // Бессрочно (Android Павел брат)
     };
