@@ -5,7 +5,7 @@
  * ============================================================================
  */
 
-const PRO_CACHE = 'busol-pro-v2.9.8';
+const PRO_CACHE = 'busol-pro-v2.9.81';
 
 const PRO_ASSETS = [
   '/',
