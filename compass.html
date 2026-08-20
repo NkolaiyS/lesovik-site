@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Профессиональный лесной компас-визир и энциклопедия выживания (Лесовик ПРО)» (Версия 3.2).
+  Программное обеспечение: «Профессиональный лесной компас-визир и энциклопедия выживания (Лесовик ПРО)» (Версия 3.4 Perfect Centering).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -235,75 +235,85 @@
             box-shadow: 0 0 35px rgba(45, 90, 39, 0.35), inset 0 0 25px rgba(0,0,0,0.9);
             background: radial-gradient(circle, #18231F 0%, #080D0B 100%);
             display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
         }
 
         .compass-bezel {
             position: absolute; width: 100%; height: 100%; border-radius: 50%;
+            top: 0; left: 0;
             transition: transform 0.1s cubic-bezier(0.1, 0.9, 0.2, 1);
+            transform-origin: 50% 50%;
         }
 
+        /* РИСКИ (ТИКИ) */
         .tick {
-            position: absolute; top: 4px; left: 50%; width: 1px; height: 6px;
-            background: rgba(255, 255, 255, 0.35); transform-origin: 50% 156px;
+            position: absolute; top: 6px; left: calc(50% - 0.5px); width: 1px; height: 7px;
+            background: rgba(255, 255, 255, 0.35); transform-origin: 50% 154px;
         }
-        .tick.major { width: 2px; height: 12px; background: rgba(255, 255, 255, 0.85); }
-        .tick.cardinal { width: 3px; height: 16px; background: #8FBC8F; }
+        .tick.major { width: 2px; left: calc(50% - 1px); height: 12px; background: rgba(255, 255, 255, 0.85); }
+        .tick.cardinal { width: 3px; left: calc(50% - 1.5px); height: 16px; background: #8FBC8F; }
         .tick.north { background: #DC2626; }
 
         .deg-label {
-            position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
-            font-size: 9px; font-weight: 700; color: rgba(255, 255, 255, 0.65); transform-origin: 50% 142px;
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            font-size: 9px; font-weight: 700; color: rgba(255, 255, 255, 0.65); transform-origin: 50% 140px;
         }
 
-        /* ИДЕАЛЬНОЕ РАДИАЛЬНОЕ ВЫРАВНИВАНИЕ БУКВ С, Ю, В, З */
+        /* ТОЧНЫЕ БУКВЫ С, Ю, В, З СТРОГО ПО ЦЕНТРУ РАДИУСА */
         .cardinal-letter {
             position: absolute;
             top: 20px;
             left: 50%;
-            width: 20px;
-            margin-left: -10px;
+            width: 24px;
+            margin-left: -12px;
             text-align: center;
             font-weight: 800;
             font-size: 16px;
             transform-origin: 50% 140px;
             user-select: none;
+            line-height: 1;
         }
         .cardinal-letter.north-letter { color: #DC2626; transform: rotate(0deg); }
         .cardinal-letter.east-letter { color: #FFFFFF; transform: rotate(90deg); }
         .cardinal-letter.south-letter { color: #FFFFFF; transform: rotate(180deg); }
         .cardinal-letter.west-letter { color: #FFFFFF; transform: rotate(270deg); }
 
-        .cardinal-letter span {
-            display: inline-block;
-        }
+        .cardinal-letter span { display: inline-block; }
         .cardinal-letter.east-letter span { transform: rotate(-90deg); }
         .cardinal-letter.south-letter span { transform: rotate(-180deg); }
         .cardinal-letter.west-letter span { transform: rotate(-270deg); }
 
+        /* СКВОЗНЫЕ СТРЕЛКИ КОМПАСА СТРОГО ПО ОСИ 0°-180° */
+        .compass-needle-wrapper {
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+            pointer-events: none;
+        }
         .compass-needle-north {
-            position: absolute; top: 28px; left: 50%; transform: translateX(-50%);
-            width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-bottom: 105px solid #DC2626;
+            position: absolute; top: 32px; left: 50%; transform: translateX(-50%);
+            width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-bottom: 118px solid #DC2626;
             filter: drop-shadow(0 0 6px rgba(220,38,38,0.6));
         }
         .compass-needle-south {
-            position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
-            width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-top: 105px solid #FFFFFF;
+            position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+            width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-top: 118px solid #FFFFFF;
             filter: drop-shadow(0 0 4px rgba(255,255,255,0.4));
         }
 
         .compass-center-pin {
-            position: absolute; width: 22px; height: 22px; border-radius: 50%;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 22px; height: 22px; border-radius: 50%;
             background: radial-gradient(circle, #E67E22 30%, #2D5A27 100%);
             border: 2px solid #FFF; z-index: 5; box-shadow: 0 0 10px rgba(0,0,0,0.8);
         }
 
+        /* НЕПОДВИЖНОЕ ПЕРЕКРЕСТИЕ ВИЗИРА СТРОГО В ЦЕНТРЕ ДИСКА */
         .crosshair-line-v {
             position: absolute; top: 0; left: 50%; width: 2px; height: 100%;
-            background: rgba(220, 38, 38, 0.7); transform: translateX(-50%); pointer-events: none; z-index: 3;
+            background: rgba(220, 38, 38, 0.85); transform: translateX(-50%); pointer-events: none; z-index: 6;
         }
         .crosshair-line-h {
-            position: absolute; top: 50%; left: 0; width: 100%; height: 2px;
-            background: rgba(143, 188, 143, 0.35); transform: translateY(-50%); pointer-events: none; z-index: 3;
+            position: absolute; top: 50%; left: 0; width: 100%; height: 1px;
+            background: rgba(143, 188, 143, 0.4); transform: translateY(-50%); pointer-events: none; z-index: 6;
         }
 
         .gps-overlay-grid {
@@ -459,9 +469,6 @@
 
         <!-- СЦЕНА 3D-КОМПАСА -->
         <div class="compass-stage-container" id="compass-stage">
-            <div class="crosshair-line-v"></div>
-            <div class="crosshair-line-h"></div>
-
             <div class="compass-main-wrapper">
                 
                 <div class="azimuth-display">
@@ -474,17 +481,25 @@
                 </div>
 
                 <div class="compass-dial-container">
+                    <!-- НЕПОДВИЖНОЕ ПЕРЕКРЕСТИЕ ПРИЦЕЛА В ЦЕНТРЕ -->
+                    <div class="crosshair-line-v"></div>
+                    <div class="crosshair-line-h"></div>
+
+                    <!-- ВРАЩАЮЩИЙСЯ ЛИМБ СО СТРЕЛКАМИ И СТОРОНАМИ СВЕТА -->
                     <div class="compass-bezel" id="compass-bezel-disc">
                         <div id="ticks-container"></div>
 
-                        <!-- ИДЕАЛЬНО ВЫВЕРЕННЫЕ РАДИАЛЬНЫЕ БУКВЫ С, Ю, В, З -->
+                        <!-- 4 СТОРОНЫ СВЕТА СТРОГО ПО РАДИУСАМ 0°, 90°, 180°, 270° -->
                         <div class="cardinal-letter north-letter"><span>С</span></div>
                         <div class="cardinal-letter east-letter"><span>В</span></div>
                         <div class="cardinal-letter south-letter"><span>Ю</span></div>
                         <div class="cardinal-letter west-letter"><span>З</span></div>
 
-                        <div class="compass-needle-north"></div>
-                        <div class="compass-needle-south"></div>
+                        <div class="compass-needle-wrapper">
+                            <div class="compass-needle-north"></div>
+                            <div class="compass-needle-south"></div>
+                        </div>
+
                         <div class="compass-center-pin"></div>
                     </div>
                 </div>
@@ -694,7 +709,7 @@
                 tick.style.transform = `rotate(${deg}deg)`;
                 container.appendChild(tick);
 
-                // Подписи цифр каждые 30 градусов (кроме 0, 90, 180, 270 - там стоят буквы)
+                // Подписи цифр каждые 30 градусов (кроме узловых 0, 90, 180, 270)
                 if (deg % 30 === 0 && deg % 90 !== 0) {
                     const label = document.createElement('div');
                     label.className = 'deg-label';
@@ -731,6 +746,7 @@
             document.getElementById('azimuth-deg-label').innerText = `${Math.round(displayedAzimuth)}°`;
             document.getElementById('azimuth-rumb-label').innerText = getRumbString(displayedAzimuth);
 
+            // Вращение лимба
             document.getElementById('compass-bezel-disc').style.transform = `rotate(${-displayedAzimuth}deg)`;
 
             if (lockedTargetAzimuth !== null) {
