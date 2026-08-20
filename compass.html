@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Профессиональный лесной компас-визир и энциклопедия выживания (Лесовик ПРО)» (Версия 3.2).
+  Программное обеспечение: «Профессиональный лесной компас-визир и энциклопедия выживания (Лесовик ПРО)» (Версия 3.3 Precision Dial).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -255,41 +255,28 @@
             font-size: 9px; font-weight: 700; color: rgba(255, 255, 255, 0.65); transform-origin: 50% 142px;
         }
 
-        /* ИДЕАЛЬНОЕ РАДИАЛЬНОЕ ВЫРАВНИВАНИЕ БУКВ С, Ю, В, З */
-        .cardinal-letter {
+        /* ТОЧНЫЕ БУКВЫ СТОРОН СВЕТА С ВЕРТИКАЛЬНОЙ ОРИЕНТАЦИЕЙ */
+        .cardinal-node {
             position: absolute;
-            top: 20px;
+            top: 22px;
             left: 50%;
-            width: 20px;
-            margin-left: -10px;
+            width: 24px;
+            margin-left: -12px;
             text-align: center;
             font-weight: 800;
             font-size: 16px;
-            transform-origin: 50% 140px;
+            transform-origin: 50% 138px;
             user-select: none;
         }
-        .cardinal-letter.north-letter { color: #DC2626; transform: rotate(0deg); }
-        .cardinal-letter.east-letter { color: #FFFFFF; transform: rotate(90deg); }
-        .cardinal-letter.south-letter { color: #FFFFFF; transform: rotate(180deg); }
-        .cardinal-letter.west-letter { color: #FFFFFF; transform: rotate(270deg); }
+        .cardinal-node.c-n { color: #DC2626; transform: rotate(0deg); }
+        .cardinal-node.c-e { color: #FFFFFF; transform: rotate(90deg); }
+        .cardinal-node.c-s { color: #FFFFFF; transform: rotate(180deg); }
+        .cardinal-node.c-w { color: #FFFFFF; transform: rotate(270deg); }
 
-        .cardinal-letter span {
-            display: inline-block;
-        }
-        .cardinal-letter.east-letter span { transform: rotate(-90deg); }
-        .cardinal-letter.south-letter span { transform: rotate(-180deg); }
-        .cardinal-letter.west-letter span { transform: rotate(-270deg); }
-
-        .compass-needle-north {
-            position: absolute; top: 28px; left: 50%; transform: translateX(-50%);
-            width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-bottom: 105px solid #DC2626;
-            filter: drop-shadow(0 0 6px rgba(220,38,38,0.6));
-        }
-        .compass-needle-south {
-            position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
-            width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-top: 105px solid #FFFFFF;
-            filter: drop-shadow(0 0 4px rgba(255,255,255,0.4));
-        }
+        .cardinal-node span { display: inline-block; }
+        .cardinal-node.c-e span { transform: rotate(-90deg); }
+        .cardinal-node.c-s span { transform: rotate(-180deg); }
+        .cardinal-node.c-w span { transform: rotate(-270deg); }
 
         .compass-center-pin {
             position: absolute; width: 22px; height: 22px; border-radius: 50%;
@@ -299,10 +286,10 @@
 
         .crosshair-line-v {
             position: absolute; top: 0; left: 50%; width: 2px; height: 100%;
-            background: rgba(220, 38, 38, 0.7); transform: translateX(-50%); pointer-events: none; z-index: 3;
+            background: rgba(220, 38, 38, 0.85); transform: translateX(-50%); pointer-events: none; z-index: 4;
         }
         .crosshair-line-h {
-            position: absolute; top: 50%; left: 0; width: 100%; height: 2px;
+            position: absolute; top: 50%; left: 0; width: 100%; height: 1px;
             background: rgba(143, 188, 143, 0.35); transform: translateY(-50%); pointer-events: none; z-index: 3;
         }
 
@@ -477,14 +464,12 @@
                     <div class="compass-bezel" id="compass-bezel-disc">
                         <div id="ticks-container"></div>
 
-                        <!-- ИДЕАЛЬНО ВЫВЕРЕННЫЕ РАДИАЛЬНЫЕ БУКВЫ С, Ю, В, З -->
-                        <div class="cardinal-letter north-letter"><span>С</span></div>
-                        <div class="cardinal-letter east-letter"><span>В</span></div>
-                        <div class="cardinal-letter south-letter"><span>Ю</span></div>
-                        <div class="cardinal-letter west-letter"><span>З</span></div>
+                        <!-- 4 СТОРОНЫ СВЕТА СТРОГО ПО РАДИУСАМ -->
+                        <div class="cardinal-node c-n"><span>С</span></div>
+                        <div class="cardinal-node c-e"><span>В</span></div>
+                        <div class="cardinal-node c-s"><span>Ю</span></div>
+                        <div class="cardinal-node c-w"><span>З</span></div>
 
-                        <div class="compass-needle-north"></div>
-                        <div class="compass-needle-south"></div>
                         <div class="compass-center-pin"></div>
                     </div>
                 </div>
@@ -694,7 +679,7 @@
                 tick.style.transform = `rotate(${deg}deg)`;
                 container.appendChild(tick);
 
-                // Подписи цифр каждые 30 градусов (кроме 0, 90, 180, 270 - там стоят буквы)
+                // Подписи цифр каждые 30 градусов (кроме узловых 0, 90, 180, 270)
                 if (deg % 30 === 0 && deg % 90 !== 0) {
                     const label = document.createElement('div');
                     label.className = 'deg-label';
@@ -731,6 +716,7 @@
             document.getElementById('azimuth-deg-label').innerText = `${Math.round(displayedAzimuth)}°`;
             document.getElementById('azimuth-rumb-label').innerText = getRumbString(displayedAzimuth);
 
+            // Вращение лимба
             document.getElementById('compass-bezel-disc').style.transform = `rotate(${-displayedAzimuth}deg)`;
 
             if (lockedTargetAzimuth !== null) {
