@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Профессиональный лесной компас-визир и энциклопедия выживания (Лесовик ПРО)» (Версия 3.4 Perfect Centering).
+  Программное обеспечение: «Профессиональный лесной компас-визир и энциклопедия выживания (Лесовик ПРО)» (Версия 3.5 Haptic Clicker).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -283,7 +283,7 @@
         .cardinal-letter.south-letter span { transform: rotate(-180deg); }
         .cardinal-letter.west-letter span { transform: rotate(-270deg); }
 
-        /* СКВОЗНЫЕ СТРЕЛКИ КОМПАСА СТРОГО ПО ОСИ 0°-180° */
+        /* СКВОЗНЫЕ СТРЕЛКИ КОМПАСА */
         .compass-needle-wrapper {
             position: absolute; width: 100%; height: 100%; top: 0; left: 0;
             pointer-events: none;
@@ -440,10 +440,34 @@
                 </div>
             </div>
 
+            <!-- НАСТРОЙКИ ЗВУКА И ВИБРООТКЛИКА -->
+            <div>
+                <div class="panel-section-title">
+                    <span>3. Тактильный отклик и трещотка</span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+                    <div class="form-group">
+                        <label>Звук трещотки:</label>
+                        <select id="sound-toggle-select" onchange="initAudioContext()">
+                            <option value="on" selected>Включен 🔊</option>
+                            <option value="off">Выключен 🔇</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Виброотклик (Haptic):</label>
+                        <select id="vibe-toggle-select">
+                            <option value="on" selected>Включен 📳</option>
+                            <option value="off">Выключен</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             <!-- ДАТЧИКИ И ПОЛНЫЙ ЭКРАН -->
             <div>
                 <div class="panel-section-title">
-                    <span>3. Управление экраном</span>
+                    <span>4. Управление экраном</span>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
@@ -455,7 +479,7 @@
             <!-- ПОЛЕВОЙ ЖУРНАЛ СТОЛБОВ -->
             <div>
                 <div class="panel-section-title">
-                    <span>4. Засечка столба в журнал</span>
+                    <span>5. Засечка столба в журнал</span>
                 </div>
 
                 <button class="btn-action" onclick="saveCurrentPost()">📍 Сохранить точку в полевой список</button>
@@ -480,7 +504,7 @@
                     Створ: <b id="locked-target-val">45°</b> | Отклонение: <b id="deviation-val">0°</b>
                 </div>
 
-                <div class="compass-dial-container">
+                <div class="compass-dial-container" onclick="initAudioContext()">
                     <!-- НЕПОДВИЖНОЕ ПЕРЕКРЕСТИЕ ПРИЦЕЛА В ЦЕНТРЕ -->
                     <div class="crosshair-line-v"></div>
                     <div class="crosshair-line-h"></div>
@@ -522,7 +546,7 @@
 
     </div>
 
-    <!-- ИНТЕРАКТИВНАЯ ЭНЦИКЛОПЕДИЯ-АККОРДЕОН (SEO-БАЗА) -->
+    <!-- ИНТЕРАКТИВНАЯ ЭНЦИКЛОПЕДИЯ-АККОРДЕОН -->
     <div class="faq-accordion-section" id="survival-guide">
         <div class="faq-card">
             <h2>Энциклопедия выживания и ориентирования в лесу</h2>
@@ -681,6 +705,7 @@
 
     <script>
         let currentAzimuth = 0;
+        let lastVibeDegree = 0;
         let lockedTargetAzimuth = null;
         let postCount = 0;
         let isFullscreen = false;
@@ -689,6 +714,66 @@
         let currentLon = 50.836399;
         let currentAlt = 142;
         let currentAcc = 3;
+
+        // СИНТЕЗАТОР ЗВУКА МЕХАНИЧЕСКОЙ ТРЕЩОТКИ (WEB AUDIO API)
+        let audioCtx = null;
+
+        function initAudioContext() {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) audioCtx = new AudioContextClass();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playClickSound(isCardinal = false) {
+            const soundEnabled = document.getElementById('sound-toggle-select')?.value === 'on';
+            if (!soundEnabled || !audioCtx) return;
+
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                // Мягкий щелчок шестеренки
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(isCardinal ? 850 : 550, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.015);
+                
+                gain.gain.setValueAtTime(isCardinal ? 0.25 : 0.12, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.015);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.018);
+            } catch(e) {}
+        }
+
+        // ТАКТИЛЬНЫЙ ВИБРООТКЛИК И ТРЕЩОТКА ПРИ ПОВОРОТЕ
+        function triggerHapticStep(deg) {
+            const roundedDeg = Math.round(deg);
+            // Срабатывает на каждом 5-м градусе (шаг риски)
+            if (Math.abs(roundedDeg - lastVibeDegree) >= 5 || (lastVibeDegree === 355 && roundedDeg === 0)) {
+                lastVibeDegree = roundedDeg;
+                const isCardinal = (roundedDeg % 90 === 0);
+                
+                // Звук
+                playClickSound(isCardinal);
+
+                // Вибро
+                const vibeEnabled = document.getElementById('vibe-toggle-select')?.value === 'on';
+                if (vibeEnabled && "vibrate" in navigator) {
+                    if (isCardinal) {
+                        navigator.vibrate([15, 30, 15]); // Акцент на стороны света (С, Ю, В, З)
+                    } else {
+                        navigator.vibrate(8); // Легкий тактильный тик
+                    }
+                }
+            }
+        }
 
         // ГЕНЕРАЦИЯ МЕХАНИЧЕСКИХ ДЕЛЕНИЙ (ТИКОВ) НА ЛИМБЕ
         function buildCompassTicks() {
@@ -749,6 +834,9 @@
             // Вращение лимба
             document.getElementById('compass-bezel-disc').style.transform = `rotate(${-displayedAzimuth}deg)`;
 
+            // Запуск тактильной трещотки
+            triggerHapticStep(displayedAzimuth);
+
             if (lockedTargetAzimuth !== null) {
                 let diff = displayedAzimuth - lockedTargetAzimuth;
                 if (diff > 180) diff -= 360;
@@ -791,6 +879,7 @@
         }
 
         function requestDeviceOrientationPermission() {
+            initAudioContext();
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 DeviceOrientationEvent.requestPermission().then(permissionState => {
                     if (permissionState === 'granted') {
@@ -829,9 +918,11 @@
 
         // ФИКСАЦИЯ СТВОРА
         function toggleLockTarget() {
+            initAudioContext();
             const displayed = parseInt(document.getElementById('azimuth-deg-label').innerText);
             lockedTargetAzimuth = displayed;
             document.getElementById('btn-lock-azimuth').innerText = `🎯 Створ: ${lockedTargetAzimuth}°`;
+            if ("vibrate" in navigator) navigator.vibrate([30, 40, 30]);
             updateCompassReading();
         }
 
@@ -843,6 +934,7 @@
 
         // ПОЛНОЭКРАННЫЙ РЕЖИМ (CSS TOGGLE)
         function toggleCustomFullscreen() {
+            initAudioContext();
             const stage = document.getElementById('compass-stage');
             const fsBtn = document.getElementById('btn-fs-toggle');
             isFullscreen = !isFullscreen;
@@ -858,6 +950,7 @@
 
         // СОХРАНЕНИЕ ТОЧКИ
         function saveCurrentPost() {
+            initAudioContext();
             postCount++;
             const logBox = document.getElementById('post-log-container');
             const az = document.getElementById('azimuth-deg-label').innerText;
@@ -867,6 +960,7 @@
             if (postCount === 1) logBox.innerHTML = '';
 
             logBox.innerHTML = `<div><b>Столб №${postCount}</b> (${time}) | Аз: <b>${az}</b> (${rumb}) | Lat: ${currentLat.toFixed(6)}, Lon: ${currentLon.toFixed(6)}</div>` + logBox.innerHTML;
+            if ("vibrate" in navigator) navigator.vibrate(50);
         }
 
         // АККОРДЕОН FAQ
