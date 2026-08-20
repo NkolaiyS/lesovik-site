@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Профессиональный лесной компас-визир и энциклопедия выживания (Лесовик ПРО)» (Версия 3.1).
+  Программное обеспечение: «Профессиональный лесной компас-визир и энциклопедия выживания (Лесовик ПРО)» (Версия 3.2).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -255,6 +255,31 @@
             font-size: 9px; font-weight: 700; color: rgba(255, 255, 255, 0.65); transform-origin: 50% 142px;
         }
 
+        /* ИДЕАЛЬНОЕ РАДИАЛЬНОЕ ВЫРАВНИВАНИЕ БУКВ С, Ю, В, З */
+        .cardinal-letter {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            width: 20px;
+            margin-left: -10px;
+            text-align: center;
+            font-weight: 800;
+            font-size: 16px;
+            transform-origin: 50% 140px;
+            user-select: none;
+        }
+        .cardinal-letter.north-letter { color: #DC2626; transform: rotate(0deg); }
+        .cardinal-letter.east-letter { color: #FFFFFF; transform: rotate(90deg); }
+        .cardinal-letter.south-letter { color: #FFFFFF; transform: rotate(180deg); }
+        .cardinal-letter.west-letter { color: #FFFFFF; transform: rotate(270deg); }
+
+        .cardinal-letter span {
+            display: inline-block;
+        }
+        .cardinal-letter.east-letter span { transform: rotate(-90deg); }
+        .cardinal-letter.south-letter span { transform: rotate(-180deg); }
+        .cardinal-letter.west-letter span { transform: rotate(-270deg); }
+
         .compass-needle-north {
             position: absolute; top: 28px; left: 50%; transform: translateX(-50%);
             width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-bottom: 105px solid #DC2626;
@@ -452,14 +477,15 @@
                     <div class="compass-bezel" id="compass-bezel-disc">
                         <div id="ticks-container"></div>
 
+                        <!-- ИДЕАЛЬНО ВЫВЕРЕННЫЕ РАДИАЛЬНЫЕ БУКВЫ С, Ю, В, З -->
+                        <div class="cardinal-letter north-letter"><span>С</span></div>
+                        <div class="cardinal-letter east-letter"><span>В</span></div>
+                        <div class="cardinal-letter south-letter"><span>Ю</span></div>
+                        <div class="cardinal-letter west-letter"><span>З</span></div>
+
                         <div class="compass-needle-north"></div>
                         <div class="compass-needle-south"></div>
                         <div class="compass-center-pin"></div>
-                        
-                        <span style="position: absolute; top: 12px; left: 50%; transform: translateX(-50%); color: #DC2626; font-weight: 800; font-size: 16px;">С</span>
-                        <span style="position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); color: #FFFFFF; font-weight: 800; font-size: 16px;">Ю</span>
-                        <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #FFFFFF; font-weight: 800; font-size: 16px;">В</span>
-                        <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #FFFFFF; font-weight: 800; font-size: 16px;">З</span>
                     </div>
                 </div>
 
@@ -668,6 +694,7 @@
                 tick.style.transform = `rotate(${deg}deg)`;
                 container.appendChild(tick);
 
+                // Подписи цифр каждые 30 градусов (кроме 0, 90, 180, 270 - там стоят буквы)
                 if (deg % 30 === 0 && deg % 90 !== 0) {
                     const label = document.createElement('div');
                     label.className = 'deg-label';
