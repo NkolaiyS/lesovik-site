@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#000000">
+  <title>Детектор БПЛА</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #070908;
+      color: #00ff66;
+      font-family: monospace, monospace;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid #00ff66;
+      padding: 8px;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .status-badge {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #333;
+      margin-right: 4px;
+    }
+    .status-badge.active {
+      background: #00ff66;
+      box-shadow: 0 0 8px #00ff66;
+    }
+    .threat-card {
+      border: 2px solid #00ff66;
+      padding: 14px;
+      text-align: center;
+      margin-bottom: 8px;
+      background: #0c140e;
+      transition: all 0.2s ease;
+    }
+    .threat-card.alert {
+      border-color: #ff2200;
+      background: #200500;
+      color: #ff3311;
+      animation: blink 0.6s infinite alternate;
+    }
+    @keyframes blink {
+      from { box-shadow: 0 0 4px #ff2200; }
+      to { box-shadow: 0 0 16px #ff2200; }
+    }
+    .threat-title {
+      font-size: 22px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      margin-bottom: 4px;
+    }
+    .threat-desc {
+      font-size: 14px;
+      margin-top: 4px;
+    }
+    .rssi-container {
+      margin: 8px 0;
+      text-align: left;
+    }
+    .rssi-bar-bg {
+      width: 100%;
+      height: 14px;
+      background: #152219;
+      border: 1px solid #00ff66;
+      margin-top: 4px;
+    }
+    .threat-card.alert .rssi-bar-bg {
+      border-color: #ff2200;
+      background: #2b0c08;
+    }
+    .rssi-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: #00ff66;
+      transition: width 0.1s linear;
+    }
+    .threat-card.alert .rssi-bar-fill {
+      background: #ff2200;
+    }
+    .visualizer-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #00ff66;
+      padding: 4px;
+      margin-bottom: 8px;
+      min-height: 120px;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      background: #040605;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    button {
+      background: #0e1a12;
+      border: 1px solid #00ff66;
+      color: #00ff66;
+      padding: 10px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:active {
+      background: #00ff66;
+      color: #000;
+    }
+    .log-box {
+      font-size: 11px;
+      color: #00aa44;
+      margin-top: 4px;
+      height: 36px;
+      overflow: hidden;
+      line-height: 1.2;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div><span id="sdr-status" class="status-badge"></span> SDR USB</div>
+    <div><span id="mic-status" class="status-badge"></span> АКУСТИКА</div>
+    <div><span id="pwa-status" class="status-badge active"></span> ОФФЛАЙН</div>
+  </div>
+
+  <div id="threat-box" class="threat-card">
+    <div id="threat-title" class="threat-title">СКАНИРОВАНИЕ</div>
+    <div id="threat-target" class="threat-desc">Угрозы не обнаружены (Эфир чист)</div>
+    <div class="rssi-container">
+      <div style="display: flex; justify-content: space-between; font-size: 11px;">
+        <span>УРОВЕНЬ СИГНАЛА:</span>
+        <span id="rssi-val">0 %</span>
+      </div>
+      <div class="rssi-bar-bg">
+        <div id="rssi-fill" class="rssi-bar-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="visualizer-container">
+    <canvas id="spectrogram"></canvas>
+    <div id="log-console" class="log-box">Система готова. Нажмите [АКУСТИКА] или [ТЕСТ].</div>
+  </div>
+
+  <div class="controls">
+    <button id="btn-audio">СТАРТ АКУСТИКИ</button>
+    <button id="btn-sdr">ПОДКЛЮЧИТЬ SDR</button>
+    <button id="btn-mock">ТЕСТ (ИМИТАТОР FPV)</button>
+    <button id="btn-reset">СБРОС ТРЕВОГИ</button>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(err => console.log(err));
+    }
+
+    let audioContext, analyser, microphone, dataArray;
+    let isAudioActive = false;
+    let isMockRunning = false;
+    let mockInterval = null;
+
+    const threatBox = document.getElementById('threat-box');
+    const threatTitle = document.getElementById('threat-title');
+    const threatTarget = document.getElementById('threat-target');
+    const rssiVal = document.getElementById('rssi-val');
+    const rssiFill = document.getElementById('rssi-fill');
+    const micStatus = document.getElementById('mic-status');
+    const sdrStatus = document.getElementById('sdr-status');
+    const logConsole = document.getElementById('log-console');
+
+    const canvas = document.getElementById('spectrogram');
+    const canvasCtx = canvas.getContext('2d');
+
+    function log(msg) {
+      logConsole.innerHTML = `> ${msg}<br>` + logConsole.innerHTML;
+    }
+
+    function triggerAlert(title, target, percent) {
+      threatBox.classList.add('alert');
+      threatTitle.innerText = title;
+      threatTarget.innerText = target;
+      rssiVal.innerText = `${percent}%`;
+      rssiFill.style.width = `${percent}%`;
+
+      if (navigator.vibrate) {
+        navigator.vibrate([200, 100, 200, 100, 400]);
+      }
+    }
+
+    function clearAlert() {
+      threatBox.classList.remove('alert');
+      threatTitle.innerText = "СКАНИРОВАНИЕ";
+      threatTarget.innerText = "Угрозы не обнаружены (Эфир чист)";
+      rssiVal.innerText = "0%";
+      rssiFill.style.width = "0%";
+    }
+
+    document.getElementById('btn-audio').addEventListener('click', async () => {
+      if (isAudioActive) return;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 2048;
+        microphone = audioContext.createMediaStreamSource(stream);
+        microphone.connect(analyser);
+
+        const bufferLength = analyser.frequencyBinCount;
+        dataArray = new Uint8Array(bufferLength);
+        isAudioActive = true;
+        micStatus.classList.add('active');
+        log('Акустический мониторинг запущен.');
+        processAudio();
+      } catch (err) {
+        log('Ошибка микрофона: ' + err.message);
+      }
+    });
+
+    function processAudio() {
+      if (!isAudioActive) return;
+      requestAnimationFrame(processAudio);
+
+      analyser.getByteFrequencyData(dataArray);
+
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+      canvasCtx.fillStyle = '#040605';
+      canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const barWidth = (canvas.width / (dataArray.length / 4));
+      let x = 0;
+      let droneBandEnergy = 0;
+      const sampleRate = audioContext.sampleRate;
+      const binWidth = sampleRate / analyser.fftSize;
+
+      for (let i = 0; i < dataArray.length / 4; i++) {
+        const freq = i * binWidth;
+        const v = dataArray[i];
+        const y = canvas.height - (v / 255 * canvas.height);
+
+        if (freq >= 150 && freq <= 350) {
+          canvasCtx.fillStyle = '#ff3311';
+          droneBandEnergy += v;
+        } else {
+          canvasCtx.fillStyle = '#00aa44';
+        }
+
+        canvasCtx.fillRect(x, y, barWidth - 1, canvas.height - y);
+        x += barWidth;
+      }
+
+      const avgEnergy = droneBandEnergy / (200 / binWidth);
+      if (avgEnergy > 160 && !isMockRunning) {
+        const percent = Math.min(100, Math.round((avgEnergy / 255) * 100));
+        triggerAlert("АКУСТИЧЕСКАЯ ТРЕВОГА!", "Шум винтов БПЛА (150-350 Гц)", percent);
+      }
+    }
+
+    document.getElementById('btn-sdr').addEventListener('click', async () => {
+      if (!navigator.usb) {
+        log('WebUSB не поддерживается вашим браузером.');
+        return;
+      }
+      try {
+        const device = await navigator.usb.requestDevice({
+          filters: [
+            { vendorId: 0x0bda, productId: 0x2838 },
+            { vendorId: 0x0bda, productId: 0x2832 }
+          ]
+        });
+        await device.open();
+        await device.selectConfiguration(1);
+        await device.claimInterface(0);
+        sdrStatus.classList.add('active');
+        log(`RTL-SDR подключен: ${device.productName || 'USB устройство'}`);
+      } catch (err) {
+        log('SDR: ' + err.message);
+      }
+    });
+
+    document.getElementById('btn-mock').addEventListener('click', () => {
+      if (isMockRunning) return;
+      isMockRunning = true;
+      log('Запущен имитатор: перехват FPV на 915 МГц');
+      let p = 30;
+      mockInterval = setInterval(() => {
+        p += 15;
+        if (p > 95) p = 95;
+        triggerAlert("ВНИМАНИЕ! БПЛА (FPV)", "Частота: 915 МГц (Канал ELRS/TBS)", p);
+      }, 700);
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      if (mockInterval) clearInterval(mockInterval);
+      isMockRunning = false;
+      clearAlert();
+      log('Тревога сброшена оператором.');
+    });
+  </script>
+</body>
+</html>
