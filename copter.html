@@ -6,6 +6,9 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a0e0c">
   <title>Комплексный Детектор БПЛА</title>
+  <!-- Подключение легковесного движка TensorFlow.js и модели COCO-SSD -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -131,12 +134,12 @@
       flex-direction: column;
       gap: 6px;
       margin-bottom: 6px;
-      min-height: 110px;
+      min-height: 120px;
     }
 
-    /* Оптический модуль */
+    /* Оптический модуль с нейросетью */
     .cam-card {
-      height: 110px;
+      height: 140px;
       background: #040605;
       border: 1px solid #1f3327;
       border-radius: 8px;
@@ -161,6 +164,7 @@
       border-radius: 3px;
       color: #00ff66;
       font-weight: bold;
+      z-index: 10;
     }
 
     /* Спектрограмма звука */
@@ -172,7 +176,7 @@
       display: flex;
       flex-direction: column;
       padding: 6px;
-      min-height: 80px;
+      min-height: 70px;
     }
     .spectrum-title {
       font-size: 10px;
@@ -188,7 +192,7 @@
       background: #020302;
     }
 
-    /* Блок управления чувствительностью */
+    /* Чувствительность */
     .settings-row {
       display: flex;
       align-items: center;
@@ -260,25 +264,25 @@
 </head>
 <body>
 
-  <!-- Верхняя строка состояния всех контуров -->
+  <!-- Верхняя панель -->
   <div class="top-bar">
     <div class="status-group">
       <div><span id="mic-indicator" class="status-dot"></span> ЗВУК</div>
-      <div><span id="cam-indicator" class="status-dot"></span> КАМЕРА</div>
+      <div><span id="cam-indicator" class="status-dot"></span> ИИ-ОПТИКА</div>
       <div><span id="rf-indicator" class="status-dot"></span> РАДИО</div>
       <div><span id="sdr-indicator" class="status-dot"></span> SDR</div>
     </div>
-    <div>РЕЖИМ: ОФФЛАЙН</div>
+    <div>РЕЖИМ: АВТОНОМНЫЙ</div>
   </div>
 
-  <!-- Главный экран тревоги -->
+  <!-- Главный щит статуса -->
   <div id="main-card" class="main-display">
     <div id="status-head" class="state-title">НАБЛЮДЕНИЕ</div>
     <div id="status-sub" class="state-subtitle">Эфир чист. Выберите режим сканирования</div>
     
     <div class="meter-box">
       <div class="meter-label">
-        <span id="meter-source-title">ИНТЕНСИВНОСТЬ СИГНАЛА</span>
+        <span id="meter-source-title">ИНТЕНСИВНОСТЬ СИГНАЛА / УВЕРЕННОСТЬ ИИ</span>
         <span id="meter-num">0%</span>
       </div>
       <div class="meter-track">
@@ -289,21 +293,21 @@
 
   <!-- Визуальный блок -->
   <div class="visual-box">
-    <!-- Оптический экран (появляется только при включении камеры) -->
+    <!-- Оптический модуль с предсказаниями нейросети -->
     <div id="cam-card" class="cam-card">
-      <span class="cam-tag">ОПТИЧЕСКИЙ ТРЕКИНГ НЕБА</span>
+      <span class="cam-tag" id="ai-status-tag">ИИ TENSORFLOW: ЗАГРУЗКА</span>
       <video id="cam-video" autoplay playsinline muted style="display:none;"></video>
       <canvas id="cam-canvas"></canvas>
     </div>
 
     <!-- Акустическая спектрограмма -->
     <div class="spectrum-card">
-      <div class="spectrum-title">Спектрограмма частот (Красная зона = Моторы БПЛА 150–350 Гц)</div>
+      <div class="spectrum-title">Спектрограмма звука (Красная зона = Моторы БПЛА 150–350 Гц)</div>
       <canvas id="spec-canvas"></canvas>
     </div>
   </div>
 
-  <!-- Чувствительность и сирена -->
+  <!-- Чувствительность и звук -->
   <div class="settings-row">
     <span>Порог:</span>
     <input type="range" id="sensitivity-slider" min="30" max="95" value="65">
@@ -311,24 +315,24 @@
     <button id="btn-sound-toggle" style="padding: 3px 8px; font-size: 10px; margin-left: 6px;">ЗВУК: ВЫКЛ</button>
   </div>
 
-  <!-- Кнопки управления всеми модулями -->
+  <!-- Кнопки управления модулями -->
   <div class="btn-grid">
     <button id="btn-toggle-mic">1. АКУСТИКА</button>
-    <button id="btn-toggle-cam">2. КАМЕРА (НЕБО)</button>
+    <button id="btn-toggle-cam">2. ИИ-КАМЕРА (TENSORFLOW)</button>
     <button id="btn-toggle-rf">3. РАДИО (ESP32)</button>
     <button id="btn-toggle-sdr">4. USB SDR (OTG)</button>
     <button id="btn-sim" class="btn-test">ТЕСТ СИРЕНЫ</button>
     <button id="btn-reset" class="btn-stop">СБРОС ТРЕВОГИ</button>
   </div>
 
-  <div id="log-line" class="log-text">Готов к работе. Включите необходимый контур.</div>
+  <div id="log-line" class="log-text">Готов к работе. Инициализация нейросети...</div>
 
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
 
-    // Состояния датчиков
+    // Состояния
     let isListening = false;
     let isCamActive = false;
     let isRfActive = false;
@@ -336,8 +340,10 @@
     let audioAlertEnabled = false;
     let thresholdPercent = 65;
     let testTimer = null;
+    let nnModel = null;
+    let isModelLoading = false;
 
-    // Ссылки на элементы UI
+    // Ссылки на DOM
     const mainCard = document.getElementById('main-card');
     const statusHead = document.getElementById('status-head');
     const statusSub = document.getElementById('status-sub');
@@ -357,14 +363,15 @@
     const btnSound = document.getElementById('btn-sound-toggle');
     const sensSlider = document.getElementById('sensitivity-slider');
     const sensVal = document.getElementById('sens-val');
+    const aiStatusTag = document.getElementById('ai-status-tag');
 
-    // Настройка порога
+    // Чувствительность
     sensSlider.addEventListener('input', (e) => {
       thresholdPercent = parseInt(e.target.value);
       sensVal.innerText = `${thresholdPercent}%`;
     });
 
-    // Звуковая сирена (Web Audio)
+    // Звуковой зуммер
     let audioCtx;
     function playBeep() {
       if (!audioAlertEnabled) return;
@@ -409,12 +416,30 @@
       meterFill.style.width = "0%";
     }
 
+    // Предзагрузка нейросети при старте
+    async function initNeuralNet() {
+      if (nnModel || isModelLoading) return;
+      isModelLoading = true;
+      try {
+        logLine.innerText = "Загрузка весов нейросети TensorFlow...";
+        nnModel = await cocoSsd.load({ base: 'mobilenet_v2' });
+        aiStatusTag.innerText = "ИИ МОДЕЛЬ ГОТОВА";
+        logLine.innerText = "Нейросеть готова к автономному инференсу.";
+      } catch (err) {
+        aiStatusTag.innerText = "ОШИБКА ИИ";
+        logLine.innerText = "Сбой загрузки модели: " + err.message;
+      } finally {
+        isModelLoading = false;
+      }
+    }
+    initNeuralNet();
+
     // =============================================================
-    // 1. АКУСТИЧЕСКИЙ МОДУЛЬ (МИКРОФОН + FFT + ФИЛЬТР ШУМА)
+    // 1. АКУСТИЧЕСКИЙ ДЕТЕКТОР (МИКРОФОН + SNR-ФИЛЬТР)
     // =============================================================
     let analyser, micStream, dataArr;
-    const canvas = document.getElementById('spec-canvas');
-    const ctx = canvas.getContext('2d');
+    const specCanvas = document.getElementById('spec-canvas');
+    const specCtx = specCanvas.getContext('2d');
 
     btnToggleMic.addEventListener('click', async () => {
       if (isListening) {
@@ -439,29 +464,29 @@
         micIndicator.classList.add('online');
         btnToggleMic.classList.add('btn-active');
         btnToggleMic.innerText = "1. АКУСТИКА (ВКЛ)";
-        logLine.innerText = "Микрофон активен. Идет анализ гармоник...";
+        logLine.innerText = "Анализ звукового спектра запущен.";
         resetAlert();
-        renderLoop();
+        renderAudioLoop();
       } catch (err) {
-        logLine.innerText = "Ошибка доступа к микрофону: " + err.message;
+        logLine.innerText = "Ошибка микрофона: " + err.message;
       }
     });
 
-    function renderLoop() {
+    function renderAudioLoop() {
       if (!isListening) return;
-      requestAnimationFrame(renderLoop);
+      requestAnimationFrame(renderAudioLoop);
 
       analyser.getByteFrequencyData(dataArr);
 
-      canvas.width = canvas.clientWidth;
-      canvas.height = canvas.clientHeight;
-      ctx.fillStyle = '#020302';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      specCanvas.width = specCanvas.clientWidth;
+      specCanvas.height = specCanvas.clientHeight;
+      specCtx.fillStyle = '#020302';
+      specCtx.fillRect(0, 0, specCanvas.width, specCanvas.height);
 
       const sampleRate = audioCtx.sampleRate;
       const binWidth = sampleRate / analyser.fftSize;
       const totalBars = Math.floor(dataArr.length / 4);
-      const barWidth = canvas.width / totalBars;
+      const barWidth = specCanvas.width / totalBars;
 
       let x = 0;
       let peakDroneVal = 0;
@@ -470,24 +495,23 @@
       for (let i = 0; i < totalBars; i++) {
         const freq = i * binWidth;
         const val = dataArr[i];
-        const barHeight = (val / 255) * canvas.height;
-        const y = canvas.height - barHeight;
+        const barHeight = (val / 255) * specCanvas.height;
+        const y = specCanvas.height - barHeight;
 
         totalNoise += val;
 
         if (freq >= 150 && freq <= 380) {
-          ctx.fillStyle = '#ff3322';
+          specCtx.fillStyle = '#ff3322';
           if (val > peakDroneVal) peakDroneVal = val;
         } else {
-          ctx.fillStyle = '#00aa44';
+          specCtx.fillStyle = '#00aa44';
         }
 
-        ctx.fillRect(x, y, barWidth - 0.5, barHeight);
+        specCtx.fillRect(x, y, barWidth - 0.5, barHeight);
         x += barWidth;
       }
 
       const avgBackground = totalNoise / totalBars;
-      // Фильтр SNR: острый пик в зоне моторов, превышающий общий шум
       const isSharpPeak = peakDroneVal > (avgBackground * 1.7) && peakDroneVal > 130;
 
       if (isSharpPeak && !isTesting) {
@@ -496,7 +520,7 @@
         meterFill.style.width = `${percent}%`;
 
         if (percent >= thresholdPercent) {
-          setAlert("ТРЕВОГА: ЗВУК БПЛА!", "Характерный гул винтов (150-350 Гц)", percent);
+          setAlert("ТРЕВОГА: ЗВУК БПЛА!", "Характерный гул моторов (150-350 Гц)", percent);
         }
       } else if (mainCard.classList.contains('danger') && !isTesting && !isCamActive && !isRfActive) {
         resetAlert();
@@ -504,28 +528,33 @@
     }
 
     // =============================================================
-    // 2. ОПТИЧЕСКИЙ МОДУЛЬ (КАМЕРА + CV В БРАУЗЕРЕ)
+    // 2. ИИ-ОПТИКА (TENSORFLOW.JS + COCO-SSD)
     // =============================================================
     const camCard = document.getElementById('cam-card');
     const camVideo = document.getElementById('cam-video');
     const camCanvas = document.getElementById('cam-canvas');
     const camCtx = camCanvas.getContext('2d');
-    let lastFrameData = null;
+    let isDetectingFrame = false;
 
     btnToggleCam.addEventListener('click', async () => {
       if (isCamActive) {
         isCamActive = false;
         camIndicator.classList.remove('online');
         btnToggleCam.classList.remove('btn-active');
-        btnToggleCam.innerText = "2. КАМЕРА (НЕБО)";
+        btnToggleCam.innerText = "2. ИИ-КАМЕРА";
         camCard.style.display = 'none';
         if (camVideo.srcObject) {
           camVideo.srcObject.getTracks().forEach(t => t.stop());
         }
-        logLine.innerText = "Оптический сканер отключен.";
+        logLine.innerText = "ИИ-камера выключена.";
         resetAlert();
         return;
       }
+
+      if (!nnModel) {
+        await initNeuralNet();
+      }
+
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }
@@ -536,61 +565,70 @@
         camCard.style.display = 'flex';
         camIndicator.classList.add('online');
         btnToggleCam.classList.add('btn-active');
-        btnToggleCam.innerText = "2. КАМЕРА (ВКЛ)";
-        logLine.innerText = "Оптический трекинг неба запущен.";
-        processOpticalFrame();
+        btnToggleCam.innerText = "2. ИИ-КАМЕРА (ВКЛ)";
+        aiStatusTag.innerText = "ИИ: СКАНИРОВАНИЕ НЕБА";
+        logLine.innerText = "Нейросетевой трекинг запущен.";
+        processAIVideoFrame();
       } catch (err) {
         logLine.innerText = "Ошибка камеры: " + err.message;
       }
     });
 
-    function processOpticalFrame() {
+    async function processAIVideoFrame() {
       if (!isCamActive) return;
-      requestAnimationFrame(processOpticalFrame);
 
-      if (camVideo.readyState === camVideo.HAVE_ENOUGH_DATA) {
-        camCanvas.width = 320;
-        camCanvas.height = 240;
+      if (camVideo.readyState === camVideo.HAVE_ENOUGH_DATA && !isDetectingFrame && nnModel) {
+        isDetectingFrame = true;
+
+        camCanvas.width = camVideo.videoWidth || 640;
+        camCanvas.height = camVideo.videoHeight || 480;
         camCtx.drawImage(camVideo, 0, 0, camCanvas.width, camCanvas.height);
 
-        const currentFrame = camCtx.getImageData(0, 0, camCanvas.width, camCanvas.height);
-        const data = currentFrame.data;
+        // Инференс нейросети на кадре
+        const predictions = await nnModel.detect(camCanvas);
+        isDetectingFrame = false;
 
-        if (lastFrameData) {
-          let changedPixels = 0;
-          let targetX = 0, targetY = 0, targetPoints = 0;
+        let detectedThreat = false;
+        let highestConfidence = 0;
+        let threatClass = "";
 
-          for (let i = 0; i < data.length; i += 16) {
-            const diff = Math.abs(data[i] - lastFrameData.data[i]);
-            if (diff > 60) {
-              changedPixels++;
-              const pixelIdx = i / 4;
-              targetX += (pixelIdx % camCanvas.width);
-              targetY += Math.floor(pixelIdx / camCanvas.width);
-              targetPoints++;
+        predictions.forEach(prediction => {
+          const [x, y, width, height] = prediction.bbox;
+          const score = Math.round(prediction.score * 100);
+          const pClass = prediction.class.toLowerCase();
+
+          // Фильтрация: ищем самолеты, БПЛА, птиц и неопознанные воздушные цели
+          const isAeroTarget = (pClass === 'airplane' || pClass === 'bird' || pClass === 'kite' || pClass === 'drone');
+
+          if (isAeroTarget && score >= (thresholdPercent - 20)) {
+            detectedThreat = true;
+            if (score > highestConfidence) {
+              highestConfidence = score;
+              threatClass = pClass.toUpperCase();
             }
-          }
 
-          // Фильтр дрожания рук и размера цели
-          const isDroneSize = targetPoints >= 10 && targetPoints <= 250;
-          const isNotGlobalShake = changedPixels < 800;
-
-          if (isDroneSize && isNotGlobalShake && !isTesting) {
-            const avgX = targetX / targetPoints;
-            const avgY = targetY / targetPoints;
-
+            // Отрисовка ограничивающего бокса цели
             camCtx.strokeStyle = '#ff2200';
-            camCtx.lineWidth = 2;
-            camCtx.strokeRect(avgX - 12, avgY - 12, 24, 24);
+            camCtx.lineWidth = 3;
+            camCtx.strokeRect(x, y, width, height);
 
-            const percent = Math.min(100, Math.round((targetPoints / 200) * 100));
-            setAlert("ОПТИЧЕСКИЙ ЗАХВАТ!", "Точечный объект в небе", percent);
-          } else if (mainCard.classList.contains('danger') && !isTesting && !isListening && !isRfActive) {
-            resetAlert();
+            // Текстовая метка
+            camCtx.fillStyle = '#ff2200';
+            camCtx.fillRect(x, y > 18 ? y - 18 : 0, width, 18);
+            camCtx.fillStyle = '#ffffff';
+            camCtx.font = 'bold 12px monospace';
+            camCtx.fillText(`ЦЕЛЬ: ${pClass} (${score}%)`, x + 4, y > 18 ? y - 4 : 14);
           }
+        });
+
+        if (detectedThreat && !isTesting) {
+          setAlert("ИИ-ЗАХВАТ ЦЕЛИ!", `Обнаружен силуэт: ${threatClass}`, highestConfidence);
+        } else if (mainCard.classList.contains('danger') && !isTesting && !isListening && !isRfActive) {
+          resetAlert();
         }
-        lastFrameData = currentFrame;
       }
+
+      requestAnimationFrame(processAIVideoFrame);
     }
 
     // =============================================================
@@ -640,11 +678,11 @@
     });
 
     // =============================================================
-    // 4. ПРЯМОЙ USB SDR (ЧЕРЕЗ WEBUSB)
+    // 4. ПРЯМОЙ USB SDR (ЧЕРЕЗ WEBUSB ДЛЯ ANDROID)
     // =============================================================
     btnToggleSdr.addEventListener('click', async () => {
       if (!navigator.usb) {
-        alert("WebUSB не поддерживается на iOS (Apple). Для выноса используйте способ 3 (ESP32 Wi-Fi) или Android.");
+        alert("WebUSB не поддерживается на iOS (Apple). Используйте способ 3 (ESP32 Wi-Fi) или Android.");
         return;
       }
       try {
