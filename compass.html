@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Профессиональный лесной компас-визир и энциклопедия выживания (Лесовик ПРО)» (Версия 3.6 Perfect SVG Dial).
+  Программное обеспечение: «Профессиональный лесной компас-визир и энциклопедия выживания (Лесовик ПРО)» (Версия 3.7 Kalman Filter & Bubble Level).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -240,7 +240,7 @@
 
         #compass-svg-disc {
             width: 100%; height: 100%;
-            transition: transform 0.1s cubic-bezier(0.1, 0.9, 0.2, 1);
+            transition: transform 0.05s linear;
             transform-origin: 50% 50%;
         }
 
@@ -254,12 +254,33 @@
             background: rgba(143, 188, 143, 0.4); transform: translateY(-50%); pointer-events: none; z-index: 6;
         }
 
-        .compass-center-pin {
+        /* ПУЗЫРЬКОВЫЙ УРОВЕНЬ В ЦЕНТРЕ КОЛЬЦА */
+        .compass-center-level-box {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 22px; height: 22px; border-radius: 50%;
-            background: radial-gradient(circle, #E67E22 30%, #2D5A27 100%);
-            border: 2px solid #FFF; z-index: 7; box-shadow: 0 0 10px rgba(0,0,0,0.8);
-            pointer-events: none;
+            width: 46px; height: 46px; border-radius: 50%;
+            background: rgba(0, 0, 0, 0.65);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            z-index: 7; box-shadow: 0 0 12px rgba(0,0,0,0.9);
+            overflow: hidden; pointer-events: none;
+        }
+        .compass-level-cross-v {
+            position: absolute; top: 0; left: 50%; width: 1px; height: 100%;
+            background: rgba(255,255,255,0.25); transform: translateX(-50%);
+        }
+        .compass-level-cross-h {
+            position: absolute; top: 50%; left: 0; width: 100%; height: 1px;
+            background: rgba(255,255,255,0.25); transform: translateY(-50%);
+        }
+        .compass-bubble-dot {
+            position: absolute; top: 50%; left: 50%; width: 14px; height: 14px;
+            border-radius: 50%; background: #16A34A;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px #16A34A;
+            transition: all 0.04s ease-out;
+        }
+        .compass-bubble-dot.tilt-bad {
+            background: #E67E22;
+            box-shadow: 0 0 8px #E67E22;
         }
 
         .gps-overlay-grid {
@@ -457,7 +478,6 @@
 
                     <!-- ВЕКТОРНЫЙ ЛИМБ С АБСОЛЮТНОЙ ЦЕНТРОВКОЙ 400x400 -->
                     <svg id="compass-svg-disc" viewBox="0 0 400 400">
-                        <!-- Контейнер для динамических рисок и цифр -->
                         <g id="svg-ticks-group"></g>
 
                         <!-- Буквы сторон света (С, В, Ю, З) строго по радиусам -->
@@ -467,13 +487,16 @@
                         <text x="44" y="200" fill="#FFFFFF" font-size="20" font-weight="900" font-family="Inter, sans-serif" text-anchor="middle" dominant-baseline="central">З</text>
 
                         <!-- Сквозная стрелка Север-Юг со строгой симметрией -->
-                        <!-- Север (Красный) -->
                         <polygon points="200,60 188,200 212,200" fill="#DC2626" filter="drop-shadow(0 0 6px rgba(220,38,38,0.7))"/>
-                        <!-- Юг (Белый) -->
                         <polygon points="200,340 188,200 212,200" fill="#FFFFFF" filter="drop-shadow(0 0 4px rgba(255,255,255,0.5))"/>
                     </svg>
 
-                    <div class="compass-center-pin"></div>
+                    <!-- ИНТЕРАКТИВНЫЙ ПУЗЫРЬКОВЫЙ УРОВЕНЬ ГОРИЗОНТА -->
+                    <div class="compass-center-level-box">
+                        <div class="compass-level-cross-v"></div>
+                        <div class="compass-level-cross-h"></div>
+                        <div id="compass-level-bubble" class="compass-bubble-dot"></div>
+                    </div>
                 </div>
 
                 <div class="gps-overlay-grid">
@@ -658,6 +681,12 @@
         let postCount = 0;
         let isFullscreen = false;
 
+        // --- МАТЕМАТИЧЕСКИЙ ФИЛЬТР КАЛМАНА ДЛЯ ИСКЛЮЧЕНИЯ ДРОЖАНИЯ (ANTI-JITTER) ---
+        let filteredSin = 0;
+        let filteredCos = 0;
+        let isFilterInitialized = false;
+        const kalmanAlpha = 0.05; // Оптимальный коэффициент сглаживания для Android/iOS
+
         let currentLat = 61.668793;
         let currentLon = 50.836399;
         let currentAlt = 142;
@@ -691,7 +720,6 @@
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 
-                // Мягкий механический клик
                 osc.type = 'triangle';
                 osc.frequency.setValueAtTime(isCardinal ? 920 : 620, audioCtx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.015);
@@ -771,7 +799,6 @@
                 line.setAttribute("stroke-width", strokeWidth);
                 group.appendChild(line);
 
-                // Подписи градусов каждые 30° (кроме 0°, 90°, 180°, 270° где буквы)
                 if (deg % 30 === 0 && deg % 90 !== 0) {
                     const textRad = (deg - 90) * (Math.PI / 180);
                     const textDist = 158;
@@ -819,7 +846,7 @@
             document.getElementById('azimuth-deg-label').innerText = `${Math.round(displayedAzimuth)}°`;
             document.getElementById('azimuth-rumb-label').innerText = getRumbString(displayedAzimuth);
 
-            // Плавный поворот SVG-диска относительно центра
+            // Плавный поворот SVG-диска
             document.getElementById('compass-svg-disc').style.transform = `rotate(${-displayedAzimuth}deg)`;
 
             triggerHapticStep(displayedAzimuth);
@@ -849,7 +876,7 @@
             }
         }
 
-        // ДАТЧИКИ ОРИЕНТАЦИИ
+        // ОБРАБОТКА ДАТЧИКОВ ОРИЕНТАЦИИ И УРОВНЯ ГОРИЗОНТА
         function handleOrientation(event) {
             let heading = null;
 
@@ -860,8 +887,42 @@
             }
 
             if (heading !== null) {
-                currentAzimuth = heading;
+                // ПРИМЕНЕНИЕ ФИЛЬТРА КАЛМАНА ДЛЯ ИСКЛЮЧЕНИЯ ДРОЖАНИЯ
+                let rad = (heading * Math.PI) / 180;
+                let rawSin = Math.sin(rad);
+                let rawCos = Math.cos(rad);
+
+                if (!isFilterInitialized) {
+                    filteredSin = rawSin;
+                    filteredCos = rawCos;
+                    isFilterInitialized = true;
+                } else {
+                    filteredSin = filteredSin + kalmanAlpha * (rawSin - filteredSin);
+                    filteredCos = filteredCos + kalmanAlpha * (rawCos - filteredCos);
+                }
+
+                currentAzimuth = (Math.atan2(filteredSin, filteredCos) * 180 / Math.PI + 360) % 360;
                 updateCompassReading();
+            }
+
+            // ОБРАБОТКА ПУЗЫРЬКОВОГО УРОВНЯ (PITCH & ROLL)
+            let pitch = event.beta || 0;  // Наклон вперед-назад
+            let roll = event.gamma || 0;   // Наклон влево-вправо
+
+            let moveX = Math.max(-16, Math.min(16, roll * 0.8));
+            let moveY = Math.max(-16, Math.min(16, pitch * 0.8));
+
+            const bubble = document.getElementById('compass-level-bubble');
+            if (bubble) {
+                bubble.style.left = `calc(50% + ${moveX}px)`;
+                bubble.style.top = `calc(50% + ${moveY}px)`;
+
+                // Если наклон более 6 градусов - предупреждаем о потере точности
+                if (Math.abs(pitch) > 6 || Math.abs(roll) > 6) {
+                    bubble.classList.add('tilt-bad');
+                } else {
+                    bubble.classList.remove('tilt-bad');
+                }
             }
         }
 
