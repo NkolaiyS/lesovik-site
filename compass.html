@@ -40,6 +40,20 @@
     <link rel="canonical" href="https://lesovik-pro.ru/compass.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
 
+    <!-- ИНДИВИДУАЛЬНЫЙ МАНИФЕСТ И SERVICE WORKER ДЛЯ ОФЛАЙН-КОМПАСА -->
+    <link rel="manifest" href="/compass.webmanifest">
+    <meta name="theme-color" content="#2D5A27">
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw-compass.js')
+            .then(reg => console.log('Лесной Компас готов к офлайн работе:', reg.scope))
+            .catch(err => console.error('Ошибка регистрации SW компаса:', err));
+        });
+      }
+    </script>
+
     <!-- СТРУКТУРИРОВАННАЯ МИКРОРАЗМЕТКА ДЛЯ ЯНДЕКСА И GOOGLE (FAQ SCHEMA) -->
     <script type="application/ld+json">
     {
@@ -720,6 +734,7 @@
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 
+                // Мягкий механический клик
                 osc.type = 'triangle';
                 osc.frequency.setValueAtTime(isCardinal ? 920 : 620, audioCtx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.015);
@@ -799,6 +814,7 @@
                 line.setAttribute("stroke-width", strokeWidth);
                 group.appendChild(line);
 
+                // Подписи градусов каждые 30° (кроме 0°, 90°, 180°, 270° где буквы)
                 if (deg % 30 === 0 && deg % 90 !== 0) {
                     const textRad = (deg - 90) * (Math.PI / 180);
                     const textDist = 158;
@@ -846,7 +862,7 @@
             document.getElementById('azimuth-deg-label').innerText = `${Math.round(displayedAzimuth)}°`;
             document.getElementById('azimuth-rumb-label').innerText = getRumbString(displayedAzimuth);
 
-            // Плавный поворот SVG-диска
+            // Плавный поворот SVG-диска относительно центра
             document.getElementById('compass-svg-disc').style.transform = `rotate(${-displayedAzimuth}deg)`;
 
             triggerHapticStep(displayedAzimuth);
@@ -906,8 +922,8 @@
             }
 
             // ОБРАБОТКА ПУЗЫРЬКОВОГО УРОВНЯ (PITCH & ROLL)
-            let pitch = event.beta || 0;  // Наклон вперед-назад
-            let roll = event.gamma || 0;   // Наклон влево-вправо
+            let pitch = event.beta || 0;
+            let roll = event.gamma || 0;
 
             let moveX = Math.max(-16, Math.min(16, roll * 0.8));
             let moveY = Math.max(-16, Math.min(16, pitch * 0.8));
@@ -917,7 +933,6 @@
                 bubble.style.left = `calc(50% + ${moveX}px)`;
                 bubble.style.top = `calc(50% + ${moveY}px)`;
 
-                // Если наклон более 6 градусов - предупреждаем о потере точности
                 if (Math.abs(pitch) > 6 || Math.abs(roll) > 6) {
                     bubble.classList.add('tilt-bad');
                 } else {
