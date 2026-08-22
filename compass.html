@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Профессиональный лесной компас-визир и энциклопедия выживания (Лесовик ПРО)» (Версия 3.8 Field Tracker & KML).
+  Программное обеспечение: «Профессиональный лесной компас-визир и энциклопедия выживания (Лесовик ПРО)» (Версия 3.9 Share & Field Tracker).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -210,6 +210,8 @@
         .btn-secondary { background-color: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); }
         .btn-lock { background-color: var(--accent); color: white; }
         .btn-sos { background: #B91C1C; color: #FFF; font-size: 13px; }
+        .btn-share { background: #15803D; color: #FFF; font-size: 12px; }
+        .btn-share:hover { background: #166534; }
         .btn-export-kml { background-color: #0284C7; color: white; }
         .btn-danger-clear { background-color: transparent; border: 1px solid var(--danger); color: var(--danger); }
         .btn-danger-clear:hover { background-color: var(--danger); color: white; }
@@ -390,6 +392,11 @@
             <!-- ПЛАШКА ОБ ОФЛАЙН-РАБОТЕ -->
             <div style="background: rgba(45, 90, 39, 0.15); border: 1px solid var(--forest-green); border-radius: 8px; padding: 10px 15px; font-size: 13px; text-align: center; color: var(--text-graphite);">
                 📶 <b>Работает без интернета!</b> Компас, координаты GPS, дневник точек и инструкции сохраняются в телефоне и работают в глухой тайге без связи.
+            </div>
+
+            <!-- КНОПКА ПОДЕЛИТЬСЯ С ДРУГОМ -->
+            <div>
+                <button class="btn-action btn-share" onclick="shareCompassWithFriend()">📤 Отправить другу перед походом в лес</button>
             </div>
 
             <div>
@@ -718,7 +725,6 @@
         let lockedTargetAzimuth = null;
         let isFullscreen = false;
 
-        // МАТЕМАТИЧЕСКИЙ ФИЛЬТР КАЛМАНА ДЛЯ ИСКЛЮЧЕНИЯ ДРОЖАНИЯ (ANTI-JITTER)
         let filteredSin = 0;
         let filteredCos = 0;
         let isFilterInitialized = false;
@@ -729,10 +735,8 @@
         let currentAlt = 142;
         let currentAcc = 3;
 
-        // ЖУРНАЛ ТОЧЕК И ХОДОВ
         let savedPointsList = [];
 
-        // СИНТЕЗАТОР ЗВУКА МЕХАНИЧЕСКОЙ ТРЕЩОТКИ
         let audioCtx = null;
         let isAudioUnlocked = false;
 
@@ -1024,6 +1028,26 @@
             }
         }
 
+        // --- ФУНКЦИЯ «ПОДЕЛИТЬСЯ С ДРУГОМ» ---
+        function shareCompassWithFriend() {
+            unlockAudioOnFirstGesture();
+            const shareData = {
+                title: 'Автономный Лесной Компас — Лесовик ПРО',
+                text: 'Сохрани перед походом в лес! Автономный лесной компас с GPS-координатами и памяткой выживания, работает в тайге без интернета:',
+                url: 'https://lesovik-pro.ru/compass.html'
+            };
+
+            if (navigator.share) {
+                navigator.share(shareData).catch((err) => console.log('Share canceled'));
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText('https://lesovik-pro.ru/compass.html').then(() => {
+                    alert('Ссылка на Лесной Компас скопирована! Отправьте её друзьям в мессенджере.');
+                });
+            } else {
+                prompt('Скопируйте ссылку и отправьте другу:', 'https://lesovik-pro.ru/compass.html');
+            }
+        }
+
         // --- УПРАВЛЕНИЕ АРХИВОМ ТОЧЕК И ПАМЯТЬЮ СМАРТФОНА ---
         function loadPointsFromStorage() {
             try {
@@ -1062,7 +1086,7 @@
                 time: `${date} ${time}`
             };
 
-            savedPointsList.unshift(newPoint); // Добавляем свежую точку наверх
+            savedPointsList.unshift(newPoint);
             savePointsToStorage();
             renderPointsList();
 
@@ -1124,7 +1148,6 @@
   <description>Сохранено в приложении Лесной Компас (Лесовик ПРО)</description>
 `;
 
-            // 1. Точечные маркеры
             savedPointsList.forEach(p => {
                 kml += `
   <Placemark>
@@ -1136,7 +1159,6 @@
   </Placemark>`;
             });
 
-            // 2. Линия трека маршрута (в хронологическом порядке)
             const chronological = [...savedPointsList].reverse();
             let trackCoords = chronological.map(p => `${p.lon.toFixed(6)},${p.lat.toFixed(6)},${p.alt}`).join(' ');
 
