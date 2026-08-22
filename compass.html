@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Профессиональный лесной компас-визир и энциклопедия выживания (Лесовик ПРО)» (Версия 3.7 Kalman Filter & Bubble Level).
+  Программное обеспечение: «Профессиональный лесной компас-визир и энциклопедия выживания (Лесовик ПРО)» (Версия 3.8 Field Tracker & KML).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -54,7 +54,7 @@
       }
     </script>
 
-    <!-- СТРУКТУРИРОВАННАЯ МИКРОРАЗМЕТКА ДЛЯ ЯНДЕКСА И GOOGLE (FAQ SCHEMA) -->
+    <!-- СТРУКТУРИРОВАННАЯ МИКРОРАЗМЕТКА FAQ SCHEMA -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -210,6 +210,9 @@
         .btn-secondary { background-color: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); }
         .btn-lock { background-color: var(--accent); color: white; }
         .btn-sos { background: #B91C1C; color: #FFF; font-size: 13px; }
+        .btn-export-kml { background-color: #0284C7; color: white; }
+        .btn-danger-clear { background-color: transparent; border: 1px solid var(--danger); color: var(--danger); }
+        .btn-danger-clear:hover { background-color: var(--danger); color: white; }
 
         /* ОБЛАСТЬ КОМПАСА */
         .compass-stage-container {
@@ -219,7 +222,6 @@
             transition: all 0.3s ease;
         }
 
-        /* ПОЛНОЭКРАННЫЙ РЕЖИМ (CSS OVERLAY) */
         .compass-stage-container.custom-fullscreen {
             position: fixed !important; top: 0 !important; left: 0 !important;
             width: 100vw !important; height: 100vh !important; max-width: 100vw !important; max-height: 100vh !important;
@@ -242,7 +244,6 @@
             font-size: 18px; font-weight: 700; text-transform: uppercase; color: #E0E0E0; margin-top: 4px;
         }
 
-        /* МЕХАНИЧЕСКИЙ ЛИМБ КОМПАСА (ВЕКТОРНЫЙ SVG ДИСК) */
         .compass-dial-container {
             position: relative; width: 330px; height: 330px; max-width: 82vw; max-height: 82vw;
             border-radius: 50%; border: 6px solid #2D3E36;
@@ -258,7 +259,6 @@
             transform-origin: 50% 50%;
         }
 
-        /* СТАТИЧНЫЙ ПРИЦЕЛ ВИЗИРА В ЦЕНТРЕ */
         .crosshair-line-v {
             position: absolute; top: 0; left: 50%; width: 2px; height: 100%;
             background: rgba(220, 38, 38, 0.85); transform: translateX(-50%); pointer-events: none; z-index: 6;
@@ -268,7 +268,6 @@
             background: rgba(143, 188, 143, 0.4); transform: translateY(-50%); pointer-events: none; z-index: 6;
         }
 
-        /* ПУЗЫРЬКОВЫЙ УРОВЕНЬ В ЦЕНТРЕ КОЛЬЦА */
         .compass-center-level-box {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 46px; height: 46px; border-radius: 50%;
@@ -324,6 +323,10 @@
             text-transform: uppercase; transition: 0.2s;
         }
         .btn-screen-bar:hover { background: rgba(255, 255, 255, 0.25); }
+
+        .log-item-row {
+            padding: 5px 0; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;
+        }
 
         /* ИНТЕРАКТИВНАЯ ЭНЦИКЛОПЕДИЯ-АККОРДЕОН */
         .faq-accordion-section {
@@ -383,12 +386,12 @@
 
         <!-- ПАНЕЛЬ УПРАВЛЕНИЯ -->
         <div class="control-panel">
-
-          <!-- ПЛАШКА ОБ ОФЛАЙН-РАБОТЕ -->
-            <div style="background: rgba(45, 90, 39, 0.15); border: 1px solid var(--forest-green); border-radius: 8px; padding: 10px 15px; font-size: 13px; text-align: center; color: var(--text-graphite);">
-                📶 <b>Работает без интернета!</b> Добавьте страницу на главный экран смартфона, и компас с GPS и инструкциями выручит вас даже в глухой тайге без связи.
-            </div>
             
+            <!-- ПЛАШКА ОБ ОФЛАЙН-РАБОТЕ -->
+            <div style="background: rgba(45, 90, 39, 0.15); border: 1px solid var(--forest-green); border-radius: 8px; padding: 10px 15px; font-size: 13px; text-align: center; color: var(--text-graphite);">
+                📶 <b>Работает без интернета!</b> Компас, координаты GPS, дневник точек и инструкции сохраняются в телефоне и работают в глухой тайге без связи.
+            </div>
+
             <div>
                 <a href="#survival-guide" class="btn-action btn-sos" style="text-decoration:none;">🆘 Памятка: Как выжить в тайге</a>
             </div>
@@ -462,16 +465,32 @@
                 </div>
             </div>
 
-            <!-- ПОЛЕВОЙ ЖУРНАЛ СТОЛБОВ -->
+            <!-- ТАЁЖНЫЙ ЖУРНАЛ И КАРТОГРАФИЯ KML -->
             <div>
                 <div class="panel-section-title">
-                    <span>5. Засечка столба в журнал</span>
+                    <span>5. Дневник точек и мест</span>
                 </div>
 
-                <button class="btn-action" onclick="saveCurrentPost()">📍 Сохранить точку в полевой список</button>
-                
+                <div style="display: flex; gap: 6px; margin-top: 8px;">
+                    <select id="point-type-select" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-paper); font-size: 12px; font-weight: bold; width: 45%;">
+                        <option value="📍 Точка" selected>📍 Столб / Точка</option>
+                        <option value="🍄 Грибы">🍄 Грибное место</option>
+                        <option value="🫐 Ягоды">🫐 Ягодник</option>
+                        <option value="⛺ Стоянка">⛺ Лагерь / Стоянка</option>
+                        <option value="💧 Родник">💧 Родник / Вода</option>
+                    </select>
+                    <button class="btn-action" style="flex: 1;" onclick="saveCurrentPost()">📍 Сохранить точку</button>
+                </div>
+
+                <!-- СПИСОК ТОЧЕК ИЗ ПАМЯТИ -->
                 <div style="margin-top: 8px; max-height: 160px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px; padding: 6px; font-size: 11px; font-family: monospace; background: var(--bg-paper);" id="post-log-container">
-                    Журнал пуст. Нажмите кнопку выше для фиксации азимута и координат столба.
+                    Журнал пуст. Нажмите кнопку выше для сохранения точек в архив памяти телефона.
+                </div>
+
+                <!-- КНОПКИ ЭКСПОРТА В KML И ОЧИСТКИ -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+                    <button class="btn-action btn-export-kml" onclick="exportTrackToKML()">🗺️ Скачать KML</button>
+                    <button class="btn-action btn-danger-clear" onclick="clearTrackArchive()">🗑️ Очистить архив</button>
                 </div>
             </div>
 
@@ -697,21 +716,23 @@
         let currentAzimuth = 0;
         let lastVibeDegree = 0;
         let lockedTargetAzimuth = null;
-        let postCount = 0;
         let isFullscreen = false;
 
-        // --- МАТЕМАТИЧЕСКИЙ ФИЛЬТР КАЛМАНА ДЛЯ ИСКЛЮЧЕНИЯ ДРОЖАНИЯ (ANTI-JITTER) ---
+        // МАТЕМАТИЧЕСКИЙ ФИЛЬТР КАЛМАНА ДЛЯ ИСКЛЮЧЕНИЯ ДРОЖАНИЯ (ANTI-JITTER)
         let filteredSin = 0;
         let filteredCos = 0;
         let isFilterInitialized = false;
-        const kalmanAlpha = 0.05; // Оптимальный коэффициент сглаживания для Android/iOS
+        const kalmanAlpha = 0.05;
 
         let currentLat = 61.668793;
         let currentLon = 50.836399;
         let currentAlt = 142;
         let currentAcc = 3;
 
-        // СИНТЕЗАТОР ЗВУКА МЕХАНИЧЕСКОЙ ТРЕЩОТКИ (WEB AUDIO API С РАЗБЛОКИРОВКОЙ)
+        // ЖУРНАЛ ТОЧЕК И ХОДОВ
+        let savedPointsList = [];
+
+        // СИНТЕЗАТОР ЗВУКА МЕХАНИЧЕСКОЙ ТРЕЩОТКИ
         let audioCtx = null;
         let isAudioUnlocked = false;
 
@@ -739,7 +760,6 @@
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 
-                // Мягкий механический клик
                 osc.type = 'triangle';
                 osc.frequency.setValueAtTime(isCardinal ? 920 : 620, audioCtx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.015);
@@ -755,7 +775,6 @@
             } catch(e) {}
         }
 
-        // ТАКТИЛЬНЫЙ ВИБРООТКЛИК И ТРЕЩОТКА ПРИ ПОВОРОТЕ
         function triggerHapticStep(deg) {
             const roundedDeg = Math.round(deg);
             if (Math.abs(roundedDeg - lastVibeDegree) >= 5 || (lastVibeDegree === 355 && roundedDeg === 0)) {
@@ -777,7 +796,6 @@
             }
         }
 
-        // ВЕКТОРНАЯ ГЕНЕРАЦИЯ ДЕЛЕНИЙ И ЦИФР SVG (СТРОГО ЦЕНТР X=200, Y=200)
         function buildSvgCompassTicks() {
             const group = document.getElementById('svg-ticks-group');
             group.innerHTML = '';
@@ -819,7 +837,6 @@
                 line.setAttribute("stroke-width", strokeWidth);
                 group.appendChild(line);
 
-                // Подписи градусов каждые 30° (кроме 0°, 90°, 180°, 270° где буквы)
                 if (deg % 30 === 0 && deg % 90 !== 0) {
                     const textRad = (deg - 90) * (Math.PI / 180);
                     const textDist = 158;
@@ -841,7 +858,6 @@
             }
         }
 
-        // РАСЧЕТ РУМБА
         function getRumbString(deg) {
             deg = (deg % 360 + 360) % 360;
             if (deg >= 337.5 || deg < 22.5) return 'Север (С)';
@@ -854,7 +870,6 @@
             return `СЗ: ${(360 - deg).toFixed(1)}°`;
         }
 
-        // ОБНОВЛЕНИЕ ДИСКА И ПОКАЗАНИЙ
         function updateCompassReading() {
             const northType = document.getElementById('north-type-select').value;
             const declination = parseFloat(document.getElementById('declination-input').value) || 0;
@@ -867,7 +882,6 @@
             document.getElementById('azimuth-deg-label').innerText = `${Math.round(displayedAzimuth)}°`;
             document.getElementById('azimuth-rumb-label').innerText = getRumbString(displayedAzimuth);
 
-            // Плавный поворот SVG-диска относительно центра
             document.getElementById('compass-svg-disc').style.transform = `rotate(${-displayedAzimuth}deg)`;
 
             triggerHapticStep(displayedAzimuth);
@@ -897,7 +911,6 @@
             }
         }
 
-        // ОБРАБОТКА ДАТЧИКОВ ОРИЕНТАЦИИ И УРОВНЯ ГОРИЗОНТА
         function handleOrientation(event) {
             let heading = null;
 
@@ -908,7 +921,6 @@
             }
 
             if (heading !== null) {
-                // ПРИМЕНЕНИЕ ФИЛЬТРА КАЛМАНА ДЛЯ ИСКЛЮЧЕНИЯ ДРОЖАНИЯ
                 let rad = (heading * Math.PI) / 180;
                 let rawSin = Math.sin(rad);
                 let rawCos = Math.cos(rad);
@@ -926,7 +938,6 @@
                 updateCompassReading();
             }
 
-            // ОБРАБОТКА ПУЗЫРЬКОВОГО УРОВНЯ (PITCH & ROLL)
             let pitch = event.beta || 0;
             let roll = event.gamma || 0;
 
@@ -964,7 +975,6 @@
             }
         }
 
-        // GPS
         function initGPS() {
             if ("geolocation" in navigator) {
                 navigator.geolocation.watchPosition(
@@ -984,7 +994,6 @@
             }
         }
 
-        // ФИКСАЦИЯ СТВОРА
         function toggleLockTarget() {
             unlockAudioOnFirstGesture();
             const displayed = parseInt(document.getElementById('azimuth-deg-label').innerText);
@@ -1000,7 +1009,6 @@
             document.getElementById('target-deviation-badge').style.display = 'none';
         }
 
-        // ПОЛНОЭКРАННЫЙ РЕЖИМ (CSS TOGGLE)
         function toggleCustomFullscreen() {
             unlockAudioOnFirstGesture();
             const stage = document.getElementById('compass-stage');
@@ -1016,19 +1024,147 @@
             }
         }
 
-        // СОХРАНЕНИЕ ТОЧКИ
+        // --- УПРАВЛЕНИЕ АРХИВОМ ТОЧЕК И ПАМЯТЬЮ СМАРТФОНА ---
+        function loadPointsFromStorage() {
+            try {
+                const data = localStorage.getItem('lesovik_compass_points');
+                if (data) {
+                    savedPointsList = JSON.parse(data);
+                    renderPointsList();
+                }
+            } catch(e) {}
+        }
+
+        function savePointsToStorage() {
+            try {
+                localStorage.setItem('lesovik_compass_points', JSON.stringify(savedPointsList));
+            } catch(e) {}
+        }
+
         function saveCurrentPost() {
             unlockAudioOnFirstGesture();
-            postCount++;
-            const logBox = document.getElementById('post-log-container');
+            const pointType = document.getElementById('point-type-select').value;
             const az = document.getElementById('azimuth-deg-label').innerText;
             const rumb = document.getElementById('azimuth-rumb-label').innerText;
             const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const date = new Date().toLocaleDateString('ru-RU');
 
-            if (postCount === 1) logBox.innerHTML = '';
+            const newPoint = {
+                id: savedPointsList.length + 1,
+                name: `${pointType} №${savedPointsList.length + 1}`,
+                type: pointType,
+                azimuth: az,
+                rumb: rumb,
+                lat: currentLat,
+                lon: currentLon,
+                alt: currentAlt,
+                acc: currentAcc,
+                time: `${date} ${time}`
+            };
 
-            logBox.innerHTML = `<div><b>Столб №${postCount}</b> (${time}) | Аз: <b>${az}</b> (${rumb}) | Lat: ${currentLat.toFixed(6)}, Lon: ${currentLon.toFixed(6)}</div>` + logBox.innerHTML;
+            savedPointsList.unshift(newPoint); // Добавляем свежую точку наверх
+            savePointsToStorage();
+            renderPointsList();
+
             if (navigator.vibrate) navigator.vibrate(50);
+        }
+
+        function deleteSinglePoint(id) {
+            savedPointsList = savedPointsList.filter(p => p.id !== id);
+            savePointsToStorage();
+            renderPointsList();
+        }
+
+        function renderPointsList() {
+            const logBox = document.getElementById('post-log-container');
+            if (savedPointsList.length === 0) {
+                logBox.innerHTML = 'Журнал пуст. Нажмите кнопку выше для сохранения точек в архив памяти телефона.';
+                return;
+            }
+
+            let html = '';
+            savedPointsList.forEach(p => {
+                html += `
+                    <div class="log-item-row">
+                        <div>
+                            <b>${p.name}</b> (${p.time})<br>
+                            Аз: <b>${p.azimuth}</b> (${p.rumb}) | Lat: ${p.lat.toFixed(6)}, Lon: ${p.lon.toFixed(6)} | H: ${p.alt}м
+                        </div>
+                        <button onclick="deleteSinglePoint(${p.id})" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:14px; padding:2px 6px;">✕</button>
+                    </div>
+                `;
+            });
+            logBox.innerHTML = html;
+        }
+
+        function clearTrackArchive() {
+            if (savedPointsList.length === 0) {
+                alert("Архив точек уже пуст!");
+                return;
+            }
+            if (confirm("Вы точно хотите очистить весь архив сохраненных точек и маршрутов?")) {
+                savedPointsList = [];
+                savePointsToStorage();
+                renderPointsList();
+            }
+        }
+
+        // --- ЭКСПОРТ В KML (ГИС, ЯНДЕКС.КАРТЫ, GOOGLE EARTH) ---
+        function exportTrackToKML() {
+            if (savedPointsList.length === 0) {
+                alert("Нет сохраненных точек для выгрузки в KML!");
+                return;
+            }
+
+            const dateStr = new Date().toISOString().slice(0, 10);
+            let kml = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document>
+  <name>Таежный маршрут и точки (${dateStr})</name>
+  <description>Сохранено в приложении Лесной Компас (Лесовик ПРО)</description>
+`;
+
+            // 1. Точечные маркеры
+            savedPointsList.forEach(p => {
+                kml += `
+  <Placemark>
+    <name>${p.name}</name>
+    <description>Время: ${p.time}\nАзимут: ${p.azimuth} (${p.rumb})\nВысота: ${p.alt} м (±${p.acc}м)</description>
+    <Point>
+      <coordinates>${p.lon.toFixed(6)},${p.lat.toFixed(6)},${p.alt}</coordinates>
+    </Point>
+  </Placemark>`;
+            });
+
+            // 2. Линия трека маршрута (в хронологическом порядке)
+            const chronological = [...savedPointsList].reverse();
+            let trackCoords = chronological.map(p => `${p.lon.toFixed(6)},${p.lat.toFixed(6)},${p.alt}`).join(' ');
+
+            kml += `
+  <Placemark>
+    <name>Линия пройденного пути</name>
+    <Style>
+      <LineStyle>
+        <color>ff16a34a</color>
+        <width>4</width>
+      </LineStyle>
+    </Style>
+    <LineString>
+      <coordinates>${trackCoords}</coordinates>
+    </LineString>
+  </Placemark>
+</Document>
+</kml>`;
+
+            const blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Таежный_маршрут_${dateStr}.kml`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
 
         // АККОРДЕОН FAQ
@@ -1048,6 +1184,7 @@
             requestDeviceOrientationPermission();
             initGPS();
             updateCompassReading();
+            loadPointsFromStorage();
         };
     </script>
 </body>
