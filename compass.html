@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Профессиональный лесной компас-визир и энциклопедия выживания (Лесовик ПРО)» (Версия 4.2 Light Engine).
+  Программное обеспечение: «Профессиональный лесной компас-визир и энциклопедия выживания (Лесовик ПРО)» (Версия 4.3 Stable Dual Engine).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -725,19 +725,19 @@
     </footer>
 
     <script>
-        let isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-        
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
         let currentAzimuth = 0;
         let manualZeroOffset = 0;
         let lastVibeDegree = 0;
         let lockedTargetAzimuth = null;
         let isFullscreen = false;
 
-        // Легкий фильтр угла без матричной нагрузки
+        // Пороговые переменные для исключения шума на Android
         let filteredSin = 0;
         let filteredCos = 0;
         let isFilterInit = false;
-        const smoothAlpha = isIOS ? 0.25 : 0.08;
+        let lastValidHeading = 0;
 
         let currentLat = 61.668793;
         let currentLon = 50.836399;
@@ -903,7 +903,6 @@
             document.getElementById('azimuth-deg-label').innerText = `${Math.round(displayed)}°`;
             document.getElementById('azimuth-rumb-label').innerText = getRumbString(displayed);
 
-            // Мгновенный аппаратный поворот без лагов
             document.getElementById('compass-svg-disc').style.transform = `rotate(${-displayed}deg)`;
 
             triggerHapticStep(displayed);
@@ -933,32 +932,41 @@
             }
         }
 
-        // ОБРАБОТЧИК СЕНСОРОВ (IOS + ANDROID)
         function handleOrientation(event) {
             let heading = null;
 
             if (event.webkitCompassHeading !== undefined) {
+                // Прямой аппаратный компас Apple
                 heading = event.webkitCompassHeading;
             } else if (event.alpha !== null) {
-                // На Android alpha отсчитывается против часовой стрелки
                 heading = (360 - event.alpha) % 360;
             }
 
             if (heading !== null) {
-                let rad = heading * (Math.PI / 180);
-                let rawSin = Math.sin(rad);
-                let rawCos = Math.cos(rad);
-
-                if (!isFilterInit) {
-                    filteredSin = rawSin;
-                    filteredCos = rawCos;
-                    isFilterInit = true;
+                if (isIOS) {
+                    currentAzimuth = heading;
                 } else {
-                    filteredSin += smoothAlpha * (rawSin - filteredSin);
-                    filteredCos += smoothAlpha * (rawCos - filteredCos);
-                }
+                    // Аппаратный Deadband для Android: если дельта меньше 0.8° — гасим дрожание
+                    let diffFromLast = Math.abs(heading - lastValidHeading);
+                    if (diffFromLast > 180) diffFromLast = 360 - diffFromLast;
 
-                currentAzimuth = (Math.atan2(filteredSin, filteredCos) * 180 / Math.PI + 360) % 360;
+                    if (diffFromLast > 0.8 || !isFilterInit) {
+                        lastValidHeading = heading;
+                        let rad = heading * (Math.PI / 180);
+                        let rawSin = Math.sin(rad);
+                        let rawCos = Math.cos(rad);
+
+                        if (!isFilterInit) {
+                            filteredSin = rawSin;
+                            filteredCos = rawCos;
+                            isFilterInit = true;
+                        } else {
+                            filteredSin += 0.035 * (rawSin - filteredSin);
+                            filteredCos += 0.035 * (rawCos - filteredCos);
+                        }
+                        currentAzimuth = (Math.atan2(filteredSin, filteredCos) * 180 / Math.PI + 360) % 360;
+                    }
+                }
                 updateCompassDisplay();
             }
 
