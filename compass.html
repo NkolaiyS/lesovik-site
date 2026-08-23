@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Профессиональный лесной компас-визир и таежный спутниковый навигатор (Лесовик ПРО)» (Версия 5.2 ГЛОНАСС и Яндекс Карты).
+  Программное обеспечение: «Профессиональный лесной компас-визир и таежный спутниковый навигатор (Лесовик ПРО)» (Версия 5.3 Archive & Target Guide).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -264,7 +264,6 @@
             align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
-        /* АВТОНОМНОЕ ПЕРЕКРЕСТИЕ СТОРОН СВЕТА НА КАРТЕ */
         .map-cardinal-crosshair {
             position: absolute; top: 12px; right: 12px; z-index: 500;
             width: 54px; height: 54px; background: rgba(17, 24, 21, 0.85);
@@ -279,6 +278,7 @@
         .cross-e { position: absolute; right: 4px; color: #FFF; }
         .cross-center-dot { width: 4px; height: 4px; background: #8FBC8F; border-radius: 50%; }
 
+        /* ПЛАШКА ВЕДЕНИЯ НА ТОЧКУ И ДИНАМИЧЕСКИЙ ЛУЧ */
         .target-beacon-card {
             background: rgba(230, 126, 34, 0.25); border: 2px solid var(--accent);
             border-radius: 10px; padding: 10px 14px; color: #FFF; font-size: 13px; text-align: center;
@@ -301,13 +301,19 @@
             transition: transform 0.08s ease-out;
         }
 
+        /* НАПРАВЛЯЮЩАЯ СТРЕЛКА И ЛУЧ К ВЫБРАННОЙ ТОЧКЕ */
+        #beacon-target-arrow-layer {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 6;
+        }
+
         .crosshair-line-v {
             position: absolute; top: 0; left: 50%; width: 2px; height: 100%;
-            background: rgba(220, 38, 38, 0.85); transform: translateX(-50%); pointer-events: none; z-index: 6;
+            background: rgba(220, 38, 38, 0.85); transform: translateX(-50%); pointer-events: none; z-index: 7;
         }
         .crosshair-line-h {
             position: absolute; top: 50%; left: 0; width: 100%; height: 1px;
-            background: rgba(143, 188, 143, 0.4); transform: translateY(-50%); pointer-events: none; z-index: 6;
+            background: rgba(143, 188, 143, 0.4); transform: translateY(-50%); pointer-events: none; z-index: 7;
         }
 
         .compass-center-level-box {
@@ -315,7 +321,7 @@
             width: 46px; height: 46px; border-radius: 50%;
             background: rgba(0, 0, 0, 0.65);
             border: 2px solid rgba(255, 255, 255, 0.4);
-            z-index: 7; box-shadow: 0 0 12px rgba(0,0,0,0.9);
+            z-index: 8; box-shadow: 0 0 12px rgba(0,0,0,0.9);
             overflow: hidden; pointer-events: none;
         }
         .compass-level-cross-v {
@@ -429,7 +435,7 @@
 </head>
 <body onclick="unlockAudioOnFirstGesture()" ontouchstart="unlockAudioOnFirstGesture()">
 
-    <!-- ПОП-АП: ИНСТРУКЦИЯ ПО СКЛОНЕНИЮ И СЕВЕРУ (ДЛЯ МЧС И СПАСАТЕЛЕЙ) -->
+    <!-- ПОП-АП: ИНСТРУКЦИЯ ПО СКЛОНЕНИЮ И СЕВЕРУ -->
     <div id="north-info-popup" class="popup-overlay" onclick="closePopupOuter('north-info-popup', event)">
         <div class="popup-card">
             <h3>🧭 Памятка по точности и выбору Севера</h3>
@@ -465,6 +471,25 @@
                 📶 <b>Работает без интернета!</b> Спутниковые координаты ГЛОНАСС, таёжный навигатор возврата к авто и памятка сохраняются в телефоне и работают в глухой тайге.
             </div>
 
+            <!-- УПРАВЛЕНИЕ АРХИВОМ ПОХОДОВ -->
+            <div>
+                <div class="panel-section-title">
+                    <span>Управление архивом походов</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
+                    <input type="text" id="archive-project-name" placeholder="Название похода (напр. За грибами 1)" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-paper); font-size: 12px; font-weight: bold;">
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                        <button class="btn-action" onclick="saveCurrentTrackToArchive()">💾 В архив (Сброс)</button>
+                        <button class="btn-action btn-danger-clear" onclick="deleteSelectedArchiveItem()">🗑️ Очистить архив</button>
+                    </div>
+
+                    <select id="archive-history-select" onchange="loadSelectedArchiveTrack(this.value)" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-paper); font-size: 12px; font-weight: bold;">
+                        <option value="">-- Выбрать поход из архива --</option>
+                    </select>
+                </div>
+            </div>
+
             <!-- ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМА: КОМПАС / НАВИГАТОР ЛЕСОВИК -->
             <div>
                 <div class="panel-section-title">
@@ -481,6 +506,11 @@
                 <button class="btn-action btn-sos" onclick="triggerEmergencySOS()">🆘 SOS: Отправить координаты по SMS / 112</button>
             </div>
 
+            <!-- КНОПКА КАЛИБРОВКИ / ЗАПУСКА ДАТЧИКА ДЛЯ IPHONE -->
+            <div>
+                <button class="btn-action btn-secondary" onclick="requestDeviceOrientationPermission()">🧭 Калибровать датчик компаса</button>
+            </div>
+
             <!-- КНОПКА ПОДЕЛИТЬСЯ С ДРУГОМ -->
             <div>
                 <button class="btn-action btn-share" onclick="shareCompassWithFriend()">📤 Отправить другу перед походом в лес</button>
@@ -493,7 +523,7 @@
             <!-- БЫСТРАЯ ФИКСАЦИЯ МАШИНЫ ИЛИ ДОМА -->
             <div>
                 <div class="panel-section-title">
-                    <span>1. Точка возврата (Навигатор)</span>
+                    <span>1. Быстрый возврат</span>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
                     <button class="btn-action btn-lock" onclick="setReturnBeacon('🚗 Автомобиль')">🚗 Моё авто</button>
@@ -561,6 +591,7 @@
                     <select id="point-type-select" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-paper); font-size: 12px; font-weight: bold; width: 45%;">
                         <option value="📍 Точка" selected>📍 Точка / Столб</option>
                         <option value="🚗 Автомобиль">🚗 Автомобиль</option>
+                        <option value="🏠 Дом / Лагерь">🏠 Дом / Лагерь</option>
                         <option value="🍄 Грибы">🍄 Грибное место</option>
                         <option value="🫐 Ягоды">🫐 Ягодник</option>
                         <option value="⛺ Стоянка">⛺ Лагерь / Стоянка</option>
@@ -570,7 +601,7 @@
                 </div>
 
                 <!-- СПИСОК ТОЧЕК ИЗ ПАМЯТИ -->
-                <div style="margin-top: 8px; max-height: 160px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px; padding: 6px; font-size: 11px; font-family: monospace; background: var(--bg-paper);" id="post-log-container">
+                <div style="margin-top: 8px; max-height: 180px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px; padding: 6px; font-size: 11px; font-family: monospace; background: var(--bg-paper);" id="post-log-container">
                     Журнал пуст.
                 </div>
 
@@ -598,6 +629,7 @@
                 <!-- ПЛАШКА ВЕДЕНИЯ НА ТОЧКУ -->
                 <div id="target-beacon-display" class="target-beacon-card">
                     Цель: <b id="beacon-name-label">🚗 Автомобиль</b> | Азимут: <b id="beacon-azimuth-label">0°</b> | Дистанция: <b id="beacon-dist-label">0 м</b>
+                    <button onclick="stopNavigationToBeacon()" style="background:transparent; border:1px solid #FFF; color:#FFF; border-radius:4px; font-size:10px; margin-left:8px; padding:2px 6px; cursor:pointer;">Отменить</button>
                 </div>
 
                 <div id="target-deviation-badge" class="target-lock-indicator">
@@ -606,6 +638,13 @@
 
                 <!-- 1. ДИСК КОМПАСА -->
                 <div class="compass-dial-container" id="compass-dial-view">
+                    
+                    <!-- ДИНАМИЧЕСКИЙ ЛУЧ И СТРЕЛКА ВЕДЕНИЯ К ТОЧКЕ -->
+                    <svg id="beacon-target-arrow-layer" viewBox="0 0 400 400">
+                        <line id="beacon-line-element" x1="200" y1="200" x2="200" y2="40" stroke="#E67E22" stroke-width="4" stroke-dasharray="6,6"/>
+                        <polygon points="200,20 188,48 212,48" fill="#E67E22" filter="drop-shadow(0 0 6px #E67E22)"/>
+                    </svg>
+
                     <div class="crosshair-line-v"></div>
                     <div class="crosshair-line-h"></div>
 
@@ -635,7 +674,6 @@
                 <div id="yandex-map-view">
                     <div id="yandex-map-canvas"></div>
                     
-                    <!-- Автономная роза ветров в углу карты -->
                     <div class="map-cardinal-crosshair">
                         <span class="cross-n">С</span>
                         <span class="cross-s">Ю</span>
@@ -844,6 +882,7 @@
         let savedPointsList = [];
         let trackBreadcrumbs = [];
         let activeReturnBeacon = null;
+        let projectsArchive = [];
 
         // ЯНДЕКС КАРТА
         let yMap = null;
@@ -1024,24 +1063,62 @@
             };
             localStorage.setItem('lesovik_return_beacon', JSON.stringify(activeReturnBeacon));
             saveSpecificPoint(name, name);
-            alert(`Точка возврата «${name}» зафиксирована по ГЛОНАСС! Навигатор указывает прямое направление к ней.`);
+            alert(`Точка возврата «${name}» зафиксирована по ГЛОНАСС! Направляющая стрелка ведет к ней.`);
             updateBeaconDisplay();
+        }
+
+        function navigateToPoint(id) {
+            unlockAudioOnFirstGesture();
+            const pt = savedPointsList.find(p => p.id === id);
+            if (pt) {
+                activeReturnBeacon = {
+                    name: pt.name,
+                    lat: pt.lat,
+                    lon: pt.lon,
+                    alt: pt.alt
+                };
+                localStorage.setItem('lesovik_return_beacon', JSON.stringify(activeReturnBeacon));
+                updateBeaconDisplay();
+                alert(`Включено ведение к точке «${pt.name}»! Стрелка и луч компаса указывают направление.`);
+            }
+        }
+
+        function stopNavigationToBeacon() {
+            activeReturnBeacon = null;
+            localStorage.removeItem('lesovik_return_beacon');
+            document.getElementById('target-beacon-display').style.display = 'none';
+            document.getElementById('beacon-target-arrow-layer').style.display = 'none';
         }
 
         function updateBeaconDisplay() {
             const beaconCard = document.getElementById('target-beacon-display');
+            const arrowLayer = document.getElementById('beacon-target-arrow-layer');
+            const beaconLine = document.getElementById('beacon-line-element');
+
             if (!activeReturnBeacon) {
                 beaconCard.style.display = 'none';
+                arrowLayer.style.display = 'none';
                 return;
             }
 
             const dist = Math.round(calculateDistanceMeters(currentLat, currentLon, activeReturnBeacon.lat, activeReturnBeacon.lon));
-            const bearing = Math.round(calculateBearingAngle(currentLat, currentLon, activeReturnBeacon.lat, activeReturnBeacon.lon));
+            const targetBearing = Math.round(calculateBearingAngle(currentLat, currentLon, activeReturnBeacon.lat, activeReturnBeacon.lon));
 
             beaconCard.style.display = 'block';
             document.getElementById('beacon-name-label').innerText = activeReturnBeacon.name;
-            document.getElementById('beacon-azimuth-label').innerText = `${bearing}° (${getRumbString(bearing)})`;
+            document.getElementById('beacon-azimuth-label').innerText = `${targetBearing}° (${getRumbString(targetBearing)})`;
             document.getElementById('beacon-dist-label').innerText = dist > 1000 ? `${(dist/1000).toFixed(2)} км` : `${dist} м`;
+
+            // Направление стрелки относительно корпуса телефона
+            const relativeAngle = (targetBearing - currentAzimuth + 360) % 360;
+            arrowLayer.style.display = 'block';
+            arrowLayer.style.transform = `rotate(${relativeAngle}deg)`;
+
+            // Динамическое сокращение длины луча при приближении к цели
+            let lineLength = Math.max(50, Math.min(160, dist * 0.4));
+            if (beaconLine) {
+                beaconLine.setAttribute('y2', (200 - lineLength).toString());
+            }
         }
 
         function updateCompassDisplay() {
@@ -1198,7 +1275,7 @@
             }
         }
 
-        // --- ЯНДЕКС КАРТА (ОТЕЧЕСТВЕННАЯ НАВИГАЦИЯ) ---
+        // --- ЯНДЕКС КАРТА ---
         function initYandexMap() {
             if (yMap || typeof ymaps === 'undefined') return;
 
@@ -1209,7 +1286,6 @@
                     controls: ['zoomControl', 'typeSelector']
                 });
 
-                // Метка пользователя ГЛОНАСС
                 yUserPlacemark = new ymaps.Placemark([currentLat, currentLon], {
                     hintContent: 'Моё местоположение (ГЛОНАСС)'
                 }, {
@@ -1217,7 +1293,6 @@
                 });
                 yMap.geoObjects.add(yUserPlacemark);
 
-                // Пунктирный след пройденного пути
                 yTrackPolyline = new ymaps.Polyline(trackBreadcrumbs, {
                     hintContent: "Пройденный след"
                 }, {
@@ -1252,7 +1327,7 @@
 
             savedPointsList.forEach(p => {
                 const placemark = new ymaps.Placemark([p.lat, p.lon], {
-                    balloonContent: `<b>${p.name}</b><br>Время: ${p.time}<br>Высота: ${p.alt}м`,
+                    balloonContent: `<b>${p.name}</b><br>Время: ${p.time}<br>Высота: ${p.alt}м<br><button onclick="navigateToPoint(${p.id})">🎯 Идти к точке</button>`,
                     iconCaption: p.name
                 }, {
                     preset: 'islands#forestIcon'
@@ -1289,19 +1364,118 @@
             }
         }
 
-        // --- КНОПКА SOS: ОТПРАВКА SMS СПАСАТЕЛЯМ / 112 БЕЗ ИНТЕРНЕТА ---
         function triggerEmergencySOS() {
             unlockAudioOnFirstGesture();
             const latStr = currentLat.toFixed(6);
             const lonStr = currentLon.toFixed(6);
             const msg = `SOS! Я потерялся в лесу. Мои координаты ГЛОНАСС: Широта ${latStr}, Долгота ${lonStr} (Высота ${currentAlt}м). Срочно нужна помощь!`;
 
-            if (confirm(`Экстренное оповещение!\n\nВаши координаты ГЛОНАСС:\nШирота: ${latStr}\nДолгота: ${lonStr}\n\nОткрыть отправку SMS родным/спасателям?`)) {
+            if (confirm(`Экстренное оповещение!\n\nВаши координаты ГЛОНАСС:\nШирота: ${latStr}\nДолгота: ${lonStr}\n\nОткрыть отправку SMS спасателям/родным?`)) {
                 window.location.href = `sms:?body=${encodeURIComponent(msg)}`;
             }
         }
 
-        // --- УПРАВЛЕНИЕ ТОЧКАМИ И ОЧИСТКА ---
+        // --- УПРАВЛЕНИЕ АРХИВОМ ПОХОДОВ ---
+        function saveCurrentTrackToArchive() {
+            unlockAudioOnFirstGesture();
+            const nameInput = document.getElementById('archive-project-name');
+            const title = nameInput.value.trim() || `Поход от ${new Date().toLocaleDateString('ru-RU')}`;
+
+            if (savedPointsList.length === 0 && trackBreadcrumbs.length === 0) {
+                alert("Текущий поход пуст! Зафиксируйте точки или пройдите маршрут перед сохранением.");
+                return;
+            }
+
+            const snapshot = {
+                id: Date.now(),
+                title: title,
+                date: new Date().toLocaleString('ru-RU'),
+                points: [...savedPointsList],
+                track: [...trackBreadcrumbs],
+                beacon: activeReturnBeacon
+            };
+
+            projectsArchive.unshift(snapshot);
+            localStorage.setItem('lesovik_compass_archive', JSON.stringify(projectsArchive));
+            updateArchiveSelectUI();
+
+            // Очищаем текущие данные экрана для нового похода
+            savedPointsList = [];
+            trackBreadcrumbs = [];
+            activeReturnBeacon = null;
+            nameInput.value = '';
+            localStorage.removeItem('lesovik_return_beacon');
+            savePointsToStorage();
+            saveTrackToStorage();
+            renderPointsList();
+            renderYandexMapPoints();
+            if (yTrackPolyline) yTrackPolyline.geometry.setCoordinates([]);
+            updateBeaconDisplay();
+
+            alert(`Поход «${title}» сохранен в архив! Экран очищен для нового маршрута.`);
+        }
+
+        function updateArchiveSelectUI() {
+            const select = document.getElementById('archive-history-select');
+            select.innerHTML = '<option value="">-- Выбрать поход из архива --</option>';
+
+            projectsArchive.forEach((proj, idx) => {
+                const opt = document.createElement('option');
+                opt.value = proj.id;
+                opt.innerText = `${proj.title} (${proj.points.length} точек)`;
+                select.appendChild(opt);
+            });
+        }
+
+        function loadSelectedArchiveTrack(projId) {
+            if (!projId) return;
+            const proj = projectsArchive.find(p => p.id == projId);
+            if (!proj) return;
+
+            if (savedPointsList.length > 0 || trackBreadcrumbs.length > 0) {
+                if (!confirm("Внимание! Текущие данные на экране будут заменены походом из архива. Продолжить?")) {
+                    document.getElementById('archive-history-select').value = "";
+                    return;
+                }
+            }
+
+            savedPointsList = [...proj.points];
+            trackBreadcrumbs = [...proj.track];
+            activeReturnBeacon = proj.beacon || null;
+
+            savePointsToStorage();
+            saveTrackToStorage();
+            if (activeReturnBeacon) localStorage.setItem('lesovik_return_beacon', JSON.stringify(activeReturnBeacon));
+            else localStorage.removeItem('lesovik_return_beacon');
+
+            renderPointsList();
+            renderYandexMapPoints();
+            if (yTrackPolyline) yTrackPolyline.geometry.setCoordinates(trackBreadcrumbs);
+            updateBeaconDisplay();
+            alert(`Поход «${proj.title}» успешно загружен на экран!`);
+        }
+
+        function deleteSelectedArchiveItem() {
+            const select = document.getElementById('archive-history-select');
+            const projId = select.value;
+            if (!projId) {
+                if (confirm("Очистить ВЕСЬ архив сохраненных походов?")) {
+                    projectsArchive = [];
+                    localStorage.removeItem('lesovik_compass_archive');
+                    updateArchiveSelectUI();
+                    alert("Архив полностью очищен.");
+                }
+                return;
+            }
+
+            if (confirm("Удалить выбранный поход из архива?")) {
+                projectsArchive = projectsArchive.filter(p => p.id != projId);
+                localStorage.setItem('lesovik_compass_archive', JSON.stringify(projectsArchive));
+                updateArchiveSelectUI();
+                alert("Выбранный поход удален из архива.");
+            }
+        }
+
         function saveSpecificPoint(customName, type) {
             const az = document.getElementById('azimuth-deg-label').innerText;
             const rumb = document.getElementById('azimuth-rumb-label').innerText;
@@ -1354,12 +1528,10 @@
             }
             if (confirm("Удалить все сохраненные точки (пунктирный след хода сохранится)?")) {
                 savedPointsList = [];
-                activeReturnBeacon = null;
-                localStorage.removeItem('lesovik_return_beacon');
+                stopNavigationToBeacon();
                 savePointsToStorage();
                 renderPointsList();
                 renderYandexMapPoints();
-                updateBeaconDisplay();
                 alert("Все точки удалены.");
             }
         }
@@ -1378,6 +1550,11 @@
                 const beaconData = localStorage.getItem('lesovik_return_beacon');
                 if (beaconData) {
                     activeReturnBeacon = JSON.parse(beaconData);
+                }
+                const archiveData = localStorage.getItem('lesovik_compass_archive');
+                if (archiveData) {
+                    projectsArchive = JSON.parse(archiveData);
+                    updateArchiveSelectUI();
                 }
                 const savedZero = localStorage.getItem('lesovik_manual_zero_offset');
                 if (savedZero !== null) {
@@ -1420,14 +1597,16 @@
                             <b>${p.name}</b> (${p.time})<br>
                             Шир: ${p.lat.toFixed(6)}, Долг: ${p.lon.toFixed(6)} | H: ${p.alt}м
                         </div>
-                        <button onclick="deleteSinglePoint(${p.id})" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:14px; padding:2px 6px;">✕</button>
+                        <div style="display:flex; gap:4px; align-items:center;">
+                            <button onclick="navigateToPoint(${p.id})" style="background:var(--forest-green); border:none; color:#FFF; border-radius:4px; font-size:10px; padding:3px 6px; cursor:pointer;" title="Идти к точке">🎯</button>
+                            <button onclick="deleteSinglePoint(${p.id})" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:14px; padding:2px 4px;">✕</button>
+                        </div>
                     </div>
                 `;
             });
             logBox.innerHTML = html;
         }
 
-        // --- ЭКСПОРТ KML ДЛЯ ОТЕЧЕСТВЕННЫХ ГИС И КАРТ ---
         function exportTrackToKML() {
             if (savedPointsList.length === 0 && trackBreadcrumbs.length === 0) {
                 alert("Нет данных для выгрузки!");
