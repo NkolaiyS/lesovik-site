@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Профессиональный лесной компас-визир и энциклопедия выживания (Лесовик ПРО)» (Версия 4.1 Smooth Multi-Platform Engine).
+  Программное обеспечение: «Профессиональный лесной компас-визир и энциклопедия выживания (Лесовик ПРО)» (Версия 4.2 Light Engine).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -258,7 +258,7 @@
         #compass-svg-disc {
             width: 100%; height: 100%;
             transform-origin: 50% 50%;
-            will-change: transform;
+            transition: transform 0.08s ease-out;
         }
 
         .crosshair-line-v {
@@ -412,14 +412,14 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
                     <div class="form-group">
                         <label>Базовый север:</label>
-                        <select id="north-type-select" onchange="triggerScreenUpdate()">
+                        <select id="north-type-select" onchange="updateCompassDisplay()">
                             <option value="magnetic" selected>Магнитный (N_магн)</option>
                             <option value="true">Истинный (N_истин)</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Склонение (°):</label>
-                        <input type="number" step="0.1" id="declination-input" value="13.2" onfocus="this.select()" oninput="triggerScreenUpdate()">
+                        <input type="number" step="0.1" id="declination-input" value="13.2" onfocus="this.select()" oninput="updateCompassDisplay()">
                     </div>
                 </div>
 
@@ -728,18 +728,16 @@
         let isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         
         let currentAzimuth = 0;
-        let targetAzimuth = 0;
-        let displayedAzimuth = 0;
         let manualZeroOffset = 0;
         let lastVibeDegree = 0;
         let lockedTargetAzimuth = null;
         let isFullscreen = false;
 
-        // Фильтры тригонометрического усреднения (Качество хода на Android)
+        // Легкий фильтр угла без матричной нагрузки
         let filteredSin = 0;
         let filteredCos = 0;
         let isFilterInit = false;
-        const androidSmoothingAlpha = 0.035; // Мягкий масляный фильтр
+        const smoothAlpha = isIOS ? 0.25 : 0.08;
 
         let currentLat = 61.668793;
         let currentLon = 50.836399;
@@ -890,89 +888,60 @@
             manualZeroOffset = (360 - currentAzimuth) % 360;
             localStorage.setItem('lesovik_manual_zero_offset', manualZeroOffset);
             alert("Шкала совмещена! Текущее направление выставлено как точный СЕВЕР (0°).");
+            updateCompassDisplay();
         }
 
-        function triggerScreenUpdate() {
-            // Мгновенная перерисовка при изменении настроек
-        }
-
-        // --- 60 FPS ПЛАВНЫЙ ИНТЕРПОЛЯТОР ШКАЛЫ (БЕЗ ДРОЖАНИЯ) ---
-        function renderCompassFrame() {
+        function updateCompassDisplay() {
             const northType = document.getElementById('north-type-select').value;
             const declination = parseFloat(document.getElementById('declination-input').value) || 0;
 
-            let targetWithOffset = (currentAzimuth + manualZeroOffset + 360) % 360;
+            let displayed = (currentAzimuth + manualZeroOffset + 360) % 360;
             if (northType === 'true') {
-                targetWithOffset = (targetWithOffset + declination + 360) % 360;
+                displayed = (displayed + declination + 360) % 360;
             }
 
-            // Плавное следование кратчайшим угловым путем
-            let diff = targetWithOffset - displayedAzimuth;
-            if (diff > 180) diff -= 360;
-            if (diff < -180) diff += 360;
+            document.getElementById('azimuth-deg-label').innerText = `${Math.round(displayed)}°`;
+            document.getElementById('azimuth-rumb-label').innerText = getRumbString(displayed);
 
-            if (Math.abs(diff) > 0.05) {
-                displayedAzimuth += diff * (isIOS ? 0.35 : 0.12);
-                displayedAzimuth = (displayedAzimuth % 360 + 360) % 360;
-            }
+            // Мгновенный аппаратный поворот без лагов
+            document.getElementById('compass-svg-disc').style.transform = `rotate(${-displayed}deg)`;
 
-            document.getElementById('azimuth-deg-label').innerText = `${Math.round(displayedAzimuth)}°`;
-            document.getElementById('azimuth-rumb-label').innerText = getRumbString(displayedAzimuth);
-
-            document.getElementById('compass-svg-disc').style.transform = `rotate(${-displayedAzimuth}deg)`;
-
-            triggerHapticStep(displayedAzimuth);
+            triggerHapticStep(displayed);
 
             if (lockedTargetAzimuth !== null) {
-                let dev = displayedAzimuth - lockedTargetAzimuth;
-                if (dev > 180) dev -= 360;
-                if (dev < -180) dev += 360;
+                let diff = displayed - lockedTargetAzimuth;
+                if (diff > 180) diff -= 360;
+                if (diff < -180) diff += 360;
 
                 const devBadge = document.getElementById('target-deviation-badge');
                 devBadge.style.display = 'block';
                 document.getElementById('locked-target-val').innerText = `${lockedTargetAzimuth}°`;
 
-                if (Math.abs(dev) <= 2) {
+                if (Math.abs(diff) <= 2) {
                     document.getElementById('deviation-val').innerText = 'В СТВОРЕ (0°)';
                     devBadge.style.borderColor = '#2D5A27';
                     devBadge.style.background = 'rgba(45, 90, 39, 0.4)';
-                } else if (dev > 0) {
-                    document.getElementById('deviation-val').innerText = `Вправо на +${Math.round(dev)}°`;
+                } else if (diff > 0) {
+                    document.getElementById('deviation-val').innerText = `Вправо на +${Math.round(diff)}°`;
                     devBadge.style.borderColor = '#DC2626';
                     devBadge.style.background = 'rgba(220, 38, 38, 0.3)';
                 } else {
-                    document.getElementById('deviation-val').innerText = `Влево на ${Math.round(dev)}°`;
+                    document.getElementById('deviation-val').innerText = `Влево на ${Math.round(diff)}°`;
                     devBadge.style.borderColor = '#DC2626';
                     devBadge.style.background = 'rgba(220, 38, 38, 0.3)';
                 }
             }
-
-            requestAnimationFrame(renderCompassFrame);
         }
 
-        // --- АБСОЛЮТНОЕ ВЫЧИСЛЕНИЕ ДЛЯ ANDROID И IOS ---
+        // ОБРАБОТЧИК СЕНСОРОВ (IOS + ANDROID)
         function handleOrientation(event) {
             let heading = null;
 
             if (event.webkitCompassHeading !== undefined) {
                 heading = event.webkitCompassHeading;
             } else if (event.alpha !== null) {
-                // Математическая модель ориентации с компенсацией крена для Android
-                let a = event.alpha * (Math.PI / 180);
-                let b = (event.beta || 0) * (Math.PI / 180);
-                let g = (event.gamma || 0) * (Math.PI / 180);
-
-                let cA = Math.cos(a), sA = Math.sin(a);
-                let cB = Math.cos(b), sB = Math.sin(b);
-                let cG = Math.cos(g), sG = Math.sin(g);
-
-                let rA = -cA * sG - sA * sB * cG;
-                let rB = -sA * sG + cA * sB * cG;
-
-                let calcHeading = Math.atan2(rA, rB) * (180 / Math.PI);
-                if (calcHeading < 0) calcHeading += 360;
-
-                heading = calcHeading;
+                // На Android alpha отсчитывается против часовой стрелки
+                heading = (360 - event.alpha) % 360;
             }
 
             if (heading !== null) {
@@ -985,12 +954,12 @@
                     filteredCos = rawCos;
                     isFilterInit = true;
                 } else {
-                    let alphaVal = isIOS ? 0.3 : androidSmoothingAlpha;
-                    filteredSin += alphaVal * (rawSin - filteredSin);
-                    filteredCos += alphaVal * (rawCos - filteredCos);
+                    filteredSin += smoothAlpha * (rawSin - filteredSin);
+                    filteredCos += smoothAlpha * (rawCos - filteredCos);
                 }
 
                 currentAzimuth = (Math.atan2(filteredSin, filteredCos) * 180 / Math.PI + 360) % 360;
+                updateCompassDisplay();
             }
 
             // ПУЗЫРЬКОВЫЙ УРОВЕНЬ
@@ -1025,9 +994,12 @@
                     }
                 }).catch(console.error);
             } else {
-                window.addEventListener('deviceorientationabsolute', handleOrientation, true) ||
-                window.addEventListener('deviceorientation', handleOrientation, true);
-                alert("Датчик компаса откалиброван и активирован!");
+                if ('ondeviceorientationabsolute' in window) {
+                    window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+                } else {
+                    window.addEventListener('deviceorientation', handleOrientation, true);
+                }
+                alert("Датчик компаса активирован!");
             }
         }
 
@@ -1056,6 +1028,7 @@
             lockedTargetAzimuth = displayed;
             document.getElementById('btn-lock-azimuth').innerText = `🎯 Створ: ${lockedTargetAzimuth}°`;
             if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
+            updateCompassDisplay();
         }
 
         function resetTargetLock() {
@@ -1257,7 +1230,7 @@
             requestDeviceOrientationPermission();
             initGPS();
             loadPointsFromStorage();
-            requestAnimationFrame(renderCompassFrame);
+            updateCompassDisplay();
         };
     </script>
 </body>
