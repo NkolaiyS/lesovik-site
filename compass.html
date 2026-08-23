@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Профессиональный лесной компас-визир и таежный спутниковый навигатор (Лесовик ПРО)» (Версия 5.4 Navigate Home & Auto).
+  Программное обеспечение: «Профессиональный лесной компас-визир и таежный спутниковый навигатор (Лесовик ПРО)» (Версия 5.5 Battery & ETA Assist).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -205,6 +205,7 @@
         .btn-sos { background: #B91C1C; color: #FFF; font-size: 13px; }
         .btn-share { background: #15803D; color: #FFF; font-size: 12px; }
         .btn-share:hover { background: #166534; }
+        .btn-copy-coords { background: #0284C7; color: #FFF; font-size: 11px; padding: 7px; margin-top: 4px; }
         .btn-export-kml { background-color: #0284C7; color: white; }
         .btn-danger-clear { background-color: transparent; border: 1px solid var(--danger); color: var(--danger); }
         .btn-danger-clear:hover { background-color: var(--danger); color: white; }
@@ -278,6 +279,7 @@
         .cross-e { position: absolute; right: 4px; color: #FFF; }
         .cross-center-dot { width: 4px; height: 4px; background: #8FBC8F; border-radius: 50%; }
 
+        /* ПЛАШКА ВЕДЕНИЯ НА ТОЧКУ И ДИНАМИЧЕСКИЙ ЛУЧ */
         .target-beacon-card {
             background: rgba(230, 126, 34, 0.25); border: 2px solid var(--accent);
             border-radius: 10px; padding: 10px 14px; color: #FFF; font-size: 13px; text-align: center;
@@ -343,14 +345,14 @@
         }
 
         .gps-overlay-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 500px;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; width: 100%; max-width: 540px;
             margin-top: 8px; z-index: 2;
         }
         .gps-badge {
             background: rgba(0, 0, 0, 0.75); border: 1px solid rgba(143, 188, 143, 0.3);
             border-radius: 8px; padding: 6px; text-align: center; color: #FFF; font-size: 11px;
         }
-        .gps-badge b { display: block; font-size: 13px; color: #8FBC8F; }
+        .gps-badge b { display: block; font-size: 12.5px; color: #8FBC8F; }
 
         .target-lock-indicator {
             background: rgba(230, 126, 34, 0.2); border: 1px solid var(--accent);
@@ -428,6 +430,7 @@
         @media (max-width: 950px) {
             .main-workspace { grid-template-columns: 1fr; }
             .compass-stage-container { min-height: 540px; }
+            .gps-overlay-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
@@ -624,9 +627,10 @@
                     <div class="azimuth-rumb-text" id="azimuth-rumb-label">Север (С)</div>
                 </div>
 
-                <!-- ПЛАШКА ВЕДЕНИЯ НА ТОЧКУ -->
+                <!-- ПЛАШКА ВЕДЕНИЯ НА ТОЧКУ С РАСЧЕТОМ ВРЕМЕНИ ХОДА -->
                 <div id="target-beacon-display" class="target-beacon-card">
-                    Цель: <b id="beacon-name-label">🚗 Автомобиль</b> | Азимут: <b id="beacon-azimuth-label">0°</b> | Дистанция: <b id="beacon-dist-label">0 м</b>
+                    Цель: <b id="beacon-name-label">🚗 Автомобиль</b> | Азимут: <b id="beacon-azimuth-label">0°</b><br>
+                    Дистанция: <b id="beacon-dist-label">0 м</b> | Время пешком: <b id="beacon-time-label">~0 мин</b>
                     <button onclick="stopNavigationToBeacon()" style="background:transparent; border:1px solid #FFF; color:#FFF; border-radius:4px; font-size:10px; margin-left:8px; padding:2px 6px; cursor:pointer;">Отменить</button>
                 </div>
 
@@ -684,10 +688,14 @@
                 </div>
 
                 <div class="gps-overlay-grid">
-                    <div class="gps-badge">Широта (ГЛОНАСС):<b id="gps-lat-label">61.668793°</b></div>
-                    <div class="gps-badge">Долгота (ГЛОНАСС):<b id="gps-lon-label">50.836399°</b></div>
-                    <div class="gps-badge">Высота / Точность:<b id="gps-alt-label">142 м (±3м)</b></div>
+                    <div class="gps-badge">Широта:<b id="gps-lat-label">61.668793°</b></div>
+                    <div class="gps-badge">Долгота:<b id="gps-lon-label">50.836399°</b></div>
+                    <div class="gps-badge">Высота / Погр.:<b id="gps-alt-label">142 м (±3м)</b></div>
+                    <div class="gps-badge">Батарея:<b id="battery-status-label">🔋 100%</b></div>
                 </div>
+
+                <!-- КНОПКА БЫСТРОГО КОПИРОВАНИЯ КООРДИНАТ -->
+                <button class="btn-action btn-copy-coords" onclick="copyCoordinatesToClipboard()">📋 Скопировать координаты ГЛОНАСС в буфер</button>
 
                 <!-- ДУБЛИРУЮЩИЕ КНОПКИ -->
                 <div class="stage-quick-bar">
@@ -1032,6 +1040,7 @@
             updateCompassDisplay();
         }
 
+        // РАСЧЕТ ДИСТАНЦИИ И АЗИМУТА ПО ГЛОНАСС
         function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
             const R = 6371000;
             const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -1100,10 +1109,14 @@
             const dist = Math.round(calculateDistanceMeters(currentLat, currentLon, activeReturnBeacon.lat, activeReturnBeacon.lon));
             const targetBearing = Math.round(calculateBearingAngle(currentLat, currentLon, activeReturnBeacon.lat, activeReturnBeacon.lon));
 
+            // Расчет примерного времени ходьбы (из расчета 3.5 км/ч по пересеченной местности)
+            const minutesWalking = Math.max(1, Math.round(dist / 58));
+
             beaconCard.style.display = 'block';
             document.getElementById('beacon-name-label').innerText = activeReturnBeacon.name;
             document.getElementById('beacon-azimuth-label').innerText = `${targetBearing}° (${getRumbString(targetBearing)})`;
             document.getElementById('beacon-dist-label').innerText = dist > 1000 ? `${(dist/1000).toFixed(2)} км` : `${dist} м`;
+            document.getElementById('beacon-time-label').innerText = minutesWalking > 60 ? `~${(minutesWalking/60).toFixed(1)} ч` : `~${minutesWalking} мин`;
 
             const relativeAngle = (targetBearing - currentAzimuth + 360) % 360;
             arrowLayer.style.display = 'block';
@@ -1233,6 +1246,42 @@
             }
         }
 
+        // --- МОНИТОРИНГ БАТАРЕИ ---
+        function initBatteryMonitor() {
+            if ('getBattery' in navigator) {
+                navigator.getBattery().then(battery => {
+                    function updateBatteryUI() {
+                        const level = Math.round(battery.level * 100);
+                        const isCharging = battery.charging ? '⚡' : '🔋';
+                        const label = document.getElementById('battery-status-label');
+                        if (label) {
+                            label.innerText = `${isCharging} ${level}%`;
+                            if (level <= 20 && !battery.charging) {
+                                label.style.color = '#DC2626';
+                            } else {
+                                label.style.color = '#8FBC8F';
+                            }
+                        }
+                    }
+                    updateBatteryUI();
+                    battery.addEventListener('levelchange', updateBatteryUI);
+                    battery.addEventListener('chargingchange', updateBatteryUI);
+                });
+            }
+        }
+
+        function copyCoordinatesToClipboard() {
+            unlockAudioOnFirstGesture();
+            const text = `Широта: ${currentLat.toFixed(6)}°, Долгота: ${currentLon.toFixed(6)}° (Высота: ${currentAlt}м, ГЛОНАСС)`;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert(`Координаты скопированы в буфер:\n${text}`);
+                });
+            } else {
+                prompt('Скопируйте координаты:', text);
+            }
+        }
+
         function initGPS() {
             if ("geolocation" in navigator) {
                 navigator.geolocation.watchPosition(
@@ -1267,6 +1316,7 @@
             }
         }
 
+        // --- ЯНДЕКС КАРТА ---
         function initYandexMap() {
             if (yMap || typeof ymaps === 'undefined') return;
 
@@ -1729,6 +1779,7 @@
             buildSvgCompassTicks();
             requestDeviceOrientationPermission();
             initGPS();
+            initBatteryMonitor();
             loadPointsFromStorage();
             updateCompassDisplay();
         };
