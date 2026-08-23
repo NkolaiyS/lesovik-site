@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Профессиональный лесной компас-визир и энциклопедия выживания (Лесовик ПРО)» (Версия 3.9 Share & Field Tracker).
+  Программное обеспечение: «Профессиональный лесной компас-визир и энциклопедия выживания (Лесовик ПРО)» (Версия 4.0 Universal Sensor Engine).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -422,6 +422,11 @@
                         <input type="number" step="0.1" id="declination-input" value="13.2" onfocus="this.select()" oninput="updateCompassReading()">
                     </div>
                 </div>
+
+                <!-- КНОПКА БЫСТРОЙ ЮСТИРОВКИ ДЛЯ ANDROID -->
+                <div style="margin-top: 8px;">
+                    <button class="btn-action btn-secondary" onclick="calibrateZeroToNorth()" style="font-size: 11px; padding: 8px;">🎯 Совместить шкалу с Севером</button>
+                </div>
             </div>
 
             <!-- ФИКСАЦИЯ СТВОРА ВИЗИРА -->
@@ -721,14 +726,16 @@
 
     <script>
         let currentAzimuth = 0;
+        let manualZeroOffset = 0;
         let lastVibeDegree = 0;
         let lockedTargetAzimuth = null;
         let isFullscreen = false;
 
+        // МАТЕМАТИЧЕСКИЙ ФИЛЬТР КАЛМАНА ДЛЯ ИСКЛЮЧЕНИЯ ДРОЖАНИЯ (ANTI-JITTER)
         let filteredSin = 0;
         let filteredCos = 0;
         let isFilterInitialized = false;
-        const kalmanAlpha = 0.05;
+        const kalmanAlpha = 0.08;
 
         let currentLat = 61.668793;
         let currentLon = 50.836399;
@@ -874,13 +881,21 @@
             return `СЗ: ${(360 - deg).toFixed(1)}°`;
         }
 
+        function calibrateZeroToNorth() {
+            unlockAudioOnFirstGesture();
+            manualZeroOffset = (360 - currentAzimuth) % 360;
+            localStorage.setItem('lesovik_manual_zero_offset', manualZeroOffset);
+            alert("Шкала совмещена! Текущее направление выставлено как точный СЕВЕР (0°).");
+            updateCompassReading();
+        }
+
         function updateCompassReading() {
             const northType = document.getElementById('north-type-select').value;
             const declination = parseFloat(document.getElementById('declination-input').value) || 0;
 
-            let displayedAzimuth = currentAzimuth;
+            let displayedAzimuth = (currentAzimuth + manualZeroOffset + 360) % 360;
             if (northType === 'true') {
-                displayedAzimuth = (currentAzimuth + declination + 360) % 360;
+                displayedAzimuth = (displayedAzimuth + declination + 360) % 360;
             }
 
             document.getElementById('azimuth-deg-label').innerText = `${Math.round(displayedAzimuth)}°`;
@@ -915,17 +930,52 @@
             }
         }
 
-        function handleOrientation(event) {
+        // --- УНИВЕРСАЛЬНЫЙ АЛГОРИТМ ЧТЕНИЯ СЕНСОРОВ (IOS + ANDROID) ---
+        function calculateUniversalHeading(event) {
             let heading = null;
 
+            // 1. iOS Safari (Аппаратный компас)
             if (event.webkitCompassHeading !== undefined) {
                 heading = event.webkitCompassHeading;
-            } else if (event.alpha !== null) {
-                heading = (360 - event.alpha) % 360;
+            } 
+            // 2. Android (Математический расчет по тригонометрии Эйлера)
+            else if (event.alpha !== null) {
+                let alpha = event.alpha;
+                let beta = event.beta || 0;
+                let gamma = event.gamma || 0;
+
+                // Перевод углов в радианы
+                let alphaRad = alpha * (Math.PI / 180);
+                let betaRad = beta * (Math.PI / 180);
+                let gammaRad = gamma * (Math.PI / 180);
+
+                let cA = Math.cos(alphaRad);
+                let sA = Math.sin(alphaRad);
+                let cB = Math.cos(betaRad);
+                let sB = Math.sin(betaRad);
+                let cG = Math.cos(gammaRad);
+                let sG = Math.sin(gammaRad);
+
+                // Вектор поворота в пространстве
+                let rA = -cA * sG - sA * sB * cG;
+                let rB = -sA * sG + cA * sB * cG;
+
+                // Вычисление азимута с компенсацией наклонов
+                let compassHeading = Math.atan2(rA, rB);
+                if (compassHeading < 0) {
+                    compassHeading += 2 * Math.PI;
+                }
+                heading = compassHeading * (180 / Math.PI);
             }
 
-            if (heading !== null) {
-                let rad = (heading * Math.PI) / 180;
+            return heading;
+        }
+
+        function handleOrientation(event) {
+            let rawHeading = calculateUniversalHeading(event);
+
+            if (rawHeading !== null) {
+                let rad = (rawHeading * Math.PI) / 180;
                 let rawSin = Math.sin(rad);
                 let rawCos = Math.cos(rad);
 
@@ -942,6 +992,7 @@
                 updateCompassReading();
             }
 
+            // ПУЗЫРЬКОВЫЙ УРОВЕНЬ
             let pitch = event.beta || 0;
             let roll = event.gamma || 0;
 
@@ -975,7 +1026,7 @@
             } else {
                 window.addEventListener('deviceorientationabsolute', handleOrientation, true) ||
                 window.addEventListener('deviceorientation', handleOrientation, true);
-                alert("Датчик компаса активирован!");
+                alert("Датчик компаса откалиброван и активирован!");
             }
         }
 
@@ -1028,7 +1079,6 @@
             }
         }
 
-        // --- ФУНКЦИЯ «ПОДЕЛИТЬСЯ С ДРУГОМ» ---
         function shareCompassWithFriend() {
             unlockAudioOnFirstGesture();
             const shareData = {
@@ -1048,13 +1098,16 @@
             }
         }
 
-        // --- УПРАВЛЕНИЕ АРХИВОМ ТОЧЕК И ПАМЯТЬЮ СМАРТФОНА ---
         function loadPointsFromStorage() {
             try {
                 const data = localStorage.getItem('lesovik_compass_points');
                 if (data) {
                     savedPointsList = JSON.parse(data);
                     renderPointsList();
+                }
+                const savedZero = localStorage.getItem('lesovik_manual_zero_offset');
+                if (savedZero !== null) {
+                    manualZeroOffset = parseFloat(savedZero) || 0;
                 }
             } catch(e) {}
         }
@@ -1133,7 +1186,6 @@
             }
         }
 
-        // --- ЭКСПОРТ В KML (ГИС, ЯНДЕКС.КАРТЫ, GOOGLE EARTH) ---
         function exportTrackToKML() {
             if (savedPointsList.length === 0) {
                 alert("Нет сохраненных точек для выгрузки в KML!");
@@ -1189,7 +1241,6 @@
             setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
 
-        // АККОРДЕОН FAQ
         function toggleAccordion(headerEl) {
             const item = headerEl.parentElement;
             item.classList.toggle('active');
@@ -1205,8 +1256,8 @@
             buildSvgCompassTicks();
             requestDeviceOrientationPermission();
             initGPS();
-            updateCompassReading();
             loadPointsFromStorage();
+            updateCompassReading();
         };
     </script>
 </body>
