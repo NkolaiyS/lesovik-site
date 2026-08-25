@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Оптическая мерная вилка PRO (Лесовик ПРО)» (Версия 3.0).
+  Программное обеспечение: «Оптическая мерная вилка PRO (Лесовик ПРО)» (Версия 3.1 Mobile Edition).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -47,7 +47,7 @@
             k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
         })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109130409', 'ym');
 
-        ym(109130409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, trackLinks:true});
+        ym(109130409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
     </script>
     <noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
     
@@ -58,18 +58,7 @@
     <meta name="description" content="Бесплатный цифровой инструмент таксатора. Оптическая мерная вилка для точного бесконтактного измерения диаметра растущих деревьев по камере смартфона. Стоп-кадр, микроподстройка, печать ведомости в PDF и экспорт в Excel.">
     <meta name="keywords" content="мерная вилка купить, оптическая мерная вилка, электронная мерная вилка для смартфона, таксация леса приборы, измерение диаметра ствола онлайн, калькулятор диаметра дерева, Лесовик Про, отвод лесосек инструменты">
     <link rel="canonical" href="https://lesovik-pro.ru/diameter.html">
-
-    <meta property="og:title" content="Оптическая мерная вилка онлайн: бесконтактный замер диаметра дерева | Лесовик ПРО">
-    <meta property="og:description" content="Цифровой прибор инженера лесоустройства в кармане. Наведите визиры камеры на кору, укажите дистанцию и рассчитайте точный диаметр ствола по ГОСТ.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://lesovik-pro.ru/diameter.html">
-    <meta property="og:image" content="https://lesovik-pro.ru/logo.jpeg">
-    <meta property="og:image:width" content="500">
-    <meta property="og:image:height" content="500">
-
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
-    <meta name="geo.region" content="RU-KO">
-    <meta name="geo.placename" content="Сыктывкар">
 
     <!-- ПОДКЛЮЧЕНИЕ SHEETJS ДЛЯ ЭКСПОРТА XLSX -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.mini.min.js"></script>
@@ -117,7 +106,7 @@
             padding-bottom: 75px !important;
         }
 
-        *, *:before, *:after { box-sizing: inherit; }
+        * { box-sizing: border-box; }
 
         .glass-header {
             position: sticky; top: 0; z-index: 1000;
@@ -181,7 +170,10 @@
             touch-action: none;
         }
         .camera-stream-el { width: 100%; height: 100%; object-fit: cover; transform-origin: center center; }
-        canvas#freeze-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none; z-index: 5; }
+        canvas.freeze-canvas-layer { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            object-fit: cover; display: none; z-index: 6; pointer-events: none;
+        }
 
         /* ВИЗИРНЫЕ ЛИНИИ */
         .measurement-line {
@@ -246,7 +238,7 @@
             padding: 10px 12px 85px 12px; box-sizing: border-box; overflow: hidden;
         }
         .fs-header-bar { display: flex; justify-content: space-between; align-items: center; color: #8FBC8F; font-weight: bold; font-size: 13px; z-index: 10; }
-        .fs-viewport-container { position: relative; width: 100%; height: 58vh; overflow: hidden; border-radius: 12px; margin: 6px 0; touch-action: none; }
+        .fs-viewport-container { position: relative; width: 100%; height: 58vh; overflow: hidden; border-radius: 12px; margin: 6px 0; touch-action: none; background: #000; }
         .fs-bottom-panel { background: rgba(20, 30, 25, 0.95); padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); z-index: 10; }
 
         /* ТАБЛИЦА АРХИВА */
@@ -295,61 +287,11 @@
         </div>
     </header>
 
-    <!-- ПОЛНОЭКРАННАЯ КАМЕРА -->
-    <div id="fs-camera-modal" class="fullscreen-camera-modal">
-        <div class="fs-header-bar">
-            <span>🔍 ВИДОИСКАТЕЛЬ МЕРНОЙ ВИЛКИ</span>
-            <button class="btn btn-outline" style="width:auto; padding:4px 10px; margin:0; color:white; border-color:white;" onclick="closeFullscreenCamera()">✕ ЗАКРЫТЬ</button>
-        </div>
-
-        <div class="fs-viewport-container" id="fs-touch-container">
-            <video id="fs-camera-stream" class="camera-stream-el" autoplay playsinline></video>
-            <canvas id="fs-freeze-canvas"></canvas>
-            <div class="freeze-indicator-badge" id="fs-freeze-badge">❄️ Стоп-кадр зафиксирован</div>
-            <div id="fs-line-left" class="measurement-line" style="left: 40%;"></div>
-            <div id="fs-line-right" class="measurement-line" style="left: 60%;"></div>
-            <div class="center-marker"></div>
-        </div>
-
-        <div class="fs-bottom-panel">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; color:white; font-size:12px;">
-                <span>Раскрытие визиров: <b id="fs-slider-val-text" style="color:#8FBC8F;">20%</b></span>
-                <button class="btn-toggle-ctrl" style="padding:4px 8px; font-size:10.5px; border-color:white; color:white;" id="fs-btn-freeze" onclick="toggleFreezeFrame()">❄️ Стоп-кадр</button>
-            </div>
-            
-            <input type="range" class="width-slider" min="2" max="98" value="20" oninput="syncSliders(this.value)">
-            
-            <div class="micro-adjust-row" style="margin-top:4px; margin-bottom:6px;">
-                <button class="btn-micro" onclick="adjustSpread(-5)">-5%</button>
-                <button class="btn-micro" onclick="adjustSpread(-0.5)">-0.5%</button>
-                <button class="btn-micro" onclick="adjustSpread(0.5)">+0.5%</button>
-                <button class="btn-micro" onclick="adjustSpread(5)">+5%</button>
-            </div>
-
-            <button class="btn" style="margin:0; padding:10px; background:#16A34A;" onclick="calculateDiameter(); closeFullscreenCamera();">РАССЧИТАТЬ ДИАМЕТР</button>
-        </div>
-    </div>
-
-    <!-- ПОПАП ИНСТРУКЦИИ -->
-    <div id="instruction-popup" class="popup-overlay" onclick="closeInstructionOuter(event)">
-        <div class="popup-window">
-            <button class="popup-close" onclick="closeInstruction()">&times;</button>
-            <h3 style="font-family:'Merriweather',serif; color:var(--forest-green); margin-top:0;">📖 Инструкция оптической вилки</h3>
-            <ol style="padding-left:16px; font-size:12.5px; line-height:1.5; color:var(--text-graphite);">
-                <li>Измерьте точное расстояние до ствола в метрах (рулеткой/дальномером) и введите в поле <b>«Дистанция»</b>.</li>
-                <li>Наведите видоискатель на ствол дерева на высоте 1.3 м. При необходимости нажмите <b>«❄️ Стоп-кадр»</b> для спокойного визирования без тряски рук.</li>
-                <li>Совместите красные линии визира строго по внешним границам коры ползунком, жестом пинч-зума двумя пальцами или кнопками микрошага <b>[-0.5%] / [+0.5%]</b>.</li>
-                <li>Нажмите <b>«РАССЧИТАТЬ ДИАМЕТР»</b>. Замер запишется в журнал и посчитает средний диаметр делянки.</li>
-            </ol>
-            <button class="btn" style="margin-top:10px;" onclick="closeInstruction()">Понятно, к замеру</button>
-        </div>
-    </div>
-
     <main class="container">
         
         <!-- 1. ПАСПОРТ ДЕЛЯНКИ И УПРАВЛЕНИЕ АРХИВОМ -->
         <div class="card">
-            <h2>Паспорт делянки и архив замеров вилки (PRO 3.0)</h2>
+            <h2>Паспорт делянки и архив замеров вилки (PRO 3.1)</h2>
             <div class="subtitle">Привязка замеров к объекту, сохранение съемок и выгрузка ведомостей.</div>
 
             <div class="passport-grid">
@@ -409,8 +351,8 @@
                 </div>
 
                 <div class="camera-viewport-wrapper" id="inline-touch-container">
-                    <video id="camera-stream" class="camera-stream-el" autoplay playsinline></video>
-                    <canvas id="freeze-canvas"></canvas>
+                    <video id="camera-stream" class="camera-stream-el" autoplay playsinline muted></video>
+                    <canvas id="freeze-canvas" class="freeze-canvas-layer"></canvas>
                     <div class="freeze-indicator-badge" id="inline-freeze-badge">❄️ Стоп-кадр</div>
                     <div id="line-left" class="measurement-line" style="left: 40%;"></div>
                     <div id="line-right" class="measurement-line" style="left: 60%;"></div>
@@ -535,6 +477,41 @@
         </div>
     </main>
 
+    <!-- ПОЛНОЭКРАННЫЙ ВИДОИСКАТЕЛЬ (ПЕРЕМЕЩЕН В КОНЕЦ ДЛЯ ИЗОЛЯЦИИ СЛОЕВ) -->
+    <div id="fs-camera-modal" class="fullscreen-camera-modal">
+        <div class="fs-header-bar">
+            <span>🔍 ВИДОИСКАТЕЛЬ МЕРНОЙ ВИЛКИ</span>
+            <button class="btn btn-outline" style="width:auto; padding:4px 10px; margin:0; color:white; border-color:white;" onclick="closeFullscreenCamera()">✕ ЗАКРЫТЬ</button>
+        </div>
+
+        <div class="fs-viewport-container" id="fs-touch-container">
+            <video id="fs-camera-stream" class="camera-stream-el" autoplay playsinline muted></video>
+            <canvas id="fs-freeze-canvas" class="freeze-canvas-layer"></canvas>
+            <div class="freeze-indicator-badge" id="fs-freeze-badge">❄️ Стоп-кадр зафиксирован</div>
+            <div id="fs-line-left" class="measurement-line" style="left: 40%;"></div>
+            <div id="fs-line-right" class="measurement-line" style="left: 60%;"></div>
+            <div class="center-marker"></div>
+        </div>
+
+        <div class="fs-bottom-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; color:white; font-size:12px;">
+                <span>Раскрытие визиров: <b id="fs-slider-val-text" style="color:#8FBC8F;">20%</b></span>
+                <button class="btn-toggle-ctrl" style="padding:4px 8px; font-size:10.5px; border-color:white; color:white;" id="fs-btn-freeze" onclick="toggleFreezeFrame()">❄️ Стоп-кадр</button>
+            </div>
+            
+            <input type="range" class="width-slider" min="2" max="98" value="20" oninput="syncSliders(this.value)">
+            
+            <div class="micro-adjust-row" style="margin-top:4px; margin-bottom:6px;">
+                <button class="btn-micro" onclick="adjustSpread(-5)">-5%</button>
+                <button class="btn-micro" onclick="adjustSpread(-0.5)">-0.5%</button>
+                <button class="btn-micro" onclick="adjustSpread(0.5)">+0.5%</button>
+                <button class="btn-micro" onclick="adjustSpread(5)">+5%</button>
+            </div>
+
+            <button class="btn" style="margin:0; padding:10px; background:#16A34A;" onclick="calculateDiameter(); closeFullscreenCamera();">РАССЧИТАТЬ ДИАМЕТР</button>
+        </div>
+    </div>
+
     <!-- ОФИЦИАЛЬНЫЙ АЛЬБОМНЫЙ ПЕЧАТНЫЙ БЛАНК А4 -->
     <div id="printable-diameter-sheet"></div>
 
@@ -573,7 +550,7 @@
         }
     }
 
-    // 2. СТОП-КАДР (ЗАМОРОЗКА ИЗОБРАЖЕНИЯ)
+    // 2. СТОП-КАДР: ФИКСАЦИЯ И СИНХРОНИЗАЦИЯ ХОЛСТА И СТРИМА
     function toggleFreezeFrame() {
         isFrozen = !isFrozen;
         const video = document.getElementById('camera-stream');
@@ -587,9 +564,11 @@
         const fsBtn = document.getElementById('fs-btn-freeze');
 
         if (isFrozen) {
-            // Рисуем текущий кадр на canvas
-            [ { v: video, c: canvas }, { v: fsVideo, c: fsCanvas } ].forEach(pair => {
-                if (pair.v && pair.c && pair.v.videoWidth) {
+            // Отрисовываем кадр с основного или полноэкранного видео
+            const sourceVideo = (fsVideo && fsVideo.videoWidth > 0) ? fsVideo : video;
+            
+            [ { v: sourceVideo, c: canvas }, { v: sourceVideo, c: fsCanvas } ].forEach(pair => {
+                if (pair.v && pair.c && pair.v.videoWidth > 0) {
                     pair.c.width = pair.v.videoWidth;
                     pair.c.height = pair.v.videoHeight;
                     const ctx = pair.c.getContext('2d');
@@ -598,12 +577,20 @@
                 }
             });
 
+            // Аппаратная пауза воспроизведения видеопотока
+            if (video) video.pause();
+            if (fsVideo) fsVideo.pause();
+
             badge.style.display = 'block';
             if (fsBadge) fsBadge.style.display = 'block';
             btn.classList.add('active');
             btn.innerText = '▶️ В эфир';
             if (fsBtn) { fsBtn.classList.add('active'); fsBtn.innerText = '▶️ В эфир'; }
         } else {
+            // Возобновление трансляции
+            if (video) video.play().catch(()=>{});
+            if (fsVideo) fsVideo.play().catch(()=>{});
+
             canvas.style.display = 'none';
             if (fsCanvas) fsCanvas.style.display = 'none';
             badge.style.display = 'none';
@@ -696,9 +683,28 @@
     function openFullscreenCamera() {
         const modal = document.getElementById('fs-camera-modal');
         const fsVideo = document.getElementById('fs-camera-stream');
-        if (activeStream) { fsVideo.srcObject = activeStream; }
+        if (activeStream) { 
+            fsVideo.srcObject = activeStream;
+            fsVideo.play().catch(()=>{});
+        }
         modal.style.display = 'flex';
         syncSliders(currentSpreadPercent);
+
+        // Если активен стоп-кадр — прорисовываем его в модальное окно
+        if (isFrozen) {
+            const video = document.getElementById('camera-stream');
+            const fsCanvas = document.getElementById('fs-freeze-canvas');
+            if (video && fsCanvas && video.videoWidth > 0) {
+                fsCanvas.width = video.videoWidth;
+                fsCanvas.height = video.videoHeight;
+                const ctx = fsCanvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, fsCanvas.width, fsCanvas.height);
+                fsCanvas.style.display = 'block';
+                document.getElementById('fs-freeze-badge').style.display = 'block';
+                document.getElementById('fs-btn-freeze').classList.add('active');
+                document.getElementById('fs-btn-freeze').innerText = '▶️ В эфир';
+            }
+        }
     }
 
     function closeFullscreenCamera() {
@@ -790,7 +796,7 @@
         measurementsLog.unshift(record);
         localStorage.setItem(ARCHIVE_STORAGE_KEY, JSON.stringify(measurementsLog));
         
-        // Синхронизация с LesovikCore
+        // Синхронизация с ядром LesovikCore
         if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
             const activeProj = window.LesovikCore.getActiveProject();
             if (activeProj && activeProj.plots && activeProj.plots.length > 0) {
@@ -1016,7 +1022,6 @@
         const checker = document.getElementById('v-checker').value;
         const dateStr = new Date().toLocaleDateString('ru-RU');
 
-        // Сводка по породам
         let speciesMap = {};
         measurementsLog.forEach(m => {
             if (!speciesMap[m.species]) speciesMap[m.species] = [];
