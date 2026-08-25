@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 11180157622.
-  Программное обеспечение: «Электронная буссоль БГ-ХНС PRO» (Версия 2.6).
+  Программное обеспечение: «Электронная буссоль БГ-ХНС PRO» (Версия 2.8).
 -->
 <!DOCTYPE html>
 <html lang="ru">
@@ -9,16 +9,16 @@
     <script type="text/javascript" src="cordova.js"></script>
 
     <meta charset="UTF-8">
-    <meta name="application-name" content="БГ-ХНС PRO 2.6">
+    <meta name="application-name" content="БГ-ХНС PRO 2.8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="google-site-verification" content="rLtNyEQ2h992Lp8m73ynLM8J6xY5tJcr3dbVwbO35rU" />
     
-    <title>Электронная буссоль онлайн с визиром и уровнем | БГ-ХНС PRO 2.6</title>
+    <title>Электронная буссоль онлайн с визиром и уровнем | БГ-ХНС PRO 2.8</title>
     <meta name="description" content="Бесплатная электронная буссоль и геодезический компас для отвода лесосек. Точное измерение магнитных азимутов, GPS-вектора по двум точкам, внутренних углов поворота делянки и визиров.">
     <meta name="keywords" content="буссоль онлайн, буссоль лазерная карманная, electronic буссоль для телефона, компас таксатора, измерение азимута онлайн, отвод лесосек, углы поворота делянки, БГ-ХНС">
     <link rel="canonical" href="https://lesovik-pro.ru/busol-pro.html">
 
-    <meta property="og:title" content="Электронная буссоль онлайн с визиром и уровнем | БГ-ХНС PRO 2.6">
+    <meta property="og:title" content="Электронная буссоль онлайн с визиром и уровнем | БГ-ХНС PRO 2.8">
     <meta property="og:description" content="Геодезический прибор таксатора в кармане. Разбивка лесосек, фиксация азимутов, GPS-вектора и замер внутренних углов через камеру смартфона.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://lesovik-pro.ru/busol-pro.html">
@@ -170,32 +170,26 @@
         }
         
         #compass-svg-canvas {
-            width: 96%;
+            width: 90%;
             aspect-ratio: 1;
             transition: transform 0.05s linear;
         }
 
+        /* КРАСНЫЙ ЛУЧ ВИЗИРОВАНИЯ В СВЕРНУТОМ РЕЖИМЕ (ДО ВЕРХНЕЙ РАМКИ) */
         .compass-device-sight-line {
             position: absolute;
-            top: 5px; left: 50%;
-            width: 4px; height: 40px;
+            top: 0; bottom: 50%; left: 50%;
+            width: 3px;
             background: #FF0000;
             transform: translateX(-50%);
             z-index: 95;
-            filter: drop-shadow(0 0 8px #FF0000);
-        }
-        .compass-device-sight-line::after {
-            content: '▲';
-            position: absolute;
-            bottom: -12px; left: 50%;
-            transform: translateX(-50%);
-            font-size: 14px; color: #FF0000;
-            filter: drop-shadow(0 0 8px #FF0000);
+            box-shadow: 0 0 10px #FF0000, 0 0 4px #FF3B30;
+            pointer-events: none;
         }
 
         .compass-center-bubble-level {
             position: absolute;
-            top: 42%; left: 50%;
+            top: 50%; left: 50%;
             width: 48px; height: 48px;
             border: 2px solid rgba(255,255,255,0.4);
             border-radius: 50%;
@@ -229,17 +223,18 @@
             line-height: 1.3;
         }
 
+        /* ПОЛНОЭКРАННОЕ ОКНО БУССОЛИ */
         .fullscreen-compass-modal {
             display: none;
             position: fixed;
             top: 0; left: 0;
             width: 100vw; height: 100vh;
             background: #0D1311;
-            z-index: 9999;
+            z-index: 9999999;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            padding: 12px;
+            padding: 12px 15px 95px 15px; /* Увеличенный нижний отступ для подъема кнопки над меню */
             box-sizing: border-box;
         }
         .fs-header-bar {
@@ -249,13 +244,14 @@
             align-items: center;
             color: #8FBC8F;
             font-weight: bold;
+            z-index: 100;
         }
         .fs-close-btn {
             background: rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.2);
             color: #FFF;
-            font-size: 18px;
-            padding: 8px 18px;
+            font-size: 16px;
+            padding: 8px 16px;
             border-radius: 8px;
             cursor: pointer;
         }
@@ -263,12 +259,27 @@
             position: relative;
             width: 90vw;
             height: 90vw;
-            max-width: 75vh;
-            max-height: 75vh;
+            max-width: 65vh;
+            max-height: 65vh;
             display: flex;
             align-items: center;
             justify-content: center;
         }
+
+        /* КРАСНЫЙ ЛАЗЕРНЫЙ ЛУЧ ЧЕРЕЗ ВЕСЬ ВЕРХ ЭКРАНА В ПОЛНОЭКРАННОМ РЕЖИМЕ */
+        .fs-laser-ray-top {
+            position: absolute;
+            top: -100px;
+            bottom: 50%;
+            left: 50%;
+            width: 3.5px;
+            background: #FF0000;
+            transform: translateX(-50%);
+            z-index: 95;
+            box-shadow: 0 0 14px #FF0000, 0 0 6px #FF3B30;
+            pointer-events: none;
+        }
+
         #fs-compass-svg {
             width: 100%;
             height: 100%;
@@ -278,7 +289,7 @@
             position: absolute;
             top: 0; bottom: 0; left: 50%;
             width: 1px;
-            background: rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.2);
             transform: translateX(-50%);
             pointer-events: none;
             z-index: 85;
@@ -287,7 +298,7 @@
             position: absolute;
             left: 0; right: 0; top: 50%;
             height: 1px;
-            background: rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.2);
             transform: translateY(-50%);
             pointer-events: none;
             z-index: 85;
@@ -299,18 +310,18 @@
             text-align: center;
             color: #FFF;
             font-family: monospace;
-            padding: 5px 0 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 6px;
+            z-index: 100;
         }
 
         .btn-fs-huge-trigger {
             width: 100%;
-            min-height: 65px;
-            padding: 16px;
-            font-size: 16px;
+            min-height: 58px;
+            padding: 14px;
+            font-size: 15px;
             font-weight: bold;
             border-radius: 12px;
             text-transform: uppercase;
@@ -364,7 +375,6 @@
         #polygon-canvas:active { cursor: grabbing; }
         [data-theme="dark"] #polygon-canvas { background: #151e1b; border: 1px dashed rgba(255,255,255,0.1); }
         
-        /* КНОПКИ МАСШТАБИРОВАНИЯ И НАВИГАЦИИ НА ЧЕРТЕЖЕ */
         .canvas-zoom-controls { position: absolute; right: 15px; top: 35px; display: flex; flex-direction: column; gap: 6px; z-index: 30; }
         .btn-canvas-ctrl { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--forest-green); font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.15); transition: 0.15s; }
         .btn-canvas-ctrl:active { transform: scale(0.95); background: var(--forest-green); color: #FFF; }
@@ -408,8 +418,8 @@
 
     <header class="glass-header">
         <a href="#" class="logo-container" onclick="return false;">
-            <img src="logo.jpeg" alt="БГ-ХНС PRO 2.6" class="header-logo" onerror="this.style.display='none'">
-            <h1>БГ-ХНС PRO 2.6</h1>
+            <img src="logo.jpeg" alt="БГ-ХНС PRO 2.8" class="header-logo" onerror="this.style.display='none'">
+            <h1>БГ-ХНС PRO 2.8</h1>
         </a>
         <div class="header-seo-text">Электронная буссоль • Геодезия выдела • Отвод лесосек</div>
         <div class="header-right">
@@ -417,6 +427,7 @@
         </div>
     </header>
 
+    <!-- ПОЛНОЭКРАННОЕ ОКНО БУССОЛИ -->
     <div id="fullscreen-compass-modal" class="fullscreen-compass-modal">
         <div class="fs-header-bar">
             <span>🔍 ПОЛНОЭКРАННАЯ ЭЛЕКТРОННАЯ БУССОЛЬ</span>
@@ -424,13 +435,14 @@
         </div>
 
         <div class="fs-compass-viewport">
-            <div class="compass-device-sight-line"></div>
+            <!-- Красный луч визирования сквозь весь экран вверх -->
+            <div class="fs-laser-ray-top"></div>
             
             <div class="fs-crosshair-line-v"></div>
             <div class="fs-crosshair-line-h"></div>
 
             <svg id="fs-compass-svg" viewBox="0 0 300 300">
-                <!-- JS отрисует векторный лимб -->
+                <!-- JS отрисует векторный лимб со стрелкой -->
             </svg>
 
             <div class="compass-center-bubble-level" style="width: 55px; height: 55px;">
@@ -536,7 +548,7 @@
             <h4 style="margin-top: 12px; font-family: 'Merriweather', serif; color: var(--forest-green);">Инструкция проведения калибровки в поле:</h4>
             <ul class="instruction-steps" style="font-size: 13px; line-height: 1.5;">
                 <li><strong>Как воводить устройство:</strong> Нажмите кнопку «Начать калибровку» ниже. Возьмите смартфон в руку и начните непрерывно выписывать в воздухе объемную фигуру знака бесконечности или «восьмерки».</li>
-                <li><strong>Положение осей:</strong> В процессе движения плавно разворачивайте кисть руки. Смартфон должен попеременно менять наклоны относительно горизонта и плоскости земли.Это позволит стереть налипшие магнитные шумы железа.</li>
+                <li><strong>Положение осей:</strong> В процессе движения плавно разворачивайте кисть руки. Смартфон должен попеременно менять наклоны относительно горизонта и плоскости земли. Это позволит стереть налипшие магнитные шумы железа.</li>
                 <li><strong>⚠️ ВАЖНОЕ ПОЛОЖЕНИЕ:</strong> Для получения максимальной стабильности во вкладке кругового лимба всегда держите телефон строго горизонтально экраном вверх, ориентируя верхний торец корпуса на целевой деляночный столб.</li>
             </ul>
             <div style="display: flex; gap: 10px; margin-top: 15px;">
@@ -548,7 +560,7 @@
 
     <main class="container">
         <div class="card" style="margin-bottom: 20px;">
-            <h2>Управление проектами и архивом делянок (БГ-ХНС PRO 2.6)</h2>
+            <h2>Управление проектами и архивом делянок (БГ-ХНС PRO 2.8)</h2>
             <div class="subtitle">Сохранение независимых съемок, KML-подложка выдела и выгрузка отчетов.</div>
             <div class="archive-scroll-container">
                 <div class="archive-inner-flex">
@@ -558,7 +570,6 @@
                         <option value="">-- Выберите из архива --</option>
                     </select>
                     
-                    <!-- ЗАГРУЗКА ВЕКТОРНОГО KML В ОФЛАЙНЕ -->
                     <label class="btn-action" style="background:#2D5A27; color:#FFF; padding:8px 15px; cursor:pointer; display:inline-flex; align-items:center; width:auto;">
                         📂 Загрузить KML выдела
                         <input type="file" id="kml-file-input" accept=".kml" style="display:none;" onchange="handleKMLUpload(event)">
@@ -626,6 +637,7 @@
 
                 <div class="camera-viewport-wrapper">
                     <div id="digital-compass-disk" class="digital-compass-disk-container">
+                        <!-- Красный лазерный луч до верхней рамки экрана -->
                         <div class="compass-device-sight-line"></div>
                         
                         <svg id="compass-svg-canvas" viewBox="0 0 300 300">
@@ -667,11 +679,9 @@
                 </div>
 
                 <div class="control-panel-buttons">
-                    <!-- КНОПКИ GPS РЕЖИМА -->
                     <button class="btn-action btn-set-zero" id="btn-gps-start" style="display:none; grid-column: span 1;" onclick="startGpsLine()">📍 Старт линии (Т1)</button>
                     <button class="btn-action btn-reset-zero" id="btn-gps-reset" style="display:none; grid-column: span 1;" onclick="resetGpsLine()">🔄 Сброс Т1</button>
 
-                    <!-- ОБЫЧНЫЕ КНОПКИ МАГНИТНОГО РЕЖИМА -->
                     <button class="btn-action btn-set-zero" id="btn-lock-zero" onclick="setZeroDirection()">🔒 Фиксировать 0°</button>
                     <button class="btn-action btn-reset-zero" id="btn-clear-zero" onclick="resetZeroDirection()">Сбросить</button>
                     
@@ -715,7 +725,6 @@
                 <div class="canvas-container">
                     <span style="font-weight: 700; color: var(--forest-green); font-size: 13px; margin-bottom: 5px; align-self: flex-start;">📐 ЧЕРТЕЖ И КАРТА СТОРОН СВЕТА:</span>
                     
-                    <!-- КНОПКИ МАСШТАБИРОВАНИЯ И НАВИГАЦИИ НА ЧЕРТЕЖЕ -->
                     <div class="canvas-zoom-controls">
                         <button class="btn-canvas-ctrl" onclick="zoomCanvas(1.25)" title="Увеличить чертеж">+</button>
                         <button class="btn-canvas-ctrl" onclick="zoomCanvas(0.8)" title="Уменьшить чертеж">−</button>
@@ -726,7 +735,6 @@
                     <div id="area-display" class="area-badge">Площадь: 0.0000 га</div>
                 </div>
                 
-                <!-- РАСШИРЕННАЯ ЗАМЕТКА ТАКСАТОРУ ПО ВСЕМ ИНСТРУМЕНТАМ -->
                 <div style="margin-top: 15px; background: rgba(45, 90, 39, 0.04); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
                     <span style="font-weight: 700; color: var(--forest-green); display: block; font-size: 12px; margin-bottom: 6px;">⚠️ РУКОВОДСТВО ТАКСАТОРУ ПО ИНСТРУМЕНТАМ БУССОЛИ:</span>
                     <ul style="font-size: 11px; line-height: 1.5; padding-left: 14px; margin: 0; opacity: 0.9; color: var(--text-graphite);">
@@ -745,7 +753,7 @@
             <p><strong>Буссоль в лесоустройстве</strong> — это базовый геодезический инструмент, применяемый инженерами и лесничими для таксации, отвода лесосек, замера направлений ходовых линий (визиров) и определения внутренних углов делянок. Точность построения полигона делянки напрямую влияет на правильность исчисления площадей выдела и корректность отображения квартальных сеток во ФГИС ЛК.</p>
 
             <h3>Инструкция по работе с оптическим онлайн-визиром</h3>
-            <p>В отличие от классической металлической буссоли БГ-1, требующей жесткой установки штатива, электронная буссоль «БГ-ХНС PRO 2.6» использует метод вертикального проецирования вешек на матрицу камеры, круговой лимб и спутниковый GPS-вектор по 2 точкам.</p>
+            <p>В отличие от классической металлической буссоли БГ-1, требующей жесткой установки штатива, электронная буссоль «БГ-ХНС PRO 2.8» использует метод вертикального проецирования вешек на матрицу камеры, круговой лимб и спутниковый GPS-вектор по 2 точкам.</p>
         </section>
     </main>
 
@@ -756,7 +764,7 @@
                     <path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/>
                     <rect x="10.5" y="20" width="3" height="4"/>
                 </svg>
-                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 16px;">БГ-ХНС PRO 2.6</div>
+                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 16px;">БГ-ХНС PRO 2.8</div>
                 <div style="font-size: 12px; margin-top: 5px; opacity: 0.8;">Цифровой инструмент таксатора. База знаний, калькуляторы и профильные статьи для специалистов леса.</div>
             </div>
             <div class="footer-column">
@@ -812,12 +820,11 @@
     let currentAltitude = 150;
     let currentAccuracy = 0;
 
-    let gpsPoint1 = null; // Стартовая точка Т1
+    let gpsPoint1 = null; 
     let calculatedGpsAzimuth = null;
-    let uploadedKmlPolygon = null; // Векторный контур KML
+    let uploadedKmlPolygon = null; 
 
-    // ПЕРЕМЕННЫЕ МАСШТАБИРОВАНИЯ И СДВИГА ЧЕРТЕЖА ПАЛЬЦЕМ/МЫШКОЙ (PAN/DRAG)
-    let canvasZoomMultiplier = 1.8; // Увеличенный стартовый зум!
+    let canvasZoomMultiplier = 1.8; 
     let isFollowUser = false;
     let panOffsetX = 0;
     let panOffsetY = 0;
@@ -828,7 +835,6 @@
     let lastVibratedSector = -1; 
     let calibrationOffsetDecimal = 0.0;
 
-    // ВСПОМОГАТЕЛЬНОЕ УВЕДОМЛЕНИЕ
     function showToast(msg) {
         const toast = document.getElementById('toast-message');
         if (toast) {
@@ -838,7 +844,6 @@
         }
     }
 
-    // МАСШТАБИРОВАНИЕ И ЦЕНТРИРОВАНИЕ ЧЕРТЕЖА
     function zoomCanvas(factor) {
         canvasZoomMultiplier *= factor;
         if (canvasZoomMultiplier < 0.2) canvasZoomMultiplier = 0.2;
@@ -855,7 +860,6 @@
         drawPolygon();
     }
 
-    // ИНИЦИАЛИЗАЦИЯ ПЕРЕМЕЩЕНИЯ ЧЕРТЕЖА ПАЛЬЦЕМ / МЫШКОЙ
     function initCanvasDragControls() {
         const canvas = document.getElementById('polygon-canvas');
         if (!canvas) return;
@@ -895,7 +899,6 @@
         window.addEventListener('touchend', stopDrag);
     }
 
-    // ЗАГРУЗКА И ОФЛАЙН-ПАРСИНГ ФАЙЛА KML
     function handleKMLUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -999,7 +1002,7 @@
     }
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371000; // метры
+        const R = 6371000;
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
         const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -1108,6 +1111,7 @@
         }
     }
 
+    // ОТРИСОВКА ЛИМБА С КРАСИВОЙ СТРЕЛКОЙ СЕВЕР-ЮГ
     function drawCompassDialSVG(targetSvgId = 'compass-svg-canvas') {
         const svg = document.getElementById(targetSvgId);
         if (!svg) return;
@@ -1159,6 +1163,19 @@
                 svg.appendChild(text);
             }
         }
+
+        // КРАСИВАЯ СТРЕЛКА СЕВЕР-ЮГ В ЛИМБЕ
+        let arrowNorth = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        arrowNorth.setAttribute("points", "150,40 142,150 158,150");
+        arrowNorth.setAttribute("fill", "#DC2626");
+        arrowNorth.setAttribute("filter", "drop-shadow(0 0 6px rgba(220,38,38,0.8))");
+        svg.appendChild(arrowNorth);
+
+        let arrowSouth = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        arrowSouth.setAttribute("points", "150,260 142,150 158,150");
+        arrowSouth.setAttribute("fill", "#FFFFFF");
+        arrowSouth.setAttribute("filter", "drop-shadow(0 0 4px rgba(255,255,255,0.5))");
+        svg.appendChild(arrowSouth);
     }
 
     function saveToLocalStorage() {
@@ -1554,8 +1571,8 @@
         const btnFsCapture = document.getElementById('btn-fs-capture');
 
         if (currentSystemMode === 'magnetic') {
-            const isPitchOk = Math.abs(pitch - 90) <= 5 || Math.abs(pitch - 0) <= 5 || Math.abs(pitch + 90) <= 5;
-            const isRollOk = Math.abs(roll) <= 4 || Math.abs(roll - 180) <= 4 || Math.abs(roll + 180) <= 4;
+            const isPitchOk = Math.abs(pitch - 90) <= 6 || Math.abs(pitch - 0) <= 6 || Math.abs(pitch + 90) <= 6;
+            const isRollOk = Math.abs(roll) <= 6 || Math.abs(roll - 180) <= 6 || Math.abs(roll + 180) <= 6;
             
             if (isPitchOk && isRollOk) {
                 isLevel = true;
@@ -1571,7 +1588,8 @@
                 btnCapture.disabled = true;
             }
         } else {
-            const isHorizontal = Math.abs(pitch) <= 4 && Math.abs(roll) <= 4;
+            // Расширенный допуск горизонтали (+-7 градусов) для легкой фиксации на весу
+            const isHorizontal = Math.abs(pitch) <= 7 && Math.abs(roll) <= 7;
             if (isHorizontal) {
                 isLevel = true;
                 btnCapture.classList.add('ready-to-fire');
@@ -1814,7 +1832,6 @@
         });
     }
 
-    // ПОЛНАЯ ОТРИСОВКА ЧЕРТЕЖА, KML-ПОДЛОЖКИ И КУРСОРA С ПОДДЕРЖКОЙ СДВИГА (PAN/DRAG)
     function drawPolygon() {
         const canvas = document.getElementById('polygon-canvas');
         const ctx = canvas.getContext('2d');
@@ -1825,7 +1842,6 @@
         ctx.fillStyle = isDark ? '#22302B' : '#FFFFFF';
         ctx.fillRect(0, 0, width, height);
 
-        // Стороны света
         ctx.fillStyle = isDark ? 'rgba(255,255,255,0.4)' : '#333333'; 
         ctx.font = "bold 12px Inter, sans-serif";
         ctx.textAlign = "center";
@@ -1836,7 +1852,6 @@
         ctx.textAlign = "right";
         ctx.fillText("В", width - 10, height / 2 + 4);
 
-        // Расчет точек ходовых линий
         let points = [{ x: 0, y: 0 }];
         let currentX = 0;
         let currentY = 0;
@@ -1848,12 +1863,11 @@
             points.push({ x: currentX, y: currentY });
         });
 
-        // 1. ИСПРАВЛЕНИЕ СДВИГА КУРСОРA: Точка отсчета берется от КОНЦА ПОСЛЕДНЕЙ ЛИНИИ!
         let lastIndex = measurementsLog.length - 1;
         let startLat = gpsPoint1 ? gpsPoint1.lat : (lastIndex >= 0 && measurementsLog[lastIndex].lat ? measurementsLog[lastIndex].lat : currentLat);
         let startLng = gpsPoint1 ? gpsPoint1.lng : (lastIndex >= 0 && measurementsLog[lastIndex].lng ? measurementsLog[lastIndex].lng : currentLng);
 
-        let lastPoint = points[points.length - 1]; // Координаты последней точки на холсте
+        let lastPoint = points[points.length - 1];
 
         let relativeDx = calculateDistance(startLat, startLng, startLat, currentLng) * (currentLng >= startLng ? 1 : -1);
         let relativeDy = calculateDistance(startLat, startLng, currentLat, startLng) * (currentLat >= startLat ? 1 : -1);
@@ -1874,7 +1888,6 @@
         let minY = Math.min(...allY);
         let maxY = Math.max(...allY);
 
-        // 2. ИСПРАВЛЕНИЕ ЗУМА: Минимальный охват уменьшен до 2 метров для крупного масштаба
         let baseScale = (width - 80) / Math.max(maxX - minX, maxY - minY, 2.0);
         let scale = baseScale * canvasZoomMultiplier;
 
@@ -1893,7 +1906,6 @@
             };
         }
 
-        // 1. Отрисовка координатной сетки
         ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
         ctx.lineWidth = 1;
         for(let i = 0; i < width; i += 40) {
@@ -1901,7 +1913,6 @@
             ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke();
         }
 
-        // 2. Отрисовка эталонного контура выдела KML (Оранжевым пунктиром)
         if (uploadedKmlPolygon && uploadedKmlPolygon.length > 0) {
             ctx.beginPath();
             ctx.setLineDash([5, 5]);
@@ -1921,7 +1932,6 @@
             ctx.setLineDash([]);
         }
 
-        // 3. Отрисовка фактических линий хода
         if (measurementsLog.length > 0) {
             ctx.lineWidth = 2.5;
             ctx.strokeStyle = isDark ? '#8FBC8F' : '#2D5A27';
@@ -1953,7 +1963,6 @@
             });
         }
 
-        // 4. Отрисовка текущего положения таксатора (Динамический зеленый треугольник строго от конца линии!)
         if (gpsPoint1 || measurementsLog.length > 0) {
             let userPixel = toPixel({ x: userDx, y: userDy });
 
@@ -1962,7 +1971,7 @@
             ctx.rotate((currentAzimuth * Math.PI) / 180);
 
             ctx.beginPath();
-            ctx.moveTo(0, -11); // Нос стрелки
+            ctx.moveTo(0, -11);
             ctx.lineTo(8, 9);
             ctx.lineTo(0, 5);
             ctx.lineTo(-8, 9);
@@ -1976,7 +1985,6 @@
             ctx.restore();
         }
 
-        // Расчет площадей
         let area = 0;
         let j = points.length - 1;
         for (let i = 0; i < points.length; i++) {
@@ -2108,7 +2116,7 @@
             });
         });
 
-        const fileName = "Архив_полевых_съемок_БГ_ХНС_2_6.xls";
+        const fileName = "Архив_полевых_съемок_БГ_ХНС_2_8.xls";
         const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
@@ -2120,7 +2128,6 @@
         setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
-    // РАСШИРЕННЫЙ ГИС-ЭКСПОРТ KML С АТРИБУТАМИ ЛИНИЙ И ТОЧЕЧНЫМИ МЕТКАМИ
     function exportToKML() {
         if (measurementsLog.length === 0) { showToast("Журнал пуст!"); return; }
         let name = document.getElementById('project-name').value || "Делянка";
@@ -2134,7 +2141,6 @@
         let polygonCoords = [];
         polygonCoords.push(`${lng.toFixed(6)},${lat.toFixed(6)},0`);
 
-        // 1. Создаем метку для первого столба (Точка 1)
         kml += `<Placemark>\n<name>Столб №1 (Старт)</name>\n<description>Координаты: ${decimalToDMS(lat, true)} ${decimalToDMS(lng, false)}\nВысота: ${currentAltitude} м</description>\n<Point><coordinates>${lng.toFixed(6)},${lat.toFixed(6)},0</coordinates></Point>\n</Placemark>\n`;
 
         measurementsLog.forEach((m, idx) => {
@@ -2145,14 +2151,12 @@
             lng += dX / (111111 * Math.cos(lat * Math.PI / 180));
             polygonCoords.push(`${lng.toFixed(6)},${lat.toFixed(6)},0`);
 
-            // Метки для каждого следующего столба
             let dirCard = getCardinalDirection(m.azimuth);
             kml += `<Placemark>\n<name>Столб №${idx + 2}</name>\n<description>Линия №${m.id}\nАзимут: ${m.azimuth}° (${dirCard})\nДлина: ${m.distance} м\nКоординаты: ${decimalToDMS(lat, true)} ${decimalToDMS(lng, false)} (${lat.toFixed(6)}, ${lng.toFixed(6)})</description>\n<Point><coordinates>${lng.toFixed(6)},${lat.toFixed(6)},0</coordinates></Point>\n</Placemark>\n`;
         });
         
         if (polygonCoords.length > 0) polygonCoords.push(polygonCoords[0]);
 
-        // 2. Полигон делянки
         kml += `<Placemark>\n<name>${name} - Контур делянки</name>\n<Polygon>\n<outerBoundaryIs>\n<LinearRing>\n<coordinates>\n${polygonCoords.join("\n")}\n</coordinates>\n</LinearRing>\n</outerBoundaryIs>\n</Polygon>\n</Placemark>\n`;
         kml += `</Document>\n</kml>`;
 
@@ -2160,7 +2164,7 @@
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", `${name}_контур_БГ_ХНС_2.6.kml`);
+        link.setAttribute("download", `${name}_контур_БГ_ХНС_2.8.kml`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -2170,7 +2174,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         startCamera();
         initGPS(); 
-        initCanvasDragControls(); // Инициализация сдвига чертежа пальцем/мышкой
+        initCanvasDragControls();
         
         const triggerSensorAccess = async () => {
             try {
