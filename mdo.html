@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Модуль материально-денежной оценки лесосек МДО PRO (Лесовик ПРО)» (Версия 3.3).
+  Программное обеспечение: «Модуль материально-денежной оценки лесосек МДО PRO (Лесовик ПРО)» (Версия 3.4).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -220,6 +220,23 @@
         .step-input-wrapper input { width: 100%; text-align: center; padding: 4px; border: 1px solid var(--border-light); border-radius: 4px; font-weight: 700; outline: none; background: var(--input-bg); color: var(--text-main); font-size: 12px; }
 
         /* МАТРИЧНАЯ СЕТКА-ТОЧКОВКА */
+        .matrix-header-bar {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;
+        }
+        .delta-step-picker {
+            display: inline-flex; background: var(--input-bg); border: 1px solid var(--border-light); border-radius: 6px; padding: 2px;
+        }
+        .delta-btn {
+            background: transparent; border: none; padding: 5px 12px; font-size: 11px; font-weight: 700;
+            border-radius: 4px; cursor: pointer; color: var(--text-main); transition: 0.15s;
+        }
+        .delta-btn.active {
+            background: var(--primary-forest); color: #FFF;
+        }
+        .delta-btn.delta-sub.active {
+            background: var(--fire-accent); color: #FFF;
+        }
+
         .matrix-table-wrapper { width: 100%; overflow-x: auto; border: 1px solid var(--border-light); border-radius: 8px; margin-bottom: 15px; -webkit-overflow-scrolling: touch; }
         .matrix-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 760px; text-align: center; background: var(--bg-card); }
         .matrix-table th, .matrix-table td { border: 1px solid var(--border-light); padding: 6px 3px; }
@@ -231,7 +248,7 @@
         .matrix-tap-btn {
             background: var(--input-bg); border: 1px solid transparent; border-radius: 4px;
             padding: 6px 2px; font-size: 12px; font-weight: 800; cursor: pointer; width: 100%; height: 100%;
-            display: block; color: var(--text-main); transition: 0.1s;
+            display: block; color: var(--text-main); transition: 0.1s; user-select: none;
         }
         .matrix-tap-btn:active { background: var(--success); color: #FFF; transform: scale(0.95); }
         .matrix-tap-btn.has-val { background: rgba(59, 102, 52, 0.15); color: var(--primary-forest); border-color: var(--primary-forest); }
@@ -449,7 +466,13 @@
 
         <!-- 1. МАТРИЧНЫЙ РЕЖИМ (СЕТКА ДЛЯ ПЕРЕЧЕТА В 1 ТАП) -->
         <div id="view-matrix-container">
-            <div class="field-peruchet-section-title">Матрица перечета (Меняйте разряд в селекторе и нажимайте на ячейку для точковки +1):</div>
+            <div class="matrix-header-bar">
+                <div class="field-peruchet-section-title" style="margin:0; border:none; padding:0;">Матрица перечета:</div>
+                <div class="delta-step-picker">
+                    <button class="delta-btn active" id="btn-delta-add" onclick="setTallyDelta(1)">➕ Прибавить (+1)</button>
+                    <button class="delta-btn delta-sub" id="btn-delta-sub" onclick="setTallyDelta(-1)">➖ Убавить (-1)</button>
+                </div>
+            </div>
             <div class="matrix-table-wrapper">
                 <table class="matrix-table" id="matrix-table-el"></table>
             </div>
@@ -529,7 +552,14 @@
     const diameters = [16, 20, 24, 28, 32, 36, 40, 44, 48];
     const addedSpeciesCodes = new Set();
     let currentInputMode = 'matrix';
+    let currentTallyDelta = 1; // 1 для прибавления, -1 для убавления
     let lastMdoCalculatedData = null;
+
+    function setTallyDelta(delta) {
+        currentTallyDelta = delta;
+        document.getElementById('btn-delta-add').classList.toggle('active', delta === 1);
+        document.getElementById('btn-delta-sub').classList.toggle('active', delta === -1);
+    }
 
     function switchInputMode(mode) {
         currentInputMode = mode;
@@ -654,7 +684,6 @@
         }
     }
 
-    // ИЗМЕНЕНИЕ РАЗРЯДА ВЫСОТ ИЗ СЕТКИ
     function updateHClassFromMatrix(rawCode, newClass) {
         const block = document.getElementById(`block-${rawCode}`);
         if (block) {
@@ -663,7 +692,6 @@
         }
     }
 
-    // ОТРИСОВКА СЕТКИ-ТОЧКОВКИ
     function renderMatrixGrid() {
         const table = document.getElementById('matrix-table-el');
         const blocks = document.querySelectorAll('.species-peruchet-block');
@@ -686,7 +714,7 @@
                 const count = parseInt(inp ? inp.value : 0, 10) || 0;
                 rowSum += count;
                 const hasVal = count > 0 ? 'has-val' : '';
-                return `<td><button class="matrix-tap-btn ${hasVal}" onclick="matrixCellTap('${rawCode}', ${d})">${count}</button></td>`;
+                return `<td><button class="matrix-tap-btn ${hasVal}" onclick="matrixCellTap('${rawCode}', ${d})" oncontextmenu="matrixCellRightClick(event, '${rawCode}', ${d})">${count}</button></td>`;
             }).join('');
 
             const selectHHtml = `
@@ -713,12 +741,23 @@
     }
 
     function matrixCellTap(rawCode, d) {
+        applyTallyDelta(rawCode, d, currentTallyDelta);
+    }
+
+    function matrixCellRightClick(event, rawCode, d) {
+        event.preventDefault();
+        applyTallyDelta(rawCode, d, -1);
+    }
+
+    function applyTallyDelta(rawCode, d, delta) {
         const block = document.getElementById(`block-${rawCode}`);
         if (!block) return;
         const inp = block.querySelector(`.step-tree-input[data-diameter="${d}"]`);
         if (inp) {
-            inp.value = (parseInt(inp.value, 10) || 0) + 1;
-            if (navigator.vibrate) navigator.vibrate(15);
+            let val = (parseInt(inp.value, 10) || 0) + delta;
+            if (val < 0) val = 0;
+            inp.value = val;
+            if (navigator.vibrate) navigator.vibrate(delta > 0 ? 15 : 25);
             renderMatrixGrid();
         }
     }
@@ -1037,7 +1076,7 @@
         window.print();
     }
 
-    // 2. ВЫГРУЗКА В EXCEL (.XLSX) С УЧЕТОМ ДОЛЖНОСТЕЙ
+    // 2. ВЫГРУЗКА В EXCEL (.XLSX)
     function exportMDOToXLSX() {
         if (!lastMdoCalculatedData) {
             runMDO();
@@ -1251,10 +1290,10 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         const selector = document.getElementById('species-selector');
-        selector.selectedIndex = 0; // Ель (Е)
+        selector.selectedIndex = 0;
         addSpeciesBlock();
         
-        selector.selectedIndex = 1; // Береза (Б)
+        selector.selectedIndex = 1;
         addSpeciesBlock();
         
         updateMDOArchiveSelect();
