@@ -31,7 +31,7 @@ const PRO_ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(PRO_CACHE).then((cache) => {
-      console.log('[Lesovik PRO SW] Кэширование 6 автономных инструментов PRO...');
+      console.log('[Lesovik PRO SW] Кэширование автономных инструментов PRO...');
       return cache.addAll(PRO_ASSETS);
     })
   );
@@ -49,10 +49,27 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// Хелпер таймаута: если сеть не ответила за 2.5 сек, принудительно отдаем кэш
+function fetchWithTimeout(request, timeoutMs = 2500) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Network timeout (Е-шка)')), timeoutMs);
+    fetch(request).then(
+      response => {
+        clearTimeout(timer);
+        resolve(response);
+      },
+      err => {
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
+}
+
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
 
-  // Игнорируем сетевые метрики и рекламу (пропускаем мимо кэша)
+  // Игнорируем сетевые метрики и рекламу
   if (
     url.includes('mc.yandex.ru') ||
     url.includes('google-analytics') ||
@@ -63,14 +80,17 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
+    // 1. Сначала проверяем локальный кэш (с игнорированием ?key= и прочих GET-параметров)
+    caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse;
       }
-      return fetch(event.request).catch(() => {
-        // Если сети нет и запрашивается страница — открываем строго Буссоль PRO
+
+      // 2. Если в кэше нет — идем в сеть, но с жестким таймаутом
+      return fetchWithTimeout(event.request, 2500).catch(() => {
+        // Если сеть зависла или недоступна, а запрашивается страница — открываем Буссоль PRO
         if (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html')) {
-          return caches.match('/busol-pro.html');
+          return caches.match('/busol-pro.html', { ignoreSearch: true });
         }
       });
     })
