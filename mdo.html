@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Модуль материально-денежной оценки лесосек МДО PRO (Лесовик ПРО)» (Версия 3.2).
+  Программное обеспечение: «Модуль материально-денежной оценки лесосек МДО PRO (Лесовик ПРО)» (Версия 3.3).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -85,6 +85,7 @@
             --card-shadow: 0 4px 12px rgba(0,0,0,0.03);
             --success: #16A34A;
             --info: #2563EB;
+            --danger: #DC2626;
         }
 
         [data-theme="dark"] {
@@ -190,7 +191,7 @@
 
         /* МАТРИЧНАЯ СЕТКА-ТОЧКОВКА */
         .matrix-table-wrapper { width: 100%; overflow-x: auto; border: 1px solid var(--border-light); border-radius: 8px; margin-bottom: 15px; -webkit-overflow-scrolling: touch; }
-        .matrix-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 720px; text-align: center; background: var(--bg-card); }
+        .matrix-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 760px; text-align: center; background: var(--bg-card); }
         .matrix-table th, .matrix-table td { border: 1px solid var(--border-light); padding: 6px 3px; }
         .matrix-table th { background: rgba(59, 102, 52, 0.1); color: var(--primary-forest); font-weight: 700; }
         .matrix-h-select {
@@ -204,6 +205,12 @@
         }
         .matrix-tap-btn:active { background: var(--success); color: #FFF; transform: scale(0.95); }
         .matrix-tap-btn.has-val { background: rgba(59, 102, 52, 0.15); color: var(--primary-forest); border-color: var(--primary-forest); }
+        
+        .btn-matrix-del {
+            background: transparent; border: none; color: var(--fire-accent); font-size: 14px; font-weight: bold;
+            cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: 0.15s;
+        }
+        .btn-matrix-del:hover { background: rgba(194, 65, 12, 0.1); }
 
         .btn-action-main { background-color: var(--primary-forest); color: #fff; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
         .btn-calc { background-color: var(--primary-forest); color: #fff; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: 700; text-transform: uppercase; font-size: 13px; margin-top: 10px; }
@@ -391,9 +398,9 @@
             <div class="form-group" style="margin: 0; flex: 1;">
                 <label>Выбрать древесную породу для добавления:</label>
                 <select id="species-selector">
-                    <option value="С|true|266.45|190.05|94.79|6.60|🌲 Сосна (С)">🌲 Сосна (С)</option>
-                    <option value="Е|true|240.04|171.19|85.77|6.60|🌲 Ель (Е)</option>
+                    <option value="Е|true|240.04|171.19|85.77|6.60|🌲 Ель (Е)">🌲 Ель (Е)</option>
                     <option value="Б|false|132.99|94.79|47.63|7.55|🌳 Береза (Б)">🌳 Береза (Б)</option>
+                    <option value="С|true|266.45|190.05|94.79|6.60|🌲 Сосна (С)">🌲 Сосна (С)</option>
                     <option value="Ос|false|25.94|19.34|10.38|0.94|🌳 Осина / Тополь (Ос)">🌳 Осина / Тополь (Ос)</option>
                     <option value="Л|true|213.16|152.80|76.40|6.60|🌲 Лиственница (Л)">🌲 Лиственница (Л)</option>
                     <option value="К|true|600.00|450.00|250.00|60.00|🌲 Кедр (К)">🌲 Кедр (К)</option>
@@ -591,8 +598,9 @@
 
         diameters.forEach(d => {
             let defVal = "0";
+            if (rawCode === 'Е' && d === 24) defVal = "15";
+            if (rawCode === 'Б' && d === 20) defVal = "10";
             if (rawCode === 'С' && d === 28) defVal = "20";
-            if (rawCode === 'Б' && d === 24) defVal = "10";
 
             blockHtml += `
                 <div class="step-input-wrapper">
@@ -625,17 +633,17 @@
         }
     }
 
-    // ОТРИСОВКА СЕТКИ-ТОЧКОВКИ С СЕЛЕКТОРОМ РАЗРЯДА
+    // ОТРИСОВКА СЕТКИ-ТОЧКОВКИ С СЕЛЕКТОРОМ РАЗРЯДА И КНОПКОЙ «✕» В КОНЦЕ СТРОКИ
     function renderMatrixGrid() {
         const table = document.getElementById('matrix-table-el');
         const blocks = document.querySelectorAll('.species-peruchet-block');
 
         if (blocks.length === 0) {
-            table.innerHTML = `<tr><td style="padding:15px; color:gray;">Породы не добавлены. Нажмите «➕ Добавить породу» выше.</td></tr>`;
+            table.innerHTML = `<tr><td style="padding:15px; color:gray;">Породы не добавлены. Выберите породу выше и нажмите «➕ Добавить породу».</td></tr>`;
             return;
         }
 
-        let thead = `<tr><th>Порода</th><th>Разряд</th>` + diameters.map(d => `<th>${d}</th>`).join('') + `<th>Итого (шт)</th></tr>`;
+        let thead = `<tr><th>Порода</th><th>Разряд</th>` + diameters.map(d => `<th>${d}</th>`).join('') + `<th>Итого</th><th class="no-print">Удал.</th></tr>`;
         let tbody = '';
 
         blocks.forEach(block => {
@@ -662,7 +670,13 @@
                 </select>
             `;
 
-            tbody += `<tr><td style="font-weight:bold; text-align:left; background:rgba(0,0,0,0.02);">${rawCode}</td><td>${selectHHtml}</td>${cells}<td style="font-weight:bold; color:var(--primary-forest);">${rowSum}</td></tr>`;
+            tbody += `<tr>
+                <td style="font-weight:bold; text-align:left; background:rgba(0,0,0,0.02);">${rawCode}</td>
+                <td>${selectHHtml}</td>
+                ${cells}
+                <td style="font-weight:bold; color:var(--primary-forest);">${rowSum}</td>
+                <td class="no-print"><button class="btn-matrix-del" onclick="removeSpeciesBlock('${rawCode}')" title="Убрать породу">✕</button></td>
+            </tr>`;
         });
 
         table.innerHTML = `<thead>${thead}</thead><tbody>${tbody}</tbody>`;
@@ -1190,6 +1204,32 @@
         }
     }
 
+    function exportMDOToCSV() {
+        const snapshot = getMDODataSnapshot();
+        let csv = "\uFEFF";
+        csv += `Паспорт делянки;${snapshot.passport.lesnichestvo}; Кв. ${snapshot.passport.kvartal}; Выд. ${snapshot.passport.vydel}; Дел. ${snapshot.passport.delyanka}; ${snapshot.passport.target}\n`;
+        csv += `Площадь выдела (га);${snapshot.passport.totalSpace}; Площадь перечета (га);${snapshot.passport.sampleSpace}\n\n`;
+        csv += "Порода;Разряд высот;Крупная (руб);Средняя (руб);Мелкая (руб);Дрова (руб);Ступень 16;Ступень 20;Ступень 24;Ступень 28;Ступень 32;Ступень 36;Ступень 40;Ступень 44;Ступень 48+\n";
+
+        snapshot.speciesData.forEach(sp => {
+            csv += `"${sp.rawCode}";"${sp.hSelector}";"${sp.prLarge}";"${sp.prMedium}";"${sp.prSmall}";"${sp.prFirewood}";`;
+            diameters.forEach(d => {
+                csv += `"${sp.steps[d] || 0}";`;
+            });
+            csv += "\n";
+        });
+
+        const fileName = `МДО_Кв_${snapshot.passport.kvartal}_Выд_${snapshot.passport.vydel}_Дел_${snapshot.passport.delyanka}.xls`;
+        const blob = new Blob([csv], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", fileName);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
     function toggleTheme() {
         const body = document.documentElement;
         if (body.getAttribute('data-theme') === 'dark') {
@@ -1202,12 +1242,17 @@
     document.getElementById('themeBtn').addEventListener('click', toggleTheme);
 
     document.addEventListener('DOMContentLoaded', () => {
+        // По умолчанию выставляем Ель (индекс 0) и Березу (индекс 1)
+        const selector = document.getElementById('species-selector');
+        selector.selectedIndex = 0; // Ель (Е)
         addSpeciesBlock();
-        document.getElementById('species-selector').selectedIndex = 2; // Береза
+        
+        selector.selectedIndex = 1; // Береза (Б)
         addSpeciesBlock();
         
         updateMDOArchiveSelect();
 
+        // Автозагрузка данных из системного ядра LesovikCore
         if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
             const activeProj = window.LesovikCore.getActiveProject();
             if (activeProj) {
