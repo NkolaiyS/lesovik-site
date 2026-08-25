@@ -3,7 +3,7 @@
  * ЛЕСОВИК-CORE (lesovik-core.js)
  * Центральное ядро экосистемы «Лесовик PRO»
  * ============================================================================
- * Версия: 2.9.9 (Постоянное хранение IndexedDB + Cookies + LocalStorage, Self-healing, Защита офлайна)
+ * Версия: 2.9.9 (Постоянное хранение IndexedDB + Cookies + LocalStorage, Self-healing, Защита офлайна с таймаутом сети)
  * Автор / Владелец: Николай Сергеевич Худяков (ИП Худяков Н.С.)
  * Экосистема: РЕСУРС (https://resurs-stretch.ru/)
  * ============================================================================
@@ -23,12 +23,12 @@
         "HNS-3K0F-5IHF3A": new Date(2099, 11, 31), // Бессрочно (Android Николай)
         "HNS-3SBX-TQMJO7": new Date(2026, 11, 31), // До 31 декабря 2026 (Ноутбук)
         "HNS-MINCIFRA-TEST": new Date(2099, 11, 31),// Доступ экспертов Минцифры
-        "HNS-HS86-KK7HRA": new Date(2099, 11, 31),  // Андрей (Редми) до 31 декабря 2026
-        "HNS-RFS7-RYJB5K": new Date(2099, 11, 31), // Андрей (Хуавей) до 31 декабря 2026
+        "HNS-HS86-KK7HRA": new Date(2099, 11, 31),  // Андрей (Редми)
+        "HNS-RFS7-RYJB5K": new Date(2099, 11, 31), // Андрей (Хуавей)
         "HNS-4L1E-25O9U6": new Date(2026, 7, 31),   // Хонор 7 до 31 августа 2026
         "HNS-YU2O-2MRLAE": new Date(2099, 11, 31), // Бессрочно (Android Павел брат)
         "HNS-NATS-GINXIF": new Date(2026, 7, 28), // Вячеслав на 7 дней до 28 августа Минусинск ссылка
-        "HNS-6UEP-ZF011I": new Date(2026, 7, 30), // Вячеслав на 7 дней до 30 августа Минусиск значок
+        "HNS-6UEP-ZF011I": new Date(2026, 7, 30), // Вячеслав на 7 дней до 30 августа Минусинск значок
         "HNS-FEPM-79HAAC": new Date(2026, 7, 31), // Павел на 7 дней до 31 августа
     };
 
@@ -58,7 +58,7 @@
     function getPersistentCookie(name) {
         const nameEQ = name + "=";
         const ca = document.cookie.split(';');
-        for (let i = 0; i < ca.length; i++) {
+        for(let i = 0; i < ca.length; i++) {
             let c = ca[i];
             while (c.charAt(0) === ' ') c = c.substring(1, c.length);
             if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
@@ -230,11 +230,16 @@
         checkStatus();
     }
 
-    // --- ФОНОВАЯ ТИХАЯ ПРОВЕРКА ВЕРСИИ ---
+    // --- ФОНОВАЯ ТИХАЯ ПРОВЕРКА ВЕРСИИ С ТАЙМАУТОМ (ЗАЩИТА ОТ ЗАВИСАНИЯ ПРИ 2G/Е) ---
     async function checkSilentUpdate() {
         if (!navigator.onLine) return;
         try {
-            const res = await fetch(`version.json?t=${Date.now()}`);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 секунды максимум
+
+            const res = await fetch(`version.json?t=${Date.now()}`, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            
             if (!res.ok) return;
             const data = await res.json();
             const localVer = localStorage.getItem('lesovik_app_version');
@@ -246,7 +251,7 @@
                 }
             }
         } catch (e) {
-            // Игнорируем ошибки сети
+            // Игнорируем ошибки сети и сброс по таймауту
         }
     }
     checkSilentUpdate();
