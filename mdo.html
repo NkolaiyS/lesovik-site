@@ -63,8 +63,38 @@
     <!-- ПОДКЛЮЧЕНИЕ SHEETJS ДЛЯ ЭКСПОРТА В XLSX -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.mini.min.js"></script>
 
-    <!-- РЕКЛАМА РСЯ -->
-    <script>window.yaContextCb=window.yaContextCb||[]</script>
+    <!-- 4. РЕКЛАМА РСЯ (ПОЛНЫЙ КОМПЛЕКТ ВЫЗОВОВ, ПЕРЕХВАТЫВАЕТСЯ LESOVIKCORE У PRO) -->
+    <script>
+        window.yaContextCb = window.yaContextCb || [];
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-2",
+                "type": "fullscreen",
+                "platform": "touch"
+            })
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-1",
+                "type": "floorAd",
+                "platform": "touch"
+            })
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-3",
+                "type": "fullscreen",
+                "platform": "desktop"
+            })
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-4",
+                "type": "floorAd",
+                "platform": "desktop"
+            })
+        });
+    </script>
     <script src="https://yandex.ru/ads/system/context.js" async></script>
 
     <style>
@@ -633,7 +663,7 @@
         }
     }
 
-    // ОТРИСОВКА СЕТКИ-ТОЧКОВКИ С СЕЛЕКТОРОМ РАЗРЯДА И КНОПКОЙ «✕» В КОНЦЕ СТРОКИ
+    // ОТРИСОВКА СЕТКИ-ТОЧКОВКИ
     function renderMatrixGrid() {
         const table = document.getElementById('matrix-table-el');
         const blocks = document.querySelectorAll('.species-peruchet-block');
@@ -786,7 +816,11 @@
 
         let speciesDetailedRows = [];
 
-        speciesVolumesReport.forEach(species => {
+        blocks.forEach(block => {
+            const rawCode = block.getAttribute('data-rawcode');
+            const species = speciesVolumesReport.find(s => s.rawCode === rawCode);
+            if (!species) return;
+
             let sLargeTotal = 0, sMediumTotal = 0, sSmallTotal = 0, sTechTotal = 0, sFirewoodTotal = 0, sWasteTotal = 0;
 
             for (let diameter in species.stepsSampleData) {
@@ -1204,32 +1238,6 @@
         }
     }
 
-    function exportMDOToCSV() {
-        const snapshot = getMDODataSnapshot();
-        let csv = "\uFEFF";
-        csv += `Паспорт делянки;${snapshot.passport.lesnichestvo}; Кв. ${snapshot.passport.kvartal}; Выд. ${snapshot.passport.vydel}; Дел. ${snapshot.passport.delyanka}; ${snapshot.passport.target}\n`;
-        csv += `Площадь выдела (га);${snapshot.passport.totalSpace}; Площадь перечета (га);${snapshot.passport.sampleSpace}\n\n`;
-        csv += "Порода;Разряд высот;Крупная (руб);Средняя (руб);Мелкая (руб);Дрова (руб);Ступень 16;Ступень 20;Ступень 24;Ступень 28;Ступень 32;Ступень 36;Ступень 40;Ступень 44;Ступень 48+\n";
-
-        snapshot.speciesData.forEach(sp => {
-            csv += `"${sp.rawCode}";"${sp.hSelector}";"${sp.prLarge}";"${sp.prMedium}";"${sp.prSmall}";"${sp.prFirewood}";`;
-            diameters.forEach(d => {
-                csv += `"${sp.steps[d] || 0}";`;
-            });
-            csv += "\n";
-        });
-
-        const fileName = `МДО_Кв_${snapshot.passport.kvartal}_Выд_${snapshot.passport.vydel}_Дел_${snapshot.passport.delyanka}.xls`;
-        const blob = new Blob([csv], { type: 'application/vnd.ms-excel;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", fileName);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
     function toggleTheme() {
         const body = document.documentElement;
         if (body.getAttribute('data-theme') === 'dark') {
@@ -1242,7 +1250,6 @@
     document.getElementById('themeBtn').addEventListener('click', toggleTheme);
 
     document.addEventListener('DOMContentLoaded', () => {
-        // По умолчанию выставляем Ель (индекс 0) и Березу (индекс 1)
         const selector = document.getElementById('species-selector');
         selector.selectedIndex = 0; // Ель (Е)
         addSpeciesBlock();
