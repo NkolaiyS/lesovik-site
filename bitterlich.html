@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Полнотомер Биттерлиха PRO (Лесовик ПРО)» (Версия 3.6).
+  Программное обеспечение: «Полнотомер Биттерлиха PRO (Лесовик ПРО)» (Версия 3.7).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -11,7 +11,7 @@
     <!-- 1. Единое ядро защиты, блокировки рекламы и контекста — СТРОГО ПЕРВЫМ -->
     <script src="lesovik-core.js"></script>
 
-    <!-- 2. PWA МЕТА-ТЕГИ И РЕГИСТРАЦИЯ SERVICE WORKER -->
+    <!-- 2. PWA МЕТА-ТЕГИ И РЕГИСТРАЦИЯ СЛУЖБЫ ОБСЛУЖИВАНИЯ -->
     <meta name="application-name" content="Лесовик Биттерлих PRO">
     <link rel="manifest" href="/bitterlich.webmanifest">
     <meta name="theme-color" content="#2D5A27">
@@ -20,8 +20,8 @@
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw-busol-pro.js')
-            .then(reg => console.log('Lesovik PRO SW зарегистрирован:', reg.scope))
-            .catch(err => console.error('Ошибка регистрации SW PRO:', err));
+            .then(reg => console.log('Служба Лесовик PRO зарегистрирована:', reg.scope))
+            .catch(err => console.error('Ошибка регистрации службы PRO:', err));
         });
       }
     </script>
@@ -30,7 +30,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
     <script type="text/javascript">
-        // --- ПЕРЕХВАТ БОТОВ ДЛЯ SEO-ПРЕВЬЮ ---
+        // --- ПЕРЕХВАТ ДЛЯ ПОИСКОВЫХ РОБОТОВ ---
         (function() {
             const urlParams = new URLSearchParams(window.location.search);
             const postSlug = urlParams.get('post');
@@ -56,15 +56,15 @@
     <meta name="google-site-verification" content="rLtNyEQ2h992Lp8m73ynLM8J6xY5tJcr3dbVwbO35rU" />
     
     <title>Полнотомер Биттерлиха онлайн: расчет суммы площадей сечений и запаса леса | Лесовик ПРО</title>
-    <meta name="description" content="Профессиональный инструмент лесотаксации: расчет суммы площадей сечений (G) и запаса древесины на 1 га по разрядам высот, видовым высотам (HF). GPS-фиксация каждой реласкопической точки, экспорт в PDF и Excel.">
-    <meta name="keywords" content="полнотомер биттерлиха, разряды высот, видовая высота HF, таксация леса онлайн, калькулятор биттерлиха, абсолютная полнота древостоя, визир биттерлиха, расчет запаса на 1 га, лесовик про">
+    <meta name="description" content="Профессиональный инструмент лесотаксации: расчет суммы площадей сечений и запаса древесины на 1 га по разрядам высот, видовым высотам. Фиксация координат каждой реласкопической точки со спутника, экспорт в PDF и Excel.">
+    <meta name="keywords" content="полнотомер биттерлиха, разряды высот, видовая высота, таксация леса онлайн, калькулятор биттерлиха, абсолютная полнота древостоя, визир биттерлиха, расчет запаса на 1 га, лесовик про">
     <link rel="canonical" href="https://lesovik-pro.ru/bitterlich.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
 
-    <!-- ПОДКЛЮЧЕНИЕ SHEETJS ДЛЯ ЭКСПОРТА В XLSX -->
+    <!-- ПОДКЛЮЧЕНИЕ БИБЛИОТЕКИ ДЛЯ ЭКСПОРТА В ФОРМАТ ТАБЛИЦ -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.mini.min.js"></script>
 
-    <!-- 4. РЕКЛАМНЫЙ БЛОК РСЯ (ПОЛНЫЙ КОМПЛЕКТ ВЫЗОВОВ, ПЕРЕХВАТЫВАЕТСЯ LESOVIKCORE У PRO) -->
+    <!-- 4. РЕКЛАМНЫЙ БЛОК ЯНДЕКСА -->
     <script>
         window.yaContextCb = window.yaContextCb || [];
         window.yaContextCb.push(() => {
@@ -113,6 +113,7 @@
             --danger: #DC2626;
             --info: #2563EB;
             --success: #16A34A;
+            --prism-orange: #FF7A00;
         }
 
         [data-theme="dark"] {
@@ -124,6 +125,7 @@
             --card-bg: #22302B;
             --glass-bg: rgba(26, 36, 33, 0.85);
             --footer-bg: #111815;
+            --prism-orange: #FF9433;
         }
 
         *, *:before, *:after { box-sizing: border-box; }
@@ -187,7 +189,7 @@
 
         .multi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 6px; margin-bottom: 10px; }
 
-        /* МЕНЕДЖЕР ТОЧЕК И GPS ПРИВЯЗКА */
+        /* МЕНЕДЖЕР ТОЧЕК И ПРИВЯЗКА СО СПУТНИКА */
         .probe-manager-card { background: rgba(45, 90, 39, 0.04); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
         .probe-tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; margin-bottom: 6px; }
         .probe-tab { background: var(--card-bg); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11.5px; font-weight: 700; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
@@ -233,7 +235,7 @@
         .btn:active { transform: scale(0.98); }
         .btn-outline { background-color: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); }
 
-        /* AR МОДАЛЬНОЕ ОКНО */
+        /* ОКНО КАМЕРЫ И ПРИЗМЕННЫЙ ВИЗИР С ОРАНЖЕВЫМИ ГРАНЯМИ */
         .ar-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: black; z-index: 100000; display: none; flex-direction: column; box-sizing: border-box; overflow: hidden; }
         .ar-modal.active { display: flex; }
         .ar-video-container { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; }
@@ -241,12 +243,18 @@
         
         .ar-overlay-reticle { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            border: 2.5px dashed rgba(255, 255, 255, 0.95); background: rgba(45, 90, 39, 0.15); 
-            width: var(--reticle-width, 6%); height: 48%; box-sizing: border-box; 
+            border-top: 2px dashed rgba(255, 255, 255, 0.8);
+            border-bottom: 2px dashed rgba(255, 255, 255, 0.8);
+            border-left: 3px solid var(--prism-orange);
+            border-right: 3px solid var(--prism-orange);
+            background: rgba(255, 122, 0, 0.12); 
+            width: var(--reticle-width, 6%); height: 52%; box-sizing: border-box; 
             pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; align-items: center; 
-            padding: 8px; transition: width 0.08s ease-out; box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+            padding: 8px 4px; transition: width 0.08s ease-out; 
+            box-shadow: 0 0 16px rgba(255, 122, 0, 0.4), inset 0 0 12px rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
         }
-        .ar-reticle-header { color: white; font-size: 10.5px; font-weight: bold; background: rgba(0,0,0,0.75); padding: 3px 6px; border-radius: 4px; text-transform: uppercase; }
+        .ar-reticle-header { color: white; font-size: 10px; font-weight: bold; background: rgba(0,0,0,0.8); padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
         .ar-reticle-center-line { position: absolute; top: 0; bottom: 0; left: 50%; width: 1.5px; background: rgba(220, 38, 38, 0.85); }
 
         .ar-hud-top { 
@@ -255,7 +263,15 @@
         }
         .ar-hud-top select, .ar-hud-top input { background: #222; color: white; border: 1px solid #555; padding: 5px 6px; font-size: 11.5px; border-radius: 6px; outline: none; }
         
-        /* ПАНЕЛЬ ПРЯМОЙ КАЛИБРОВКИ ВНУТРИ КАМЕРЫ */
+        .ar-hud-right-actions { display: flex; align-items: center; gap: 6px; }
+        .ar-info-btn { 
+            background: rgba(255, 255, 255, 0.15); color: #FFF; border: 1.5px solid rgba(255, 255, 255, 0.6); 
+            width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            font-weight: 800; font-size: 14px; cursor: pointer; transition: 0.2s; 
+        }
+        .ar-info-btn:active { background: var(--forest-green); border-color: var(--forest-green); }
+
+        /* ПАНЕЛЬ ПРЯМОЙ КАЛИБРОВКИ ВНУТРИ ВИДОИСКАТЕЛЯ */
         .ar-cal-bar {
             position: absolute; top: 52px; left: 10px; right: 10px; z-index: 100001;
             background: rgba(0,0,0,0.75); padding: 5px 8px; border-radius: 8px; backdrop-filter: blur(8px);
@@ -326,7 +342,7 @@
         
         <!-- 1. ПАСПОРТ ДЕЛЯНКИ И АРХИВ -->
         <div class="card">
-            <h2>Паспорт делянки и архив полнотомера (PRO 3.6)</h2>
+            <h2>Паспорт делянки и архив полнотомера (PRO 3.7)</h2>
             <div class="subtitle">Привязка реласкопических точек, сохранение в архив и печать ведомостей.</div>
 
             <div class="passport-grid">
@@ -404,7 +420,7 @@
             </div>
         </div>
 
-        <!-- МЕНЕДЖЕР ТОЧЕК С АВТО-GPS ПРИВЯЗКОЙ КАЖДОЙ ПЛОЩАДКИ -->
+        <!-- МЕНЕДЖЕР ТОЧЕК С АВТО-ФИКСАЦИЕЙ ПЛОЩАДКИ СО СПУТНИКА -->
         <div class="card">
             <div class="probe-manager-card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -414,8 +430,8 @@
                 <div class="probe-tabs" id="probe-tabs-container"></div>
                 
                 <div class="probe-geo-badge">
-                    <span id="active-probe-coords">📍 GPS: определение спутников...</span>
-                    <button class="btn-geo-refresh" onclick="refreshCurrentProbeGPS()">Обновить GPS</button>
+                    <span id="active-probe-coords">📍 Спутник: определение координат...</span>
+                    <button class="btn-geo-refresh" onclick="refreshCurrentProbeGPS()">Обновить координаты</button>
                 </div>
             </div>
         </div>
@@ -451,7 +467,7 @@
         </div>
 
         <div class="card">
-            <h2>Результаты расчета по разрядам высот и HF</h2>
+            <h2>Результаты расчета по разрядам высот и видовым высотам</h2>
             <div class="summary-table-wrapper">
                 <div id="summary-container"></div>
             </div>
@@ -462,13 +478,13 @@
             </div>
             
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-top:6px;">
-                <button class="btn btn-outline" style="margin:0; padding:6px; font-size:10.5px;" onclick="downloadGIS()">🗺️ Карта KML (GPS)</button>
+                <button class="btn btn-outline" style="margin:0; padding:6px; font-size:10.5px;" onclick="downloadGIS()">🗺️ Карта KML (Координаты)</button>
                 <button class="btn btn-outline" style="margin:0; padding:6px; font-size:10.5px; color:var(--danger); border-color:var(--danger);" onclick="clearData()">🗑️ Очистить делянку</button>
             </div>
         </div>
     </main>
 
-    <!-- МОДАЛЬНЫЙ ЭКРАН AR-КАМЕРЫ С ОНЛАЙН-КАЛИБРОВКОЙ -->
+    <!-- МОДАЛЬНЫЙ ЭКРАН КАМЕРЫ С ОНЛАЙН-КАЛИБРОВКОЙ И КНОПКОЙ СПРАВКИ -->
     <div class="ar-modal" id="arModal">
         <!-- Верхняя панель параметров -->
         <div class="ar-hud-top">
@@ -483,10 +499,14 @@
             </select>
             <input type="number" id="ar-height-input" style="width: 55px;" placeholder="H, м" onchange="syncFromARHUD()">
             <input type="number" id="ar-diameter-input" style="width: 55px;" placeholder="D, см" onchange="syncFromARHUD()">
-            <button class="ar-close-btn" onclick="closeARCamera()">✕ Выход</button>
+            
+            <div class="ar-hud-right-actions">
+                <button class="ar-info-btn" onclick="openHelpModal()" title="Инструкция">?</button>
+                <button class="ar-close-btn" onclick="closeARCamera()">✕ Выход</button>
+            </div>
         </div>
 
-        <!-- Панель мгновенной подгонки ширины визира прямо в камере -->
+        <!-- Панель мгновенной подгонки ширины визира прямо в видоискателе -->
         <div class="ar-cal-bar">
             <span class="ar-cal-label">Визир: <b id="ar-cal-display" style="color:white;">6.0%</b></span>
             <button class="ar-cal-btn" onclick="stepReticleWidth(-1.0)">-1%</button>
@@ -532,17 +552,17 @@
         </div>
     </div>
 
-    <!-- ВСПЛЫВАЮЩЕЕ ОКНО: ПОЛНАЯ ИНСТРУКЦИЯ, КАЛИБРОВКА И GPS -->
+    <!-- ВСПЛЫВАЮЩЕЕ ОКНО: ПОЛНАЯ ИНСТРУКЦИЯ, КАЛИБРОВКА И СПУТНИКОВАЯ ПРИВЯЗКА -->
     <div class="popup-overlay" id="helpPopup" onclick="closeHelpModal(event)">
         <div class="popup-content" onclick="event.stopPropagation()">
             <button class="popup-close" onclick="document.getElementById('helpPopup').classList.remove('active')">&times;</button>
-            <h3 style="color: var(--forest-green); margin-top:0; font-family:'Merriweather',serif;">Инструкция и калибровка AR-полнотомера</h3>
+            <h3 style="color: var(--forest-green); margin-top:0; font-family:'Merriweather',serif;">Инструкция и калибровка визира полнотомера</h3>
             
             <div style="font-size: 12.5px; line-height: 1.5; color: var(--text-graphite);">
                 <p><strong>1. Порядок работы на реласкопической точке:</strong></p>
                 <ol style="padding-left: 16px; margin-bottom: 8px;">
-                    <li>Встаньте в центр закладываемой круговой площадки. <b>Координаты GPS со спутника привязываются к точке автоматически</b> при нажатии <i>«+ Добавить точку»</i>.</li>
-                    <li>Держите телефон вертикально перед собой на естественном расстоянии согнутой руки (около 35–40 см от глаз) на основной камере (1x). <b>Расстояние от глаз остается неизменным для всех коэффициентов $K$</b>, программа сама меняет геометрию рамки.</li>
+                    <li>Встаньте в центр закладываемой круговой площадки. <b>Координаты со спутника привязываются к точке автоматически</b> при нажатии <i>«+ Добавить точку»</i>.</li>
+                    <li>Держите телефон вертикально перед собой на естественном расстоянии согнутой руки (около 35–40 см от глаз) на основной камере (1x). <b>Расстояние от глаз остается неизменным для всех коэффициентов K</b>, программа сама меняет геометрию оранжевых граней призмы.</li>
                     <li>Плавно поворачивайтесь на 360°, визируя стволы деревьев на высоте груди (1.3 м) через рамку визира.</li>
                 </ol>
 
@@ -550,27 +570,27 @@
                     <p style="margin: 0 0 3px 0; font-weight: bold;">Правила учета стволов:</p>
                     <ul style="margin: 0; padding-left: 16px;">
                         <li><strong style="color: #16A34A;">В счет (1.0):</strong> Ствол дерева <u>ШИРЕ</u> рамки визира.</li>
-                        <li><strong style="color: #2563EB;">Полусчет (0.5):</strong> Края ствола строго касаются границ рамки.</li>
+                        <li><strong style="color: #2563EB;">Полусчет (0.5):</strong> Края ствола строго касаются оранжевых границ призмы.</li>
                         <li><strong style="color: #6B7280;">Пропуск (0.0):</strong> Ствол дерева <u>УЖЕ</u> визирной рамки.</li>
                     </ul>
                 </div>
 
-                <p style="margin-top: 10px; margin-bottom: 4px;"><strong>2. Калибровка угла обзора (FOV):</strong></p>
-                <p style="font-size: 11.5px; opacity: 0.85; margin-bottom: 6px;">Камеры разных моделей смартфонов имеют разный угол обзора. Для идеальной калибровки визира $K=1.0$ выполните тест:</p>
+                <p style="margin-top: 10px; margin-bottom: 4px;"><strong>2. Калибровка угла обзора камеры:</strong></p>
+                <p style="font-size: 11.5px; opacity: 0.85; margin-bottom: 6px;">Камеры разных моделей смартфонов имеют разный угол обзора. Для идеальной калибровки визира K = 1.0 выполните тест:</p>
 
                 <div style="background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px; margin-bottom: 6px;">
                     <p style="margin: 0; font-size: 11.5px;"><strong>Способ А (Быстрый — Правило пальца):</strong><br>
-                    Вытяните руку с указательным пальцем рядом со смартфоном. При естественном удержании (35–40 см) ширина рамки $K=1.0$ на экране должна быть визуально равна ширине пальца.</p>
+                    Вытяните руку с указательным пальцем рядом со смартфоном. При естественном удержании (35–40 см) ширина рамки K = 1.0 на экране должна быть визуально равна ширине пальца.</p>
                 </div>
 
                 <div style="background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px; margin-bottom: 8px;">
                     <p style="margin: 0; font-size: 11.5px;"><strong>Способ Б (Эталонный тест 15 метров):</strong><br>
                     1. Выберите дерево или столб диаметром ровно 30 см.<br>
-                    2. Отмерьте рулеткой ровно 15 метров ($L = 50 \times d$).<br>
-                    3. При наведении визира края ствола должны <u>строго совпасть</u> с рамкой (полусчет 0.5). Отрегулируйте базовую ширину рамки ползунком ниже или кнопками в камере.</p>
+                    2. Отмерьте рулеткой ровно 15 метров (дистанция = 50 умножить на диаметр ствола).<br>
+                    3. При наведении визира края ствола должны <u>строго совпасть</u> с оранжевыми линиями (полусчет 0.5). Отрегулируйте ширину рамки кнопками прямо в видоискателе или ползунком ниже.</p>
                 </div>
 
-                <h4 style="color: var(--forest-green); margin:8px 0 4px 0;">Базовая калибровка ширины рамки (для K=1.0):</h4>
+                <h4 style="color: var(--forest-green); margin:8px 0 4px 0;">Базовая ширина визира (для K = 1.0):</h4>
                 <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
                     <input type="range" id="reticle-slider" min="1.0" max="35.0" step="0.1" value="6.0" style="flex: 1;" oninput="adjustReticleWidth(this.value)">
                     <span id="reticle-val" style="font-weight: bold; font-family: monospace; font-size: 13px; color: var(--forest-green);">6.0%</span>
@@ -661,11 +681,11 @@
             }
         });
 
-        // 1. АВТОМАТИЧЕСКАЯ ФИКСАЦИЯ GPS ПРИ СОЗДАНИИ ТОЧКИ
+        // 1. АВТОМАТИЧЕСКАЯ ФИКСАЦИЯ КООРДИНАТ ПРИ СОЗДАНИИ ТОЧКИ
         function fetchGPSForActiveProbe() {
             const display = document.getElementById('active-probe-coords');
             if (navigator.geolocation) {
-                display.innerText = "📍 GPS: поиск спутников...";
+                display.innerText = "📍 Спутник: поиск сигнала...";
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
                         const lat = pos.coords.latitude.toFixed(6);
@@ -676,16 +696,16 @@
                         const currentProbe = journalData.probes[journalData.activeProbe];
                         currentProbe.coords = { lat, lon, dmsLat, dmsLon };
                         
-                        display.innerText = `📍 GPS: ${dmsLat} ${dmsLon} (${lat}, ${lon})`;
+                        display.innerText = `📍 Координаты: ${dmsLat} ${dmsLon} (${lat}, ${lon})`;
                         saveData();
                     },
                     (err) => {
-                        display.innerText = "📍 GPS: нет сигнала (введите позже)";
+                        display.innerText = "📍 Спутник: нет сигнала (введите позже)";
                     },
                     { enableHighAccuracy: true, timeout: 10000 }
                 );
             } else {
-                display.innerText = "📍 GPS: датчик недоступен";
+                display.innerText = "📍 Спутник: датчик недоступен";
             }
         }
 
@@ -753,9 +773,9 @@
             const coords = journalData.probes[journalData.activeProbe].coords;
             const display = document.getElementById('active-probe-coords');
             if (coords) {
-                display.innerText = `📍 GPS: ${coords.dmsLat} ${coords.dmsLon} (${coords.lat}, ${coords.lon})`;
+                display.innerText = `📍 Координаты: ${coords.dmsLat} ${coords.dmsLon} (${coords.lat}, ${coords.lon})`;
             } else {
-                display.innerText = `📍 GPS: координаты не зафиксированы`;
+                display.innerText = `📍 Координаты не зафиксированы`;
             }
         }
 
@@ -781,7 +801,7 @@
             saveData();
             renderProbeTabs();
             renderGrid();
-            fetchGPSForActiveProbe(); // Автофиксация GPS спутников при закладке новой точки
+            fetchGPSForActiveProbe(); // Автофиксация спутниковых координат при закладке новой точки
         }
 
         function deleteProbe(event, key) {
@@ -926,7 +946,7 @@
                                 <th>Сумма пл. (G)</th>
                                 <th>H / D</th>
                                 <th>Разряд</th>
-                                <th>HF</th>
+                                <th>Видовая высота</th>
                                 <th>Запас на 1 га</th>
                             </tr>
                         </thead>
@@ -1085,7 +1105,7 @@
             const container = document.getElementById('printable-bitterlich-sheet');
             container.innerHTML = `
                 <div class="doc-header-title">ВЕДОМОСТЬ РЕЛАСКОПИЧЕСКОЙ ТАКСАЦИИ ПОЛНОТОМЕРОМ БИТТЕРЛИХА</div>
-                <div class="doc-header-sub">Определение суммы площадей сечений (G) и запаса древесины по таблицам видовых высот HF</div>
+                <div class="doc-header-sub">Определение суммы площадей сечений и запаса древесины по таблицам видовых высот</div>
 
                 <div class="doc-passport-box">
                     <div><b>Лесничество:</b> ${les}</div>
@@ -1094,7 +1114,7 @@
                     <div><b>Количество точек:</b> ${Object.keys(journalData.probes).length} шт.</div>
                     <div><b>Дата съёмки:</b> ${dateStr}</div>
                     <div><b>Регион норматива:</b> ${journalData.region}</div>
-                    <div style="grid-column: span 3;"><b>Геодезическая привязка точек (GPS):</b> ${pointsListHtml}</div>
+                    <div style="grid-column: span 3;"><b>Привязка точек со спутника:</b> ${pointsListHtml}</div>
                 </div>
 
                 ${generateSummaryHTML(journalData)}
@@ -1108,7 +1128,7 @@
             window.print();
         }
 
-        // 4. ВЫГРУЗКА В EXCEL (.XLSX)
+        // 4. ВЫГРУЗКА В ТАБЛИЦУ (.XLSX)
         function downloadExcel() {
             if (typeof XLSX === 'undefined') {
                 alert("Компонент загружается, повторите через секунду.");
@@ -1130,11 +1150,11 @@
             rows.push(["Исполнитель:", author, "Проверил:", checker, "Дата:", new Date().toLocaleDateString('ru-RU')]);
             rows.push(["Коэффициент шаблона K:", journalData.bitterlichK, "Регион:", journalData.region]);
             rows.push([]);
-            rows.push(["Точка", "GPS Координаты", "Порода", "В счет (1.0)", "Полусчет (0.5)", "Пропуск (0.0)", "H (м)", "D (см)", "Разряд", "HF (м)"]);
+            rows.push(["Точка", "Координаты со спутника", "Порода", "В счет (1.0)", "Полусчет (0.5)", "Пропуск (0.0)", "H (м)", "D (см)", "Разряд", "Видовая высота (м)"]);
 
             for (const pKey in journalData.probes) {
                 const p = journalData.probes[pKey];
-                const c = p.coords ? `${p.coords.lat}, ${p.coords.lon}` : "Без GPS";
+                const c = p.coords ? `${p.coords.lat}, ${p.coords.lon}` : "Без координат";
                 const pCounts = p.counts || {};
                 for (const sp in pCounts) {
                     const d = pCounts[sp];
@@ -1150,11 +1170,11 @@
 
             const worksheet = XLSX.utils.aoa_to_sheet(rows);
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Полнотомер HF");
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Полнотомер");
             XLSX.writeFile(workbook, `Полнотомер_Кв${kv}_Выд${vyd}_Дел${del}.xlsx`);
         }
 
-        // 5. ИСТИННАЯ ВЫГРУЗКА ТОЧЕК В КАРТУ KML
+        // 5. ИСТИННАЯ ВЫГРУЗКА ТОЧЕК В КАРТУ
         function downloadGIS() {
             let kmlContent = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n`;
             kmlContent += `  <name>${document.getElementById('b-archive-name').value || 'Полнотомер Биттерлиха'}</name>\n`;
@@ -1170,7 +1190,7 @@
             kmlContent += `</Document>\n</kml>`;
 
             if (!hasValidCoords) {
-                alert('Ни у одной точки нет зафиксированных GPS-координат со спутника!');
+                alert('Ни у одной точки нет зафиксированных координат со спутника!');
                 return;
             }
 
@@ -1261,16 +1281,16 @@
         }
     </script>
 
-<!-- ПОДКЛЮЧЕНИЕ ЕДИНОГО МОДУЛЯ СИНХРОНИЗАЦИИ, ЛИЦЕНЗИЙ И PWA-НАВИГАЦИИ -->
+<!-- ПОДКЛЮЧЕНИЕ ЕДИНОГО МОДУЛЯ СИНХРОНИЗАЦИИ, ЛИЦЕНЗИЙ И НАВИГАЦИИ -->
 <script src="lesovik-core.js"></script>
 
-<!-- Единый изолированный Service Worker PRO для всего тайга-комплекса -->
+<!-- Единая изолированная служба PRO для всего тайга-комплекса -->
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/sw-busol-pro.js')
-        .then(reg => console.log('Lesovik PRO SW зарегистрирован:', reg.scope))
-        .catch(err => console.error('Ошибка регистрации SW PRO:', err));
+        .then(reg => console.log('Служба Лесовик PRO зарегистрирована:', reg.scope))
+        .catch(err => console.error('Ошибка регистрации службы PRO:', err));
     });
   }
 </script>
