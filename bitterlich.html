@@ -241,20 +241,33 @@
         
         .ar-overlay-reticle { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            border: 2px dashed rgba(255, 255, 255, 0.95); background: rgba(45, 90, 39, 0.15); 
-            width: var(--reticle-width, 20%); height: 48%; box-sizing: border-box; 
+            border: 2.5px dashed rgba(255, 255, 255, 0.95); background: rgba(45, 90, 39, 0.15); 
+            width: var(--reticle-width, 6%); height: 48%; box-sizing: border-box; 
             pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; align-items: center; 
-            padding: 8px; transition: width 0.15s ease-out; box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+            padding: 8px; transition: width 0.08s ease-out; box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
         }
-        .ar-reticle-header { color: white; font-size: 11px; font-weight: bold; background: rgba(0,0,0,0.7); padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
-        .ar-reticle-center-line { position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: rgba(220, 38, 38, 0.8); }
+        .ar-reticle-header { color: white; font-size: 10.5px; font-weight: bold; background: rgba(0,0,0,0.75); padding: 3px 6px; border-radius: 4px; text-transform: uppercase; }
+        .ar-reticle-center-line { position: absolute; top: 0; bottom: 0; left: 50%; width: 1.5px; background: rgba(220, 38, 38, 0.85); }
 
         .ar-hud-top { 
-            position: absolute; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; gap: 6px; z-index: 100001; 
-            background: rgba(0,0,0,0.7); padding: 8px 10px; border-radius: 10px; backdrop-filter: blur(8px); 
+            position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; align-items: center; gap: 6px; z-index: 100001; 
+            background: rgba(0,0,0,0.75); padding: 6px 8px; border-radius: 8px; backdrop-filter: blur(8px); 
         }
-        .ar-hud-top select, .ar-hud-top input { background: #222; color: white; border: 1px solid #555; padding: 6px 6px; font-size: 12px; border-radius: 6px; }
+        .ar-hud-top select, .ar-hud-top input { background: #222; color: white; border: 1px solid #555; padding: 5px 6px; font-size: 11.5px; border-radius: 6px; outline: none; }
         
+        /* ПАНЕЛЬ ПРЯМОЙ КАЛИБРОВКИ ВНУТРИ КАМЕРЫ */
+        .ar-cal-bar {
+            position: absolute; top: 52px; left: 10px; right: 10px; z-index: 100001;
+            background: rgba(0,0,0,0.75); padding: 5px 8px; border-radius: 8px; backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: space-between; gap: 6px;
+        }
+        .ar-cal-label { color: #8FBC8F; font-size: 11px; font-weight: 700; white-space: nowrap; }
+        .ar-cal-btn {
+            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: white;
+            padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer;
+        }
+        .ar-cal-btn:active { background: var(--forest-green); }
+
         .ar-hud-bottom { 
             position: absolute; bottom: 85px; left: 10px; right: 10px; z-index: 100001; 
             background: rgba(0,0,0,0.85); padding: 8px; border-radius: 12px; backdrop-filter: blur(8px); 
@@ -269,7 +282,7 @@
         .ar-btn.plus-half { background: var(--info); }
         .ar-btn.plus-miss { background: #6B7280; }
         .ar-btn.minus { background: var(--danger); }
-        .ar-close-btn { background: rgba(220, 38, 38, 0.95); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        .ar-close-btn { background: rgba(220, 38, 38, 0.95); color: white; border: none; padding: 5px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11.5px; }
 
         .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100005; display: none; align-items: center; justify-content: center; padding: 10px; box-sizing: border-box; backdrop-filter: blur(4px); }
         .popup-overlay.active { display: flex; }
@@ -455,8 +468,9 @@
         </div>
     </main>
 
-    <!-- МОДАЛЬНЫЙ ЭКРАН AR-КАМЕРЫ -->
+    <!-- МОДАЛЬНЫЙ ЭКРАН AR-КАМЕРЫ С ОНЛАЙН-КАЛИБРОВКОЙ -->
     <div class="ar-modal" id="arModal">
+        <!-- Верхняя панель параметров -->
         <div class="ar-hud-top">
             <select id="ar-species-select" onchange="syncFromARHUD()">
                 <option value="Сосна">Сосна (С)</option>
@@ -472,6 +486,15 @@
             <button class="ar-close-btn" onclick="closeARCamera()">✕ Выход</button>
         </div>
 
+        <!-- Панель мгновенной подгонки ширины визира прямо в камере -->
+        <div class="ar-cal-bar">
+            <span class="ar-cal-label">Визир: <b id="ar-cal-display" style="color:white;">6.0%</b></span>
+            <button class="ar-cal-btn" onclick="stepReticleWidth(-1.0)">-1%</button>
+            <button class="ar-cal-btn" onclick="stepReticleWidth(-0.2)">-0.2%</button>
+            <button class="ar-cal-btn" onclick="stepReticleWidth(0.2)">+0.2%</button>
+            <button class="ar-cal-btn" onclick="stepReticleWidth(1.0)">+1%</button>
+        </div>
+
         <div class="ar-video-container">
             <video id="ar-video" autoplay playsinline muted></video>
             <div class="ar-overlay-reticle" id="arReticle">
@@ -480,6 +503,7 @@
             </div>
         </div>
 
+        <!-- Нижняя панель счетчиков (приподнята над меню) -->
         <div class="ar-hud-bottom">
             <div class="ar-count-btn-card">
                 <div class="ar-count-title" style="color: #4ADE80;">В счет (1.0)</div>
@@ -543,13 +567,13 @@
                     <p style="margin: 0; font-size: 11.5px;"><strong>Способ Б (Эталонный тест 15 метров):</strong><br>
                     1. Выберите дерево или столб диаметром ровно 30 см.<br>
                     2. Отмерьте рулеткой ровно 15 метров ($L = 50 \times d$).<br>
-                    3. При наведении визира края ствола должны <u>строго совпасть</u> с рамкой (полусчет 0.5). Отрегулируйте базовую ширину рамки ползунком ниже при необходимости.</p>
+                    3. При наведении визира края ствола должны <u>строго совпасть</u> с рамкой (полусчет 0.5). Отрегулируйте базовую ширину рамки ползунком ниже или кнопками в камере.</p>
                 </div>
 
                 <h4 style="color: var(--forest-green); margin:8px 0 4px 0;">Базовая калибровка ширины рамки (для K=1.0):</h4>
                 <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-                    <input type="range" id="reticle-slider" min="10" max="40" value="20" style="flex: 1;" oninput="adjustReticleWidth(this.value)">
-                    <span id="reticle-val" style="font-weight: bold; font-family: monospace; font-size: 13px; color: var(--forest-green);">20%</span>
+                    <input type="range" id="reticle-slider" min="1.0" max="35.0" step="0.1" value="6.0" style="flex: 1;" oninput="adjustReticleWidth(this.value)">
+                    <span id="reticle-val" style="font-weight: bold; font-family: monospace; font-size: 13px; color: var(--forest-green);">6.0%</span>
                 </div>
             </div>
 
@@ -614,7 +638,7 @@
             name: 'Кв. 312, Выд. 1, Дел. 12',
             region: 'komi',
             bitterlichK: '1.0',
-            reticleWidth: '20',
+            reticleWidth: '6.0',
             activeProbe: 'Точка 1',
             heights: { 'Сосна': 24, 'Ель': 22, 'Береза': 21, 'Осина': 23, 'Лиственница': 25, 'Тополь': 22, 'Дуб': 24 },
             diameters: { 'Сосна': 28, 'Ель': 26, 'Береза': 22, 'Осина': 26, 'Лиственница': 30, 'Тополь': 28, 'Дуб': 32 },
@@ -673,9 +697,9 @@
             const k = parseFloat(document.getElementById('bitterlich-k').value) || 1.0;
             journalData.bitterlichK = document.getElementById('bitterlich-k').value;
             
-            const baseWidth = parseFloat(journalData.reticleWidth) || 20;
+            const baseWidth = parseFloat(journalData.reticleWidth) || 6.0;
             const dynamicMultiplier = Math.sqrt(k);
-            const calculatedReticleWidth = (baseWidth * dynamicMultiplier).toFixed(1);
+            const calculatedReticleWidth = (baseWidth * dynamicMultiplier).toFixed(2);
             
             const reticleEl = document.getElementById('arReticle');
             if (reticleEl) {
@@ -687,8 +711,19 @@
                 reticleH.innerText = `ВИЗИР (K=${k.toFixed(1)})`;
             }
 
+            const calDisplay = document.getElementById('ar-cal-display');
+            if (calDisplay) {
+                calDisplay.innerText = `${baseWidth.toFixed(1)}%`;
+            }
+
             saveData();
             calculateResults();
+        }
+
+        function stepReticleWidth(delta) {
+            let current = parseFloat(journalData.reticleWidth) || 6.0;
+            current = Math.max(1.0, Math.min(35.0, current + delta));
+            adjustReticleWidth(current.toFixed(1));
         }
 
         function updateRegionSettings() {
@@ -937,6 +972,11 @@
             }
             document.getElementById('region-select').value = journalData.region || 'komi';
             document.getElementById('bitterlich-k').value = journalData.bitterlichK || '1.0';
+            
+            if (journalData.reticleWidth) {
+                document.getElementById('reticle-slider').value = journalData.reticleWidth;
+                document.getElementById('reticle-val').innerText = `${journalData.reticleWidth}%`;
+            }
             updateArchiveDropdown();
         }
 
@@ -1006,6 +1046,7 @@
                 renderProbeTabs();
                 renderGrid();
                 calculateResults();
+                onBitterlichKChanged();
             }
         }
 
@@ -1204,12 +1245,15 @@
 
         function openHelpModal() { document.getElementById('helpPopup').classList.add('active'); }
         function closeHelpModal(e) { document.getElementById('helpPopup').classList.remove('active'); }
+        
         function adjustReticleWidth(val) {
-            journalData.reticleWidth = val;
-            document.getElementById('reticle-val').innerText = `${val}%`;
+            journalData.reticleWidth = parseFloat(val).toFixed(1);
+            document.getElementById('reticle-slider').value = journalData.reticleWidth;
+            document.getElementById('reticle-val').innerText = `${journalData.reticleWidth}%`;
             onBitterlichKChanged();
             saveData();
         }
+
         function toggleTheme() {
             const body = document.documentElement;
             if (body.getAttribute('data-theme') === 'dark') body.removeAttribute('data-theme');
