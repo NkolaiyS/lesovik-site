@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Полнотомер Биттерлиха PRO (Лесовик ПРО)» (Версия 3.5).
+  Программное обеспечение: «Полнотомер Биттерлиха PRO (Лесовик ПРО)» (Версия 3.6).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -55,24 +55,13 @@
 
     <meta name="google-site-verification" content="rLtNyEQ2h992Lp8m73ynLM8J6xY5tJcr3dbVwbO35rU" />
     
-    <title>Полнотомер Биттерлиха онлайн: расчет суммы площадей сечений и запаса леса | Лесовик</title>
-    <meta name="description" content="Профессиональный инструмент лесотаксации: расчет суммы площадей сечений (G) и запаса древесины на 1 га по разрядам высот, видовым высотам (HF) и нормативам Рослесхоза. Оптический AR-визир через камеру смартфона.">
+    <title>Полнотомер Биттерлиха онлайн: расчет суммы площадей сечений и запаса леса | Лесовик ПРО</title>
+    <meta name="description" content="Профессиональный инструмент лесотаксации: расчет суммы площадей сечений (G) и запаса древесины на 1 га по разрядам высот, видовым высотам (HF). GPS-фиксация каждой реласкопической точки, экспорт в PDF и Excel.">
     <meta name="keywords" content="полнотомер биттерлиха, разряды высот, видовая высота HF, таксация леса онлайн, калькулятор биттерлиха, абсолютная полнота древостоя, визир биттерлиха, расчет запаса на 1 га, лесовик про">
     <link rel="canonical" href="https://lesovik-pro.ru/bitterlich.html">
-    
-    <meta property="og:title" content="Профессиональный калькулятор полнотомера Биттерлиха | Лесовик ПРО">
-    <meta property="og:description" content="Точный расчет запаса древесины по разрядам высот и видовым высотам (HF) с поддержкой AR-визира камеры.">
-    <meta property="og:image" content="https://lesovik-pro.ru/logo.jpeg">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://lesovik-pro.ru/bitterlich.html">
-    <meta property="og:image:width" content="500">
-    <meta property="og:image:height" content="500">
-
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
-    <meta name="geo.region" content="RU-KO">
-    <meta name="geo.placename" content="Сыктывкар">
 
-    <!-- ПОДКЛЮЧЕНИЕ АВТОНОМНОЙ БИБЛИОТЕКИ SHEETJS ДЛЯ ЭКСПОРТА В XLSX -->
+    <!-- ПОДКЛЮЧЕНИЕ SHEETJS ДЛЯ ЭКСПОРТА В XLSX -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.mini.min.js"></script>
 
     <!-- 4. РЕКЛАМНЫЙ БЛОК РСЯ (ПОЛНЫЙ КОМПЛЕКТ ВЫЗОВОВ, ПЕРЕХВАТЫВАЕТСЯ LESOVIKCORE У PRO) -->
@@ -137,157 +126,115 @@
             --footer-bg: #111815;
         }
 
-        html, body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-paper);
-            color: var(--text-graphite);
-            margin: 0; padding: 0;
-            line-height: 1.6;
-            transition: background-color 0.3s, color 0.3s;
-            display: flex; flex-direction: column;
-            min-height: 100vh;
-            width: 100%;
-            max-width: 100vw;
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
-            padding-bottom: 75px !important;
-        }
+        *, *:before, *:after { box-sizing: border-box; }
 
-        *, *:before, *:after { box-sizing: inherit; }
+        html, body {
+            margin: 0; padding: 0;
+            width: 100%; max-width: 100%;
+            overflow-x: hidden;
+            position: relative;
+            touch-action: pan-y;
+            background-color: var(--bg-paper); color: var(--text-graphite);
+            font-family: 'Inter', sans-serif; line-height: 1.4;
+            -webkit-tap-highlight-color: transparent;
+            padding-bottom: 110px !important;
+        }
 
         .glass-header {
             position: sticky; top: 0; z-index: 1000;
             display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 20px; background: var(--glass-bg);
+            padding: 10px 14px; background: var(--glass-bg);
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border-color);
-            transition: background 0.3s, border-color 0.3s;
-            max-width: 100vw;
-            box-sizing: border-box;
+            width: 100%; max-width: 100%;
         }
 
-        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-        .header-logo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--forest-green); }
-        .glass-header h1 { font-family: 'Merriweather', serif; color: var(--forest-green); margin: 0; font-size: 18px; }
+        .logo-container { display: flex; align-items: center; gap: 8px; text-decoration: none; min-width: 0; }
+        .header-logo { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid var(--forest-green); flex-shrink: 0; }
+        .glass-header h1 { font-family: 'Merriweather', serif; color: var(--forest-green); margin: 0; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .header-seo-text { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: var(--text-graphite); opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; display: none; }
-        @media (min-width: 900px) { .header-seo-text { display: block; } }
+        .header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .btn-back { display: inline-flex; align-items: center; background: transparent; color: var(--forest-green); border: 1px solid var(--forest-green); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: 600; text-decoration: none; font-size: 11.5px; }
+        .theme-toggle { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 5px 8px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
 
-        .header-right { display: flex; align-items: center; gap: 10px; }
-        .btn-back { display: inline-flex; align-items: center; gap: 6px; background: transparent; color: var(--forest-green); border: 1px solid var(--forest-green); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; transition: 0.2s; font-size: 12px; }
-        .btn-back:hover { background: var(--forest-green); color: var(--bg-paper); }
-        
-        .theme-toggle { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; transition: all 0.2s; height: 36px; box-sizing: border-box; }
-        .theme-toggle:hover { background-color: var(--forest-green); color: var(--bg-paper); }
+        .container { max-width: 1000px; width: 100%; margin: 10px auto 20px; padding: 0 8px; }
 
-        main { flex: 1; width: 100%; max-width: 100vw; overflow-x: hidden; }
-        .container { max-width: 950px; margin: 25px auto; padding: 0 12px; box-sizing: border-box; width: 100%; }
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px 10px; margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); width: 100%; max-width: 100%; overflow: hidden; }
+        .card h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin: 0 0 3px 0; font-size: 15.5px; }
+        .subtitle { font-size: 10.5px; color: var(--text-graphite); opacity: 0.65; margin-bottom: 8px; }
 
-        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 20px; box-shadow: 4px 4px 0px rgba(0,0,0,0.02); transition: background-color 0.3s, border-color 0.3s; box-sizing: border-box; width: 100%; }
-        h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 18px; margin-bottom: 12px; word-break: break-word; }
-
-        /* СТРОКА СТАТУСА СВЯЗКИ LESOVIKCORE */
+        /* СТРОКА СТАТУСА СВЯЗКИ */
         .project-context-bar {
-            background: rgba(45, 90, 39, 0.08);
-            border: 1px solid var(--forest-green);
-            border-radius: 8px;
-            padding: 8px 12px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 12px;
-            box-sizing: border-box;
+            background: rgba(45, 90, 39, 0.08); border: 1px solid var(--forest-green);
+            border-radius: 6px; padding: 6px 10px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center; font-size: 11px;
         }
-        .project-context-bar .proj-title { font-weight: bold; color: var(--forest-green); }
-        .project-context-bar .mode-badge {
-            font-size: 10px;
-            font-weight: bold;
-            padding: 2px 6px;
-            border-radius: 4px;
-            text-transform: uppercase;
-        }
+        .project-context-bar .proj-title { font-weight: bold; color: var(--forest-green); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mode-badge { font-size: 9.5px; font-weight: bold; padding: 2px 5px; border-radius: 4px; text-transform: uppercase; flex-shrink: 0; }
         .badge-linked { background: rgba(45, 90, 39, 0.2); color: var(--forest-green); }
         .badge-standalone { background: rgba(255, 167, 38, 0.2); color: #E65100; }
 
-        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        @media (max-width: 600px) { .settings-grid { grid-template-columns: 1fr; gap: 10px; } }
+        /* ПАСПОРТ */
+        .passport-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 6px; margin-bottom: 8px; }
+        .form-group label { display: block; font-size: 10px; font-weight: 700; margin-bottom: 2px; text-transform: uppercase; color: var(--forest-green); }
+        .form-group input, .form-group select { width: 100%; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-paper); color: var(--text-graphite); font-size: 12px; outline: none; font-weight: 600; }
 
-        .multi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px; }
+        .archive-scroll-container { width: 100%; overflow-x: auto; white-space: nowrap; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+        .archive-inner-flex { display: inline-flex; gap: 6px; align-items: center; }
 
-        label { display: block; font-size: 11px; font-weight: 700; color: var(--forest-green); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-        select, input { width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 14px; background-color: var(--bg-paper); color: var(--text-graphite); box-sizing: border-box; transition: border-color 0.2s; }
-        select:focus, input:focus { outline: none; border-color: var(--forest-green); }
+        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+        @media (max-width: 600px) { .settings-grid { grid-template-columns: 1fr; gap: 6px; } }
 
-        .area-result { font-size: 13px; font-weight: 700; color: var(--forest-green); margin-top: 10px; text-align: right; text-transform: uppercase; letter-spacing: 0.5px; }
+        .multi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 6px; margin-bottom: 10px; }
 
-        .probe-manager { background: rgba(45, 90, 39, 0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; box-sizing: border-box; }
-        .probe-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-        .probe-tab { background: var(--card-bg); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+        /* МЕНЕДЖЕР ТОЧЕК И GPS ПРИВЯЗКА */
+        .probe-manager-card { background: rgba(45, 90, 39, 0.04); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
+        .probe-tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; margin-bottom: 6px; }
+        .probe-tab { background: var(--card-bg); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11.5px; font-weight: 700; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
         .probe-tab.active { background: var(--forest-green); color: white; border-color: var(--forest-green); }
-        .btn-add-probe { background: transparent; border: 1px dashed var(--forest-green); color: var(--forest-green); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s; }
+        .btn-add-probe { background: transparent; border: 1px dashed var(--forest-green); color: var(--forest-green); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11.5px; font-weight: 700; }
         .btn-add-probe:hover { background: var(--forest-green); color: white; }
-        .btn-del-probe { border: none; background: transparent; color: var(--danger); cursor: pointer; font-weight: bold; font-size: 14px; padding: 0 2px; }
+        .btn-del-probe { border: none; background: transparent; color: var(--danger); cursor: pointer; font-weight: bold; font-size: 13px; padding: 0 2px; }
 
-        .bitterlich-tally-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
-        @media (max-width: 500px) { .bitterlich-tally-container { grid-template-columns: 1fr; } }
+        .probe-geo-badge {
+            background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 6px;
+            padding: 6px 8px; display: flex; justify-content: space-between; align-items: center;
+            font-size: 11px; font-family: monospace; color: var(--text-graphite);
+        }
+        .btn-geo-refresh { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 3px 8px; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 10.5px; }
 
-        .tally-card { background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; user-select: none; transition: all 0.2s; box-sizing: border-box; }
-        .tally-card.has-val { border-color: var(--forest-green); box-shadow: 2px 2px 0px rgba(45, 90, 39, 0.08); }
+        /* СЧЕТЧИКИ ТАКСАТОРА */
+        .bitterlich-tally-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
+        .tally-card { background: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; user-select: none; transition: 0.2s; }
+        .tally-card.has-val { border-color: var(--forest-green); }
         
-        .tally-title-bar { padding: 8px; text-align: center; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); }
+        .tally-title-bar { padding: 5px; text-align: center; font-weight: 700; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid var(--border-color); }
         .tally-title-bar.in-count { background: rgba(22, 163, 74, 0.08); color: var(--success); }
         .tally-title-bar.half-count { background: rgba(37, 99, 235, 0.08); color: var(--info); }
         .tally-title-bar.miss-count { background: rgba(75, 85, 99, 0.08); color: var(--text-graphite); }
 
-        .tally-num-display { text-align: center; font-size: 34px; font-weight: 700; padding: 10px 0; color: var(--text-graphite); }
-        .tally-btn-row { display: flex; height: 48px; border-top: 1px solid var(--border-color); }
+        .tally-num-display { text-align: center; font-size: 30px; font-weight: 800; padding: 8px 0; color: var(--text-graphite); }
+        .tally-btn-row { display: flex; height: 44px; border-top: 1px solid var(--border-color); }
         
-        .btn-tally-action { border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; }
+        .btn-tally-action { border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; }
         .btn-tally-action.minus { flex: 1; color: var(--danger); border-right: 1px solid var(--border-color); }
-        .btn-tally-action.minus:active { background: rgba(220, 38, 38, 0.08); }
         .btn-tally-action.plus { flex: 2; color: white; }
         .btn-tally-action.plus.green-p { background: var(--success); }
         .btn-tally-action.plus.blue-p { background: var(--info); }
         .btn-tally-action.plus.gray-p { background: #4B5563; }
-        .btn-tally-action.plus:active { opacity: 0.9; }
 
-        .summary-table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; box-sizing: border-box; }
-        .summary-table { width: 100%; border-collapse: collapse; margin-top: 15px; min-width: 550px; }
-        .summary-table th, .summary-table td { padding: 8px 6px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 12.5px; }
-        .summary-table th { font-weight: 700; color: var(--forest-green); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
-        .summary-table tr:last-child td { border-bottom: none; font-weight: 700; font-size: 14px; color: var(--forest-green); background-color: rgba(45, 90, 39, 0.04); }
+        .summary-table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .summary-table { width: 100%; border-collapse: collapse; margin-top: 8px; min-width: 520px; }
+        .summary-table th, .summary-table td { padding: 6px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 11.5px; }
+        .summary-table th { font-weight: 700; color: var(--forest-green); text-transform: uppercase; font-size: 10.5px; }
+        .summary-table tr:last-child td { font-weight: 700; font-size: 13px; color: var(--forest-green); background-color: rgba(45, 90, 39, 0.04); }
 
-        .action-buttons-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
-        @media(max-width: 600px) { .action-buttons-container { grid-template-columns: 1fr; } }
-        
-        .btn-custom { padding: 12px; font-weight: 700; border-radius: 8px; cursor: pointer; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.2s; box-sizing: border-box; text-align: center; }
-        .btn-archive-save { background: var(--forest-green); border: 2px solid var(--forest-green); color: white; }
-        .btn-archive-save:hover { opacity: 0.9; }
-        .btn-excel { background: transparent; border: 2px solid var(--success); color: var(--success); }
-        .btn-excel:hover { background: var(--success); color: white; }
-        .btn-gis { background: transparent; border: 2px solid var(--info); color: var(--info); }
-        .btn-gis:hover { background: var(--info); color: white; }
-        .btn-clear-red { background: transparent; border: 2px solid var(--danger); color: var(--danger); }
-        .btn-clear-red:hover { background-color: var(--danger); color: white; }
-        
-        .btn-geo { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 8px 12px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 12px; transition: 0.2s; display: inline-block; }
-        .btn-geo:hover { background: var(--forest-green); color: white; }
-        .geo-display { font-size: 12px; margin-top: 6px; color: var(--text-graphite); opacity: 0.8; font-family: monospace; }
+        .btn { background-color: var(--forest-green); color: #fff; border: none; padding: 10px; width: 100%; border-radius: 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; cursor: pointer; margin-bottom: 6px; transition: 0.2s; text-align: center; }
+        .btn:active { transform: scale(0.98); }
+        .btn-outline { background-color: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); }
 
-        .btn-ar-group { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; }
-        .btn-ar-camera { background: var(--forest-green); color: white; border: none; padding: 10px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; }
-        .btn-ar-camera:hover { opacity: 0.9; }
-        
-        .btn-info-circle { background: var(--card-bg); color: var(--forest-green); border: 2px solid var(--forest-green); width: 36px; height: 36px; border-radius: 50%; font-weight: bold; font-size: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; user-select: none; }
-        .btn-info-circle:hover { background: var(--forest-green); color: white; }
-
-        /* AR МОДАЛЬНОЕ ОКНО КАМЕРЫ */
-        .ar-modal { 
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
-            background: black; z-index: 100000; display: none; flex-direction: column; 
-            box-sizing: border-box; overflow: hidden;
-        }
+        /* AR МОДАЛЬНОЕ ОКНО */
+        .ar-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: black; z-index: 100000; display: none; flex-direction: column; box-sizing: border-box; overflow: hidden; }
         .ar-modal.active { display: flex; }
         .ar-video-container { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         video#ar-video { width: 100%; height: 100%; object-fit: cover; }
@@ -297,36 +244,22 @@
             border: 2px dashed rgba(255, 255, 255, 0.95); background: rgba(45, 90, 39, 0.15); 
             width: var(--reticle-width, 20%); height: 48%; box-sizing: border-box; 
             pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; align-items: center; 
-            padding: 8px; transition: width 0.15s ease-out; 
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+            padding: 8px; transition: width 0.15s ease-out; box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
         }
         .ar-reticle-header { color: white; font-size: 11px; font-weight: bold; background: rgba(0,0,0,0.7); padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
         .ar-reticle-center-line { position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: rgba(220, 38, 38, 0.8); }
 
         .ar-hud-top { 
-            position: absolute; top: 12px; left: 12px; right: 12px; 
-            display: flex; justify-content: space-between; gap: 6px; z-index: 100001; 
+            position: absolute; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; gap: 6px; z-index: 100001; 
             background: rgba(0,0,0,0.7); padding: 8px 10px; border-radius: 10px; backdrop-filter: blur(8px); 
         }
         .ar-hud-top select, .ar-hud-top input { background: #222; color: white; border: 1px solid #555; padding: 6px 6px; font-size: 12px; border-radius: 6px; }
         
-        /* ПОДНЯТЫЙ НИЖНИЙ БЛОК НАД НИЖНЕЙ НАВИГАЦИЕЙ LESOVIKCORE */
         .ar-hud-bottom { 
-            position: absolute; 
-            bottom: 85px;
-            left: 10px; 
-            right: 10px; 
-            z-index: 100001; 
-            background: rgba(0,0,0,0.85); 
-            padding: 8px; 
-            border-radius: 12px; 
-            backdrop-filter: blur(8px); 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 6px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            position: absolute; bottom: 85px; left: 10px; right: 10px; z-index: 100001; 
+            background: rgba(0,0,0,0.85); padding: 8px; border-radius: 12px; backdrop-filter: blur(8px); 
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-        
         .ar-count-btn-card { display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.08); border-radius: 8px; padding: 4px; }
         .ar-count-title { font-size: 9.5px; color: #EEE; text-transform: uppercase; font-weight: bold; margin-bottom: 2px; }
         .ar-count-val { font-size: 20px; color: white; font-weight: bold; }
@@ -336,38 +269,31 @@
         .ar-btn.plus-half { background: var(--info); }
         .ar-btn.plus-miss { background: #6B7280; }
         .ar-btn.minus { background: var(--danger); }
-
         .ar-close-btn { background: rgba(220, 38, 38, 0.95); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
 
-        .archive-section { margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 15px; }
-        .archive-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
-        .archive-item { background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; box-sizing: border-box; }
-        .archive-item:hover { border-color: var(--forest-green); }
-        .archive-item-title { font-weight: 600; font-size: 13px; }
-        .archive-item-meta { font-size: 11px; color: gray; margin-top: 2px; }
-
-        .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 100005; padding: 15px; box-sizing: border-box; backdrop-filter: blur(4px); }
+        .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 100005; padding: 10px; box-sizing: border-box; backdrop-filter: blur(4px); }
         .popup-overlay.active { display: flex; }
-        .popup-content { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; max-width: 600px; width: 100%; padding: 20px; max-height: 85vh; overflow-y: auto; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); box-sizing: border-box; }
-        .popup-close { position: absolute; top: 12px; right: 12px; background: transparent; border: none; font-size: 24px; cursor: pointer; color: var(--text-graphite); }
-        .btn-delete-archive { background: var(--danger); border: none; color: white; padding: 8px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px; margin-top: 15px; text-transform: uppercase; float: right; }
+        .popup-content { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; max-width: 500px; width: 100%; padding: 14px; max-height: 85vh; overflow-y: auto; position: relative; }
+        .popup-close { position: absolute; top: 8px; right: 8px; background: transparent; border: none; font-size: 20px; cursor: pointer; color: var(--text-graphite); }
 
-        .btn-calibrate { background: transparent; border: 2px solid var(--forest-green); color: var(--forest-green); padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; text-transform: uppercase; font-size: 12px; transition: 0.2s; }
-        .btn-calibrate:hover { background: var(--forest-green); color: white; }
+        /* ПЕЧАТНЫЙ БЛАНК А4 */
+        #printable-bitterlich-sheet { display: none; background: #FFF; color: #000; font-family: 'Times New Roman', serif; line-height: 1.3; box-sizing: border-box; }
+        .doc-header-title { text-align: center; font-size: 14pt; font-weight: bold; margin-bottom: 2pt; text-transform: uppercase; }
+        .doc-header-sub { text-align: center; font-size: 9pt; font-style: italic; margin-bottom: 8pt; color: #333; }
+        .doc-passport-box { width: 100%; border: 1.5px solid #000; padding: 4pt 6pt; font-size: 9pt; margin-bottom: 8pt; display: grid; grid-template-columns: repeat(3, 1fr); gap: 3pt; }
+        .doc-print-table { width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-bottom: 8pt; }
+        .doc-print-table th, .doc-print-table td { border: 1px solid #000; padding: 3pt 4pt; text-align: left; }
+        .doc-print-table th { background: #F0F0F0; text-align: center; font-weight: bold; font-size: 8pt; }
+        .doc-signatures-box { display: grid; grid-template-columns: 1fr 1fr; gap: 20pt; font-size: 9.5pt; margin-top: 12pt; padding-top: 6pt; border-top: 1px solid #000; }
 
-        .seo-info-section { margin-top: 30px; padding-top: 20px; border-top: 2px solid var(--border-color); color: var(--text-graphite); opacity: 0.85; }
-        .seo-info-section h3 { font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 16px; margin-top: 20px; margin-bottom: 8px; }
-        .seo-info-section p { font-size: 13px; line-height: 1.6; margin-bottom: 12px; text-align: justify; }
+        @page { margin: 8mm; size: A4 landscape; }
+        @media print {
+            body { background: #FFF !important; color: #000 !important; padding: 0 !important; }
+            .glass-header, .container, footer, #offline-blocker-screen, #lesovik-bottom-nav-bar, #arModal { display: none !important; }
+            #printable-bitterlich-sheet { display: block !important; width: 100% !important; }
+        }
 
-        footer { background-color: var(--footer-bg); color: #E0E0E0; padding: 40px 20px 20px; margin-top: auto; font-size: 13px; max-width: 100vw; box-sizing: border-box; }
-        .footer-content { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 30px; margin-bottom: 30px; }
-        .footer-logo { fill: #E0E0E0; width: 26px; height: 26px; margin-bottom: 8px; }
-        .footer-column h4 { font-family: 'Merriweather', serif; color: #E0E0E0; font-size: 15px; margin-top: 0; margin-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 8px; }
-        .footer-column a { color: #8FBC8F; text-decoration: none; display: block; margin-bottom: 8px; }
-        .footer-column a:hover { color: #FFFFFF; text-decoration: underline; }
-        .footer-bottom { text-align: center; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.05); font-size: 11px; opacity: 0.6; }
-
-        @media (max-width: 600px) { .glass-header { padding: 12px 15px; } .container { padding: 10px; } .card { padding: 14px; } }
+        footer { background-color: var(--footer-bg); color: #E0E0E0; padding: 25px 10px 15px; font-size: 11px; text-align: center; margin-top: 20px; width: 100%; }
     </style>
 </head>
 <body>
@@ -377,7 +303,6 @@
             <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
             <h1>Лесовик Полнотомер PRO</h1>
         </a>
-        <div class="header-seo-text">Реласкопия • AR-Камера • Лесовик ПРО</div>
         <div class="header-right">
             <a href="index.html" class="btn-back">Главная</a>
             <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тема</button>
@@ -386,26 +311,59 @@
 
     <main class="container">
         
-        <!-- СТРОКА СТАТУСА СВЯЗКИ LESOVIKCORE -->
-        <div class="project-context-bar" id="project-context-bar">
-            <div>
-                <span style="opacity:0.7;">Активный объект:</span>
-                <span class="proj-title" id="ctx-project-name">Загрузка объекта...</span>
+        <!-- 1. ПАСПОРТ ДЕЛЯНКИ И АРХИВ -->
+        <div class="card">
+            <h2>Паспорт делянки и архив полнотомера (PRO 3.6)</h2>
+            <div class="subtitle">Привязка реласкопических точек, сохранение в архив и печать ведомостей.</div>
+
+            <div class="passport-grid">
+                <div class="form-group">
+                    <label>Лесничество:</label>
+                    <input type="text" id="b-lesnichestvo" value="Важгортское уч. лесничество" onchange="syncPassportToCore()" onfocus="this.select()">
+                </div>
+                <div class="form-group">
+                    <label>Квартал:</label>
+                    <input type="text" id="b-kvartal" value="312" onchange="syncPassportToCore()" onfocus="this.select()">
+                </div>
+                <div class="form-group">
+                    <label>Делянка:</label>
+                    <input type="text" id="b-delyanka" value="12" onchange="syncPassportToCore()" onfocus="this.select()">
+                </div>
+                <div class="form-group">
+                    <label>Выдел:</label>
+                    <input type="text" id="b-vydel" value="1" onchange="syncPassportToCore()" onfocus="this.select()">
+                </div>
             </div>
-            <span id="ctx-mode-badge" class="mode-badge badge-standalone">⚡ Автономно</span>
+
+            <div class="passport-grid" style="border-top: 1px dashed var(--border-color); padding-top: 6px;">
+                <div class="form-group">
+                    <label>Исполнитель (Должность / ФИО):</label>
+                    <input type="text" id="b-author" value="Инженер-таксатор Худяков Н.С." onfocus="this.select()">
+                </div>
+                <div class="form-group">
+                    <label>Проверил (Должность / ФИО):</label>
+                    <input type="text" id="b-checker" value="Лесничий Иванов И.И." onfocus="this.select()">
+                </div>
+            </div>
+
+            <div class="archive-scroll-container">
+                <div class="archive-inner-flex">
+                    <input type="text" id="b-archive-name" placeholder="Название объекта..." value="Кв. 312, Выд. 1, Дел. 12" style="width: 160px; padding: 5px 6px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 11px; font-weight: bold; background: var(--bg-paper); color: var(--text-graphite);" onfocus="this.select()">
+                    <button class="btn" style="width:auto; padding:5px 10px; margin:0; font-size:11px;" onclick="saveCurrentToArchive()">💾 В архив</button>
+                    <select id="b-archive-select" onchange="loadFromArchive(this.value)" style="padding: 5px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 11px; background: var(--bg-paper); color: var(--text-graphite); font-weight: bold; min-width: 160px;">
+                        <option value="">-- Выбрать из архива --</option>
+                    </select>
+                    <button class="btn" style="width:auto; padding:5px 8px; margin:0; background:var(--danger); font-size:11px;" onclick="deleteSelectedArchive()">🗑️</button>
+                </div>
+            </div>
         </div>
 
         <div class="card">
             <h2>Параметры реласкопической таксации делянки</h2>
             
-            <div style="margin-bottom: 15px;">
-                <label>Название лесосеки / Делянки</label>
-                <input type="text" id="tally-name" placeholder="Пример: Сыктывкарское уч-во, кв. 82, выд. 4, дел. 2" oninput="updateTallyName()" onfocus="this.select()">
-            </div>
-
             <div class="settings-grid">
-                <div>
-                    <label>Лесотаксационный район / Нормативный справочник</label>
+                <div class="form-group">
+                    <label>Лесотаксационный район / Норматив</label>
                     <select id="region-select" onchange="updateRegionSettings()">
                         <option value="komi" selected>Северо-Запад / Республика Коми (ГОСТ)</option>
                         <option value="karelia">Республика Карелия (Северо-Западная тайга)</option>
@@ -416,34 +374,36 @@
                         <option value="far_east">Дальний Восток</option>
                     </select>
                 </div>
-                <div>
+                <div class="form-group">
                     <label>Коэффициент полнотомера (Шаблон K)</label>
                     <select id="bitterlich-k" onchange="onBitterlichKChanged()">
-                        <option value="1.0" selected>K = 1.0 (Стандартный шаблон 1:50, рука/шнур 100 см)</option>
+                        <option value="1.0" selected>K = 1.0 (Стандарт 1:50)</option>
                         <option value="2.0">K = 2.0 (Шаблон 1:35.4)</option>
-                        <option value="4.0">K = 4.0 (Крупные стволы от 25 см, шаблон 1:25)</option>
+                        <option value="4.0">K = 4.0 (Крупные стволы 1:25)</option>
                         <option value="0.5">K = 0.5 (Узкий визир 1:70.7)</option>
                     </select>
                 </div>
             </div>
 
-            <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-                <button class="btn-geo" onclick="getLocation()">📍 Координаты GPS</button>
-                <div class="btn-ar-group">
-                    <button class="btn-ar-camera" onclick="openARCamera()">📷 AR-визир (Камера)</button>
-                    <button class="btn-info-circle" onclick="openHelpModal()" title="Инструкция и калибровка">?</button>
-                </div>
+            <div style="display:flex; gap:6px; margin-top:6px;">
+                <button class="btn" style="padding:8px; margin:0; background:var(--forest-green);" onclick="openARCamera()">📷 AR-визир (Камера)</button>
+                <button class="btn btn-outline" style="width:auto; padding:8px 12px; margin:0; font-weight:bold;" onclick="openHelpModal()">?</button>
             </div>
-            <div id="geo-coordinates" class="geo-display">Координаты не определены</div>
-
-            <div class="area-result" id="computed-area">Количество заложенных точек: 1</div>
         </div>
 
-        <!-- МЕНЕДЖЕР РЕЛАСКОПИЧЕСКИХ ТОЧЕК НА ДЕЛЯНКЕ -->
-        <div class="card" id="probe-manager-card">
-            <div class="probe-manager">
-                <label>Список заложенных точек кругового визирования</label>
+        <!-- МЕНЕДЖЕР ТОЧЕК С АВТО-GPS ПРИВЯЗКОЙ КАЖДОЙ ПЛОЩАДКИ -->
+        <div class="card">
+            <div class="probe-manager-card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <label style="margin:0; font-size:11px; font-weight:700; color:var(--forest-green); text-transform:uppercase;">Заложенные точки кругового визирования:</label>
+                    <span id="computed-area" style="font-size:10.5px; font-weight:bold; color:var(--forest-green);">Точек: 1</span>
+                </div>
                 <div class="probe-tabs" id="probe-tabs-container"></div>
+                
+                <div class="probe-geo-badge">
+                    <span id="active-probe-coords">📍 GPS: определение спутников...</span>
+                    <button class="btn-geo-refresh" onclick="refreshCurrentProbeGPS()">Обновить GPS</button>
+                </div>
             </div>
         </div>
 
@@ -451,11 +411,11 @@
             <h2>Визирование и подсчет деревьев на текущей точке</h2>
             
             <div class="multi-grid">
-                <div>
-                    <label>Учитываемая порода</label>
+                <div class="form-group">
+                    <label>Порода</label>
                     <select id="current-species" onchange="syncAndRenderGrid()">
                         <option value="Сосна">Сосна (С)</option>
-                        <option value="Ель">Ель (Е)</option>
+                        <option value="Ель" selected>Ель (Е)</option>
                         <option value="Береза">Береза (Б)</option>
                         <option value="Осина">Осина (Ос)</option>
                         <option value="Лиственница">Лиственница (Л)</option>
@@ -463,13 +423,13 @@
                         <option value="Дуб">Дуб (Д)</option>
                     </select>
                 </div>
-                <div>
-                    <label>Средняя высота яруса H (м)</label>
-                    <input type="number" id="current-height" value="24" min="1" max="50" required onchange="updateHeightAndDiameter()" onfocus="this.select()">
+                <div class="form-group">
+                    <label>Высота H (м)</label>
+                    <input type="number" id="current-height" value="24" min="1" max="50" onchange="updateHeightAndDiameter()" onfocus="this.select()">
                 </div>
-                <div>
-                    <label>Средний диаметр D (см)</label>
-                    <input type="number" id="current-diameter" value="28" min="1" max="120" required onchange="updateHeightAndDiameter()" onfocus="this.select()">
+                <div class="form-group">
+                    <label>Диаметр D (см)</label>
+                    <input type="number" id="current-diameter" value="28" min="1" max="120" onchange="updateHeightAndDiameter()" onfocus="this.select()">
                 </div>
             </div>
 
@@ -478,38 +438,25 @@
         </div>
 
         <div class="card">
-            <h2>Результаты расчета по разрядам высот и видовым высотам (HF)</h2>
+            <h2>Результаты расчета по разрядам высот и HF</h2>
             <div class="summary-table-wrapper">
                 <div id="summary-container"></div>
             </div>
-            <p style="font-size: 11px; color: gray; margin-top: 15px; line-height: 1.4;">
-                * Расчет суммы площадей сечений (G) производится агрегацией данных всех точек. Разряд высоты (Iа–V) вычисляется автоматически по соотношению средней высоты (H) и диаметра (D). Запас кубатуры на 1 га (V) рассчитывается по строгому нормативу: V = G × HF, где HF — видовая высота для установленного разряда.
-            </p>
 
-            <div class="action-buttons-container">
-                <button class="btn-custom btn-archive-save" onclick="saveToArchive()">Сохранить в архив</button>
-                <button class="btn-custom btn-excel" onclick="downloadExcel()">Скачать в Excel (.xlsx)</button>
-                <button class="btn-custom btn-gis" onclick="downloadGIS()">Скачать карту KML</button>
-                <button class="btn-custom btn-clear-red" onclick="clearData()">Очистить текущие замеры</button>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-top:10px;">
+                <button class="btn" style="margin:0; padding:8px; font-size:11px; background:#1E3A1A;" onclick="printOfficialBitterlichSheet()">📄 Бланк в PDF</button>
+                <button class="btn" style="margin:0; padding:8px; font-size:11px; background:#107C41;" onclick="downloadExcel()">📊 В Excel (.xlsx)</button>
             </div>
-
-            <div class="archive-section">
-                <h3>Архив реласкопических определений</h3>
-                <div class="archive-list" id="archive-list-container"></div>
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-top:6px;">
+                <button class="btn btn-outline" style="margin:0; padding:6px; font-size:10.5px;" onclick="downloadGIS()">🗺️ Карта KML (GPS)</button>
+                <button class="btn btn-outline" style="margin:0; padding:6px; font-size:10.5px; color:var(--danger); border-color:var(--danger);" onclick="clearData()">🗑️ Очистить делянку</button>
             </div>
         </div>
-
-        <section class="seo-info-section">
-            <h2>Профессиональная лесотаксационная методика: Видовые высоты HF и Разряды высот</h2>
-            <p><strong>Метод круговых реласкопических площадок Биттерлиха</strong> в сочетании с нормативными таблицами видовых высот (HF) обеспечивает высокую точность учета древесины, необходимую для составления материально-денежной оценки (МДО) лесосек. В отличие от упрощенных схем с постоянным видовым числом f = 0.42, данный алгоритм учитывает реальную полноту и географическую изменчивость формы ствола.</p>
-        </section>
-
-        <div style="height: 30px;"></div>
     </main>
 
     <!-- МОДАЛЬНЫЙ ЭКРАН AR-КАМЕРЫ -->
     <div class="ar-modal" id="arModal">
-        <!-- Верхняя панель ввода параметров -->
         <div class="ar-hud-top">
             <select id="ar-species-select" onchange="syncFromARHUD()">
                 <option value="Сосна">Сосна (С)</option>
@@ -526,14 +473,13 @@
         </div>
 
         <div class="ar-video-container">
-            <video id="ar-video" autoplay playsinline></video>
+            <video id="ar-video" autoplay playsinline muted></video>
             <div class="ar-overlay-reticle" id="arReticle">
                 <div class="ar-reticle-header" id="arReticleHeader">ВИЗИР (K=1.0)</div>
                 <div class="ar-reticle-center-line"></div>
             </div>
         </div>
 
-        <!-- Нижняя панель счетчиков (ПОДНЯТА НАД НАВИГАЦИЕЙ) -->
         <div class="ar-hud-bottom">
             <div class="ar-count-btn-card">
                 <div class="ar-count-title" style="color: #4ADE80;">В счет (1.0)</div>
@@ -562,89 +508,36 @@
         </div>
     </div>
 
-    <!-- ВСПЛЫВАЮЩЕЕ ОКНО: ИНСТРУКЦИЯ, ПРОВЕРКА И КАЛИБРОВКА -->
+    <!-- ВСПЛЫВАЮЩЕЕ ОКНО: ИНСТРУКЦИЯ И КАЛИБРОВКА -->
     <div class="popup-overlay" id="helpPopup" onclick="closeHelpModal(event)">
         <div class="popup-content" onclick="event.stopPropagation()">
             <button class="popup-close" onclick="document.getElementById('helpPopup').classList.remove('active')">&times;</button>
-            <h2 style="color: var(--forest-green); margin-bottom: 15px;">Инструкция и калибровка AR-полнотомера</h2>
+            <h3 style="color: var(--forest-green); margin-top:0;">📖 Инструкция и калибровка визира</h3>
             
-            <div style="font-size: 13px; line-height: 1.6; color: var(--text-graphite);">
-                <p><strong>1. Порядок работы на реласкопической точке:</strong></p>
-                <ol style="padding-left: 18px; margin-bottom: 12px;">
-                    <li>Встаньте в центр закладываемой круговой точки.</li>
-                    <li>Держите телефон вертикально перед собой на естественном расстоянии согнутой руки (около 35–40 см от глаз) на основной камере (1x). Расстояние от глаз не меняется при смене коэффициента K.</li>
-                    <li>Плавно поворачивайтесь на 360°, визируя стволы деревьев на высоте груди (1.3 м) через рамку визира.</li>
+            <div style="font-size: 12px; line-height: 1.4; color: var(--text-graphite);">
+                <p><strong>Порядок работы на реласкопической точке:</strong></p>
+                <ol style="padding-left: 14px; margin-bottom: 8px;">
+                    <li>Встаньте в центр закладываемой круговой площадки. Координаты GPS привяжутся к точке автоматически.</li>
+                    <li>Держите телефон вертикально на естественном расстоянии согнутой руки (около 35–40 см от глаз) на основной камере (1x). Расстояние не меняется при смене K.</li>
+                    <li>Плавно поворачивайтесь на 360°, визируя стволы на высоте 1.3 м.</li>
                 </ol>
 
-                <div style="background: rgba(45, 90, 39, 0.05); padding: 10px; border-radius: 8px; border-left: 4px solid var(--forest-green); margin: 12px 0;">
-                    <p style="margin: 0 0 4px 0; font-weight: bold;">Правила учета стволов:</p>
-                    <ul style="margin: 0; padding-left: 16px;">
-                        <li><strong style="color: #16A34A;">В счет (1.0):</strong> Ствол дерева <u>ШИРЕ</u> рамки визира.</li>
-                        <li><strong style="color: #2563EB;">Полусчет (0.5):</strong> Края ствола строго касаются границ рамки.</li>
-                        <li><strong style="color: #6B7280;">Пропуск (0.0):</strong> Ствол дерева <u>УЖЕ</u> визирной рамки.</li>
-                    </ul>
-                </div>
-
-                <h3 style="color: var(--forest-green); font-size: 15px; margin-top: 15px;">Калибровка угла обзора (FOV):</h3>
-                <p style="font-size: 12px; opacity: 0.9; margin-bottom: 8px;">Камеры разных моделей телефонов имеют разный угол обзора. Для идеальной калибровки визира K=1.0 выполните тест:</p>
-
-                <div style="background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 10px;">
-                    <p style="margin: 0; font-size: 12px;"><strong>Способ А (Быстрый - Правило пальца):</strong><br>
-                    Вытяните руку с указательным пальцем рядом со смартфоном. При естественном удержании (35–40 см) ширина рамки K=1.0 на экране должна быть визуально равна ширине пальца.</p>
-                </div>
-
-                <div style="background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 12px;">
-                    <p style="margin: 0; font-size: 12px;"><strong>Способ Б (Эталонный тест 15 метров):</strong><br>
-                    1. Выберите дерево или ствол диаметром ровно 30 см.<br>
-                    2. Отмерьте рулеткой ровно 15 метров (L = 50 × d).<br>
-                    3. При наведении визира края ствола должны <u>строго совпасть</u> с рамкой (полусчет 0.5). Отрегулируйте базовую ширину рамки ползунком ниже при необходимости.</p>
-                </div>
-
-                <h3 style="color: var(--forest-green); font-size: 14px; margin-top: 12px;">Базовая калибровка ширины рамки (для K=1.0):</h3>
-                <div style="display: flex; align-items: center; gap: 12px; margin-top: 6px;">
+                <h4 style="color: var(--forest-green); margin:8px 0 4px 0;">Базовая калибровка ширины визира (для K=1.0):</h4>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
                     <input type="range" id="reticle-slider" min="10" max="40" value="20" style="flex: 1;" oninput="adjustReticleWidth(this.value)">
-                    <span id="reticle-val" style="font-weight: bold; font-family: monospace; font-size: 15px; color: var(--forest-green);">20%</span>
+                    <span id="reticle-val" style="font-weight: bold; font-family: monospace; font-size: 13px; color: var(--forest-green);">20%</span>
                 </div>
             </div>
 
-            <button class="btn-calibrate" onclick="document.getElementById('helpPopup').classList.remove('active')">Понятно, закрыть</button>
+            <button class="btn" style="margin-top:10px; padding:8px;" onclick="document.getElementById('helpPopup').classList.remove('active')">Понятно, закрыть</button>
         </div>
     </div>
 
-    <!-- ПОПАП ПРОСМОТРА АРХИВА -->
-    <div class="popup-overlay" id="archivePopup" onclick="closePopup(event)">
-        <div class="popup-content" onclick="event.stopPropagation()">
-            <button class="popup-close" onclick="document.getElementById('archivePopup').classList.remove('active')">&times;</button>
-            <h2 id="popup-title" style="margin-right: 30px;">Детали делянки</h2>
-            <div id="popup-meta" style="font-size: 12px; color: gray; margin-bottom: 12px;"></div>
-            <div id="popup-table-container"></div>
-            <button class="btn-delete-archive" id="popup-delete-btn">Удалить из архива</button>
-        </div>
-    </div>
+    <!-- ОФИЦИАЛЬНЫЙ АЛЬБОМНЫЙ ПЕЧАТНЫЙ БЛАНК А4 -->
+    <div id="printable-bitterlich-sheet"></div>
 
     <footer>
-        <div class="footer-content">
-            <div class="footer-column">
-                <svg class="footer-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/>
-                    <rect x="10.5" y="20" width="3" height="4"/>
-                </svg>
-                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 16px;">Лесовик ПРО</div>
-                <div style="font-size: 12px; margin-top: 5px; opacity: 0.8;">Цифровой комплекс таксатора. Расчет запаса древесины по таблицам HF и разрядам высот.</div>
-            </div>
-            <div class="footer-column">
-                <h4>Правовая информация</h4>
-                <a href="index.html?page=policy">Политика конфиденциальности</a>
-                <a href="index.html?page=offer">Договор-оферта</a>
-            </div>
-            <div class="footer-column">
-                <h4>Контакты</h4>
-                <a href="mailto:folgoal@gmail.com">✉️ folgoal@gmail.com</a>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            &copy; 2026 Создано для профессионалов леса. Все права защищены.
-        </div>
+        &copy; 2026 Лесовик Про. Модуль реласкопической таксации полнотомером Биттерлиха.
     </footer>
 
     <script>
@@ -694,66 +587,62 @@
         }
 
         let journalData = JSON.parse(localStorage.getItem('lesovik_bitterlich_v3')) || {
-            name: '',
+            name: 'Кв. 312, Выд. 1, Дел. 12',
             region: 'komi',
-            coordinates: null,
             bitterlichK: '1.0',
             reticleWidth: '20',
             activeProbe: 'Точка 1',
             heights: { 'Сосна': 24, 'Ель': 22, 'Береза': 21, 'Осина': 23, 'Лиственница': 25, 'Тополь': 22, 'Дуб': 24 },
             diameters: { 'Сосна': 28, 'Ель': 26, 'Береза': 22, 'Осина': 26, 'Лиственница': 30, 'Тополь': 28, 'Дуб': 32 },
-            probes: { 'Точка 1': {} }
+            probes: { 'Точка 1': { counts: {}, coords: null } }
         };
 
-        let archiveData = JSON.parse(localStorage.getItem('lesovik_bitterlich_archive_v3')) || [];
-        
         const countCategories = [
             { id: 'full', title: 'В счет (1.0)', css: 'in-count', btnCss: 'green-p' },
             { id: 'half', title: 'Полусчет (0.5)', css: 'half-count', btnCss: 'blue-p' },
             { id: 'miss', title: 'Пропуск (0.0)', css: 'miss-count', btnCss: 'gray-p' }
         ];
 
-        function updateProjectContextDisplay() {
-            if (!window.LesovikCore) return;
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSavedData();
+            renderProbeTabs();
+            renderGrid();
+            onBitterlichKChanged();
+            if (!journalData.probes[journalData.activeProbe].coords) {
+                fetchGPSForActiveProbe();
+            }
+        });
 
-            const isSystemMode = window.LesovikCore.isSystemMode();
-            const activeProj = window.LesovikCore.getActiveProject();
-            
-            const badgeEl = document.getElementById('ctx-mode-badge');
-            const projTitleEl = document.getElementById('ctx-project-name');
+        // 1. АВТОМАТИЧЕСКАЯ ФИКСАЦИЯ GPS ПРИ СОЗДАНИИ ТОЧКИ
+        function fetchGPSForActiveProbe() {
+            const display = document.getElementById('active-probe-coords');
+            if (navigator.geolocation) {
+                display.innerText = "📍 GPS: поиск спутников...";
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        const lat = pos.coords.latitude.toFixed(6);
+                        const lon = pos.coords.longitude.toFixed(6);
+                        const dmsLat = toDMS(pos.coords.latitude, true);
+                        const dmsLon = toDMS(pos.coords.longitude, false);
 
-            if (isSystemMode && activeProj) {
-                const p = activeProj.passport || {};
-                projTitleEl.innerText = `${p.lesnichestvo || 'Лесничество'}, кв. ${p.kvartal || '-'}, дел. ${p.delyanka || '-'}, выд. ${p.vydel || '-'}`;
-                badgeEl.innerText = '🔗 В СВЯЗКЕ';
-                badgeEl.className = 'mode-badge badge-linked';
-
-                if (!journalData.name) {
-                    journalData.name = `${p.lesnichestvo || ''} кв.${p.kvartal || ''} дел.${p.delyanka || ''}`.trim();
-                    document.getElementById('tally-name').value = journalData.name;
-                }
+                        const currentProbe = journalData.probes[journalData.activeProbe];
+                        currentProbe.coords = { lat, lon, dmsLat, dmsLon };
+                        
+                        display.innerText = `📍 GPS: ${dmsLat} ${dmsLon} (${lat}, ${lon})`;
+                        saveData();
+                    },
+                    (err) => {
+                        display.innerText = "📍 GPS: нет сигнала (введите позже)";
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
             } else {
-                projTitleEl.innerText = 'Автономный режим (Локальный замер)';
-                badgeEl.innerText = '⚡ Автономно';
-                badgeEl.className = 'mode-badge badge-standalone';
+                display.innerText = "📍 GPS: датчик недоступен";
             }
         }
 
-        function toggleTheme() {
-            const body = document.documentElement;
-            if (body.getAttribute('data-theme') === 'dark') body.removeAttribute('data-theme');
-            else body.setAttribute('data-theme', 'dark');
-        }
-
-        function updateTallyName() {
-            journalData.name = document.getElementById('tally-name').value;
-            saveData();
-        }
-
-        function updateRegionSettings() {
-            journalData.region = document.getElementById('region-select').value;
-            saveData();
-            calculateResults();
+        function refreshCurrentProbeGPS() {
+            fetchGPSForActiveProbe();
         }
 
         function onBitterlichKChanged() {
@@ -778,138 +667,10 @@
             calculateResults();
         }
 
-        function saveData() {
-            localStorage.setItem('lesovik_bitterlich_v3', JSON.stringify(journalData));
-            
-            if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
-                const activeProj = window.LesovikCore.getActiveProject();
-                if (activeProj && activeProj.plots && activeProj.plots.length > 0) {
-                    const plotId = activeProj.plots[0].id;
-                    window.LesovikCore.updatePlotModuleData(plotId, 'bitterlich', {
-                        name: journalData.name,
-                        bitterlichData: journalData
-                    });
-                }
-            }
-        }
-
-        function getLocation() {
-            const display = document.getElementById('geo-coordinates');
-            if (navigator.geolocation) {
-                display.innerText = "Определение локации...";
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const rawLat = position.coords.latitude;
-                        const rawLon = position.coords.longitude;
-                        
-                        const latDec = rawLat.toFixed(6);
-                        const lonDec = rawLon.toFixed(6);
-                        
-                        const dmsLat = toDMS(rawLat, true);
-                        const dmsLon = toDMS(rawLon, false);
-                        
-                        journalData.coordinates = { 
-                            lat: latDec, 
-                            lon: lonDec,
-                            dmsLat: dmsLat,
-                            dmsLon: dmsLon
-                        };
-                        
-                        display.innerText = `📍 ${dmsLat} ${dmsLon} (${latDec}, ${lonDec})`;
-                        saveData();
-                    },
-                    () => { display.innerText = "Ошибка: не удалось получить координаты GPS"; },
-                    { enableHighAccuracy: true, timeout: 10000 }
-                );
-            } else {
-                display.innerText = "Геолокация не поддерживается вашим браузером";
-            }
-        }
-
-        let videoStream = null;
-        function openARCamera() {
-            const modal = document.getElementById('arModal');
-            const video = document.getElementById('ar-video');
-            
-            const sp = document.getElementById('current-species').value;
-            document.getElementById('ar-species-select').value = sp;
-            document.getElementById('ar-height-input').value = journalData.heights[sp] || 24;
-            document.getElementById('ar-diameter-input').value = journalData.diameters[sp] || 28;
-            
-            onBitterlichKChanged();
-            updateARHUDValDisplay();
-
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-                    .then(function(stream) {
-                        videoStream = stream;
-                        video.srcObject = stream;
-                        modal.classList.add('active');
-                    })
-                    .catch(function(err) {
-                        alert("Не удалось получить доступ к камере: " + err.message);
-                    });
-            } else {
-                alert("Камера не поддерживается вашим устройством/браузером.");
-            }
-        }
-
-        function closeARCamera() {
-            const modal = document.getElementById('arModal');
-            const video = document.getElementById('ar-video');
-            if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
-                videoStream = null;
-            }
-            video.srcObject = null;
-            modal.classList.remove('active');
-            renderGrid();
-        }
-
-        function syncFromARHUD() {
-            const sp = document.getElementById('ar-species-select').value;
-            document.getElementById('current-species').value = sp;
-            
-            const h = parseFloat(document.getElementById('ar-height-input').value) || 24;
-            const d = parseFloat(document.getElementById('ar-diameter-input').value) || 28;
-            
-            journalData.heights[sp] = h;
-            journalData.diameters[sp] = d;
-            
-            document.getElementById('current-height').value = h;
-            document.getElementById('current-diameter').value = d;
-            
+        function updateRegionSettings() {
+            journalData.region = document.getElementById('region-select').value;
             saveData();
-            updateARHUDValDisplay();
             calculateResults();
-        }
-
-        function updateARHUDValDisplay() {
-            const sp = document.getElementById('ar-species-select').value;
-            const activeProbeKey = journalData.activeProbe;
-            
-            if (!journalData.probes[activeProbeKey]) journalData.probes[activeProbeKey] = {};
-            if (!journalData.probes[activeProbeKey][sp]) journalData.probes[activeProbeKey][sp] = { full: 0, half: 0, miss: 0 };
-            
-            const counts = journalData.probes[activeProbeKey][sp];
-            document.getElementById('ar-val-full').innerText = counts.full || 0;
-            document.getElementById('ar-val-half').innerText = counts.half || 0;
-            document.getElementById('ar-val-miss').innerText = counts.miss || 0;
-        }
-
-        function openHelpModal() {
-            document.getElementById('helpPopup').classList.add('active');
-        }
-
-        function closeHelpModal(e) {
-            document.getElementById('helpPopup').classList.remove('active');
-        }
-
-        function adjustReticleWidth(val) {
-            journalData.reticleWidth = val;
-            document.getElementById('reticle-val').innerText = `${val}%`;
-            onBitterlichKChanged();
-            saveData();
         }
 
         function renderProbeTabs() {
@@ -928,7 +689,15 @@
             });
             
             container.innerHTML += `<button class="btn-add-probe" onclick="addNewProbe()">+ Добавить точку</button>`;
-            document.getElementById('computed-area').innerText = `Количество заложенных точек: ${keys.length}`;
+            document.getElementById('computed-area').innerText = `Точек: ${keys.length}`;
+            
+            const coords = journalData.probes[journalData.activeProbe].coords;
+            const display = document.getElementById('active-probe-coords');
+            if (coords) {
+                display.innerText = `📍 GPS: ${coords.dmsLat} ${coords.dmsLon} (${coords.lat}, ${coords.lon})`;
+            } else {
+                display.innerText = `📍 GPS: координаты не зафиксированы`;
+            }
         }
 
         function setActiveProbe(key) {
@@ -947,17 +716,18 @@
             });
             
             const newKey = `Точка ${maxNum + 1}`;
-            journalData.probes[newKey] = {};
+            journalData.probes[newKey] = { counts: {}, coords: null };
             journalData.activeProbe = newKey;
             
             saveData();
             renderProbeTabs();
             renderGrid();
+            fetchGPSForActiveProbe(); // Сразу фиксируем спутниковые координаты новой площадки
         }
 
         function deleteProbe(event, key) {
             event.stopPropagation();
-            if (confirm(`Вы уверены, что хотите удалить все данные визирования по объекту: ${key}?`)) {
+            if (confirm(`Удалить все замеры по объекту: ${key}?`)) {
                 delete journalData.probes[key];
                 const keys = Object.keys(journalData.probes);
                 journalData.activeProbe = keys[0];
@@ -994,11 +764,11 @@
             grid.innerHTML = '';
             
             const activeProbeKey = journalData.activeProbe;
-            if (!journalData.probes[activeProbeKey]) journalData.probes[activeProbeKey] = {};
-            if (!journalData.probes[activeProbeKey][sp]) journalData.probes[activeProbeKey][sp] = { full: 0, half: 0, miss: 0 };
+            if (!journalData.probes[activeProbeKey].counts) journalData.probes[activeProbeKey].counts = {};
+            if (!journalData.probes[activeProbeKey].counts[sp]) journalData.probes[activeProbeKey].counts[sp] = { full: 0, half: 0, miss: 0 };
 
             countCategories.forEach(cat => {
-                const count = journalData.probes[activeProbeKey][sp][cat.id] || 0;
+                const count = journalData.probes[activeProbeKey].counts[sp][cat.id] || 0;
                 const hasValClass = count > 0 ? 'has-val' : '';
                 
                 grid.innerHTML += `
@@ -1019,14 +789,14 @@
             const sp = document.getElementById('current-species').value;
             const activeProbeKey = journalData.activeProbe;
             
-            if (!journalData.probes[activeProbeKey]) journalData.probes[activeProbeKey] = {};
-            if (!journalData.probes[activeProbeKey][sp]) journalData.probes[activeProbeKey][sp] = { full: 0, half: 0, miss: 0 };
+            if (!journalData.probes[activeProbeKey].counts) journalData.probes[activeProbeKey].counts = {};
+            if (!journalData.probes[activeProbeKey].counts[sp]) journalData.probes[activeProbeKey].counts[sp] = { full: 0, half: 0, miss: 0 };
             
-            let current = journalData.probes[activeProbeKey][sp][catId] || 0;
+            let current = journalData.probes[activeProbeKey].counts[sp][catId] || 0;
             current += delta;
             if (current < 0) current = 0;
             
-            journalData.probes[activeProbeKey][sp][catId] = current;
+            journalData.probes[activeProbeKey].counts[sp][catId] = current;
             
             if (document.getElementById(`count-${catId}`)) {
                 document.getElementById(`count-${catId}`).innerText = current;
@@ -1047,11 +817,12 @@
             
             let totalAggregated = {};
             for (const pKey in dataStructure.probes) {
-                for (const sp in dataStructure.probes[pKey]) {
+                const pCounts = dataStructure.probes[pKey].counts || {};
+                for (const sp in pCounts) {
                     if (!totalAggregated[sp]) totalAggregated[sp] = { full: 0, half: 0, miss: 0 };
-                    totalAggregated[sp].full += (dataStructure.probes[pKey][sp].full || 0);
-                    totalAggregated[sp].half += (dataStructure.probes[pKey][sp].half || 0);
-                    totalAggregated[sp].miss += (dataStructure.probes[pKey][sp].miss || 0);
+                    totalAggregated[sp].full += (pCounts[sp].full || 0);
+                    totalAggregated[sp].half += (pCounts[sp].half || 0);
+                    totalAggregated[sp].miss += (pCounts[sp].miss || 0);
                 }
             }
 
@@ -1111,237 +882,315 @@
                     </table>
                 `;
             } else {
-                return '<p style="color: gray; font-size: 13px; padding: 10px 0;">Замеры отсутствуют. Проведите визирование полнотомером вокруг точек.</p>';
+                return '<p style="color: gray; font-size: 11.5px; padding: 6px 0; margin:0;">Замеры отсутствуют. Проведите визирование полнотомером вокруг точек.</p>';
             }
         }
 
         function calculateResults() {
             document.getElementById('summary-container').innerHTML = generateSummaryHTML(journalData);
-            journalData.bitterlichK = document.getElementById('bitterlich-k').value;
             saveData();
         }
 
         function clearData() {
-            if(confirm("Вы уверены? Все реласкопические замеры текущей делянки будут полностью очищены!")) {
-                journalData.probes = { 'Точка 1': {} };
+            if(confirm("Очистить все замеры полнотомера текущей делянки?")) {
+                journalData.probes = { 'Точка 1': { counts: {}, coords: null } };
                 journalData.activeProbe = 'Точка 1';
-                journalData.name = '';
-                journalData.coordinates = null;
-                
-                document.getElementById('tally-name').value = '';
-                document.getElementById('geo-coordinates').innerText = 'Координаты не определены';
-                
                 saveData();
                 renderProbeTabs();
                 renderGrid();
+                fetchGPSForActiveProbe();
             }
         }
 
-        function saveToArchive() {
-            let hasData = false;
-            for (const p in journalData.probes) {
-                for (const sp in journalData.probes[p]) {
-                    if ((journalData.probes[p][sp].full || 0) > 0 || (journalData.probes[p][sp].half || 0) > 0) {
-                        hasData = true; break;
-                    }
-                }
-            }
-            if (!hasData) {
-                alert("Невозможно сохранить пустой расчет полнотомера.");
-                return;
-            }
+        function saveData() {
+            localStorage.setItem('lesovik_bitterlich_v3', JSON.stringify(journalData));
+        }
 
-            const name = journalData.name.trim() || `Реласкопия №${archiveData.length + 1}`;
-            const archiveItem = {
+        function loadSavedData() {
+            const saved = localStorage.getItem('lesovik_bitterlich_v3');
+            if (saved) {
+                try { journalData = JSON.parse(saved); } catch(e) {}
+            }
+            document.getElementById('region-select').value = journalData.region || 'komi';
+            document.getElementById('bitterlich-k').value = journalData.bitterlichK || '1.0';
+            updateArchiveDropdown();
+        }
+
+        // 2. АРХИВ И ПАСПОРТ
+        function syncPassportToCore() {
+            const les = document.getElementById('b-lesnichestvo').value;
+            const kv = document.getElementById('b-kvartal').value;
+            const del = document.getElementById('b-delyanka').value;
+            const vyd = document.getElementById('b-vydel').value;
+            document.getElementById('b-archive-name').value = `Кв. ${kv}, Выд. ${vyd}, Дел. ${del}`;
+        }
+
+        function saveCurrentToArchive() {
+            const name = document.getElementById('b-archive-name').value.trim();
+            if (!name) { alert('Введите название объекта!'); return; }
+
+            let archive = JSON.parse(localStorage.getItem('lesovik_bitterlich_archive_projects') || '[]');
+            const snapshot = {
                 id: Date.now(),
                 name: name,
-                timestamp: new Date().toLocaleString('ru-RU'),
+                passport: {
+                    lesnichestvo: document.getElementById('b-lesnichestvo').value,
+                    kvartal: document.getElementById('b-kvartal').value,
+                    delyanka: document.getElementById('b-delyanka').value,
+                    vydel: document.getElementById('b-vydel').value,
+                    author: document.getElementById('b-author').value,
+                    checker: document.getElementById('b-checker').value
+                },
                 data: JSON.parse(JSON.stringify(journalData)),
-                bitterlichK: document.getElementById('bitterlich-k').value,
-                region: document.getElementById('region-select').value
+                timestamp: new Date().toLocaleString('ru-RU')
             };
-
-            archiveData.push(archiveItem);
-            localStorage.setItem('lesovik_bitterlich_archive_v3', JSON.stringify(archiveData));
-            renderArchiveList();
-            alert("Расчет успешно заархивирован в память устройства!");
+            archive.push(snapshot);
+            localStorage.setItem('lesovik_bitterlich_archive_projects', JSON.stringify(archive));
+            alert(`Делянка "${name}" сохранена в архив!`);
+            updateArchiveDropdown();
         }
 
-        function renderArchiveList() {
-            const container = document.getElementById('archive-list-container');
-            container.innerHTML = '';
-            
-            if (archiveData.length === 0) {
-                container.innerHTML = '<p style="color: gray; font-size: 13px;">Архив пуст.</p>';
-                return;
-            }
-
-            archiveData.forEach(item => {
-                const c = item.data.coordinates;
-                const coordText = c ? (c.dmsLat ? `📍 ${c.dmsLat} ${c.dmsLon}` : `📍 ${c.lat}, ${c.lon}`) : 'Без координат';
-                
-                container.innerHTML += `
-                    <div class="archive-item" onclick="openArchivePopup(${item.id})">
-                        <div>
-                            <div class="archive-item-title">${item.name}</div>
-                            <div class="archive-item-meta">${item.timestamp} | Точек: ${Object.keys(item.data.probes).length} | ${coordText}</div>
-                        </div>
-                        <div style="color: var(--forest-green); font-weight: bold;">Смотреть →</div>
-                    </div>
-                `;
+        function updateArchiveDropdown() {
+            const select = document.getElementById('b-archive-select');
+            select.innerHTML = '<option value="">-- Выбрать из архива --</option>';
+            const archive = JSON.parse(localStorage.getItem('lesovik_bitterlich_archive_projects') || '[]');
+            archive.forEach((item, index) => {
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.innerText = `${item.name} (${item.timestamp})`;
+                select.appendChild(opt);
             });
         }
 
-        function openArchivePopup(id) {
-            const item = archiveData.find(x => x.id === id);
+        function loadFromArchive(index) {
+            if (index === '') return;
+            const archive = JSON.parse(localStorage.getItem('lesovik_bitterlich_archive_projects') || '[]');
+            const item = archive[index];
             if (!item) return;
 
-            document.getElementById('popup-title').innerText = item.name;
-            const c = item.data.coordinates;
-            const coordText = c ? (c.dmsLat ? `${c.dmsLat} ${c.dmsLon} (${c.lat}, ${c.lon})` : `Широта: ${c.lat}, Долгота: ${c.lon}`) : 'Координаты отсутствуют';
-            document.getElementById('popup-meta').innerText = `Запись от: ${item.timestamp} | К=${item.bitterlichK} | ${coordText}`;
-            
-            const currentK = document.getElementById('bitterlich-k').value;
-            document.getElementById('bitterlich-k').value = item.bitterlichK;
-            document.getElementById('popup-table-container').innerHTML = generateSummaryHTML(item.data);
-            document.getElementById('bitterlich-k').value = currentK;
-            
-            const deleteBtn = document.getElementById('popup-delete-btn');
-            deleteBtn.onclick = function() {
-                if (confirm("Удалить расчет данной делянки из архива телефона?")) {
-                    archiveData = archiveData.filter(x => x.id !== id);
-                    localStorage.setItem('lesovik_bitterlich_archive_v3', JSON.stringify(archiveData));
-                    renderArchiveList();
-                    document.getElementById('archivePopup').classList.remove('active');
-                }
-            };
+            if (confirm(`Загрузить съемку "${item.name}"? Текущие данные будут заменены.`)) {
+                document.getElementById('b-lesnichestvo').value = item.passport.lesnichestvo || '';
+                document.getElementById('b-kvartal').value = item.passport.kvartal || '';
+                document.getElementById('b-delyanka').value = item.passport.delyanka || '';
+                document.getElementById('b-vydel').value = item.passport.vydel || '';
+                document.getElementById('b-author').value = item.passport.author || '';
+                document.getElementById('b-checker').value = item.passport.checker || '';
+                document.getElementById('b-archive-name').value = item.name;
 
-            document.getElementById('archivePopup').classList.add('active');
+                journalData = item.data;
+                saveData();
+                renderProbeTabs();
+                renderGrid();
+                calculateResults();
+            }
         }
 
-        function closePopup(e) {
-            document.getElementById('archivePopup').classList.remove('active');
+        function deleteSelectedArchive() {
+            const select = document.getElementById('b-archive-select');
+            const index = select.value;
+            if (index === '') { alert('Выберите объект для удаления!'); return; }
+
+            let archive = JSON.parse(localStorage.getItem('lesovik_bitterlich_archive_projects') || '[]');
+            if (confirm(`Удалить объект "${archive[index].name}"?`)) {
+                archive.splice(index, 1);
+                localStorage.setItem('lesovik_bitterlich_archive_projects', JSON.stringify(archive));
+                updateArchiveDropdown();
+                alert('Удалено.');
+            }
         }
 
+        // 3. ОФИЦИАЛЬНАЯ ПЕЧАТЬ В АЛЬБОМНЫЙ PDF
+        function printOfficialBitterlichSheet() {
+            const les = document.getElementById('b-lesnichestvo').value;
+            const kv = document.getElementById('b-kvartal').value;
+            const del = document.getElementById('b-delyanka').value;
+            const vyd = document.getElementById('b-vydel').value;
+            const author = document.getElementById('b-author').value;
+            const checker = document.getElementById('b-checker').value;
+            const dateStr = new Date().toLocaleDateString('ru-RU');
+            const k = journalData.bitterlichK;
+
+            let pointsListHtml = '';
+            for (const pKey in journalData.probes) {
+                const c = journalData.probes[pKey].coords;
+                const coordStr = c ? `${c.dmsLat} ${c.dmsLon}` : 'Координаты не сняты';
+                pointsListHtml += `<b>${pKey}:</b> ${coordStr}; `;
+            }
+
+            const container = document.getElementById('printable-bitterlich-sheet');
+            container.innerHTML = `
+                <div class="doc-header-title">ВЕДОМОСТЬ РЕЛАСКОПИЧЕСКОЙ ТАКСАЦИИ ПОЛНОТОМЕРОМ БИТТЕРЛИХА</div>
+                <div class="doc-header-sub">Определение суммы площадей сечений (G) и запаса древесины по таблицам видовых высот HF</div>
+
+                <div class="doc-passport-box">
+                    <div><b>Лесничество:</b> ${les}</div>
+                    <div><b>Квартал:</b> ${kv} | <b>Выдел:</b> ${vyd} | <b>Делянка:</b> ${del}</div>
+                    <div><b>Коэффициент шаблона:</b> K = ${k}</div>
+                    <div><b>Количество точек:</b> ${Object.keys(journalData.probes).length} шт.</div>
+                    <div><b>Дата съёмки:</b> ${dateStr}</div>
+                    <div><b>Регион норматива:</b> ${journalData.region}</div>
+                    <div style="grid-column: span 3;"><b>Геодезическая привязка точек (GPS):</b> ${pointsListHtml}</div>
+                </div>
+
+                ${generateSummaryHTML(journalData)}
+
+                <div class="doc-signatures-box">
+                    <div><b>Составил:</b> ${author} _________________</div>
+                    <div><b>Проверил:</b> ${checker} _________________</div>
+                </div>
+            `;
+
+            window.print();
+        }
+
+        // 4. ВЫГРУЗКА В EXCEL (.XLSX)
         function downloadExcel() {
             if (typeof XLSX === 'undefined') {
                 alert("Компонент загружается, повторите через секунду.");
                 return;
             }
 
-            let rows = [];
-            rows.push(["Таксация методом круговых площадок Биттерлиха (По разрядам высот)"]);
-            rows.push(["Название объекта:", journalData.name || "Не указано"]);
-            rows.push(["Регион / Норматив:", journalData.region]);
-            rows.push(["Коэффициент прибора K:", journalData.bitterlichK]);
-            if (journalData.coordinates) {
-                const c = journalData.coordinates;
-                const coordStr = c.dmsLat ? `${c.dmsLat} ${c.dmsLon} (${c.lat}, ${c.lon})` : `Широта: ${c.lat}, Долгота: ${c.lon}`;
-                rows.push(["Координаты:", coordStr]);
-            }
-            rows.push([]);
-            rows.push(["Таксационная точка", "Порода", "В счет (1.0)", "Полусчет (0.5)", "Пропуск (0.0)", "Высота H (м)", "Диаметр D (см)", "Разряд высоты", "Видовая высота HF (м)"]);
+            const les = document.getElementById('b-lesnichestvo').value;
+            const kv = document.getElementById('b-kvartal').value;
+            const del = document.getElementById('b-delyanka').value;
+            const vyd = document.getElementById('b-vydel').value;
+            const author = document.getElementById('b-author').value;
+            const checker = document.getElementById('b-checker').value;
 
-            let hasData = false;
+            let rows = [];
+            rows.push(["ТАКСАЦИЯ МЕТОДОМ КРУГОВЫХ ПЛОЩАДОК БИТТЕРЛИХА (ПОЛНОТОМЕР)"]);
+            rows.push(["Сформировано в цифровом комплексе «Лесовик ПРО»"]);
+            rows.push([]);
+            rows.push(["Лесничество:", les, "Квартал:", kv, "Делянка:", del, "Выдел:", vyd]);
+            rows.push(["Исполнитель:", author, "Проверил:", checker, "Дата:", new Date().toLocaleDateString('ru-RU')]);
+            rows.push(["Коэффициент шаблона K:", journalData.bitterlichK, "Регион:", journalData.region]);
+            rows.push([]);
+            rows.push(["Точка", "GPS Координаты", "Порода", "В счет (1.0)", "Полусчет (0.5)", "Пропуск (0.0)", "H (м)", "D (см)", "Разряд", "HF (м)"]);
+
             for (const pKey in journalData.probes) {
-                for (const sp in journalData.probes[pKey]) {
-                    const d = journalData.probes[pKey][sp];
+                const p = journalData.probes[pKey];
+                const c = p.coords ? `${p.coords.lat}, ${p.coords.lon}` : "Без GPS";
+                const pCounts = p.counts || {};
+                for (const sp in pCounts) {
+                    const d = pCounts[sp];
                     if ((d.full || 0) > 0 || (d.half || 0) > 0 || (d.miss || 0) > 0) {
                         const h = parseFloat(journalData.heights[sp] || 24);
                         const dia = parseFloat(journalData.diameters[sp] || 28);
                         const hClass = getHeightClass(h, dia);
                         const hf = getHF(sp, h, hClass);
-
-                        rows.push([pKey, sp, parseInt(d.full || 0), parseInt(d.half || 0), parseInt(d.miss || 0), h, dia, hClass, hf]);
-                        hasData = true;
+                        rows.push([pKey, c, sp, d.full || 0, d.half || 0, d.miss || 0, h, dia, hClass, hf]);
                     }
                 }
             }
 
-            if (!hasData) {
-                alert("Данные для экспорта отсутствуют.");
-                return;
-            }
-
             const worksheet = XLSX.utils.aoa_to_sheet(rows);
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Реласкопия HF");
-            XLSX.writeFile(workbook, `lesovik_bitterlich_hf_${Date.now()}.xlsx`);
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Полнотомер HF");
+            XLSX.writeFile(workbook, `Полнотомер_Кв${kv}_Выд${vyd}_Дел${del}.xlsx`);
         }
 
+        // 5. ИСТИННАЯ ВЫГРУЗКА ТОЧЕК В КАРТУ KML
         function downloadGIS() {
-            if (!journalData.coordinates) {
-                alert("Определите GPS-координаты лесосеки перед выгрузкой карты.");
+            let kmlContent = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n`;
+            kmlContent += `  <name>${document.getElementById('b-archive-name').value || 'Полнотомер Биттерлиха'}</name>\n`;
+
+            let hasValidCoords = false;
+            for (const pKey in journalData.probes) {
+                const c = journalData.probes[pKey].coords;
+                if (c && c.lat && c.lon) {
+                    hasValidCoords = true;
+                    kmlContent += `  <Placemark>\n    <name>${pKey}</name>\n    <description>Реласкопическая площадка полнотомера Биттерлиха</description>\n    <Point>\n      <coordinates>${c.lon},${c.lat},0</coordinates>\n    </Point>\n  </Placemark>\n`;
+                }
+            }
+            kmlContent += `</Document>\n</kml>`;
+
+            if (!hasValidCoords) {
+                alert('Ни у одной точки нет зафиксированных GPS-координат со спутника!');
                 return;
             }
-
-            const baseLat = parseFloat(journalData.coordinates.lat);
-            const baseLon = parseFloat(journalData.coordinates.lon);
-            const keys = Object.keys(journalData.probes);
-
-            let kmlContent = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-            kmlContent += `<kml xmlns="http://www.opengis.net/kml/2.2">\n`;
-            kmlContent += `<Document>\n`;
-            kmlContent += `  <name>${journalData.name || 'Полнотомер Биттерлиха'}</name>\n`;
-
-            keys.forEach((pKey, index) => {
-                const offsetLat = baseLat + (index * 0.00025);
-                const offsetLon = baseLon + (index * 0.0004);
-
-                kmlContent += `  <Placemark>\n`;
-                kmlContent += `    <name>${pKey}</name>\n`;
-                kmlContent += `    <description>Точка кругового реласкопического визирования полнотомером</description>\n`;
-                kmlContent += `    <Point>\n`;
-                kmlContent += `      <coordinates>${offsetLon.toFixed(6)},${offsetLat.toFixed(6)},0</coordinates>\n`;
-                kmlContent += `    </Point>\n`;
-                kmlContent += `  </Placemark>\n`;
-            });
-
-            kmlContent += `</Document>\n`;
-            kmlContent += `</kml>\n`;
 
             const blob = new Blob([kmlContent], { type: "application/octet-stream" });
             const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.href = url;
-            link.setAttribute("download", `bitterlich_map_${Date.now()}.kml`);
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", `Полнотомер_Карта_${Date.now()}.kml`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            URL.revokeObjectURL(url);
         }
 
-        window.addEventListener('lesovikDataChanged', () => {
-            if (window.LesovikCore) {
-                updateProjectContextDisplay();
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            updateProjectContextDisplay();
-
-            if(journalData.name) document.getElementById('tally-name').value = journalData.name;
-            if(journalData.region) document.getElementById('region-select').value = journalData.region;
-            if(journalData.coordinates) {
-                const c = journalData.coordinates;
-                if (c.dmsLat && c.dmsLon) {
-                    document.getElementById('geo-coordinates').innerText = `📍 ${c.dmsLat} ${c.dmsLon} (${c.lat}, ${c.lon})`;
-                } else {
-                    document.getElementById('geo-coordinates').innerText = `Широта: ${c.lat}, Долгота: ${c.lon}`;
-                }
-            }
-            document.getElementById('bitterlich-k').value = journalData.bitterlichK || '1.0';
+        let videoStream = null;
+        function openARCamera() {
+            const modal = document.getElementById('arModal');
+            const video = document.getElementById('ar-video');
+            const sp = document.getElementById('current-species').value;
+            document.getElementById('ar-species-select').value = sp;
+            document.getElementById('ar-height-input').value = journalData.heights[sp] || 24;
+            document.getElementById('ar-diameter-input').value = journalData.diameters[sp] || 28;
             
-            if (journalData.reticleWidth) {
-                document.getElementById('reticle-slider').value = journalData.reticleWidth;
-                document.getElementById('reticle-val').innerText = `${journalData.reticleWidth}%`;
-            }
             onBitterlichKChanged();
+            updateARHUDValDisplay();
 
-            renderProbeTabs();
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                    .then(function(stream) {
+                        videoStream = stream;
+                        video.srcObject = stream;
+                        modal.classList.add('active');
+                    })
+                    .catch(function(err) {
+                        alert("Ошибка камеры: " + err.message);
+                    });
+            }
+        }
+
+        function closeARCamera() {
+            const modal = document.getElementById('arModal');
+            const video = document.getElementById('ar-video');
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+            video.srcObject = null;
+            modal.classList.remove('active');
             renderGrid();
-            renderArchiveList();
-        });
+        }
+
+        function syncFromARHUD() {
+            const sp = document.getElementById('ar-species-select').value;
+            document.getElementById('current-species').value = sp;
+            const h = parseFloat(document.getElementById('ar-height-input').value) || 24;
+            const d = parseFloat(document.getElementById('ar-diameter-input').value) || 28;
+            journalData.heights[sp] = h;
+            journalData.diameters[sp] = d;
+            saveData();
+            updateARHUDValDisplay();
+            calculateResults();
+        }
+
+        function updateARHUDValDisplay() {
+            const sp = document.getElementById('ar-species-select').value;
+            const p = journalData.activeProbe;
+            if (!journalData.probes[p].counts) journalData.probes[p].counts = {};
+            if (!journalData.probes[p].counts[sp]) journalData.probes[p].counts[sp] = { full: 0, half: 0, miss: 0 };
+            const counts = journalData.probes[p].counts[sp];
+            document.getElementById('ar-val-full').innerText = counts.full || 0;
+            document.getElementById('ar-val-half').innerText = counts.half || 0;
+            document.getElementById('ar-val-miss').innerText = counts.miss || 0;
+        }
+
+        function openHelpModal() { document.getElementById('helpPopup').classList.add('active'); }
+        function closeHelpModal(e) { document.getElementById('helpPopup').classList.remove('active'); }
+        function adjustReticleWidth(val) {
+            journalData.reticleWidth = val;
+            document.getElementById('reticle-val').innerText = `${val}%`;
+            onBitterlichKChanged();
+            saveData();
+        }
+        function toggleTheme() {
+            const body = document.documentElement;
+            if (body.getAttribute('data-theme') === 'dark') body.removeAttribute('data-theme');
+            else body.setAttribute('data-theme', 'dark');
+        }
     </script>
 
 <!-- ПОДКЛЮЧЕНИЕ ЕДИНОГО МОДУЛЯ СИНХРОНИЗАЦИИ, ЛИЦЕНЗИЙ И PWA-НАВИГАЦИИ -->
