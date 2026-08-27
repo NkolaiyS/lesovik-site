@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 11180157622.
-  Программное обеспечение: «Электронная буссоль БГ-ХНС PRO» (Версия 2.9 с GPS-дальномером).
+  Программное обеспечение: «Электронная буссоль БГ-ХНС PRO» (Версия 3.0 с полноэкранным картографическим планшетом).
 -->
 <!DOCTYPE html>
 <html lang="ru">
@@ -9,17 +9,17 @@
     <script type="text/javascript" src="cordova.js"></script>
 
     <meta charset="UTF-8">
-    <meta name="application-name" content="БГ-ХНС PRO 2.9">
+    <meta name="application-name" content="БГ-ХНС PRO 3.0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="google-site-verification" content="rLtNyEQ2h992Lp8m73ynLM8J6xY5tJcr3dbVwbO35rU" />
     
-    <title>Электронная буссоль онлайн с визиром и уровнем | БГ-ХНС PRO 2.9</title>
-    <meta name="description" content="Бесплатная электронная буссоль и геодезический компас для отвода лесосек. Измерение магнитных азимутов, GPS-вектора, расчет расстояний по координатам спутника, внутренних углов поворота делянки и визиров.">
+    <title>Электронная буссоль онлайн с визиром и уровнем | БГ-ХНС PRO 3.0</title>
+    <meta name="description" content="Бесплатная электронная буссоль и геодезический компас для отвода лесосек. Полноэкранная карта делянки, мини-буссоль, измерение магнитных азимутов, GPS-вектор и автоматический расчет площадей.">
     <meta name="keywords" content="буссоль онлайн, буссоль лазерная карманная, electronic буссоль для телефона, компас таксатора, измерение азимута онлайн, отвод лесосек, углы поворота делянки, БГ-ХНС">
     <link rel="canonical" href="https://lesovik-pro.ru/busol-pro.html">
 
-    <meta property="og:title" content="Электронная буссоль онлайн с визиром и уровнем | БГ-ХНС PRO 2.9">
-    <meta property="og:description" content="Геодезический прибор таксатора в кармане. Разбивка лесосек, фиксация азимутов, GPS-вектора, расчет дистанций по спутнику и замер внутренних углов через камеру смартфона.">
+    <meta property="og:title" content="Электронная буссоль онлайн с визиром и уровнем | БГ-ХНС PRO 3.0">
+    <meta property="og:description" content="Геодезический прибор таксатора в кармане. Полноэкранный планшет делянки, фиксация азимутов, GPS-вектор и замер углов.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://lesovik-pro.ru/busol-pro.html">
     <meta property="og:image" content="https://lesovik-pro.ru/logo.jpeg">
@@ -328,6 +328,66 @@
             touch-action: manipulation;
         }
 
+        /* ПОЛНОЭКРАННЫЙ ПЛАНШЕТ КАРТЫ / ЧЕРТЕЖА */
+        .fullscreen-map-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: var(--bg-paper);
+            z-index: 9999999;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .fs-map-header {
+            position: absolute; top: 10px; left: 10px; right: 10px;
+            display: flex; justify-content: space-between; align-items: flex-start;
+            z-index: 100; pointer-events: none;
+        }
+        .fs-map-header > * { pointer-events: auto; }
+        .fs-map-info-card {
+            background: rgba(20, 30, 25, 0.85); backdrop-filter: blur(8px);
+            color: #FFF; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color);
+            font-family: monospace; font-size: 11px; line-height: 1.3;
+        }
+
+        /* МИНИ-БУССОЛЬ В ПРАВОМ ВЕРХНЕМ УГЛУ */
+        .fs-mini-compass-box {
+            position: relative; width: 84px; height: 84px;
+            background: rgba(20, 30, 25, 0.85); backdrop-filter: blur(8px);
+            border: 1.5px solid var(--forest-green); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        #fs-mini-compass-svg { width: 72px; height: 72px; transition: transform 0.05s linear; }
+        .fs-mini-compass-bubble {
+            position: absolute; width: 8px; height: 8px; background: #16A34A;
+            border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 0 6px #16A34A;
+        }
+        .fs-mini-azimuth-label {
+            position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
+            background: var(--forest-green); color: #FFF; font-family: monospace;
+            font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .fs-map-canvas-container {
+            width: 100%; height: 100%; position: relative;
+            display: flex; align-items: center; justify-content: center;
+            background: #FdfFfd;
+        }
+        [data-theme="dark"] .fs-map-canvas-container { background: #151e1b; }
+        #fs-polygon-canvas { width: 100%; height: 100%; cursor: grab; }
+        #fs-polygon-canvas:active { cursor: grabbing; }
+
+        .fs-map-bottom-bar {
+            position: absolute; bottom: 85px; left: 10px; right: 10px;
+            display: flex; flex-direction: column; gap: 8px; z-index: 100;
+        }
+
         .visir-line { position: absolute; top: 0; left: 50%; width: 2px; height: 100%; background: rgba(255,255,255,0.4); transform: translateX(-50%); z-index: 10; pointer-events: none; }
         .visir-center-dot { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; background: transparent; border: 2px solid #FFF; border-radius: 50%; transform: translate(-50%, -50%); z-index: 11; pointer-events: none; }
 
@@ -416,8 +476,8 @@
 
     <header class="glass-header">
         <a href="#" class="logo-container" onclick="return false;">
-            <img src="logo.jpeg" alt="БГ-ХНС PRO 2.9" class="header-logo" onerror="this.style.display='none'">
-            <h1>БГ-ХНС PRO 2.9</h1>
+            <img src="logo.jpeg" alt="БГ-ХНС PRO 3.0" class="header-logo" onerror="this.style.display='none'">
+            <h1>БГ-ХНС PRO 3.0</h1>
         </a>
         <div class="header-seo-text">Электронная буссоль • Геодезия выдела • Отвод лесосек</div>
         <div class="header-right">
@@ -437,9 +497,7 @@
             <div class="fs-crosshair-line-v"></div>
             <div class="fs-crosshair-line-h"></div>
 
-            <svg id="fs-compass-svg" viewBox="0 0 300 300">
-                <!-- JS отрисует векторный лимб со стрелкой -->
-            </svg>
+            <svg id="fs-compass-svg" viewBox="0 0 300 300"></svg>
 
             <div class="compass-center-bubble-level" style="width: 55px; height: 55px;">
                 <div id="fs-compass-bubble" class="compass-bubble-dot" style="width: 16px; height: 16px;"></div>
@@ -452,6 +510,38 @@
             <div id="fs-altitude" style="font-size: 12px; color: #8FBC8F; margin-bottom: 6px;">Высота: 150 м</div>
             
             <button id="btn-fs-capture" class="btn-action btn-lock-measure btn-fs-huge-trigger" onclick="captureMeasurement(); closeFullscreenCompass();" disabled>Поймайте уровень horizon</button>
+        </div>
+    </div>
+
+    <!-- ПОЛНОЭКРАННЫЙ КАРТОГРАФИЧЕСКИЙ ПЛАНШЕТ С МИНИ-БУССОЛЬЮ -->
+    <div id="fullscreen-map-modal" class="fullscreen-map-modal">
+        <div class="fs-map-header">
+            <div class="fs-map-info-card">
+                <div id="fs-map-area" style="font-weight:bold; color:#8FBC8F; font-size:12px;">Площадь: 0.0000 га</div>
+                <div id="fs-map-coords" style="font-size:10px; opacity:0.85;">GPS: поиск...</div>
+            </div>
+            
+            <!-- МИНИ БУССОЛЬ В ПРАВОМ ВЕРХНЕМ УГЛУ -->
+            <div class="fs-mini-compass-box">
+                <svg id="fs-mini-compass-svg" viewBox="0 0 300 300"></svg>
+                <div id="fs-mini-bubble" class="fs-mini-compass-bubble"></div>
+                <div id="fs-mini-azimuth" class="fs-mini-azimuth-label">0.0°</div>
+            </div>
+        </div>
+
+        <div class="fs-map-canvas-container">
+            <div class="canvas-zoom-controls" style="top:95px;">
+                <button class="btn-canvas-ctrl" onclick="zoomCanvas(1.25)">+</button>
+                <button class="btn-canvas-ctrl" onclick="zoomCanvas(0.8)">−</button>
+                <button class="btn-canvas-ctrl" onclick="recenterCanvasOnUser()">🎯</button>
+            </div>
+            <canvas id="fs-polygon-canvas"></canvas>
+        </div>
+
+        <div class="fs-map-bottom-bar">
+            <button id="btn-fs-map-gps-start" class="btn-action btn-set-zero" style="display:none; padding:10px; font-size:12px;" onclick="startGpsLine()">📍 Старт линии (Т1)</button>
+            <button id="btn-fs-map-capture" class="btn-action btn-lock-measure btn-fs-huge-trigger" onclick="captureMeasurement();" style="min-height:50px; padding:10px;" disabled>Поймайте уровень horizon</button>
+            <button class="btn-action btn-reset-zero" style="padding:8px; font-size:11px; background:rgba(0,0,0,0.7); color:#FFF; border-color:rgba(255,255,255,0.2);" onclick="closeFullscreenMap()">✕ Выйти из полноэкранного режима</button>
         </div>
     </div>
 
@@ -480,9 +570,8 @@
                 <li><strong>Оптический визир (Вертикально):</strong> Наведите вертикальную нить экрана на веху угла делянки. Дождитесь зеленого уровня авиагоризонта и зафиксируйте румб в журнал.</li>
                 <li><strong>Электронная буссоль (Горизонтально):</strong> Положите телефон горизонтально на ладонь. Совместите верхний торец устройства с вехой. Нажмите кнопку «🔍 Увеличить компас» для крупного лимба.</li>
                 <li><strong>📡 GPS-Курс (По 2 точкам):</strong> Встаньте на столб ➔ Нажмите «📍 Старт линии (Т1)» ➔ Пройдите 5–10 метров по линии визира ➔ Нажмите «🏁 Зафиксировать вектор».</li>
-                <li><strong>📡 GPS-расчет расстояний (Новинка):</strong> В колонке «Тип» выберите «📡 GPS». Буссоль автоматически вычислит расстояние между зафиксированными точками со спутника!</li>
-                <li><strong>Формат координат:</strong> Фиксируются сразу 2 формата: <b>DMS</b> (градусы, минуты, секунды) и <b>DD</b> (десятичные градусы) с высотой над уровнем моря.</li>
-                <li><strong>Расчет площади:</strong> По мере добавления линий на интерактивном чертеже выстраивается контур делянки и вычисляется площадь выдела в гектарах (га).</li>
+                <li><strong>📡 GPS-расчет расстояний:</strong> В колонке «Тип» выберите «📡 GPS». Буссоль автоматически вычислит расстояние между зафиксированными точками со спутника!</li>
+                <li><strong>⛶ Полноэкранный планшет:</strong> Нажмите «⛶ Карта на весь экран» для комфортной работы прямо по чертежу с мини-буссолью в правом углу.</li>
             </ol>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closeInstruction()">Понятно, к замеру</button>
         </div>
@@ -555,7 +644,7 @@
 
     <main class="container">
         <div class="card" style="margin-bottom: 20px;">
-            <h2>Управление проектами и архивом делянок (БГ-ХНС PRO 2.9)</h2>
+            <h2>Управление проектами и архивом делянок (БГ-ХНС PRO 3.0)</h2>
             <div class="subtitle">Сохранение независимых съемок, KML-подложка выдела и выгрузка отчетов.</div>
             <div class="archive-scroll-container">
                 <div class="archive-inner-flex">
@@ -634,9 +723,7 @@
                     <div id="digital-compass-disk" class="digital-compass-disk-container">
                         <div class="compass-device-sight-line"></div>
                         
-                        <svg id="compass-svg-canvas" viewBox="0 0 300 300">
-                            <!-- JS нарисует лимб -->
-                        </svg>
+                        <svg id="compass-svg-canvas" viewBox="0 0 300 300"></svg>
 
                         <div class="compass-center-bubble-level">
                             <div id="compass-bubble" class="compass-bubble-dot"></div>
@@ -717,7 +804,10 @@
                 </div>
 
                 <div class="canvas-container">
-                    <span style="font-weight: 700; color: var(--forest-green); font-size: 13px; margin-bottom: 5px; align-self: flex-start;">📐 ЧЕРТЕЖ И КАРТА СТОРОН СВЕТА:</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:5px;">
+                        <span style="font-weight: 700; color: var(--forest-green); font-size: 13px;">📐 ЧЕРТЕЖ И КАРТА СТОРОН СВЕТА:</span>
+                        <button class="btn-action btn-set-zero" style="padding:4px 8px; font-size:11px; width:auto;" onclick="openFullscreenMap()">⛶ На весь экран</button>
+                    </div>
                     
                     <div class="canvas-zoom-controls">
                         <button class="btn-canvas-ctrl" onclick="zoomCanvas(1.25)" title="Увеличить чертеж">+</button>
@@ -733,10 +823,10 @@
                     <span style="font-weight: 700; color: var(--forest-green); display: block; font-size: 12px; margin-bottom: 6px;">⚠️ РУКОВОДСТВО ТАКСАТОРУ ПО ИНСТРУМЕНТАМ БУССОЛИ:</span>
                     <ul style="font-size: 11px; line-height: 1.5; padding-left: 14px; margin: 0; opacity: 0.9; color: var(--text-graphite);">
                         <li style="margin-bottom: 4px;"><b>1. 👁️ Магнитный (Вертикально):</b> Держите смартфон вертикально перед глазами. Наведите нить визира на веху и совместите авиагоризонт до зеленого кольца.</li>
-                        <li style="margin-bottom: 4px;"><b>2. 🧭 Буссоль (Лимб):</b> Положите смартфон горизонтально на ладонь. Работает как классическая буссоль БГ-1. Нажмите «🔍 Увеличить компас» для удобной работы.</li>
+                        <li style="margin-bottom: 4px;"><b>2. 🧭 Буссоль (Лимб):</b> Положите смартфон горизонтально на ладонь. Работает как классическая буссоль БГ-1. Нажмите «🔍 Увеличить компас» для крупного лимба.</li>
                         <li style="margin-bottom: 4px;"><b>3. 📡 GPS-Курс (По 2 точкам):</b> Встаньте на столб, нажмите «📍 Старт линии (Т1)», пройдите 5–10 метров по визиру и нажмите «🏁 Зафиксировать вектор». Исключает магнитные помехи.</li>
                         <li style="margin-bottom: 4px;"><b>4. 📏 Расчет расстояний по спутнику:</b> В колонке «Тип» выберите «📡 GPS», и длина между зафиксированными точками посчитается автоматически по координатам без рулетки.</li>
-                        <li><b>5. 🗺️ KML-Подложка:</b> Загружайте KML-файл выдела/квартала кнопкой «📂 Загрузить KML выдела».</li>
+                        <li><b>5. ⛶ Полноэкранный планшет:</b> Нажмите «⛶ На весь экран» для работы по большому чертежу с мини-буссолью в углу.</li>
                     </ul>
                 </div>
             </div>
@@ -755,7 +845,7 @@
                     <path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/>
                     <rect x="10.5" y="20" width="3" height="4"/>
                 </svg>
-                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 16px;">БГ-ХНС PRO 2.9</div>
+                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 16px;">БГ-ХНС PRO 3.0</div>
                 <div style="font-size: 12px; margin-top: 5px; opacity: 0.8;">Цифровой инструмент таксатора. База знаний, калькуляторы и профильные статьи для специалистов леса.</div>
             </div>
             <div class="footer-column">
@@ -823,6 +913,8 @@
     let dragStartX = 0;
     let dragStartY = 0;
 
+    let isFsMapOpen = false;
+
     let lastVibratedSector = -1; 
     let calibrationOffsetDecimal = 0.0;
 
@@ -851,43 +943,88 @@
         drawPolygon();
     }
 
+    function openFullscreenMap() {
+        isFsMapOpen = true;
+        const modal = document.getElementById('fullscreen-map-modal');
+        modal.style.display = 'flex';
+        
+        const fsCanvas = document.getElementById('fs-polygon-canvas');
+        fsCanvas.width = window.innerWidth;
+        fsCanvas.height = window.innerHeight;
+
+        drawCompassDialSVG('fs-mini-compass-svg');
+        updateFsMapUI();
+        drawPolygon();
+    }
+
+    function closeFullscreenMap() {
+        isFsMapOpen = false;
+        document.getElementById('fullscreen-map-modal').style.display = 'none';
+        drawPolygon();
+    }
+
+    function updateFsMapUI() {
+        if (!isFsMapOpen) return;
+        const btnGps = document.getElementById('btn-fs-map-gps-start');
+        const btnCapture = document.getElementById('btn-fs-map-capture');
+
+        if (currentSystemMode === 'gps_heading') {
+            btnGps.style.display = 'block';
+        } else {
+            btnGps.style.display = 'none';
+        }
+
+        const mainBtn = document.getElementById('btn-capture');
+        btnCapture.innerText = mainBtn.innerText;
+        btnCapture.disabled = mainBtn.disabled;
+        if (mainBtn.classList.contains('ready-to-fire')) {
+            btnCapture.classList.add('ready-to-fire');
+        } else {
+            btnCapture.classList.remove('ready-to-fire');
+        }
+
+        document.getElementById('fs-map-coords').innerText = `GPS: ${decimalToDMS(currentLat, true)} ${decimalToDMS(currentLng, false)}`;
+    }
+
     function initCanvasDragControls() {
-        const canvas = document.getElementById('polygon-canvas');
-        if (!canvas) return;
+        ['polygon-canvas', 'fs-polygon-canvas'].forEach(id => {
+            const canvas = document.getElementById(id);
+            if (!canvas) return;
 
-        const getPos = (e) => {
-            if (e.touches && e.touches.length > 0) {
-                return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-            }
-            return { x: e.clientX, y: e.clientY };
-        };
+            const getPos = (e) => {
+                if (e.touches && e.touches.length > 0) {
+                    return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                }
+                return { x: e.clientX, y: e.clientY };
+            };
 
-        const startDrag = (e) => {
-            isDraggingCanvas = true;
-            const pos = getPos(e);
-            dragStartX = pos.x - panOffsetX;
-            dragStartY = pos.y - panOffsetY;
-        };
+            const startDrag = (e) => {
+                isDraggingCanvas = true;
+                const pos = getPos(e);
+                dragStartX = pos.x - panOffsetX;
+                dragStartY = pos.y - panOffsetY;
+            };
 
-        const moveDrag = (e) => {
-            if (!isDraggingCanvas) return;
-            const pos = getPos(e);
-            panOffsetX = pos.x - dragStartX;
-            panOffsetY = pos.y - dragStartY;
-            drawPolygon();
-        };
+            const moveDrag = (e) => {
+                if (!isDraggingCanvas) return;
+                const pos = getPos(e);
+                panOffsetX = pos.x - dragStartX;
+                panOffsetY = pos.y - dragStartY;
+                drawPolygon();
+            };
 
-        const stopDrag = () => {
-            isDraggingCanvas = false;
-        };
+            const stopDrag = () => {
+                isDraggingCanvas = false;
+            };
 
-        canvas.addEventListener('mousedown', startDrag);
-        canvas.addEventListener('mousemove', moveDrag);
-        window.addEventListener('mouseup', stopDrag);
+            canvas.addEventListener('mousedown', startDrag);
+            canvas.addEventListener('mousemove', moveDrag);
+            window.addEventListener('mouseup', stopDrag);
 
-        canvas.addEventListener('touchstart', startDrag, { passive: true });
-        canvas.addEventListener('touchmove', moveDrag, { passive: true });
-        window.addEventListener('touchend', stopDrag);
+            canvas.addEventListener('touchstart', startDrag, { passive: true });
+            canvas.addEventListener('touchmove', moveDrag, { passive: true });
+            window.addEventListener('touchend', stopDrag);
+        });
     }
 
     function handleKMLUpload(event) {
@@ -1024,6 +1161,7 @@
                         processGpsHeadingMode();
                     }
                     drawPolygon();
+                    updateFsMapUI();
                 },
                 (error) => { console.error("Ошибка модулей GPS:", error); },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -1078,6 +1216,7 @@
             btnCapture.classList.remove('ready-to-fire');
             btnCapture.innerText = "Нажмите «Старт линии (Т1)»";
             btnCapture.disabled = true;
+            updateFsMapUI();
             return;
         }
 
@@ -1100,6 +1239,7 @@
             btnCapture.innerText = `Пройдите еще ${(3.0 - dist).toFixed(1)}м по линии...`;
             btnCapture.disabled = true;
         }
+        updateFsMapUI();
     }
 
     function drawCompassDialSVG(targetSvgId = 'compass-svg-canvas') {
@@ -1145,7 +1285,7 @@
                 text.setAttribute("x", tx);
                 text.setAttribute("y", ty + 4);
                 text.setAttribute("fill", i === 0 ? "#FF0000" : "#F9FBF9");
-                text.setAttribute("font-size", "12");
+                text.setAttribute("font-size", targetSvgId === 'fs-mini-compass-svg' ? "18" : "12");
                 text.setAttribute("font-weight", "bold");
                 text.setAttribute("font-family", "Inter, sans-serif");
                 text.setAttribute("text-anchor", "middle");
@@ -1517,9 +1657,11 @@
             
             const dialSvg = document.getElementById('compass-svg-canvas');
             const fsDialSvg = document.getElementById('fs-compass-svg');
+            const fsMiniDial = document.getElementById('fs-mini-compass-svg');
             
             if (dialSvg) dialSvg.style.transform = `rotate(${-currentAzimuth}deg)`;
             if (fsDialSvg) fsDialSvg.style.transform = `rotate(${-currentAzimuth}deg)`;
+            if (fsMiniDial) fsMiniDial.style.transform = `rotate(${-currentAzimuth}deg)`;
 
             let dmsText = `АЗИМУТ: ${decimalAngleToDMS(currentAzimuth)}`;
             let coordsText = `${decimalToDMS(currentLat, true)} ${decimalToDMS(currentLng, false)} (${currentLat.toFixed(6)}, ${currentLng.toFixed(6)})`;
@@ -1532,6 +1674,9 @@
             document.getElementById('fs-dms-azimuth').innerText = dmsText;
             document.getElementById('fs-dms-coords').innerText = coordsText;
             document.getElementById('fs-altitude').innerText = altText;
+
+            const miniAzLabel = document.getElementById('fs-mini-azimuth');
+            if (miniAzLabel) miniAzLabel.innerText = `${currentAzimuth.toFixed(1)}°`;
 
             let currentSector = Math.floor((currentAzimuth + 2) / 30);
             if (currentSector !== lastVibratedSector) {
@@ -1546,6 +1691,8 @@
 
             const bubble = document.getElementById('compass-bubble');
             const fsBubble = document.getElementById('fs-compass-bubble');
+            const miniBubble = document.getElementById('fs-mini-bubble');
+
             if (bubble) {
                 bubble.style.left = `calc(50% + ${moveX}px)`;
                 bubble.style.top = `calc(50% + ${moveY}px)`;
@@ -1553,6 +1700,10 @@
             if (fsBubble) {
                 fsBubble.style.left = `calc(50% + ${moveX}px)`;
                 fsBubble.style.top = `calc(50% + ${moveY}px)`;
+            }
+            if (miniBubble) {
+                miniBubble.style.left = `calc(50% + ${moveX * 0.4}px)`;
+                miniBubble.style.top = `calc(50% + ${moveY * 0.4}px)`;
             }
         }
 
@@ -1602,6 +1753,7 @@
                 }
             }
         }
+        updateFsMapUI();
     }
 
     function initOrientationSensors() {
@@ -1731,6 +1883,7 @@
         renderLogTable();
         saveToLocalStorage();
         drawPolygon();
+        updateFsMapUI();
         showToast("➕ Зафиксировано в журнал!");
     }
 
@@ -1852,179 +2005,188 @@
     }
 
     function drawPolygon() {
-        const canvas = document.getElementById('polygon-canvas');
-        const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
-        
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        ctx.fillStyle = isDark ? '#22302B' : '#FFFFFF';
-        ctx.fillRect(0, 0, width, height);
-
-        ctx.fillStyle = isDark ? 'rgba(255,255,255,0.4)' : '#333333'; 
-        ctx.font = "bold 12px Inter, sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("С", width / 2, 18); 
-        ctx.fillText("Ю", width / 2, height - 8);
-        ctx.textAlign = "left";
-        ctx.fillText("З", 10, height / 2 + 4); 
-        ctx.textAlign = "right";
-        ctx.fillText("В", width - 10, height / 2 + 4);
-
-        let points = [{ x: 0, y: 0 }];
-        let currentX = 0;
-        let currentY = 0;
-
-        measurementsLog.forEach((m) => {
-            let angleRad = (m.azimuth * Math.PI) / 180;
-            currentX += m.distance * Math.sin(angleRad);
-            currentY += m.distance * Math.cos(angleRad);
-            points.push({ x: currentX, y: currentY });
-        });
-
-        let lastIndex = measurementsLog.length - 1;
-        let startLat = gpsPoint1 ? gpsPoint1.lat : (lastIndex >= 0 && measurementsLog[lastIndex].lat ? measurementsLog[lastIndex].lat : currentLat);
-        let startLng = gpsPoint1 ? gpsPoint1.lng : (lastIndex >= 0 && measurementsLog[lastIndex].lng ? measurementsLog[lastIndex].lng : currentLng);
-
-        let lastPoint = points[points.length - 1];
-
-        let relativeDx = calculateDistance(startLat, startLng, startLat, currentLng) * (currentLng >= startLng ? 1 : -1);
-        let relativeDy = calculateDistance(startLat, startLng, currentLat, startLng) * (currentLat >= startLat ? 1 : -1);
-
-        let userDx = lastPoint.x + relativeDx;
-        let userDy = lastPoint.y + relativeDy;
-
-        let allX = points.map(p => p.x);
-        let allY = points.map(p => p.y);
-        
-        if (gpsPoint1 || measurementsLog.length > 0) {
-            allX.push(userDx);
-            allY.push(userDy);
+        const canvases = [document.getElementById('polygon-canvas')];
+        if (isFsMapOpen) {
+            canvases.push(document.getElementById('fs-polygon-canvas'));
         }
 
-        let minX = Math.min(...allX);
-        let maxX = Math.max(...allX);
-        let minY = Math.min(...allY);
-        let maxY = Math.max(...allY);
+        canvases.forEach(canvas => {
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            ctx.fillStyle = isDark ? '#22302B' : '#FFFFFF';
+            ctx.fillRect(0, 0, width, height);
 
-        let baseScale = (width - 80) / Math.max(maxX - minX, maxY - minY, 2.0);
-        let scale = baseScale * canvasZoomMultiplier;
+            ctx.fillStyle = isDark ? 'rgba(255,255,255,0.4)' : '#333333'; 
+            ctx.font = "bold 12px Inter, sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("С", width / 2, 18); 
+            ctx.fillText("Ю", width / 2, height - 8);
+            ctx.textAlign = "left";
+            ctx.fillText("З", 10, height / 2 + 4); 
+            ctx.textAlign = "right";
+            ctx.fillText("В", width - 10, height / 2 + 4);
 
-        let centerCenterX = (maxX + minX) / 2;
-        let centerCenterY = (maxY + minY) / 2;
+            let points = [{ x: 0, y: 0 }];
+            let currentX = 0;
+            let currentY = 0;
 
-        if (isFollowUser) {
-            centerCenterX = userDx;
-            centerCenterY = userDy;
-        }
-
-        function toPixel(pt) {
-            return {
-                x: width / 2 + (pt.x - centerCenterX) * scale + panOffsetX,
-                y: height / 2 - (pt.y - centerCenterY) * scale + panOffsetY
-            };
-        }
-
-        ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
-        ctx.lineWidth = 1;
-        for(let i = 0; i < width; i += 40) {
-            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke();
-        }
-
-        if (uploadedKmlPolygon && uploadedKmlPolygon.length > 0) {
-            ctx.beginPath();
-            ctx.setLineDash([5, 5]);
-            ctx.strokeStyle = "#FFA726";
-            ctx.lineWidth = 2;
-
-            let startKml = uploadedKmlPolygon[0];
-            uploadedKmlPolygon.forEach((kPt, idx) => {
-                let dX = calculateDistance(startKml.lat, startKml.lng, startKml.lat, kPt.lng) * (kPt.lng >= startKml.lng ? 1 : -1);
-                let dY = calculateDistance(startKml.lat, startKml.lng, kPt.lat, startKml.lng) * (kPt.lat >= startKml.lat ? 1 : -1);
-                let px = toPixel({ x: dX, y: dY });
-
-                if (idx === 0) ctx.moveTo(px.x, px.y);
-                else ctx.lineTo(px.x, px.y);
+            measurementsLog.forEach((m) => {
+                let angleRad = (m.azimuth * Math.PI) / 180;
+                currentX += m.distance * Math.sin(angleRad);
+                currentY += m.distance * Math.cos(angleRad);
+                points.push({ x: currentX, y: currentY });
             });
-            ctx.stroke();
-            ctx.setLineDash([]);
-        }
 
-        if (measurementsLog.length > 0) {
-            ctx.lineWidth = 2.5;
-            ctx.strokeStyle = isDark ? '#8FBC8F' : '#2D5A27';
+            let lastIndex = measurementsLog.length - 1;
+            let startLat = gpsPoint1 ? gpsPoint1.lat : (lastIndex >= 0 && measurementsLog[lastIndex].lat ? measurementsLog[lastIndex].lat : currentLat);
+            let startLng = gpsPoint1 ? gpsPoint1.lng : (lastIndex >= 0 && measurementsLog[lastIndex].lng ? measurementsLog[lastIndex].lng : currentLng);
 
-            for (let i = 0; i < points.length - 1; i++) {
-                let p1 = toPixel(points[i]);
-                let p2 = toPixel(points[i+1]);
+            let lastPoint = points[points.length - 1];
 
-                ctx.beginPath();
-                ctx.moveTo(p1.x, p1.y);
-                ctx.lineTo(p2.x, p2.y);
-                ctx.stroke();
+            let relativeDx = calculateDistance(startLat, startLng, startLat, currentLng) * (currentLng >= startLng ? 1 : -1);
+            let relativeDy = calculateDistance(startLat, startLng, currentLat, startLng) * (currentLat >= startLat ? 1 : -1);
 
-                let midX = (p1.x + p2.x) / 2;
-                let midY = (p1.y + p2.y) / 2;
-                
-                ctx.font = "bold 10px Inter, sans-serif";
-                ctx.fillStyle = isDark ? '#FFFFFF' : '#111111';
-                ctx.textAlign = "center";
-                ctx.fillText(`№ ${measurementsLog[i].id} (${measurementsLog[i].distance} м)`, midX, midY - 5);
+            let userDx = lastPoint.x + relativeDx;
+            let userDy = lastPoint.y + relativeDy;
+
+            let allX = points.map(p => p.x);
+            let allY = points.map(p => p.y);
+            
+            if (gpsPoint1 || measurementsLog.length > 0) {
+                allX.push(userDx);
+                allY.push(userDy);
             }
 
-            points.forEach((p, idx) => {
-                let pix = toPixel(p);
+            let minX = Math.min(...allX);
+            let maxX = Math.max(...allX);
+            let minY = Math.min(...allY);
+            let maxY = Math.max(...allY);
+
+            let baseScale = (width - 80) / Math.max(maxX - minX, maxY - minY, 2.0);
+            let scale = baseScale * canvasZoomMultiplier;
+
+            let centerCenterX = (maxX + minX) / 2;
+            let centerCenterY = (maxY + minY) / 2;
+
+            if (isFollowUser) {
+                centerCenterX = userDx;
+                centerCenterY = userDy;
+            }
+
+            function toPixel(pt) {
+                return {
+                    x: width / 2 + (pt.x - centerCenterX) * scale + panOffsetX,
+                    y: height / 2 - (pt.y - centerCenterY) * scale + panOffsetY
+                };
+            }
+
+            ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
+            ctx.lineWidth = 1;
+            for(let i = 0; i < width; i += 40) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke();
+            }
+
+            if (uploadedKmlPolygon && uploadedKmlPolygon.length > 0) {
                 ctx.beginPath();
-                ctx.arc(pix.x, pix.y, idx === 0 ? 5 : 3.5, 0, 2 * Math.PI);
-                ctx.fillStyle = idx === 0 ? '#DC2626' : '#16A34A'; 
-                ctx.fill();
-            });
-        }
+                ctx.setLineDash([5, 5]);
+                ctx.strokeStyle = "#FFA726";
+                ctx.lineWidth = 2;
 
-        if (gpsPoint1 || measurementsLog.length > 0) {
-            let userPixel = toPixel({ x: userDx, y: userDy });
+                let startKml = uploadedKmlPolygon[0];
+                uploadedKmlPolygon.forEach((kPt, idx) => {
+                    let dX = calculateDistance(startKml.lat, startKml.lng, startKml.lat, kPt.lng) * (kPt.lng >= startKml.lng ? 1 : -1);
+                    let dY = calculateDistance(startKml.lat, startKml.lng, kPt.lat, startKml.lng) * (kPt.lat >= startKml.lat ? 1 : -1);
+                    let px = toPixel({ x: dX, y: dY });
 
-            ctx.save();
-            ctx.translate(userPixel.x, userPixel.y);
-            ctx.rotate((currentAzimuth * Math.PI) / 180);
+                    if (idx === 0) ctx.moveTo(px.x, px.y);
+                    else ctx.lineTo(px.x, px.y);
+                });
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
 
-            ctx.beginPath();
-            ctx.moveTo(0, -11);
-            ctx.lineTo(8, 9);
-            ctx.lineTo(0, 5);
-            ctx.lineTo(-8, 9);
-            ctx.closePath();
+            if (measurementsLog.length > 0) {
+                ctx.lineWidth = 2.5;
+                ctx.strokeStyle = isDark ? '#8FBC8F' : '#2D5A27';
 
-            ctx.fillStyle = "#00FF66";
-            ctx.fill();
-            ctx.strokeStyle = "#000000";
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-            ctx.restore();
-        }
+                for (let i = 0; i < points.length - 1; i++) {
+                    let p1 = toPixel(points[i]);
+                    let p2 = toPixel(points[i+1]);
 
-        let area = 0;
-        let j = points.length - 1;
-        for (let i = 0; i < points.length; i++) {
-            area += (points[j].x + points[i].x) * (points[j].y - points[i].y);
-            j = i;
-        }
-        area = Math.abs(area / 2);
-        let areaHa = area / 10000; 
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
 
-        document.getElementById('area-display').innerText = `Площадь: ${areaHa.toFixed(4)} га (${Math.round(area)} м²)`;
+                    let midX = (p1.x + p2.x) / 2;
+                    let midY = (p1.y + p2.y) / 2;
+                    
+                    ctx.font = "bold 10px Inter, sans-serif";
+                    ctx.fillStyle = isDark ? '#FFFFFF' : '#111111';
+                    ctx.textAlign = "center";
+                    ctx.fillText(`№ ${measurementsLog[i].id} (${measurementsLog[i].distance} м)`, midX, midY - 5);
+                }
 
-        if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
-            const activeProject = window.LesovikCore.getActiveProject();
-            if (activeProject && activeProject.plots && activeProject.plots.length > 0) {
-                window.LesovikCore.updatePlotModuleData(activeProject.plots[0].id, 'busol', {
-                    area: parseFloat(areaHa.toFixed(4)),
-                    points: points,
-                    measurements: measurementsLog
+                points.forEach((p, idx) => {
+                    let pix = toPixel(p);
+                    ctx.beginPath();
+                    ctx.arc(pix.x, pix.y, idx === 0 ? 5 : 3.5, 0, 2 * Math.PI);
+                    ctx.fillStyle = idx === 0 ? '#DC2626' : '#16A34A'; 
+                    ctx.fill();
                 });
             }
-        }
+
+            if (gpsPoint1 || measurementsLog.length > 0) {
+                let userPixel = toPixel({ x: userDx, y: userDy });
+
+                ctx.save();
+                ctx.translate(userPixel.x, userPixel.y);
+                ctx.rotate((currentAzimuth * Math.PI) / 180);
+
+                ctx.beginPath();
+                ctx.moveTo(0, -11);
+                ctx.lineTo(8, 9);
+                ctx.lineTo(0, 5);
+                ctx.lineTo(-8, 9);
+                ctx.closePath();
+
+                ctx.fillStyle = "#00FF66";
+                ctx.fill();
+                ctx.strokeStyle = "#000000";
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            let area = 0;
+            let j = points.length - 1;
+            for (let i = 0; i < points.length; i++) {
+                area += (points[j].x + points[i].x) * (points[j].y - points[i].y);
+                j = i;
+            }
+            area = Math.abs(area / 2);
+            let areaHa = area / 10000; 
+
+            document.getElementById('area-display').innerText = `Площадь: ${areaHa.toFixed(4)} га (${Math.round(area)} м²)`;
+            const fsMapArea = document.getElementById('fs-map-area');
+            if (fsMapArea) fsMapArea.innerText = `Площадь: ${areaHa.toFixed(4)} га (${Math.round(area)} м²)`;
+
+            if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
+                const activeProject = window.LesovikCore.getActiveProject();
+                if (activeProject && activeProject.plots && activeProject.plots.length > 0) {
+                    window.LesovikCore.updatePlotModuleData(activeProject.plots[0].id, 'busol', {
+                        area: parseFloat(areaHa.toFixed(4)),
+                        points: points,
+                        measurements: measurementsLog
+                    });
+                }
+            }
+        });
     }
 
     function saveCurrentToArchive() {
@@ -2135,7 +2297,7 @@
             });
         });
 
-        const fileName = "Архив_полевых_съемок_БГ_ХНС_2_9.xls";
+        const fileName = "Архив_полевых_съемок_БГ_ХНС_3_0.xls";
         const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
@@ -2183,7 +2345,7 @@
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", `${name}_контур_БГ_ХНС_2.9.kml`);
+        link.setAttribute("download", `${name}_контур_БГ_ХНС_3.0.kml`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
