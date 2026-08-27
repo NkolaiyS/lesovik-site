@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 11180157622.
-  Программное обеспечение: «Электронная буссоль БГ-ХНС PRO» (Версия 3.1).
+  Программное обеспечение: «Электронная буссоль БГ-ХНС PRO» (Версия 3.2 с поддержкой KML/KMZ/GeoJSON подложек ФГИС ЛК).
 -->
 <!DOCTYPE html>
 <html lang="ru">
@@ -9,25 +9,28 @@
     <script type="text/javascript" src="cordova.js"></script>
 
     <meta charset="UTF-8">
-    <meta name="application-name" content="БГ-ХНС PRO 3.1">
+    <meta name="application-name" content="БГ-ХНС PRO 3.2">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="google-site-verification" content="rLtNyEQ2h992Lp8m73ynLM8J6xY5tJcr3dbVwbO35rU" />
     
-    <title>Электронная буссоль онлайн с визиром и уровнем | БГ-ХНС PRO 3.1</title>
-    <meta name="description" content="Бесплатная электронная буссоль и геодезический компас для отвода лесосек. Полноэкранный планшет, мини-буссоль, расчет расстояний со спутника, чистый GPS без интернета.">
-    <meta name="keywords" content="буссоль онлайн, буссоль лазерная карманная, electronic буссоль для телефона, компас таксатора, измерение азимута онлайн, отвод лесосек, углы поворота делянки, БГ-ХНС">
+    <title>Электронная буссоль онлайн с визиром и уровнем | БГ-ХНС PRO 3.2</title>
+    <meta name="description" content="Бесплатная электронная буссоль и геодезический компас для отвода лесосек. Полноэкранный планшет, чистый круглый мини-лимб с перекрестием, загрузка KML/KMZ/GeoJSON сеток кварталов и выделов ФГИС ЛК, чистый спутниковый GPS без интернета.">
+    <meta name="keywords" content="буссоль онлайн, буссоль лазерная карманная, electronic буссоль для телефона, компас таксатора, измерение азимута онлайн, отвод лесосек, углы поворота делянки, БГ-ХНС, KML выдел, GeoJSON ФГИС ЛК">
     <link rel="canonical" href="https://lesovik-pro.ru/busol-pro.html">
 
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
     <meta name="geo.region" content="RU-KO">
     <meta name="geo.placename" content="Сыктывкар">
 
+    <!-- Подключение JSZip для прямого распаковывания KMZ слоев в офлайне -->
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
     <!-- Ссылка на индивидуальный манифест PWA PRO -->
     <link rel="manifest" href="/busol-pro.webmanifest">
     <meta name="theme-color" content="#2D5A27">
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap');
         
         :root {
             --bg-paper: #F9FBF9;
@@ -320,7 +323,7 @@
             touch-action: manipulation;
         }
 
-        /* ПОЛНОЭКРАННЫЙ ПЛАНШЕТ КАРТЫ С УВЕЛИЧЕННОЙ МИНИ-БУССОЛЬЮ */
+        /* ПОЛНОЭКРАННЫЙ ПЛАНШЕТ КАРТЫ С ЧИСТОЙ КРУГЛОЙ МИНИ-БУССОЛЬЮ */
         .fullscreen-map-modal {
             display: none;
             position: fixed;
@@ -346,25 +349,32 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.25);
         }
 
-        /* МИНИ-БУССОЛЬ (УВЕЛИЧЕНА ДЛЯ ЧЕТКОЙ ЧИТАЕМОСТИ АЗИМУТА) */
+        /* МИНИ-БУССОЛЬ: ЧИСТЫЙ КРУГ БЕЗ ОВАЛЬНЫХ ТЕМНЫХ ПЯТЕН, С ПЕРЕКРЕСТИЕМ */
         .fs-mini-compass-box {
-            position: relative; width: 110px; height: 110px;
-            background: rgba(20, 30, 25, 0.92); backdrop-filter: blur(8px);
-            border: 2px solid var(--forest-green); border-radius: 50%;
+            position: relative; width: 116px; height: 116px;
+            background: transparent;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
         }
-        #fs-mini-compass-svg { width: 95px; height: 95px; transition: transform 0.05s linear; }
+        #fs-mini-compass-svg { width: 116px; height: 116px; transition: transform 0.05s linear; }
+        
+        .fs-mini-crosshair-v {
+            position: absolute; top: 6px; bottom: 6px; left: 50%; width: 1px;
+            background: rgba(255, 255, 255, 0.4); transform: translateX(-50%); pointer-events: none;
+        }
+        .fs-mini-crosshair-h {
+            position: absolute; left: 6px; right: 6px; top: 50%; height: 1px;
+            background: rgba(255, 255, 255, 0.4); transform: translateY(-50%); pointer-events: none;
+        }
         .fs-mini-compass-bubble {
             position: absolute; width: 10px; height: 10px; background: #16A34A;
             border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%);
             box-shadow: 0 0 8px #16A34A; pointer-events: none;
         }
         .fs-mini-azimuth-label {
-            position: absolute; bottom: -24px; left: 50%; transform: translateX(-50%);
+            position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
             background: var(--forest-green); color: #FFF; font-family: monospace;
-            font-size: 13px; font-weight: 800; padding: 2px 8px; border-radius: 6px;
-            white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            font-size: 13px; font-weight: 800; padding: 2px 10px; border-radius: 6px;
+            white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.3);
         }
 
         .fs-map-canvas-container {
@@ -426,8 +436,8 @@
         #polygon-canvas:active { cursor: grabbing; }
         [data-theme="dark"] #polygon-canvas { background: #151e1b; border: 1px dashed rgba(255,255,255,0.1); }
         
-        /* КНОПКИ ЗУМА СПУЩЕНЫ НИЖЕ (НЕ ПЕРЕКРЫВАЮТ ШАПКУ) */
-        .canvas-zoom-controls { position: absolute; right: 12px; top: 60px; display: flex; flex-direction: column; gap: 6px; z-index: 30; }
+        /* КНОПКИ ЗУМА СПУЩЕНЫ НИЖЕ В ОБЫЧНОМ ОКНЕ */
+        .canvas-zoom-controls { position: absolute; right: 12px; top: 52px; display: flex; flex-direction: column; gap: 6px; z-index: 30; }
         .btn-canvas-ctrl { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--forest-green); font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.15); transition: 0.15s; }
         .btn-canvas-ctrl:active { transform: scale(0.95); background: var(--forest-green); color: #FFF; }
 
@@ -470,8 +480,8 @@
 
     <header class="glass-header">
         <a href="#" class="logo-container" onclick="return false;">
-            <img src="logo.jpeg" alt="БГ-ХНС PRO 3.1" class="header-logo" onerror="this.style.display='none'">
-            <h1>БГ-ХНС PRO 3.1</h1>
+            <img src="logo.jpeg" alt="БГ-ХНС PRO 3.2" class="header-logo" onerror="this.style.display='none'">
+            <h1>БГ-ХНС PRO 3.2</h1>
         </a>
         <div class="header-seo-text">Электронная буссоль • Геодезия выдела • Отвод лесосек</div>
         <div class="header-right">
@@ -507,7 +517,7 @@
         </div>
     </div>
 
-    <!-- ПОЛНОЭКРАННЫЙ КАРТОГРАФИЧЕСКИЙ ПЛАНШЕТ С УВЕЛИЧЕННОЙ МИНИ-БУССОЛЬЮ -->
+    <!-- ПОЛНОЭКРАННЫЙ КАРТОГРАФИЧЕСКИЙ ПЛАНШЕТ С ЧИСТОЙ КРУГЛОЙ МИНИ-БУССОЛЬЮ -->
     <div id="fullscreen-map-modal" class="fullscreen-map-modal">
         <div class="fs-map-header">
             <div class="fs-map-info-card">
@@ -516,9 +526,11 @@
                 <div id="fs-map-alt" style="font-size:10px; color:#8FBC8F;">Высота: 150 м</div>
             </div>
             
-            <!-- МИНИ-БУССОЛЬ (УВЕЛИЧЕНА, ЧЕТКИЙ ЛИМБ И АЗИМУТ) -->
+            <!-- МИНИ-БУССОЛЬ (ЧИСТЫЙ КРУГ, БЕЗ ОВАЛЬНЫХ ТЕМНЫХ ПЯТЕН, С ПЕРЕКРЕСТИЕМ) -->
             <div class="fs-mini-compass-box">
                 <svg id="fs-mini-compass-svg" viewBox="0 0 300 300"></svg>
+                <div class="fs-mini-crosshair-v"></div>
+                <div class="fs-mini-crosshair-h"></div>
                 <div id="fs-mini-bubble" class="fs-mini-compass-bubble"></div>
                 <div id="fs-mini-azimuth" class="fs-mini-azimuth-label">0.0°</div>
             </div>
@@ -526,7 +538,7 @@
 
         <div class="fs-map-canvas-container">
             <!-- Кнопки зума опущены ниже шапки -->
-            <div class="canvas-zoom-controls" style="top:140px; right:15px;">
+            <div class="canvas-zoom-controls" style="top:150px; right:15px;">
                 <button class="btn-canvas-ctrl" onclick="zoomCanvas(1.25)">+</button>
                 <button class="btn-canvas-ctrl" onclick="zoomCanvas(0.8)">−</button>
                 <button class="btn-canvas-ctrl" onclick="recenterCanvasOnUser()">🎯</button>
@@ -535,7 +547,7 @@
         </div>
 
         <div class="fs-map-bottom-bar">
-            <button id="btn-fs-map-gps-start" class="btn-action btn-set-zero" style="display:none; padding:12px; font-size:13px;" onclick="startGpsLine()">📍 Старт линии (Т1)</button>
+            <button id="btn-fs-map-gps-start" class="btn-action btn-set-zero" style="display:none; padding:12px; font-size:13px;" onclick="startGpsLine()">📍 Старт точки Т1</button>
             <button id="btn-fs-map-capture" class="btn-action btn-lock-measure btn-fs-huge-trigger" onclick="captureMeasurement();" style="min-height:52px; padding:12px;" disabled>Поймайте уровень horizon</button>
             <button class="btn-action btn-reset-zero" style="padding:9px; font-size:11.5px; background:rgba(0,0,0,0.75); color:#FFF; border-color:rgba(255,255,255,0.3);" onclick="closeFullscreenMap()">✕ Выйти из полноэкранного режима</button>
         </div>
@@ -565,8 +577,9 @@
             <ol class="instruction-steps">
                 <li><strong>Оптический визир (Вертикально):</strong> Наведите вертикальную нить экрана на веху угла делянки. Дождитесь зеленого уровня авиагоризонта и зафиксируйте румб в журнал.</li>
                 <li><strong>Электронная буссоль (Горизонтально):</strong> Положите телефон горизонтально на ладонь. Совместите верхний торец устройства с вехой. Нажмите кнопку «🔍 Увеличить компас» для крупного лимба.</li>
-                <li><strong>📡 GPS-Курс (По 2 точкам):</strong> Встаньте на столб ➔ Нажмите «📍 Старт линии (Т1)» ➔ Пройдите 5–10 метров по линии визира ➔ Нажмите «🏁 Зафиксировать вектор». После фиксации система сразу предложит старт следующей точки (Т2, Т3 и т.д.).</li>
+                <li><strong>📡 GPS-Курс (По 2 точкам):</strong> Нажмите «📍 Старт точки», пройдите 5–10 метров по визиру и нажмите «🏁 Зафиксировать вектор». Точки переключаются по цепочке (Т1, Т2, Т3...).</li>
                 <li><strong>📡 GPS-расчет расстояний:</strong> В колонке «Тип» выберите «📡 GPS». Буссоль автоматически вычислит расстояние между зафиксированными точками со спутника!</li>
+                <li><strong>📂 Загрузка KML / KMZ / GeoJSON:</strong> Загружайте файлы квартальных сеток и выделов из ФГИС ЛК или лесоустроительных баз прямо на чертёж без подключения к интернету.</li>
                 <li><strong>⛶ Полноэкранный планшет:</strong> Нажмите «⛶ На весь экран» для комфортной работы прямо по чертежу с увеличенной мини-буссолью в правом углу.</li>
             </ol>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closeInstruction()">Понятно, к замеру</button>
@@ -640,8 +653,8 @@
 
     <main class="container">
         <div class="card" style="margin-bottom: 20px;">
-            <h2>Управление проектами и архивом делянок (БГ-ХНС PRO 3.1)</h2>
-            <div class="subtitle">Сохранение независимых съемок, KML-подложка выдела и выгрузка отчетов.</div>
+            <h2>Управление проектами и архивом делянок (БГ-ХНС PRO 3.2)</h2>
+            <div class="subtitle">Сохранение независимых съемок, подложка KML/KMZ/GeoJSON выдела ФГИС ЛК и выгрузка отчетов.</div>
             <div class="archive-scroll-container">
                 <div class="archive-inner-flex">
                     <input type="text" id="project-name" class="input-dist" value="Делянка №1" style="width: 220px; text-align: left; padding: 6px 10px;" onfocus="this.select()">
@@ -651,8 +664,8 @@
                     </select>
                     
                     <label class="btn-action" style="background:#2D5A27; color:#FFF; padding:8px 15px; cursor:pointer; display:inline-flex; align-items:center; width:auto;">
-                        📂 Загрузить KML выдела
-                        <input type="file" id="kml-file-input" accept=".kml" style="display:none;" onchange="handleKMLUpload(event)">
+                        📂 Слой ФГИС (KML/KMZ/GeoJSON)
+                        <input type="file" id="kml-file-input" accept=".kml,.kmz,.geojson,.json" style="display:none;" onchange="handleGISLayerUpload(event)">
                     </label>
 
                     <button class="btn-action" style="padding: 8px 15px; background-color: var(--danger); color: #FFF; width: auto;" onclick="deleteSelectedFromArchive()">🗑️ Удалить из архива</button>
@@ -805,8 +818,8 @@
                         <button class="btn-action btn-set-zero" style="padding:4px 8px; font-size:11px; width:auto;" onclick="openFullscreenMap()">⛶ На весь экран</button>
                     </div>
                     
-                    <!-- Кнопки зума опущены ниже шапки -->
-                    <div class="canvas-zoom-controls" style="top:42px;">
+                    <!-- Кнопки зума опущены ниже шапки в обычном окне -->
+                    <div class="canvas-zoom-controls">
                         <button class="btn-canvas-ctrl" onclick="zoomCanvas(1.25)" title="Увеличить чертеж">+</button>
                         <button class="btn-canvas-ctrl" onclick="zoomCanvas(0.8)" title="Уменьшить чертеж">−</button>
                         <button class="btn-canvas-ctrl" onclick="recenterCanvasOnUser()" title="Я здесь (Сброс сдвига и центрирование)">🎯</button>
@@ -823,7 +836,8 @@
                         <li style="margin-bottom: 4px;"><b>2. 🧭 Буссоль (Лимб):</b> Положите смартфон горизонтально на ладонь. Работает как классическая буссоль БГ-1. Нажмите «🔍 Увеличить компас» для крупного лимба.</li>
                         <li style="margin-bottom: 4px;"><b>3. 📡 GPS-Курс (По 2 точкам):</b> Нажмите «📍 Старт точки», пройдите 5–10 метров по визиру и нажмите «🏁 Зафиксировать вектор». Точки переключаются по цепочке (Т1, Т2, Т3...).</li>
                         <li style="margin-bottom: 4px;"><b>4. 📏 Расчет расстояний по спутнику:</b> В колонке «Тип» выберите «📡 GPS», и длина между зафиксированными точками посчитается автоматически по координатам без рулетки.</li>
-                        <li><b>5. ⛶ Полноэкранный планшет:</b> Нажмите «⛶ На весь экран» для работы по большому чертежу с увеличенной мини-буссолью в правом углу.</li>
+                        <li><b>5. 📂 Подложка ФГИС ЛК:</b> Загружайте файлы квартальных сеток и выделов в формате KML, KMZ или GeoJSON для точной навигации в лесу без интернета.</li>
+                        <li><b>6. ⛶ Полноэкранный планшет:</b> Нажмите «⛶ На весь экран» для работы по большому чертежу с увеличенной мини-буссолью в правом углу.</li>
                     </ul>
                 </div>
             </div>
@@ -842,7 +856,7 @@
                     <path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/>
                     <rect x="10.5" y="20" width="3" height="4"/>
                 </svg>
-                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 16px;">БГ-ХНС PRO 3.1</div>
+                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 16px;">БГ-ХНС PRO 3.2</div>
                 <div style="font-size: 12px; margin-top: 5px; opacity: 0.8;">Цифровой инструмент таксатора. База знаний, калькуляторы и профильные статьи для специалистов леса.</div>
             </div>
             <div class="footer-column">
@@ -900,7 +914,7 @@
 
     let gpsPoint1 = null; 
     let calculatedGpsAzimuth = null;
-    let uploadedKmlPolygon = null; 
+    let uploadedGisPolygons = []; // Массив полигонов из KML/KMZ/GeoJSON
 
     let canvasZoomMultiplier = 1.8; 
     let isFollowUser = false;
@@ -1041,35 +1055,107 @@
         });
     }
 
-    function handleKMLUpload(event) {
+    // УНИВЕРСАЛЬНЫЙ ПАРСЕР СЛОЕВ (KML, KMZ, GeoJSON) ДЛЯ ФГИС ЛК
+    async function handleGISLayerUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            try {
-                const xmlText = e.target.result;
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-                const coordNodes = xmlDoc.getElementsByTagName("coordinates");
+        const fileName = file.name.toLowerCase();
+        try {
+            if (fileName.endsWith('.kmz')) {
+                const zip = new JSZip();
+                const zipData = await zip.loadAsync(file);
+                const kmlFile = Object.keys(zipData.files).find(name => name.toLowerCase().endsWith('.kml'));
+                if (kmlFile) {
+                    const kmlText = await zipData.files[kmlFile].async('string');
+                    parseKMLText(kmlText);
+                } else {
+                    showToast("❌ Внутри KMZ не найден файл KML!");
+                }
+            } else if (fileName.endsWith('.kml')) {
+                const reader = new FileReader();
+                reader.onload = function(e) { parseKMLText(e.target.result); };
+                reader.readAsText(file);
+            } else if (fileName.endsWith('.geojson') || fileName.endsWith('.json')) {
+                const reader = new FileReader();
+                reader.onload = function(e) { parseGeoJSONText(e.target.result); };
+                reader.readAsText(file);
+            }
+        } catch (err) {
+            console.error(err);
+            showToast("❌ Ошибка чтения файла слоя!");
+        }
+    }
 
-                if (coordNodes.length > 0) {
-                    const rawCoords = coordNodes[0].textContent.trim().split(/\s+/);
-                    uploadedKmlPolygon = rawCoords.map(str => {
+    function parseKMLText(xmlText) {
+        try {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+            const coordNodes = xmlDoc.getElementsByTagName("coordinates");
+
+            if (coordNodes.length > 0) {
+                uploadedGisPolygons = [];
+                for (let i = 0; i < coordNodes.length; i++) {
+                    const rawCoords = coordNodes[i].textContent.trim().split(/\s+/);
+                    const poly = rawCoords.map(str => {
                         const parts = str.split(',');
                         return { lng: parseFloat(parts[0]), lat: parseFloat(parts[1]) };
                     }).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
-
-                    showToast("✔️ KML контур выдела успешно подгружен!");
-                    drawPolygon();
-                } else {
-                    showToast("❌ В KML файле не найдены координаты!");
+                    
+                    if (poly.length > 0) uploadedGisPolygons.push(poly);
                 }
-            } catch (err) {
-                showToast("❌ Ошибка обработки файла KML!");
+                showToast(`✔️ Загружено полигонов ФГИС ЛК: ${uploadedGisPolygons.length}`);
+                drawPolygon();
+            } else {
+                showToast("❌ В KML не найдены координаты полигонов!");
             }
-        };
-        reader.readAsText(file);
+        } catch (err) {
+            showToast("❌ Ошибка парсинга KML!");
+        }
+    }
+
+    function parseGeoJSONText(jsonText) {
+        try {
+            const data = JSON.parse(jsonText);
+            uploadedGisPolygons = [];
+
+            const extractCoords = (geometry) => {
+                if (!geometry) return;
+                if (geometry.type === 'Polygon') {
+                    geometry.coordinates.forEach(ring => {
+                        const poly = ring.map(pt => ({ lng: pt[0], lat: pt[1] }));
+                        if (poly.length > 0) uploadedGisPolygons.push(poly);
+                    });
+                } else if (geometry.type === 'MultiPolygon') {
+                    geometry.coordinates.forEach(polyArr => {
+                        polyArr.forEach(ring => {
+                            const poly = ring.map(pt => ({ lng: pt[0], lat: pt[1] }));
+                            if (poly.length > 0) uploadedGisPolygons.push(poly);
+                        });
+                    });
+                } else if (geometry.type === 'LineString') {
+                    const poly = geometry.coordinates.map(pt => ({ lng: pt[0], lat: pt[1] }));
+                    if (poly.length > 0) uploadedGisPolygons.push(poly);
+                }
+            };
+
+            if (data.type === 'FeatureCollection' && data.features) {
+                data.features.forEach(f => extractCoords(f.geometry));
+            } else if (data.type === 'Feature') {
+                extractCoords(data.geometry);
+            } else if (data.coordinates) {
+                extractCoords(data);
+            }
+
+            if (uploadedGisPolygons.length > 0) {
+                showToast(`✔️ Загружено объектов GeoJSON: ${uploadedGisPolygons.length}`);
+                drawPolygon();
+            } else {
+                showToast("❌ В GeoJSON не найдены полигоны!");
+            }
+        } catch (err) {
+            showToast("❌ Ошибка формата GeoJSON!");
+        }
     }
 
     function updateOffsetFromUI() {
@@ -1684,7 +1770,7 @@
             badge.style.display = 'none';
         }
 
-        // ВРАЩЕНИЕ ВСЕХ ЛИМБОВ (ВКЛЮЧАЯ УВЕЛИЧЕННУЮ МИНИ-БУССОЛЬ НА КАРТЕ)
+        // ВРАЩЕНИЕ ВСЕХ ЛИМБОВ (ВКЛЮЧАЯ ЧИСТУЮ МИНИ-БУССОЛЬ С ПЕРЕКРЕСТИЕМ НА КАРТЕ)
         const dialSvg = document.getElementById('compass-svg-canvas');
         const fsDialSvg = document.getElementById('fs-compass-svg');
         const fsMiniDial = document.getElementById('fs-mini-compass-svg');
@@ -1732,8 +1818,8 @@
             fsBubble.style.top = `calc(50% + ${moveY}px)`;
         }
         if (miniBubble) {
-            miniBubble.style.left = `calc(50% + ${moveX * 0.45}px)`;
-            miniBubble.style.top = `calc(50% + ${moveY * 0.45}px)`;
+            miniBubble.style.left = `calc(50% + ${moveX * 0.4}px)`;
+            miniBubble.style.top = `calc(50% + ${moveY * 0.4}px)`;
         }
 
         const btnCapture = document.getElementById('btn-capture');
@@ -2121,22 +2207,26 @@
                 ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke();
             }
 
-            if (uploadedKmlPolygon && uploadedKmlPolygon.length > 0) {
-                ctx.beginPath();
+            // ОТРИСОВКА ВСЕХ ЗАГРУЖЕННЫХ СЛОЕВ ФГИС ЛК (KML / KMZ / GeoJSON)
+            if (uploadedGisPolygons && uploadedGisPolygons.length > 0) {
                 ctx.setLineDash([5, 5]);
                 ctx.strokeStyle = "#FFA726";
                 ctx.lineWidth = 2;
 
-                let startKml = uploadedKmlPolygon[0];
-                uploadedKmlPolygon.forEach((kPt, idx) => {
-                    let dX = calculateDistance(startKml.lat, startKml.lng, startKml.lat, kPt.lng) * (kPt.lng >= startKml.lng ? 1 : -1);
-                    let dY = calculateDistance(startKml.lat, startKml.lng, kPt.lat, startKml.lng) * (kPt.lat >= startKml.lat ? 1 : -1);
-                    let px = toPixel({ x: dX, y: dY });
+                const baseAnchor = uploadedGisPolygons[0][0];
 
-                    if (idx === 0) ctx.moveTo(px.x, px.y);
-                    else ctx.lineTo(px.x, px.y);
+                uploadedGisPolygons.forEach(polygon => {
+                    ctx.beginPath();
+                    polygon.forEach((kPt, idx) => {
+                        let dX = calculateDistance(baseAnchor.lat, baseAnchor.lng, baseAnchor.lat, kPt.lng) * (kPt.lng >= baseAnchor.lng ? 1 : -1);
+                        let dY = calculateDistance(baseAnchor.lat, baseAnchor.lng, kPt.lat, baseAnchor.lng) * (kPt.lat >= baseAnchor.lat ? 1 : -1);
+                        let px = toPixel({ x: dX, y: dY });
+
+                        if (idx === 0) ctx.moveTo(px.x, px.y);
+                        else ctx.lineTo(px.x, px.y);
+                    });
+                    ctx.stroke();
                 });
-                ctx.stroke();
                 ctx.setLineDash([]);
             }
 
@@ -2327,7 +2417,7 @@
             });
         });
 
-        const fileName = "Архив_полевых_съемок_БГ_ХНС_3_1.xls";
+        const fileName = "Архив_полевых_съемок_БГ_ХНС_3_2.xls";
         const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
@@ -2375,7 +2465,7 @@
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", `${name}_контур_БГ_ХНС_3.1.kml`);
+        link.setAttribute("download", `${name}_контур_БГ_ХНС_3.2.kml`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
