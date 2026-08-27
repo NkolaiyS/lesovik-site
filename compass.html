@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Профессиональный лесной компас-визир и таежный спутниковый навигатор (Лесовик ПРО)» (Версия 5.6 GLONASS Navigator & Archive).
+  Программное обеспечение: «Профессиональный лесной компас-визир и таежный спутниковый навигатор (Лесовик ПРО)» (Версия 5.7 Rescue Tools & Sun Timer).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -76,7 +76,7 @@
           "name": "Как передать координаты спасателям МЧС или ЛизаАлерт без интернета?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Нажмите кнопку «SOS: Передать координаты по SMS / 112». Смартфон автоматически сформирует текстовое сообщение с точными цифрами широты и долготы по спутникам ГЛОНАСС."
+            "text": "Нажмите кнопку «SOS: Экстренная помощь и координаты 112». Позвоните по бесплатному номеру 112 или отправьте готовое SMS с точными цифрами широты и долготы по спутникам ГЛОНАСС."
           }
         }
       ]
@@ -164,6 +164,10 @@
             text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; height: 34px;
         }
         .btn-nav:hover { background-color: var(--forest-green); color: var(--bg-paper); }
+        .btn-nav-pro {
+            background: #B45309; border: 1px solid #D97706; color: #FFF;
+        }
+        .btn-nav-pro:hover { background: #D97706; color: #FFF; }
 
         .main-workspace {
             display: grid; grid-template-columns: 440px 1fr; gap: 20px;
@@ -202,7 +206,8 @@
         .btn-action:hover { opacity: 0.9; }
         .btn-secondary { background-color: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); }
         .btn-lock { background-color: var(--accent); color: white; }
-        .btn-sos { background: #B91C1C; color: #FFF; font-size: 13px; }
+        .btn-sos { background: #B91C1C; color: #FFF; font-size: 13px; font-weight: 800; }
+        .btn-sos:hover { background: #991B1B; }
         .btn-share { background: #15803D; color: #FFF; font-size: 12px; }
         .btn-share:hover { background: #166534; }
         .btn-copy-coords { background: #0284C7; color: #FFF; font-size: 11px; padding: 7px; margin-top: 4px; }
@@ -450,12 +455,65 @@
         </div>
     </div>
 
+    <!-- ПОП-АП: ЭКСТРЕННАЯ ПОМОЩЬ SOS (ЗВОНОК 112 + SMS) -->
+    <div id="sos-dialog-popup" class="popup-overlay" onclick="closePopupOuter('sos-dialog-popup', event)">
+        <div class="popup-card" style="border: 2px solid var(--danger);">
+            <h3 style="color: var(--danger);">🆘 Экстренная помощь: Спасение 112</h3>
+            
+            <div style="background: rgba(220, 38, 38, 0.1); border: 1px solid var(--danger); border-radius: 8px; padding: 12px; margin: 12px 0;">
+                <span style="font-size: 11px; font-weight: bold; color: var(--danger); text-transform: uppercase;">Ваши точные координаты ГЛОНАСС для спасателей:</span>
+                <div style="font-size: 16px; font-weight: 800; color: var(--text-graphite); margin-top: 4px;" id="sos-coords-preview">
+                    Шир: 61.668793°, Долг: 50.836399° (H: 142м)
+                </div>
+            </div>
+
+            <p style="font-size: 13px; line-height: 1.5; color: var(--text-graphite);">
+                <b>⚠️ Главный приоритет — прямой голосовой звонок!</b><br>
+                Звонок на <b>112</b> бесплатный, проходит при нулевом балансе, без денег и даже без SIM-карты через любого доступного оператора связи.
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 14px;">
+                <button class="btn-action btn-sos" style="padding: 14px; font-size: 14px;" onclick="makeEmergencyCall112()">
+                    📞 Позвонить в службу спасения (112)
+                </button>
+                
+                <button class="btn-action btn-secondary" style="padding: 10px; font-size: 12px;" onclick="sendEmergencySMS()">
+                    ✉️ Отправить координаты по SMS (при наличии баланса)
+                </button>
+                
+                <button class="btn-action" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-graphite); font-size: 11px; padding: 8px;" onclick="closePopup('sos-dialog-popup')">
+                    ✕ Отмена
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ПОП-АП: ЗАГЛУШКА БУССОЛЬ ПРО (ДЛЯ РАБОТЫ И ЛЕСНИЧИХ) -->
+    <div id="busol-pro-popup" class="popup-overlay" onclick="closePopupOuter('busol-pro-popup', event)">
+        <div class="popup-card" style="border: 2px solid #D97706;">
+            <h3 style="color: #B45309;">🌲 Профессиональная Буссоль ПРО</h3>
+            <p style="font-size: 13.5px; line-height: 1.6;">
+                <b>Специализированный модуль для инженеров лесного хозяйства и лесоустройства:</b><br><br>
+                • Прецизионная оптическая буссоль БГ-ХНС.<br>
+                • Ввод и пересчет румбов и магнитных склонений кварталов.<br>
+                • Расчет площадей лесосек, невязок и замыкания ходов отводов.<br>
+                • Прямая интеграция с форматами лесоустроительной документации.<br><br>
+                <i>Модуль предназначен исключительно для камеральных и полевых работ лесничеств.</i>
+            </p>
+            <div style="display: flex; gap: 8px; margin-top: 15px;">
+                <a href="https://lesovik-pro.ru" class="btn-action" style="background: #B45309; text-decoration: none;">Перейти в Лесовик ПРО</a>
+                <button class="btn-action btn-secondary" onclick="closePopup('busol-pro-popup')">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
     <header class="glass-header">
         <a href="tools.html" class="logo-container">
             <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
             <h1>Лесной Компас и Навигатор</h1>
         </a>
         <div class="header-right">
+            <button class="btn-nav btn-nav-pro" onclick="openPopup('busol-pro-popup')">Буссоль ПРО 🌲</button>
             <a href="tools.html" class="btn-nav">Инструменты</a>
             <button class="btn-nav" onclick="toggleTheme()">Тема</button>
         </div>
@@ -469,6 +527,45 @@
             <!-- ПЛАШКА ОБ ОФЛАЙН-РАБОТЕ -->
             <div style="background: rgba(45, 90, 39, 0.15); border: 1px solid var(--forest-green); border-radius: 8px; padding: 10px 15px; font-size: 13px; text-align: center; color: var(--text-graphite);">
                 📶 <b>Работает без интернета!</b> Спутниковые координаты ГЛОНАСС, таёжный навигатор возврата к авто и памятка сохраняются в телефоне и работают в глухой тайге.
+            </div>
+
+            <!-- ГЛАВНАЯ КНОПКА ЭКСТРЕННОЙ ПОМОЩИ SOS -->
+            <div>
+                <button class="btn-action btn-sos" onclick="openSOSDialog()">🆘 SOS: Экстренная помощь и координаты 112</button>
+            </div>
+
+            <!-- СПАСАТЕЛЬНЫЕ ИНСТРУМЕНТЫ: СВИСТОК-МАЯК, ЗАКАТ И ШАГОМЕР -->
+            <div>
+                <div class="panel-section-title">
+                    <span>Таёжные приборы спасения</span>
+                </div>
+
+                <!-- 1. ЗВУКОВОЙ СВИСТОК И СВЕТОВОЙ МАЯК SOS -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+                    <button id="btn-whistle-toggle" class="btn-action btn-secondary" onclick="toggleRescueWhistle()">📢 Свисток SOS</button>
+                    <button id="btn-strobe-toggle" class="btn-action btn-secondary" onclick="toggleRescueStrobe()">💡 Маяк-Вспышка</button>
+                </div>
+
+                <!-- 2. СОЛНЕЧНЫЙ ТАЙМЕР ЗАКАТА (БЕЗ ИНТЕРНЕТА) -->
+                <div style="background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 10px; margin-top: 8px; font-size: 11.5px;">
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; color: var(--forest-green);">
+                        <span>☀️ Закат сегодня:</span>
+                        <span id="sun-sunset-time">--:--</span>
+                    </div>
+                    <div style="margin-top: 2px; color: var(--text-graphite);" id="sun-timer-status">
+                        ⏳ До темноты: расчет спутников...
+                    </div>
+                </div>
+
+                <!-- 3. ТАЁЖНЫЙ ШАГОМЕР И ПЕРЕХОД -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; font-size: 11px;">
+                    <div style="background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 6px; padding: 6px; text-align: center;">
+                        Пройдено: <b id="pedometer-dist-label" style="color:var(--forest-green); font-size:12px;">0.00 км</b>
+                    </div>
+                    <div style="background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 6px; padding: 6px; text-align: center;">
+                        Шагов: <b id="pedometer-steps-label" style="color:var(--forest-green); font-size:12px;">0 (~0 ккал)</b>
+                    </div>
+                </div>
             </div>
 
             <!-- УПРАВЛЕНИЕ АРХИВОМ ПОХОДОВ -->
@@ -499,11 +596,6 @@
                     <button id="tab-btn-compass" class="view-tab-btn active" onclick="switchMainView('compass')">🧭 Компас-Визир</button>
                     <button id="tab-btn-map" class="view-tab-btn" onclick="switchMainView('map')">🗺️ Навигатор Лесовик</button>
                 </div>
-            </div>
-
-            <!-- КНОПКА ЭКСТРЕННОЙ ОТПРАВКИ КООРДИНАТ SOS (БЕЗ ИНТЕРНЕТА) -->
-            <div>
-                <button class="btn-action btn-sos" onclick="triggerEmergencySOS()">🆘 SOS: Отправить координаты по SMS / 112</button>
             </div>
 
             <!-- КНОПКА КАЛИБРОВКИ / ЗАПУСКА ДАТЧИКА ДЛЯ IPHONE -->
@@ -888,6 +980,16 @@
         let activeReturnBeacon = null;
         let projectsArchive = [];
 
+        // Переменные шагомера
+        let totalDistanceMeters = 0;
+
+        // Переменные спасательного свистка и стробоскопа
+        let isWhistleActive = false;
+        let whistleTimer = null;
+        let isStrobeActive = false;
+        let strobeTimer = null;
+        let torchTrack = null;
+
         let yMap = null;
         let yUserPlacemark = null;
         let yTrackPolyline = null;
@@ -952,6 +1054,172 @@
                             navigator.vibrate(10);
                         }
                     } catch(e) {}
+                }
+            }
+        }
+
+        // --- СПАСАТЕЛЬНЫЙ СВИСТОК SOS (3 ИМПУЛЬСА ПО СТАНДАРТУ МЧС) ---
+        function toggleRescueWhistle() {
+            unlockAudioOnFirstGesture();
+            const btn = document.getElementById('btn-whistle-toggle');
+            isWhistleActive = !isWhistleActive;
+
+            if (isWhistleActive) {
+                btn.innerText = '⏹️ Стоп Свисток';
+                btn.style.background = '#DC2626';
+                btn.style.color = '#FFF';
+                playSosWhistleBurst();
+                whistleTimer = setInterval(playSosWhistleBurst, 15000); // Повтор каждые 15 сек
+            } else {
+                btn.innerText = '📢 Свисток SOS';
+                btn.style.background = 'transparent';
+                btn.style.color = 'var(--forest-green)';
+                if (whistleTimer) clearInterval(whistleTimer);
+            }
+        }
+
+        function playSosWhistleBurst() {
+            if (!audioCtx) unlockAudioOnFirstGesture();
+            if (!audioCtx) return;
+
+            // 3 резких высоких гудка по 350 мс
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    if (!isWhistleActive) return;
+                    try {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(2600, audioCtx.currentTime); // Пронзительный свист 2.6 кГц
+                        gain.gain.setValueAtTime(0.9, audioCtx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start();
+                        osc.stop(audioCtx.currentTime + 0.36);
+                    } catch(e) {}
+                }, i * 500);
+            }
+        }
+
+        // --- СВЕТОВОЙ МАЯК-СТРОБОСКОП (ФОНАРИК КАМЕРЫ) ---
+        async function toggleRescueStrobe() {
+            unlockAudioOnFirstGesture();
+            const btn = document.getElementById('btn-strobe-toggle');
+            isStrobeActive = !isStrobeActive;
+
+            if (isStrobeActive) {
+                btn.innerText = '⏹️ Стоп Маяк';
+                btn.style.background = '#E67E22';
+                btn.style.color = '#FFF';
+
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'environment' }
+                    });
+                    torchTrack = stream.getVideoTracks()[0];
+                    let torchState = false;
+
+                    strobeTimer = setInterval(async () => {
+                        if (!isStrobeActive || !torchTrack) return;
+                        torchState = !torchState;
+                        try {
+                            await torchTrack.applyConstraints({
+                                advanced: [{ torch: torchState }]
+                            });
+                        } catch(e) {}
+                    }, 400);
+                } catch(e) {
+                    alert("Вспышка не поддерживается браузером или запрещен доступ к камере.");
+                    toggleRescueStrobe();
+                }
+            } else {
+                btn.innerText = '💡 Маяк-Вспышка';
+                btn.style.background = 'transparent';
+                btn.style.color = 'var(--forest-green)';
+                if (strobeTimer) clearInterval(strobeTimer);
+                if (torchTrack) {
+                    try {
+                        await torchTrack.applyConstraints({ advanced: [{ torch: false }] });
+                        torchTrack.stop();
+                    } catch(e) {}
+                    torchTrack = null;
+                }
+            }
+        }
+
+        // --- АВТОНОМНЫЙ РАСЧЕТ ЗАКАТА (БЕЗ ИНТЕРНЕТА) ---
+        function calculateSolarSunset(lat, lon) {
+            const now = new Date();
+            const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+            
+            // Формула приближения заката (зенит 90.833°)
+            const zenith = 90.833 * Math.PI / 180;
+            const latRad = lat * Math.PI / 180;
+            const lngHour = lon / 15;
+            const t = dayOfYear + ((18 - lngHour) / 24);
+            const M = (0.9856 * t) - 3.289;
+            let L = M + (1.916 * Math.sin(M * Math.PI / 180)) + (0.020 * Math.sin(2 * M * Math.PI / 180)) + 282.634;
+            L = (L % 360 + 360) % 360;
+            
+            let RA = Math.atan(0.91764 * Math.tan(L * Math.PI / 180)) * 180 / Math.PI;
+            RA = (RA % 360 + 360) % 360;
+            const Lquadrant = (Math.floor(L / 90)) * 90;
+            const RAquadrant = (Math.floor(RA / 90)) * 90;
+            RA = (RA + (Lquadrant - RAquadrant)) / 15;
+            
+            const sinDec = 0.39782 * Math.sin(L * Math.PI / 180);
+            const cosDec = Math.cos(Math.asin(sinDec));
+            const cosH = (Math.cos(zenith) - (sinDec * Math.sin(latRad))) / (cosDec * Math.cos(latRad));
+            
+            if (cosH > 1 || cosH < -1) return null; // Полярный день / ночь
+            
+            const H = Math.acos(cosH) * 180 / Math.PI / 15;
+            const T = H + RA - (0.06571 * t) - 6.622;
+            let UT = (T - lngHour) % 24;
+            if (UT < 0) UT += 24;
+            
+            // Локальное время со смещением часового пояса
+            const localOffset = -now.getTimezoneOffset() / 60;
+            let localSunsetHour = UT + localOffset;
+            if (localSunsetHour >= 24) localSunsetHour -= 24;
+            
+            const hours = Math.floor(localSunsetHour);
+            const minutes = Math.floor((localSunsetHour - hours) * 60);
+            
+            const sunsetDate = new Date();
+            sunsetDate.setHours(hours, minutes, 0, 0);
+            return sunsetDate;
+        }
+
+        function updateSunTimerDisplay() {
+            const sunsetDate = calculateSolarSunset(currentLat, currentLon);
+            const timeEl = document.getElementById('sun-sunset-time');
+            const statusEl = document.getElementById('sun-timer-status');
+            if (!sunsetDate) {
+                timeEl.innerText = 'Полярный день';
+                statusEl.innerText = '☀️ Темнота не наступает';
+                return;
+            }
+
+            const hh = sunsetDate.getHours().toString().padStart(2, '0');
+            const mm = sunsetDate.getMinutes().toString().padStart(2, '0');
+            timeEl.innerText = `${hh}:${mm}`;
+
+            const diffMs = sunsetDate - new Date();
+            if (diffMs <= 0) {
+                statusEl.innerHTML = '<b style="color:var(--danger)">⚠️ Уже стемнело! Идти ночью запрещено.</b>';
+            } else {
+                const diffMin = Math.floor(diffMs / 60000);
+                const hrs = Math.floor(diffMin / 60);
+                const mins = diffMin % 60;
+                
+                if (diffMin <= 90) {
+                    statusEl.innerHTML = `⚠️ До темноты: <b>${hrs}ч ${mins}мин</b> (Пора к авто!)`;
+                    statusEl.style.color = 'var(--accent)';
+                } else {
+                    statusEl.innerHTML = `⏳ До темноты: <b>${hrs}ч ${mins}мин</b>`;
+                    statusEl.style.color = 'var(--text-graphite)';
                 }
             }
         }
@@ -1254,10 +1522,33 @@
             }
         }
 
+        // --- МОДАЛЬНОЕ ОКНО SOS С ПРИОРИТЕТОМ ЗВОНКА НА 112 ---
+        function openSOSDialog() {
+            unlockAudioOnFirstGesture();
+            const latStr = currentLat.toFixed(6);
+            const lonStr = currentLon.toFixed(6);
+            document.getElementById('sos-coords-preview').innerText = `Шир: ${latStr}°, Долг: ${lonStr}° (Высота: ${currentAlt}м)`;
+            openPopup('sos-dialog-popup');
+        }
+
+        function makeEmergencyCall112() {
+            window.location.href = 'tel:112';
+        }
+
+        function sendEmergencySMS() {
+            const latStr = currentLat.toFixed(6);
+            const lonStr = currentLon.toFixed(6);
+            const msg = `SOS! Я потерялся в лесу. Мои координаты ГЛОНАСС: Широта ${latStr}, Долгота ${lonStr} (Высота ${currentAlt}м). Срочно нужна помощь!`;
+            window.location.href = `sms:?body=${encodeURIComponent(msg)}`;
+        }
+
         function initGPS() {
             if ("geolocation" in navigator) {
                 navigator.geolocation.watchPosition(
                     (pos) => {
+                        const prevLat = currentLat;
+                        const prevLon = currentLon;
+
                         currentLat = pos.coords.latitude;
                         currentLon = pos.coords.longitude;
                         currentAlt = pos.coords.altitude ? Math.round(pos.coords.altitude) : 140;
@@ -1267,14 +1558,32 @@
                         document.getElementById('gps-lon-label').innerText = `${currentLon.toFixed(6)}°`;
                         document.getElementById('gps-alt-label').innerText = `${currentAlt} м (±${currentAcc}м)`;
 
+                        // Подсчет расстояния и шагов
+                        if (trackBreadcrumbs.length > 0) {
+                            const stepDist = calculateDistanceMeters(prevLat, prevLon, currentLat, currentLon);
+                            if (stepDist >= 3.0 && stepDist < 150.0) {
+                                totalDistanceMeters += stepDist;
+                                updatePedometerDisplay();
+                            }
+                        }
+
                         addTrackBreadcrumb(currentLat, currentLon);
                         updateYandexMapLive();
                         updateBeaconDisplay();
+                        updateSunTimerDisplay();
                     },
                     (err) => console.log("ГЛОНАСС поиск спутников..."),
                     { enableHighAccuracy: true, maximumAge: 0 }
                 );
             }
+        }
+
+        function updatePedometerDisplay() {
+            const km = (totalDistanceMeters / 1000).toFixed(2);
+            const steps = Math.round(totalDistanceMeters / 0.75); // Средний шаг 75 см
+            const kcal = Math.round(steps * 0.045); // ~45 ккал на 1000 шагов
+            document.getElementById('pedometer-dist-label').innerText = `${km} км`;
+            document.getElementById('pedometer-steps-label').innerText = `${steps} (~${kcal} ккал)`;
         }
 
         function addTrackBreadcrumb(lat, lon) {
@@ -1376,17 +1685,6 @@
             }
         }
 
-        function triggerEmergencySOS() {
-            unlockAudioOnFirstGesture();
-            const latStr = currentLat.toFixed(6);
-            const lonStr = currentLon.toFixed(6);
-            const msg = `SOS! Я потерялся в лесу. Мои координаты ГЛОНАСС: Широта ${latStr}, Долгота ${lonStr} (Высота ${currentAlt}м). Срочно нужна помощь!`;
-
-            if (confirm(`Экстренное оповещение!\n\nВаши координаты ГЛОНАСС:\nШирота: ${latStr}\nДолгота: ${lonStr}\n\nОткрыть отправку SMS спасателям/родным?`)) {
-                window.location.href = `sms:?body=${encodeURIComponent(msg)}`;
-            }
-        }
-
         function saveCurrentTrackToArchive() {
             unlockAudioOnFirstGesture();
             const nameInput = document.getElementById('archive-project-name');
@@ -1413,6 +1711,8 @@
             savedPointsList = [];
             trackBreadcrumbs = [];
             activeReturnBeacon = null;
+            totalDistanceMeters = 0;
+            updatePedometerDisplay();
             nameInput.value = '';
             localStorage.removeItem('lesovik_return_beacon');
             savePointsToStorage();
@@ -1525,6 +1825,8 @@
             }
             if (confirm("Стереть только пунктирный след пройденного пути (точки сохранятся)?")) {
                 trackBreadcrumbs = [];
+                totalDistanceMeters = 0;
+                updatePedometerDisplay();
                 saveTrackToStorage();
                 if (yTrackPolyline) yTrackPolyline.geometry.setCoordinates([]);
                 alert("Пунктирный след пути очищен.");
@@ -1750,6 +2052,7 @@
             initGPS();
             loadPointsFromStorage();
             updateCompassDisplay();
+            updateSunTimerDisplay();
         };
     </script>
 </body>
