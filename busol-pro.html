@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 11180157622.
-  Программное обеспечение: «Электронная буссоль БГ-ХНС PRO» (Версия 3.1 с глобальным переключателем замера расстояний).
+  Программное обеспечение: «Электронная буссоль БГ-ХНС PRO» (Версия 3.1).
 -->
 <!DOCTYPE html>
 <html lang="ru">
@@ -438,7 +438,19 @@
 
         .btn-delete-row { background: transparent; border: none; color: var(--danger); font-size: 14px; cursor: pointer; font-weight: bold; }
         .input-dist { width: 100%; padding: 5px 3px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--card-bg); color: var(--text-graphite); font-weight: bold; font-size: 12px; text-align: center; }
-        .step-settings { margin-top: 10px; font-size: 11px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        
+        /* ПАНЕЛЬ УПРАВЛЕНИЯ ПОД ТАБЛИЦЕЙ (КНОПКА ОЧИСТКИ ВСЕГДА НА МЕСТЕ) */
+        .step-settings { 
+            margin-top: 10px; font-size: 11px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            flex-wrap: wrap; gap: 8px; 
+        }
+        .btn-clear-log {
+            background: transparent; border: 1px solid var(--danger); color: var(--danger);
+            padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;
+            margin-left: auto; transition: 0.2s;
+        }
+        .btn-clear-log:hover { background: var(--danger); color: #FFF; }
 
         .canvas-container { position: relative; width: 100%; max-width: 100%; background: #FFFFFF; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-top: 12px; display: flex; flex-direction: column; align-items: center; padding: 8px; box-sizing: border-box; }
         #polygon-canvas { background: #FdfFfd; border-radius: 6px; width: 100%; max-width: 100%; aspect-ratio: 1; border: 1px dashed rgba(0,0,0,0.1); box-sizing: border-box; cursor: grab; }
@@ -615,7 +627,7 @@
                 <li><strong>Оптический визир (Вертикально):</strong> Наведите вертикальную нить экрана на веху угла делянки. Дождитесь зеленого уровня авиагоризонта и зафиксируйте румб в журнал.</li>
                 <li><strong>Электронная буссоль (Горизонтально):</strong> Положите телефон горизонтально на ладонь. Совместите верхний торец устройства с вехой. Нажмите кнопку «🔍 Увеличить компас» для крупного лимба.</li>
                 <li><strong>📡 GPS-Курс (По 2 точкам):</strong> Нажмите «📍 Старт точки», пройдите 5–10 метров по визиру и нажмите «🏁 Зафиксировать вектор». Точки переключаются по цепочке (Т1, Т2, Т3...).</li>
-                <li><strong>📡 GPS-расчет расстояний:</strong> Нажмите «Метод замера» ➔ «📡 GPS-расчет». Длина между зафиксированными точками посчитается автоматически со спутника (для Т1 будет прочерк).</li>
+                <li><strong>📡 GPS-расчет расстояний:</strong> Нажмите «Сменить метод» ➔ «📡 GPS-расчет». Длина между зафиксированными точками посчитается автоматически со спутника (для Т1 будет прочерк).</li>
                 <li><strong>📂 Загрузка KML / KMZ / GeoJSON:</strong> Загружайте файлы квартальных сеток и выделов из ФГИС ЛК или лесоустроительных баз прямо на чертёж без подключения к интернету.</li>
                 <li><strong>⛶ Полноэкранный планшет:</strong> Нажмите «⛶ На весь экран» для комфортной работы прямо по чертежу с увеличенной мини-буссолью в правом углу.</li>
             </ol>
@@ -828,7 +840,7 @@
                 <!-- ЕДИНЫЙ ПЕРЕКЛЮЧАТЕЛЬ МЕТОДА РАСЧЕТА ДИСТАНЦИЙ -->
                 <div class="dist-calc-selector-bar">
                     <span style="font-size:11.5px; font-weight:bold; color:var(--forest-green);">
-                        📏 Метод замера: <span id="current-dist-mode-label" style="color:var(--text-graphite);">Ручной ввод</span>
+                        📏 Метод: <span id="current-dist-mode-label" style="color:var(--text-graphite);">Ручной ввод</span>
                     </span>
                     <button class="btn-dist-mode-open" onclick="openPopup('dist-mode-popup')">Сменить метод</button>
                 </div>
@@ -850,10 +862,13 @@
                     </table>
                 </div>
 
-                <div class="step-settings" id="step-settings-bar" style="display:none;">
-                    <label>Шаг таксатора (м): </label>
-                    <input type="number" id="step-length" class="input-dist" value="0.75" step="0.05" style="width: 55px;" onfocus="this.select()" onchange="updateStepLength()">
-                    <button class="btn-clear-log" style="padding: 4px 6px;" onclick="clearLog()">Очистить журнал</button>
+                <!-- ПАНЕЛЬ УПРАВЛЕНИЯ ПОД ТАБЛИЦЕЙ (КНОПКА ОЧИСТКИ ВСЕГДА НА МЕСТЕ ПРИ ВСЕХ РЕЖИМАХ) -->
+                <div class="step-settings">
+                    <div id="step-settings-bar" style="display:none; align-items:center; gap:6px;">
+                        <label>Шаг таксатора (м): </label>
+                        <input type="number" id="step-length" class="input-dist" value="0.75" step="0.05" style="width: 55px;" onfocus="this.select()" onchange="updateStepLength()">
+                    </div>
+                    <button class="btn-clear-log" onclick="clearLog()">🗑️ Очистить журнал</button>
                 </div>
 
                 <div class="canvas-container">
