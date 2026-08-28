@@ -1,23 +1,24 @@
 /**
  * ============================================================================
- * SERVICE WORKER — ЕДИНЫЙ ОФФЛАЙН-КЕШ ЭКОСИСТЕМЫ «ЛЕСОВИК PRO» (v2.9.9)
+ * SERVICE WORKER — ЕДИНЫЙ ОФФЛАЙН-КЕШ ЭКОСИСТЕМЫ «ЛЕСОВИК PRO» (v3.2.0)
  * (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
  * ============================================================================
  */
 
-const PRO_CACHE = 'busol-pro-v2.9.9';
+const PRO_CACHE = 'busol-pro-v3.2.0';
 
 const PRO_ASSETS = [
   '/',
   '/index.html',
+  '/busol.html',
   '/busol-pro.html',
   '/height.html',
   '/diameter.html',
   '/bitterlich.html',
   '/journal.html',
   '/mdo.html',
+  '/tools.html',
   '/lesovik-core.js',
-  '/version.json',
   '/logo.jpeg',
   '/busol-pro.webmanifest',
   '/height.webmanifest',
@@ -25,34 +26,49 @@ const PRO_ASSETS = [
   '/bitterlich.webmanifest',
   '/journal.webmanifest',
   '/mdo.webmanifest',
-  'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.mini.min.js'
+  'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.mini.min.js',
+  'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'
 ];
 
+// 1. Поштучное отказоустойчивое кэширование
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(PRO_CACHE).then((cache) => {
-      console.log('[Lesovik PRO SW] Кэширование автономных инструментов PRO...');
-      return cache.addAll(PRO_ASSETS);
+    caches.open(PRO_CACHE).then(async (cache) => {
+      console.log('[Lesovik PRO SW] Запуск надежного поштучного кэширования...');
+      for (const asset of PRO_ASSETS) {
+        try {
+          const response = await fetch(asset, { cache: 'no-cache' });
+          if (response.ok) {
+            await cache.put(asset, response);
+          }
+        } catch (err) {
+          console.warn(`[Lesovik PRO SW] Пропущен ресурс при кэшировании: ${asset}`, err);
+        }
+      }
     })
   );
   self.skipWaiting();
 });
 
+// 2. Активация и удаление старых версий кэша
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter(key => key !== PRO_CACHE && key.startsWith('busol-pro')).map(key => caches.delete(key))
+        keys.filter(key => key !== PRO_CACHE).map(key => {
+          console.log(`[Lesovik PRO SW] Удаление устаревшего кэша: ${key}`);
+          return caches.delete(key);
+        })
       );
     })
   );
   self.clients.claim();
 });
 
-// Хелпер таймаута: если сеть не ответила за 2.5 сек, принудительно отдаем кэш
-function fetchWithTimeout(request, timeoutMs = 2500) {
+// Хелпер таймаута для плохой сети в лесу (2 секунды)
+function fetchWithTimeout(request, timeoutMs = 2000) {
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Network timeout (Е-шка)')), timeoutMs);
+    const timer = setTimeout(() => reject(new Error('Network timeout')), timeoutMs);
     fetch(request).then(
       response => {
         clearTimeout(timer);
@@ -66,6 +82,7 @@ function fetchWithTimeout(request, timeoutMs = 2500) {
   });
 }
 
+// 3. Перехват запросов (Cache-First для стабильного офлайна)
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
 
@@ -74,21 +91,26 @@ self.addEventListener('fetch', (event) => {
     url.includes('mc.yandex.ru') ||
     url.includes('google-analytics') ||
     url.includes('yandex.ru/ads') ||
-    url.includes('an.yandex.ru')
+    url.includes('an.yandex.ru') ||
+    url.includes('mail.ru')
   ) {
     return;
   }
 
   event.respondWith(
-    // 1. Сначала проверяем локальный кэш (с игнорированием ?key= и прочих GET-параметров)
     caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse;
       }
 
-      // 2. Если в кэше нет — идем в сеть, но с жестким таймаутом
-      return fetchWithTimeout(event.request, 2500).catch(() => {
-        // Если сеть зависла или недоступна, а запрашивается страница — открываем Буссоль PRO
+      return fetchWithTimeout(event.request, 2000).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && event.request.method === 'GET') {
+          const responseClone = networkResponse.clone();
+          caches.open(PRO_CACHE).then((cache) => cache.put(event.request, responseClone));
+        }
+        return networkResponse;
+      }).catch(() => {
+        // Если сети нет, а запрашивается HTML-страница — возвращаем Буссоль PRO
         if (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html')) {
           return caches.match('/busol-pro.html', { ignoreSearch: true });
         }
