@@ -5,13 +5,15 @@
  * ============================================================================
  * Версия: 3.2.0 (Стабильный офлайн, Self-healing без reload, Защита черновиков)
  * Автор / Владелец: Николай Сергеевич Худяков (ИП Худяков Н.С.)
+ * Экосистема: РЕСУРС (https://resurs-stretch.ru/)
  * ============================================================================
  */
 
 (function () {
     'use strict';
 
-    // 1. РЕЕСТР АКТИВИРОВАННЫХ УСТРОЙСТВ
+    // 1. РЕЕСТР АКТИВИРОВАННЫХ УСТРОЙСТВ И СРОКИ ДЕЙСТВИЯ ЛИЦЕНЗИЙ
+    // Месяцы в JS: 0-Янв, 1-Фев, 2-Мар, 3-Апр, 4-Май, 5-Июн, 6-Июл, 7-Авг, 8-Сен, 9-Окт, 10-Ноя, 11-Дек
     const licensedDevices = {
         "HNS-I6UX-FQXE0J": new Date(2099, 11, 31), // Бессрочно (iPhone Яндекс Николай)
         "HNS-BDSE-8ZMQTS": new Date(2099, 11, 31), // Бессрочно (iPhone Safari Николай)
@@ -23,10 +25,10 @@
         "HNS-RFS7-RYJB5K": new Date(2099, 11, 31), // Андрей (Хуавей)
         "HNS-4L1E-25O9U6": new Date(2026, 7, 31),   // Хонор 7 до 31 августа 2026
         "HNS-YU2O-2MRLAE": new Date(2099, 11, 31), // Бессрочно (Android Павел брат)
-        "HNS-NATS-GINXIF": new Date(2026, 8, 15), // Вячеслав (Минусинск ссылка)
-        "HNS-6UEP-ZF011I": new Date(2026, 8, 15), // Вячеслав (Минусинск значок)
-        "HNS-FEPM-79HAAC": new Date(2026, 7, 31), // Павел
-        "HNS-KD9P-MHR5NX": new Date(2026, 8, 15)  // Вячеслав
+        "HNS-NATS-GINXIF": new Date(2026, 8, 5),  // Вячеслав на 14 дней до 5 сентября Минусинск ссылка
+        "HNS-6UEP-ZF011I": new Date(2026, 8, 5),  // Вячеслав на 14 дней до 5 сентября Минусинск значок
+        "HNS-FEPM-79HAAC": new Date(2026, 7, 31), // Павел на 7 дней до 31 августа
+        "HNS-KD9P-MHR5NX": new Date(2026, 8, 5)   // Вячеслав до 5 сентября
     };
 
     function generateWebDeviceId() {
@@ -125,7 +127,7 @@
         return webId;
     }
 
-    // Восстановление ID без перезагрузки страницы
+    // Мягкое самолечение без location.reload()
     (async function selfHealIdentity() {
         try {
             const localId = localStorage.getItem(STORAGE_ID_KEY);
@@ -174,9 +176,14 @@
                 <span style="font-size:50px; margin-bottom:15px;">📡</span>
                 <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:10px;">Требуется подключение к сети</h2>
                 <p style="max-width:450px; font-size:13px; opacity:0.85; line-height:1.5; margin-bottom:20px;">
-                    Бесплатные калькуляторы работают только при активном интернете.<br><br>
-                    Для автономной работы в тайге <b>без доступа к сети</b> активируйте <b>Лесовик PRO</b>.
+                    Бесплатные веб-сервисы работают исключительно при активном интернет-соединении.<br><br>
+                    Для автономной работы в глубоком лесу и тайге <b>без доступа к интернету</b> приобретите профессиональное оффлайн-приложение <b>БГ-ХНС PRO 3.2</b>.
                 </p>
+                <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; border:1px solid rgba(143,188,143,0.2); text-align:left; font-size:12px; max-width:450px; width:100%; box-sizing:border-box;">
+                    <b>Контакты для приобретения автономной программы:</b><br>
+                    • Официальный дистрибьютор (ООО ТД «Сателлит»): <a href="mailto:a1983v@yandex.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none;">a1983v@yandex.ru</a><br>
+                    • Разработчик ПО (ИП Худяков Н.С.): <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; font-weight:bold; text-decoration:none;">folgoal@gmail.com</a>
+                </div>
             `;
             document.body.appendChild(blocker);
         }
@@ -217,11 +224,23 @@
             document.body.innerHTML = `
                 <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:#111815; color:#F9FBF9; z-index:999999; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:'Inter', sans-serif; padding:20px; text-align:center; box-sizing:border-box;">
                     <span style="font-size:50px; margin-bottom:15px;">🔒</span>
-                    <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:10px;">Доступ к PRO-модулям ограничен</h2>
+                    <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:10px;">Доступ к «Буссоль PRO» ограничен</h2>
                     <p style="max-width:480px; font-size:13px; opacity:0.85; line-height:1.5; margin-bottom:20px;">
-                        Ваш ID устройства: <b style="color:#8FBC8F; font-family:monospace; font-size:15px;">${globalAuth.currentId}</b>
+                        Данное устройство не зарегистрировано в реестре лицензий экосистемы «БГ-ХНС PRO».<br><br>
+                        Ваш родной ID устройства: <b style="color:#8FBC8F; font-family:monospace; font-size:15px;">${globalAuth.currentId}</b>
                     </p>
-                    <a href="https://lesovik-pro.ru/index.html" style="background:#2D5A27; color:#FFF; text-decoration:none; padding:12px 24px; border-radius:8px; font-weight:bold; font-size:13px; text-transform:uppercase;">На главную</a>
+                    <div style="background:rgba(255,255,255,0.04); padding:16px 20px; border-radius:10px; border:1px solid rgba(143,188,143,0.25); text-align:left; max-width:480px; width:100%; box-sizing:border-box; margin-bottom:20px;">
+                        <span style="display:block; font-size:11px; opacity:0.6; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; text-align:center; font-weight:bold;">Для активации доступа передайте ваш ID:</span>
+                        <div style="margin-bottom:12px; padding-bottom:10px; border-bottom:1px dashed rgba(255,255,255,0.1);">
+                            <span style="display:block; font-size:12px; font-weight:bold; color:#8FBC8F;">• Отдел продаж (ООО «Сателлит»):</span>
+                            <a href="mailto:a1983v@yandex.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none; font-size:13px; display:inline-block; margin-top:3px;">✉️ a1983v@yandex.ru</a>
+                        </div>
+                        <div>
+                            <span style="display:block; font-size:12px; font-weight:bold; color:#8FBC8F;">• Техническая поддержка (ИП Худяков Н.С.):</span>
+                            <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; font-weight:bold; text-decoration:none; font-size:13px; display:inline-block; margin-top:3px;">✉️ folgoal@gmail.com</a>
+                        </div>
+                    </div>
+                    <a href="https://lesovik-pro.ru/index.html" style="background:#2D5A27; color:#FFF; text-decoration:none; padding:12px 24px; border-radius:8px; font-weight:bold; font-size:13px; text-transform:uppercase; box-shadow:0 4px 15px rgba(0,0,0,0.4); display:inline-block;">На главную страницу</a>
                 </div>
             `;
             return true;
@@ -289,7 +308,6 @@
             if (!this.isPro()) return false;
             localStorage.setItem(STORAGE_KEYS.SYSTEM_MODE, JSON.stringify(!!enabled));
             window.dispatchEvent(new CustomEvent('lesovik:mode_changed', { detail: { systemMode: !!enabled } }));
-            location.reload();
         },
 
         getProjects: function () {
@@ -433,11 +451,18 @@
 
         openProjectControlModal: function () {
             let modal = document.getElementById('lesovik-project-control-modal');
+            const isPro = this.isPro();
+            const isSystemMode = this.isSystemMode();
+
+            if (!isPro) {
+                window.showProPromoModal();
+                return;
+            }
+
             if (modal) modal.remove();
 
             const activeProject = this.getActiveProject() || this.createProject({});
             const p = activeProject.passport || {};
-            const isSystemMode = this.isSystemMode();
 
             const modalHTML = `
                 <div id="lesovik-project-control-modal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.8); z-index:999999; display:flex; align-items:center; justify-content:center; padding:15px; box-sizing:border-box; font-family:'Inter', sans-serif;">
@@ -557,6 +582,44 @@
                 this.renderNavigationUI();
             }
         }
+    };
+
+    // МОДАЛЬНОЕ ОКНО ДЛЯ БЕСПЛАТНЫХ ПОЛЬЗОВАТЕЛЕЙ (С КОНТАКТАМИ ДЛЯ СВЯЗИ)
+    window.showProPromoModal = function() {
+        if (document.getElementById('pro-promo-modal')) {
+            document.getElementById('pro-promo-modal').style.display = 'flex';
+            return;
+        }
+
+        const currentId = getCurrentDeviceId();
+        const modalHTML = `
+            <div id="pro-promo-modal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.75); z-index:99999; display:flex; align-items:center; justify-content:center; padding:15px; box-sizing:border-box; font-family:'Inter',sans-serif;">
+                <div style="background:#111815; color:#F9FBF9; border:1px solid #8FBC8F; border-radius:12px; max-width:500px; width:100%; padding:20px; position:relative; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                    <button onclick="document.getElementById('pro-promo-modal').style.display='none'" style="position:absolute; top:12px; right:12px; background:transparent; border:none; color:#FFF; font-size:22px; cursor:pointer;">&times;</button>
+                    <div style="text-align:center; margin-bottom:15px;">
+                        <span style="font-size:40px;">🌲</span>
+                        <h3 style="font-family:'Merriweather',serif; color:#8FBC8F; margin:8px 0 5px 0;">Единая экосистема «БГ-ХНС PRO»</h3>
+                        <span style="font-size:11px; opacity:0.7; text-transform:uppercase;">Сквозной контекст • Бесшовная связка 6 инструментов</span>
+                    </div>
+                    <p style="font-size:12px; line-height:1.5; opacity:0.9; margin-bottom:15px; text-align:justify;">
+                        Вы используете бесплатную автономную версию калькулятора. В версии <b>PRO</b> все 6 инструментов объединяются в единую сеть без рекламы и работают полностью оффлайн в тайге.
+                    </p>
+                    <div style="background:rgba(255,255,255,0.04); padding:12px 15px; border-radius:8px; border:1px solid rgba(143,188,143,0.25); font-size:12px; margin-bottom:15px;">
+                        <span style="display:block; font-size:10px; opacity:0.6; text-transform:uppercase; margin-bottom:6px; font-weight:bold;">Ваш родной ID устройства: <b style="color:#8FBC8F; font-family:monospace;">${currentId}</b></span>
+                        <div style="margin-bottom:8px;">
+                            <span style="font-weight:bold; color:#8FBC8F;">• ООО «Сателлит» (Отдел продаж):</span><br>
+                            <a href="mailto:a1983v@yandex.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none;">✉️ a1983v@yandex.ru</a>
+                        </div>
+                        <div>
+                            <span style="font-weight:bold; color:#8FBC8F;">• ИП Худяков Н.С. (Разработка):</span><br>
+                            <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; font-weight:bold; text-decoration:none;">✉️ folgoal@gmail.com</a>
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('pro-promo-modal').style.display='none'" style="width:100%; padding:10px; background:#2D5A27; color:#FFF; border:none; border-radius:6px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:12px;">Понятно, продолжить в бесплатном режиме</button>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
     };
 
     window.LesovikCore.init();
