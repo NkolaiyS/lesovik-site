@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Профессиональный лесной компас-визир и таежный спутниковый навигатор (Лесовик ПРО)» (Версия 6.0 Expert Edition).
+  Программное обеспечение: «Профессиональный лесной компас-визир и таежный спутниковый навигатор (Лесовик ПРО)» (Версия 6.1 Expert Top Bar Edition).
   Правообладатель: Худяков Николай Сергеевич.
 -->
 <!DOCTYPE html>
@@ -166,14 +166,6 @@
         }
         .btn-nav:hover { background-color: var(--forest-green); color: var(--bg-paper); }
 
-        .btn-nav-expert {
-            background: #D97706; border: 1px solid #B45309; color: #FFF; font-weight: 700;
-        }
-        .btn-nav-expert:hover { background: #B45309; color: #FFF; }
-        .btn-nav-expert.active {
-            background: #B45309; box-shadow: inset 0 0 5px rgba(0,0,0,0.4);
-        }
-
         .main-workspace {
             display: grid; grid-template-columns: 1fr; gap: 20px;
             max-width: 1600px; margin: 20px auto; padding: 0 15px; flex: 1; width: 100%;
@@ -230,6 +222,19 @@
         .btn-export-kml { background-color: #0284C7; color: white; }
         .btn-danger-clear { background-color: transparent; border: 1px solid var(--danger); color: var(--danger); }
         .btn-danger-clear:hover { background-color: var(--danger); color: white; }
+
+        /* РЯД КНОПОК НАД КОМПАСОМ (КАЛИБРОВКА И ЭКСПЕРТ) */
+        .top-stage-action-bar {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 500px; margin-bottom: 12px; z-index: 10;
+        }
+        .btn-top-bar {
+            background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3); color: #FFF; font-weight: 700;
+            font-size: 12px; padding: 10px; border-radius: 8px; cursor: pointer; text-align: center;
+            text-transform: uppercase; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .btn-top-bar:hover { background: rgba(255, 255, 255, 0.28); }
+        .btn-top-bar.expert-active { background: #D97706; border-color: #F59E0B; }
 
         /* НАРОДНЫЙ БЛОК ДЛЯ ПРОСТОГО РЕЖИМА */
         .simple-mode-bar {
@@ -547,7 +552,6 @@
             <h1>Лесной Компас и Навигатор</h1>
         </a>
         <div class="header-right">
-            <button id="btn-expert-toggle" class="btn-nav btn-nav-expert" onclick="toggleExpertMode()">⚙️ Эксперт</button>
             <a href="tools.html" class="btn-nav">Инструменты</a>
             <button class="btn-nav" onclick="toggleTheme()">Тема</button>
         </div>
@@ -757,6 +761,12 @@
                     <button id="fs-tab-btn-compass" class="view-tab-btn active" onclick="switchMainView('compass')">🧭 Компас-Визир</button>
                     <button id="fs-tab-btn-map" class="view-tab-btn" onclick="switchMainView('map')">🗺️ Навигатор Лесовик</button>
                 </div>
+            </div>
+
+            <!-- ВЕРХНЯЯ ПАНЕЛЬ НАД КОМПАСОМ: КАЛИБРОВКА ДАТЧИКА И ЭКСПЕРТ -->
+            <div class="top-stage-action-bar">
+                <button class="btn-top-bar" onclick="requestDeviceOrientationPermission()">🧭 Запуск датчика</button>
+                <button class="btn-top-bar" id="btn-expert-toggle" onclick="toggleExpertMode()">⚙️ Эксперт</button>
             </div>
 
             <div class="compass-main-wrapper">
@@ -1075,13 +1085,13 @@
 
             if (isExpertMode) {
                 container.classList.add('expert-mode');
-                btn.classList.add('active');
-                btn.innerText = '✕ Скрыть панель';
+                btn.classList.add('expert-active');
+                btn.innerText = '✕ Эксперт';
                 if (simpleControls) simpleControls.style.display = 'none';
                 localStorage.setItem('lesovik_mode_expert', 'true');
             } else {
                 container.classList.remove('expert-mode');
-                btn.classList.remove('active');
+                btn.classList.remove('expert-active');
                 btn.innerText = '⚙️ Эксперт';
                 if (simpleControls) simpleControls.style.display = 'flex';
                 localStorage.setItem('lesovik_mode_expert', 'false');
@@ -1600,34 +1610,41 @@
 
         function requestDeviceOrientationPermission() {
             unlockAudioOnFirstGesture();
-            if (isSensorsInitialized) return;
-
+            
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 DeviceOrientationEvent.requestPermission().then(permissionState => {
                     if (permissionState === 'granted') {
+                        window.removeEventListener('deviceorientation', handleOrientation, true);
                         window.addEventListener('deviceorientation', handleOrientation, true);
                         isSensorsInitialized = true;
+                        alert("Датчик компаса успешно запущен!");
+                    } else {
+                        alert("Доступ к датчикам отклонен. Разрешите доступ в настройках браузера.");
                     }
-                }).catch(() => {});
+                }).catch(err => {
+                    console.log("Permission error:", err);
+                });
             } else {
                 if ('ondeviceorientationabsolute' in window) {
+                    window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
                     window.addEventListener('deviceorientationabsolute', handleOrientation, true);
-                    isSensorsInitialized = true;
                 } else if ('ondeviceorientation' in window) {
+                    window.removeEventListener('deviceorientation', handleOrientation, true);
                     window.addEventListener('deviceorientation', handleOrientation, true);
-                    isSensorsInitialized = true;
                 }
+                isSensorsInitialized = true;
+                alert("Датчик компаса активирован!");
             }
         }
 
         function initSensorOnFirstInteraction() {
-            requestDeviceOrientationPermission();
-            window.removeEventListener('click', initSensorOnFirstInteraction, true);
-            window.removeEventListener('touchstart', initSensorOnFirstInteraction, true);
+            if (!isSensorsInitialized) {
+                requestDeviceOrientationPermission();
+            }
         }
 
-        window.addEventListener('click', initSensorOnFirstInteraction, true);
-        window.addEventListener('touchstart', initSensorOnFirstInteraction, true);
+        window.addEventListener('click', initSensorOnFirstInteraction, { once: true });
+        window.addEventListener('touchstart', initSensorOnFirstInteraction, { once: true });
 
         function copyCoordinatesToClipboard() {
             unlockAudioOnFirstGesture();
