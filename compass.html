@@ -1020,6 +1020,7 @@
 
         let audioCtx = null;
         let isAudioUnlocked = false;
+        let isSensorsInitialized = false;
 
         function unlockAudioOnFirstGesture() {
             if (!audioCtx) {
@@ -1514,24 +1515,37 @@
 
         function requestDeviceOrientationPermission() {
             unlockAudioOnFirstGesture();
+            if (isSensorsInitialized) return;
+
+            // Специфика iOS 13+ (требует явного разрешения по клику)
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 DeviceOrientationEvent.requestPermission().then(permissionState => {
                     if (permissionState === 'granted') {
                         window.addEventListener('deviceorientation', handleOrientation, true);
-                        alert("Датчик компаса откалиброван и подключен!");
-                    } else {
-                        alert("Доступ к датчикам компаса отклонен.");
+                        isSensorsInitialized = true;
                     }
-                }).catch(console.error);
+                }).catch(() => {});
             } else {
+                // Специфика Android и современных стандартов
                 if ('ondeviceorientationabsolute' in window) {
                     window.addEventListener('deviceorientationabsolute', handleOrientation, true);
-                } else {
+                    isSensorsInitialized = true;
+                } else if ('ondeviceorientation' in window) {
                     window.addEventListener('deviceorientation', handleOrientation, true);
+                    isSensorsInitialized = true;
                 }
-                alert("Датчик компаса активирован!");
             }
         }
+
+        // Автоматическая активация датчиков при первом любом касании/клике экрана (критично для iPhone)
+        function initSensorOnFirstInteraction() {
+            requestDeviceOrientationPermission();
+            window.removeEventListener('click', initSensorOnFirstInteraction, true);
+            window.removeEventListener('touchstart', initSensorOnFirstInteraction, true);
+        }
+
+        window.addEventListener('click', initSensorOnFirstInteraction, true);
+        window.addEventListener('touchstart', initSensorOnFirstInteraction, true);
 
         function copyCoordinatesToClipboard() {
             unlockAudioOnFirstGesture();
@@ -2082,6 +2096,7 @@
 
         window.onload = function() {
             buildSvgCompassTicks();
+            // Попытка старта для Android (где клик не обязателен)
             requestDeviceOrientationPermission();
             initGPS();
             loadPointsFromStorage();
