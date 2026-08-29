@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Профессиональный лесной компас-визир и таежный спутниковый навигатор (Лесовик ПРО)» (Версия 5.8 Rescue Fullscreen Edition).
+  Программное обеспечение: «Профессиональный лесной компас-визир и таежный спутниковый навигатор (Лесовик ПРО)» (Версия 6.0 Expert Edition).
   Правообладатель: Худяков Николай Сергеевич.
 -->
 <!DOCTYPE html>
@@ -166,15 +166,32 @@
         }
         .btn-nav:hover { background-color: var(--forest-green); color: var(--bg-paper); }
 
+        .btn-nav-expert {
+            background: #D97706; border: 1px solid #B45309; color: #FFF; font-weight: 700;
+        }
+        .btn-nav-expert:hover { background: #B45309; color: #FFF; }
+        .btn-nav-expert.active {
+            background: #B45309; box-shadow: inset 0 0 5px rgba(0,0,0,0.4);
+        }
+
         .main-workspace {
-            display: grid; grid-template-columns: 440px 1fr; gap: 20px;
+            display: grid; grid-template-columns: 1fr; gap: 20px;
             max-width: 1600px; margin: 20px auto; padding: 0 15px; flex: 1; width: 100%;
         }
 
+        .main-workspace.expert-mode {
+            grid-template-columns: 440px 1fr;
+        }
+
         .control-panel {
+            display: none;
             background-color: var(--card-bg); border: 1px solid var(--border-color);
-            border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px;
+            border-radius: 12px; padding: 18px; flex-direction: column; gap: 14px;
             max-height: 90vh; overflow-y: auto;
+        }
+
+        .main-workspace.expert-mode .control-panel {
+            display: flex;
         }
 
         .panel-section-title {
@@ -213,6 +230,21 @@
         .btn-export-kml { background-color: #0284C7; color: white; }
         .btn-danger-clear { background-color: transparent; border: 1px solid var(--danger); color: var(--danger); }
         .btn-danger-clear:hover { background-color: var(--danger); color: white; }
+
+        /* НАРОДНЫЙ БЛОК ДЛЯ ПРОСТОГО РЕЖИМА */
+        .simple-mode-bar {
+            display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 500px; margin-top: 10px; z-index: 10;
+        }
+        .btn-simple-car {
+            background: #15803D; color: #FFF; font-size: 15px; font-weight: 800; padding: 14px; border-radius: 10px; border: none; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(21, 128, 61, 0.4); text-transform: uppercase;
+        }
+        .btn-simple-car:hover { background: #166534; }
+        .btn-simple-sos {
+            background: #B91C1C; color: #FFF; font-size: 15px; font-weight: 800; padding: 14px; border-radius: 10px; border: none; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(185, 28, 28, 0.4); text-transform: uppercase;
+        }
+        .btn-simple-sos:hover { background: #991B1B; }
 
         .view-mode-tabs {
             display: flex; border: 1px solid var(--forest-green); border-radius: 8px; overflow: hidden; margin-top: 4px;
@@ -380,9 +412,13 @@
         }
 
         .stage-quick-bar {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 500px;
+            display: none; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 500px;
             margin-top: 10px; z-index: 10;
         }
+        .main-workspace.expert-mode .stage-quick-bar {
+            display: grid;
+        }
+
         .btn-screen-bar {
             background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.25); color: #FFF; font-weight: bold;
@@ -450,7 +486,7 @@
         .footer-bottom { text-align: center; opacity: 0.6; }
 
         @media (max-width: 950px) {
-            .main-workspace { grid-template-columns: 1fr; }
+            .main-workspace.expert-mode { grid-template-columns: 1fr; }
             .compass-stage-container { min-height: 540px; }
         }
     </style>
@@ -511,15 +547,16 @@
             <h1>Лесной Компас и Навигатор</h1>
         </a>
         <div class="header-right">
+            <button id="btn-expert-toggle" class="btn-nav btn-nav-expert" onclick="toggleExpertMode()">⚙️ Эксперт</button>
             <a href="tools.html" class="btn-nav">Инструменты</a>
             <button class="btn-nav" onclick="toggleTheme()">Тема</button>
         </div>
     </header>
 
-    <div class="main-workspace">
+    <div class="main-workspace" id="main-workspace-container">
 
-        <!-- ПАНЕЛЬ УПРАВЛЕНИЯ -->
-        <div class="control-panel">
+        <!-- ПАНЕЛЬ УПРАВЛЕНИЯ (РЕЖИМ ЭКСПЕРТА) -->
+        <div class="control-panel" id="expert-control-panel">
             
             <!-- ПЛАШКА ОБ ОФЛАЙН-РАБОТЕ -->
             <div style="background: rgba(45, 90, 39, 0.15); border: 1px solid var(--forest-green); border-radius: 8px; padding: 10px 15px; font-size: 13px; text-align: center; color: var(--text-graphite);">
@@ -798,7 +835,13 @@
                 <!-- КНОПКА БЫСТРОГО КОПИРОВАНИЯ КООРДИНАТ -->
                 <button class="btn-action btn-copy-coords" onclick="copyCoordinatesToClipboard()">📋 Скопировать координаты ГЛОНАСС в буфер</button>
 
-                <!-- ДУБЛИРУЮЩИЕ КНОПКИ -->
+                <!-- НАРОДНЫЙ БЛОК БЫСТРЫХ ДЕЙСТВИЙ (ОТОБРАЖАЕТСЯ ПО УМОЛЧАНИЮ) -->
+                <div class="simple-mode-bar" id="simple-mode-controls">
+                    <button class="btn-simple-car" id="btn-quick-car-action" onclick="handleQuickCarClick()">🚗 Запомнить машину (или дом)</button>
+                    <button class="btn-simple-sos" onclick="openSOSDialog()">🆘 Позвонить спасателям 112</button>
+                </div>
+
+                <!-- ДУБЛИРУЮЩИЕ КНОПКИ ЭКСПЕРТА -->
                 <div class="stage-quick-bar">
                     <button class="btn-screen-bar" onclick="toggleLockTarget()">🎯 Створ</button>
                     <button class="btn-screen-bar" onclick="saveCurrentPost()">📍 Засечка</button>
@@ -987,6 +1030,7 @@
         let lastVibeDegree = 0;
         let lockedTargetAzimuth = null;
         let isFullscreen = false;
+        let isExpertMode = false;
 
         let filteredSin = 0;
         let filteredCos = 0;
@@ -1021,6 +1065,39 @@
         let audioCtx = null;
         let isAudioUnlocked = false;
         let isSensorsInitialized = false;
+
+        function toggleExpertMode() {
+            unlockAudioOnFirstGesture();
+            isExpertMode = !isExpertMode;
+            const container = document.getElementById('main-workspace-container');
+            const btn = document.getElementById('btn-expert-toggle');
+            const simpleControls = document.getElementById('simple-mode-controls');
+
+            if (isExpertMode) {
+                container.classList.add('expert-mode');
+                btn.classList.add('active');
+                btn.innerText = '✕ Скрыть панель';
+                if (simpleControls) simpleControls.style.display = 'none';
+                localStorage.setItem('lesovik_mode_expert', 'true');
+            } else {
+                container.classList.remove('expert-mode');
+                btn.classList.remove('active');
+                btn.innerText = '⚙️ Эксперт';
+                if (simpleControls) simpleControls.style.display = 'flex';
+                localStorage.setItem('lesovik_mode_expert', 'false');
+            }
+        }
+
+        function handleQuickCarClick() {
+            unlockAudioOnFirstGesture();
+            if (!activeReturnBeacon) {
+                setReturnBeacon('🚗 Автомобиль');
+            } else {
+                if (confirm(`Точка «${activeReturnBeacon.name}» уже активна. Сбросить и зафиксировать текущее местоположение?`)) {
+                    setReturnBeacon('🚗 Автомобиль');
+                }
+            }
+        }
 
         function unlockAudioOnFirstGesture() {
             if (!audioCtx) {
@@ -1382,16 +1459,20 @@
             localStorage.removeItem('lesovik_return_beacon');
             document.getElementById('target-beacon-display').style.display = 'none';
             document.getElementById('beacon-target-arrow-layer').style.display = 'none';
+            const carBtn = document.getElementById('btn-quick-car-action');
+            if (carBtn) carBtn.innerText = '🚗 Запомнить машину (или дом)';
         }
 
         function updateBeaconDisplay() {
             const beaconCard = document.getElementById('target-beacon-display');
             const arrowLayer = document.getElementById('beacon-target-arrow-layer');
             const beaconLine = document.getElementById('beacon-line-element');
+            const carBtn = document.getElementById('btn-quick-car-action');
 
             if (!activeReturnBeacon) {
                 beaconCard.style.display = 'none';
                 arrowLayer.style.display = 'none';
+                if (carBtn) carBtn.innerText = '🚗 Запомнить машину (или дом)';
                 return;
             }
 
@@ -1405,6 +1486,10 @@
             document.getElementById('beacon-azimuth-label').innerText = `${targetBearing}° (${getRumbString(targetBearing)})`;
             document.getElementById('beacon-dist-label').innerText = dist > 1000 ? `${(dist/1000).toFixed(2)} км` : `${dist} м`;
             document.getElementById('beacon-time-label').innerText = minutesWalking > 60 ? `~${(minutesWalking/60).toFixed(1)} ч` : `~${minutesWalking} мин`;
+
+            if (carBtn) {
+                carBtn.innerText = `🎯 До авто: ${dist > 1000 ? (dist/1000).toFixed(2) + ' км' : dist + ' м'} (сбросить/обновить)`;
+            }
 
             const relativeAngle = (targetBearing - currentAzimuth + 360) % 360;
             arrowLayer.style.display = 'block';
@@ -1517,7 +1602,6 @@
             unlockAudioOnFirstGesture();
             if (isSensorsInitialized) return;
 
-            // Специфика iOS 13+ (требует явного разрешения по клику)
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 DeviceOrientationEvent.requestPermission().then(permissionState => {
                     if (permissionState === 'granted') {
@@ -1526,7 +1610,6 @@
                     }
                 }).catch(() => {});
             } else {
-                // Специфика Android и современных стандартов
                 if ('ondeviceorientationabsolute' in window) {
                     window.addEventListener('deviceorientationabsolute', handleOrientation, true);
                     isSensorsInitialized = true;
@@ -1537,7 +1620,6 @@
             }
         }
 
-        // Автоматическая активация датчиков при первом любом касании/клике экрана (критично для iPhone)
         function initSensorOnFirstInteraction() {
             requestDeviceOrientationPermission();
             window.removeEventListener('click', initSensorOnFirstInteraction, true);
@@ -1595,7 +1677,6 @@
                         document.getElementById('gps-lon-label').innerText = `${currentLon.toFixed(6)}°`;
                         document.getElementById('gps-alt-label').innerText = `${currentAlt} м (±${currentAcc}м)`;
 
-                        // Подсчет расстояния и шагов
                         if (trackBreadcrumbs.length > 0) {
                             const stepDist = calculateDistanceMeters(prevLat, prevLon, currentLat, currentLon);
                             if (stepDist >= 3.0 && stepDist < 150.0) {
@@ -1617,8 +1698,8 @@
 
         function updatePedometerDisplay() {
             const km = (totalDistanceMeters / 1000).toFixed(2);
-            const steps = Math.round(totalDistanceMeters / 0.75); // Средний шаг 75 см
-            const kcal = Math.round(steps * 0.045); // ~45 ккал на 1000 шагов
+            const steps = Math.round(totalDistanceMeters / 0.75);
+            const kcal = Math.round(steps * 0.045);
             document.getElementById('pedometer-dist-label').innerText = `${km} км`;
             document.getElementById('pedometer-steps-label').innerText = `${steps} (~${kcal} ккал)`;
         }
@@ -1915,6 +1996,10 @@
                 if (savedZero !== null) {
                     manualZeroOffset = parseFloat(savedZero) || 0;
                 }
+                const savedExpert = localStorage.getItem('lesovik_mode_expert');
+                if (savedExpert === 'true') {
+                    toggleExpertMode();
+                }
             } catch(e) {}
         }
 
@@ -2096,7 +2181,6 @@
 
         window.onload = function() {
             buildSvgCompassTicks();
-            // Попытка старта для Android (где клик не обязателен)
             requestDeviceOrientationPermission();
             initGPS();
             loadPointsFromStorage();
