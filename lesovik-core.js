@@ -30,6 +30,7 @@
         "HNS-FEPM-79HAAC": new Date(2026, 7, 31), // Павел на 7 дней до 31 августа
         "HNS-KD9P-MHR5NX": new Date(2026, 8, 14), // Вячеслав до 14 сентября
         "HNS-1XG4-JL61C0": new Date(2026, 8, 10), // Терянское лесничество 10 сентября
+        "HNS-MCER-ZB2MG6": new Date(2026, 8, 10), // Терянское лесничество 10 сентября
     };
 
     function generateWebDeviceId() {
