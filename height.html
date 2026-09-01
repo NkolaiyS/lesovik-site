@@ -531,7 +531,7 @@
                         </table>
                     </div>
 
-                    <!-- КНОПКИ ВЫГРУЗКИ В 1 КЛИК -->
+                    <!-- КНОПКИ ВЫГРУЗКИ В 1 КЛИК (С ЗАЩИТОЙ ЛИЦЕНЗИИ) -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
                         <button class="btn" style="margin:0; padding:7px; font-size:10.5px; background:#1E3A1A;" onclick="printOfficialHeightSheet()">📄 Бланк в PDF</button>
                         <button class="btn" style="margin:0; padding:7px; font-size:10.5px; background:#107C41;" onclick="exportHeightsXLSX()">📊 В Excel (.xlsx)</button>
@@ -734,7 +734,6 @@
         measurementsLog.unshift(record);
         localStorage.setItem(ARCHIVE_STORAGE_KEY, JSON.stringify(measurementsLog));
         
-        // Синхронизация с ядром LesovikCore
         if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
             const activeProj = window.LesovikCore.getActiveProject();
             if (activeProj && activeProj.plots && activeProj.plots.length > 0) {
@@ -869,7 +868,7 @@
     function closeInstruction() { document.getElementById('instruction-popup').style.display = 'none'; }
     function closeInstructionOuter(e) { if(e.target.id === 'instruction-popup') closeInstruction(); }
 
-    // 4. ПАСПОРТ И АРХИВАЦИЯ
+    // 4. ПАСПОРТ И АРХИВАЦИЯ (С ЗАЩИТОЙ ЛИЦЕНЗИИ)
     function syncPassportToCore() {
         const les = document.getElementById('h-lesnichestvo').value;
         const kv = document.getElementById('h-kvartal').value;
@@ -889,6 +888,11 @@
     }
 
     function saveCurrentToArchive() {
+        if (window.LesovikCore && !window.LesovikCore.isPro()) {
+            window.showProPromoModal("Сохранение проектов и привязка замеров высот к паспорту делянки доступны только в профессиональной версии БГ-ХНС PRO.");
+            return;
+        }
+
         const name = document.getElementById('h-archive-name').value.trim();
         if (!name) { alert('Введите название объекта!'); return; }
         if (measurementsLog.length === 0) { alert('Журнал пуст!'); return; }
@@ -982,16 +986,17 @@
                 document.getElementById('h-delyanka').value = p.delyanka || '';
                 document.getElementById('h-vydel').value = p.vydel || '1';
                 document.getElementById('h-archive-name').value = `Кв. ${p.kvartal || '-'}, Выд. ${p.vydel || '-'}, Дел. ${p.delyanka || '-'}`;
-                
-                document.getElementById('ctx-project-name').innerText = `${p.lesnichestvo || 'Лесничество'} • Кв. ${p.kvartal || '-'} • Дел. ${p.delyanka || '-'}`;
-                document.getElementById('ctx-mode-badge').innerText = '🔗 В СВЯЗКЕ';
-                document.getElementById('ctx-mode-badge').className = 'mode-badge badge-linked';
             }
         }
     }
 
-    // 5. ОФИЦИАЛЬНАЯ ПЕЧАТЬ В АЛЬБОМНЫЙ PDF
+    // 5. ОФИЦИАЛЬНАЯ ПЕЧАТЬ В АЛЬБОМНЫЙ PDF (С ЗАЩИТОЙ ЛИЦЕНЗИИ)
     function printOfficialHeightSheet() {
+        if (window.LesovikCore && !window.LesovikCore.isPro()) {
+            window.showProPromoModal("Печать официальных ведомостей высот и отчетов в PDF доступна только в профессиональной версии БГ-ХНС PRO.");
+            return;
+        }
+
         if (measurementsLog.length === 0) {
             alert('Журнал замеров пуст!');
             return;
@@ -1065,8 +1070,13 @@
         window.print();
     }
 
-    // 6. ВЫГРУЗКА В EXCEL (.XLSX)
+    // 6. ВЫГРУЗКА В EXCEL (.XLSX) (С ЗАЩИТОЙ ЛИЦЕНЗИИ)
     function exportHeightsXLSX() {
+        if (window.LesovikCore && !window.LesovikCore.isPro()) {
+            window.showProPromoModal("Экспорт отчетов высотомера в таблицы Excel (.xlsx) доступен только в профессиональной версии БГ-ХНС PRO.");
+            return;
+        }
+
         if (measurementsLog.length === 0) {
             alert('Журнал пуст!');
             return;
