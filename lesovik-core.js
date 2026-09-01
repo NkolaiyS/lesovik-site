@@ -18,6 +18,7 @@
         "HNS-I6UX-FQXE0J": new Date(2099, 11, 31), // Бессрочно (iPhone Яндекс Николай)
         "HNS-BDSE-8ZMQTS": new Date(2099, 11, 31), // Бессрочно (iPhone Safari Николай)
         "HNS-0EEC-NJR6JS": new Date(2099, 11, 31), // Бессрочно (Web Николай)
+        "HNS-JG2X-7UH949": new Date(2099, 11, 31), // Бессрочно (Web Николай) Гугл
         "HNS-3K0F-5IHF3A": new Date(2099, 11, 31), // Бессрочно (Android Николай)
         "HNS-3SBX-TQMJO7": new Date(2026, 11, 31), // До 31 декабря 2026 (Ноутбук)
         "HNS-MINCIFRA-TEST": new Date(2099, 11, 31), // Доступ экспертов Минцифры
