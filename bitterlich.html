@@ -997,18 +997,45 @@
                 document.getElementById('reticle-val').innerText = `${journalData.reticleWidth}%`;
             }
             updateArchiveDropdown();
+
+            if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
+                const activeProj = window.LesovikCore.getActiveProject();
+                if (activeProj && activeProj.passport) {
+                    const p = activeProj.passport;
+                    document.getElementById('b-lesnichestvo').value = p.lesnichestvo || '';
+                    document.getElementById('b-kvartal').value = p.kvartal || '';
+                    document.getElementById('b-delyanka').value = p.delyanka || '';
+                    document.getElementById('b-vydel').value = p.vydel || '1';
+                    document.getElementById('b-archive-name').value = `Кв. ${p.kvartal || '-'}, Выд. ${p.vydel || '-'}, Дел. ${p.delyanka || '-'}`;
+                }
+            }
         }
 
-        // 2. АРХИВ И ПАСПОРТ
+        // 2. АРХИВ И ПАСПОРТ (С ЗАЩИТОЙ ЛИЦЕНЗИИ)
         function syncPassportToCore() {
             const les = document.getElementById('b-lesnichestvo').value;
             const kv = document.getElementById('b-kvartal').value;
             const del = document.getElementById('b-delyanka').value;
             const vyd = document.getElementById('b-vydel').value;
             document.getElementById('b-archive-name').value = `Кв. ${kv}, Выд. ${vyd}, Дел. ${del}`;
+
+            if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
+                const activeProj = window.LesovikCore.getActiveProject();
+                if (activeProj) {
+                    activeProj.passport = { ...activeProj.passport, lesnichestvo: les, kvartal: kv, delyanka: del, vydel: vyd };
+                    const projs = window.LesovikCore.getProjects();
+                    const idx = projs.findIndex(p => p.id === activeProj.id);
+                    if (idx !== -1) { projs[idx] = activeProj; window.LesovikCore.saveProjectsDB(projs); }
+                }
+            }
         }
 
         function saveCurrentToArchive() {
+            if (window.LesovikCore && !window.LesovikCore.isPro()) {
+                window.showProPromoModal("Сохранение проектов и привязка точек полнотомера к паспорту делянки доступны только в профессиональной версии БГ-ХНС PRO.");
+                return;
+            }
+
             const name = document.getElementById('b-archive-name').value.trim();
             if (!name) { alert('Введите название объекта!'); return; }
 
@@ -1051,7 +1078,7 @@
             const item = archive[index];
             if (!item) return;
 
-            if (confirm(`Загрузить съемку "${item.name}"? Текущие данные будут заменены.`)) {
+            if (confirm(`Загрузить съемку "${item.name}"? Текущие данные будут замененя.`)) {
                 document.getElementById('b-lesnichestvo').value = item.passport.lesnichestvo || '';
                 document.getElementById('b-kvartal').value = item.passport.kvartal || '';
                 document.getElementById('b-delyanka').value = item.passport.delyanka || '';
@@ -1083,8 +1110,13 @@
             }
         }
 
-        // 3. ОФИЦИАЛЬНАЯ ПЕЧАТЬ В АЛЬБОМНЫЙ PDF
+        // 3. ОФИЦИАЛЬНАЯ ПЕЧАТЬ В АЛЬБОМНЫЙ PDF (С ЗАЩИТОЙ ЛИЦЕНЗИИ)
         function printOfficialBitterlichSheet() {
+            if (window.LesovikCore && !window.LesovikCore.isPro()) {
+                window.showProPromoModal("Печать официальных ведомостей полнотомера и отчетов в PDF доступна только в профессиональной версии БГ-ХНС PRO.");
+                return;
+            }
+
             const les = document.getElementById('b-lesnichestvo').value;
             const kv = document.getElementById('b-kvartal').value;
             const del = document.getElementById('b-delyanka').value;
@@ -1127,8 +1159,13 @@
             window.print();
         }
 
-        // 4. ВЫГРУЗКА В ТАБЛИЦУ (.XLSX)
+        // 4. ВЫГРУЗКА В ТАБЛИЦУ (.XLSX) (С ЗАЩИТОЙ ЛИЦЕНЗИИ)
         function downloadExcel() {
+            if (window.LesovikCore && !window.LesovikCore.isPro()) {
+                window.showProPromoModal("Экспорт отчетов полнотомера в таблицы Excel (.xlsx) доступен только в профессиональной версии БГ-ХНС PRO.");
+                return;
+            }
+
             if (typeof XLSX === 'undefined') {
                 alert("Компонент загружается, повторите через секунду.");
                 return;
@@ -1173,8 +1210,13 @@
             XLSX.writeFile(workbook, `Полнотомер_Кв${kv}_Выд${vyd}_Дел${del}.xlsx`);
         }
 
-        // 5. ИСТИННАЯ ВЫГРУЗКА ТОЧЕК В КАРТУ
+        // 5. ИСТИННАЯ ВЫГРУЗКА ТОЧЕК В КАРТУ (С ЗАЩИТОЙ ЛИЦЕНЗИИ)
         function downloadGIS() {
+            if (window.LesovikCore && !window.LesovikCore.isPro()) {
+                window.showProPromoModal("Экспорт координат реласкопических точек в карты KML доступен только в профессиональной версии БГ-ХНС PRO.");
+                return;
+            }
+
             let kmlContent = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n`;
             kmlContent += `  <name>${document.getElementById('b-archive-name').value || 'Полнотомер Биттерлиха'}</name>\n`;
 
