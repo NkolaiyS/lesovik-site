@@ -3,7 +3,7 @@
  * ЛЕСОВИК-CORE (lesovik-core.js)
  * Центральное ядро экосистемы «Лесовик PRO»
  * ============================================================================
- * Версия: 3.2.0 (Стабильный офлайн, Self-healing без reload, Защита черновиков)
+ * Версия: 3.2.1 (Стабильный офлайн, Self-healing, Защита черновиков и Paywall)
  * Автор / Владелец: Николай Сергеевич Худяков (ИП Худяков Н.С.)
  * Экосистема: РЕСУРС (https://resurs-stretch.ru/)
  * ============================================================================
@@ -26,11 +26,11 @@
         "HNS-RFS7-RYJB5K": new Date(2099, 11, 31), // Андрей (Хуавей)
         "HNS-4L1E-25O9U6": new Date(2026, 7, 31),   // Хонор 7 до 31 августа 2026
         "HNS-YU2O-2MRLAE": new Date(2099, 11, 31), // Бессрочно (Android Павел брат)
-        "HNS-NATS-GINXIF": new Date(2026, 8, 5),  // Вячеслав на 14 дней до 5 сентября Минусинск ссылка
-        "HNS-6UEP-ZF011I": new Date(2026, 8, 5),  // Вячеслав на 14 дней до 5 сентября Минусинск значок
+        "HNS-NATS-GINXIF": new Date(2026, 8, 5),   // Вячеслав на 14 дней до 5 сентября Минусинск ссылка
+        "HNS-6UEP-ZF011I": new Date(2026, 8, 5),   // Вячеслав на 14 дней до 5 сентября Минусинск значок
         "HNS-FEPM-79HAAC": new Date(2026, 7, 31), // Павел на 7 дней до 31 августа
         "HNS-KD9P-MHR5NX": new Date(2026, 8, 14), // Вячеслав до 14 сентября
-        "HNS-1XG4-JL61C0": new Date(2026, 8, 10), // Терянское лесничество 10 сентября (пока не ясно что это)
+        "HNS-1XG4-JL61C0": new Date(2026, 8, 10), // Терянское лесничество 10 сентября
         "HNS-MCER-ZB2MG6": new Date(2026, 8, 10), // Терянское лесничество 10 сентября ссылка
     };
 
@@ -295,10 +295,14 @@
     ];
 
     window.LesovikCore = {
-        version: '3.2.0-PRO',
+        version: '3.2.1-PRO',
 
         isPro: function () {
             return checkLicenseStatus().isPro;
+        },
+
+        getDeviceId: function () {
+            return getCurrentDeviceId();
         },
 
         isSystemMode: function () {
@@ -455,10 +459,9 @@
         openProjectControlModal: function () {
             let modal = document.getElementById('lesovik-project-control-modal');
             const isPro = this.isPro();
-            const isSystemMode = this.isSystemMode();
 
             if (!isPro) {
-                window.showProPromoModal();
+                window.showProPromoModal("Для работы с едиными проектами и паспортами лесосек требуется версия БГ-ХНС PRO.");
                 return;
             }
 
@@ -587,38 +590,45 @@
         }
     };
 
-    // МОДАЛЬНОЕ ОКНО ДЛЯ БЕСПЛАТНЫХ ПОЛЬЗОВАТЕЛЕЙ (С КОНТАКТАМИ ДЛЯ СВЯЗИ)
-    window.showProPromoModal = function() {
-        if (document.getElementById('pro-promo-modal')) {
-            document.getElementById('pro-promo-modal').style.display = 'flex';
+    // МОДАЛЬНОЕ ОКНО ДЛЯ БЕСПЛАТНЫХ ПОЛЬЗОВАТЕЛЕЙ (С КОНТАКТАМИ ДЛЯ СВЯЗИ И ДИНАМИЧЕСКИМ ТЕКСТОМ)
+    window.showProPromoModal = function(customMessage) {
+        const defaultMsg = "Вы используете ознакомительную бесплатную версию. В профессиональном комплексе <b>БГ-ХНС PRO</b> все инструменты работают с максимальной точностью, без рекламы и автономно без интернета в тайге.";
+        const currentId = getCurrentDeviceId();
+
+        let modal = document.getElementById('pro-promo-modal');
+        if (modal) {
+            const descEl = document.getElementById('pro-promo-desc-text');
+            if (descEl) {
+                descEl.innerHTML = customMessage ? `<b>Обратите внимание:</b> ${customMessage}<br><br>${defaultMsg}` : defaultMsg;
+            }
+            modal.style.display = 'flex';
             return;
         }
 
-        const currentId = getCurrentDeviceId();
         const modalHTML = `
-            <div id="pro-promo-modal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.75); z-index:99999; display:flex; align-items:center; justify-content:center; padding:15px; box-sizing:border-box; font-family:'Inter',sans-serif;">
+            <div id="pro-promo-modal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.78); z-index:99999; display:flex; align-items:center; justify-content:center; padding:15px; box-sizing:border-box; font-family:'Inter',sans-serif;">
                 <div style="background:#111815; color:#F9FBF9; border:1px solid #8FBC8F; border-radius:12px; max-width:500px; width:100%; padding:20px; position:relative; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
                     <button onclick="document.getElementById('pro-promo-modal').style.display='none'" style="position:absolute; top:12px; right:12px; background:transparent; border:none; color:#FFF; font-size:22px; cursor:pointer;">&times;</button>
                     <div style="text-align:center; margin-bottom:15px;">
                         <span style="font-size:40px;">🌲</span>
-                        <h3 style="font-family:'Merriweather',serif; color:#8FBC8F; margin:8px 0 5px 0;">Единая экосистема «БГ-ХНС PRO»</h3>
-                        <span style="font-size:11px; opacity:0.7; text-transform:uppercase;">Сквозной контекст • Бесшовная связка 6 инструментов</span>
+                        <h3 style="font-family:'Merriweather',serif; color:#8FBC8F; margin:8px 0 5px 0;">Комплекс «БГ-ХНС PRO»</h3>
+                        <span style="font-size:11px; opacity:0.7; text-transform:uppercase;">Профессиональная лесотаксация и геодезия</span>
                     </div>
-                    <p style="font-size:12px; line-height:1.5; opacity:0.9; margin-bottom:15px; text-align:justify;">
-                        Вы используете бесплатную автономную версию калькулятора. В версии <b>PRO</b> все 6 инструментов объединяются в единую сеть без рекламы и работают полностью оффлайн в тайге.
+                    <p id="pro-promo-desc-text" style="font-size:12.5px; line-height:1.5; opacity:0.9; margin-bottom:15px; text-align:justify;">
+                        ${customMessage ? `<b>Обратите внимание:</b> ${customMessage}<br><br>${defaultMsg}` : defaultMsg}
                     </p>
                     <div style="background:rgba(255,255,255,0.04); padding:12px 15px; border-radius:8px; border:1px solid rgba(143,188,143,0.25); font-size:12px; margin-bottom:15px;">
-                        <span style="display:block; font-size:10px; opacity:0.6; text-transform:uppercase; margin-bottom:6px; font-weight:bold;">Ваш родной ID устройства: <b style="color:#8FBC8F; font-family:monospace;">${currentId}</b></span>
+                        <span style="display:block; font-size:10.5px; opacity:0.7; text-transform:uppercase; margin-bottom:6px; font-weight:bold;">ID Вашего устройства: <b style="color:#8FBC8F; font-family:monospace; font-size:13px;">${currentId}</b></span>
                         <div style="margin-bottom:8px;">
-                            <span style="font-weight:bold; color:#8FBC8F;">• ООО «Сателлит» (Отдел продаж):</span><br>
+                            <span style="font-weight:bold; color:#8FBC8F;">• ООО «Сателлит» (Официальный отдел продаж):</span><br>
                             <a href="mailto:a1983v@yandex.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none;">✉️ a1983v@yandex.ru</a>
                         </div>
                         <div>
-                            <span style="font-weight:bold; color:#8FBC8F;">• ИП Худяков Н.С. (Разработка):</span><br>
+                            <span style="font-weight:bold; color:#8FBC8F;">• ИП Худяков Н.С. (Техподдержка и разработка):</span><br>
                             <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; font-weight:bold; text-decoration:none;">✉️ folgoal@gmail.com</a>
                         </div>
                     </div>
-                    <button onclick="document.getElementById('pro-promo-modal').style.display='none'" style="width:100%; padding:10px; background:#2D5A27; color:#FFF; border:none; border-radius:6px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:12px;">Понятно, продолжить в бесплатном режиме</button>
+                    <button onclick="document.getElementById('pro-promo-modal').style.display='none'" style="width:100%; padding:10px; background:#2D5A27; color:#FFF; border:none; border-radius:6px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:12px;">Понятно, продолжить</button>
                 </div>
             </div>
         `;
