@@ -544,7 +544,7 @@
                         </table>
                     </div>
 
-                    <!-- КНОПКИ ВЫГРУЗКИ В 1 КЛИК -->
+                    <!-- КНОПКИ ВЫГРУЗКИ В 1 КЛИК (С ЗАЩИТОЙ ЛИЦЕНЗИИ) -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
                         <button class="btn" style="margin:0; padding:7px; font-size:10.5px; background:#1E3A1A;" onclick="printOfficialDiameterSheet()">📄 Бланк в PDF</button>
                         <button class="btn" style="margin:0; padding:7px; font-size:10.5px; background:#107C41;" onclick="exportDiametersXLSX()">📊 В Excel (.xlsx)</button>
@@ -609,7 +609,6 @@
         const fsBtn = document.getElementById('fs-btn-freeze');
 
         if (isFrozen) {
-            // Выбираем активное видео с непустыми габаритами
             const sourceVideo = (fsVideo && fsVideo.videoWidth > 0) ? fsVideo : video;
             
             [ { v: sourceVideo, c: canvas }, { v: sourceVideo, c: fsCanvas } ].forEach(pair => {
@@ -622,7 +621,6 @@
                 }
             });
 
-            // Аппаратная пауза воспроизведения
             if (video) video.pause();
             if (fsVideo) fsVideo.pause();
 
@@ -632,7 +630,6 @@
             btn.innerText = '▶️ В эфир';
             if (fsBtn) { fsBtn.classList.add('active'); fsBtn.innerText = '▶️ В эфир'; }
         } else {
-            // Возобновление стрима
             if (video) video.play().catch(()=>{});
             if (fsVideo) fsVideo.play().catch(()=>{});
 
@@ -840,7 +837,6 @@
         measurementsLog.unshift(record);
         localStorage.setItem(ARCHIVE_STORAGE_KEY, JSON.stringify(measurementsLog));
         
-        // Синхронизация с ядром LesovikCore
         if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
             const activeProj = window.LesovikCore.getActiveProject();
             if (activeProj && activeProj.plots && activeProj.plots.length > 0) {
@@ -927,7 +923,7 @@
         if (isFrozen) toggleFreezeFrame();
     }
 
-    // 5. ПАСПОРТ, АРХИВАЦИЯ И СИНХРОНИЗАЦИЯ
+    // 5. ПАСПОРТ, АРХИВАЦИЯ И СИНХРОНИЗАЦИЯ (С ЗАЩИТОЙ ЛИЦЕНЗИИ)
     function syncPassportToCore() {
         const les = document.getElementById('v-lesnichestvo').value;
         const kv = document.getElementById('v-kvartal').value;
@@ -947,6 +943,12 @@
     }
 
     function saveCurrentToArchive() {
+        // Проверка лицензии PRO через ядро
+        if (window.LesovikCore && !window.LesovikCore.isPro()) {
+            window.showProPromoModal("Сохранение делянок в архив и ведение проектов доступно только в профессиональной версии БГ-ХНС PRO.");
+            return;
+        }
+
         const name = document.getElementById('v-archive-name').value.trim();
         if (!name) { alert('Введите название объекта!'); return; }
         if (measurementsLog.length === 0) { alert('Журнал пуст!'); return; }
@@ -1043,16 +1045,17 @@
                 document.getElementById('v-delyanka').value = p.delyanka || '';
                 document.getElementById('v-vydel').value = p.vydel || '1';
                 document.getElementById('v-archive-name').value = `Кв. ${p.kvartal || '-'}, Выд. ${p.vydel || '-'}, Дел. ${p.delyanka || '-'}`;
-                
-                document.getElementById('ctx-project-name').innerText = `${p.lesnichestvo || 'Лесничество'} • Кв. ${p.kvartal || '-'} • Дел. ${p.delyanka || '-'}`;
-                document.getElementById('ctx-mode-badge').innerText = '🔗 В СВЯЗКЕ';
-                document.getElementById('ctx-mode-badge').className = 'mode-badge badge-linked';
             }
         }
     }
 
-    // 6. ОФИЦИАЛЬНАЯ ПЕЧАТЬ В АЛЬБОМНЫЙ PDF
+    // 6. ОФИЦИАЛЬНАЯ ПЕЧАТЬ В АЛЬБОМНЫЙ PDF (С ЗАЩИТОЙ ЛИЦЕНЗИИ)
     function printOfficialDiameterSheet() {
+        if (window.LesovikCore && !window.LesovikCore.isPro()) {
+            window.showProPromoModal("Печать официальных ведомостей и отчетов в PDF доступна только в профессиональной версии БГ-ХНС PRO.");
+            return;
+        }
+
         if (measurementsLog.length === 0) {
             alert('Журнал замеров пуст!');
             return;
@@ -1126,8 +1129,13 @@
         window.print();
     }
 
-    // 7. ВЫГРУЗКА В EXCEL (.XLSX)
+    // 7. ВЫГРУЗКА В EXCEL (.XLSX) (С ЗАЩИТОЙ ЛИЦЕНЗИИ)
     function exportDiametersXLSX() {
+        if (window.LesovikCore && !window.LesovikCore.isPro()) {
+            window.showProPromoModal("Экспорт отчетов в таблицы Excel (.xlsx) доступен только в профессиональной версии БГ-ХНС PRO.");
+            return;
+        }
+
         if (measurementsLog.length === 0) {
             alert('Журнал пуст!');
             return;
