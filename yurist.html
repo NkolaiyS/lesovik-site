@@ -1,7 +1,7 @@
 <!--  
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.  
   Свидетельство ИНН: 111801576622.  
-  Программное обеспечение: «Лесничий ПРО: Полевой юрист» (Экосистема Лесовик ПРО) (Версия 3.2 — С редактором статей и норм).  
+  Программное обеспечение: «Лесничий ПРО: Полевой юрист» (Экосистема Лесовик ПРО) (Версия 4.5).  
   Правообладатель: Худяков Николай Сергеевич.  
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).  
 -->
@@ -11,31 +11,17 @@
     <!-- 1. Единое ядро экосистемы — СТРОГО ПЕРВЫМ -->
     <script src="lesovik-core.js"></script>
 
-    <!-- 2. PWA МЕТА-ТЕГИ И СЛУЖБА ОБСЛУЖИВАНИЯ -->
-    <meta name="application-name" content="Лесничий Полевой Юрист ПРО">
-    <link rel="manifest" href="/yurist.webmanifest">
-    <meta name="theme-color" content="#2D5A27">
-
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw-busol-pro.js')
-            .then(reg => console.log('Полевой юрист PRO готов к офлайну:', reg.scope))
-            .catch(err => console.error('Ошибка регистрации SW:', err));
-        });
-      }
-    </script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
     <script type="text/javascript">
-        // --- ПЕРЕХВАТ БОТОВ ДЛЯ SEO ---
+        // --- ПЕРЕХВАТ БОТОВ ДЛЯ SEO-ПРЕВЬЮ ---
         (function() {
             const urlParams = new URLSearchParams(window.location.search);
             const postSlug = urlParams.get('post');
             const userAgent = (navigator.userAgent || '').toLowerCase();
             const isBot = /telegrambot|vkshare|facebookexternalhit|twitterbot|slackbot|whatsapp|viber/i.test(userAgent);
+            
             if (postSlug && isBot) {
                 window.location.href = 'https://functions.yandexcloud.net/d4ecn5ag33dcdd2deivd?post=' + encodeURIComponent(postSlug);
             }
@@ -48,14 +34,53 @@
             for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
             k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
         })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109130409', 'ym');
+
         ym(109130409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, referrer: document.referrer, url: location.href, trackLinks:true});
     </script>
     <noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 
-    <title>Лесничий ПРО: Полевой юрист | Иски, расчеты ущерба и акты лесонарушений</title>
-    <meta name="description" content="Автоматизированный комплекс правовой защиты гослесинспектора: исковые заявления, расчет ущерба по 7 составам лесонарушений с возможностью ручной правки статей законов и приказов.">
+    <title>Лесничий ПРО: Полевой юрист | Формирование исков, расчетов вреда лесам и фототаблиц</title>
+    <meta name="description" content="Инженерно-правовой комплекс лесной охраны: расчет ущерба по 7 составам лесонарушений, многопородные перечеты, справки РДС, генерация исков, претензий, актов и фототаблиц в PDF и Excel.">
+    <meta name="keywords" content="иск незаконная рубка, расчет ущерба лесу постановление 1730, ст 260 ук рф калькулятор, акт осмотра лесного участка, претензия лесонарушение, лесничий полевой юрист">
     <link rel="canonical" href="https://lesovik-pro.ru/yurist.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
+
+    <!-- ПОДКЛЮЧЕНИЕ SHEETJS ДЛЯ ЭКСПОРТА В XLSX -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.mini.min.js"></script>
+
+    <!-- РЕКЛАМА РСЯ -->
+    <script>
+        window.yaContextCb = window.yaContextCb || [];
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-2",
+                "type": "fullscreen",
+                "platform": "touch"
+            })
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-1",
+                "type": "floorAd",
+                "platform": "touch"
+            })
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-3",
+                "type": "fullscreen",
+                "platform": "desktop"
+            })
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-4",
+                "type": "floorAd",
+                "platform": "desktop"
+            })
+        });
+    </script>
+    <script src="https://yandex.ru/ads/system/context.js" async></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:wght@400;700&display=swap');
@@ -69,10 +94,13 @@
             --forest-light: #8FBC8F;
             --border-light: #edf2ec;
             --input-bg: #f5f8f4;
+            --accent-gold: #b38f43;
             --fire-accent: #c2410c;
             --header-bg: rgba(255, 255, 255, 0.85);
             --card-shadow: 0 4px 12px rgba(0,0,0,0.03);
             --success: #16A34A;
+            --info: #2563EB;
+            --danger: #DC2626;
         }
 
         [data-theme="dark"] {
@@ -89,9 +117,13 @@
         }
 
         html, body {
-            margin: 0; padding: 0; width: 100%; max-width: 100%; overflow-x: hidden;
+            margin: 0; padding: 0;
+            width: 100%; max-width: 100%;
+            overflow-x: hidden;
             background-color: var(--bg-main); color: var(--text-main);
-            font-family: 'Inter', sans-serif; line-height: 1.5; box-sizing: border-box;
+            font-family: 'Inter', sans-serif; line-height: 1.5;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
             padding-bottom: 75px !important;
         }
 
@@ -106,41 +138,72 @@
 
         .logo-block {
             display: flex; align-items: center; gap: 10px; text-decoration: none;
-            color: var(--primary-forest); font-weight: 700; font-size: 18px;
+            color: var(--primary-forest); font-weight: 700; font-size: 18px; letter-spacing: -0.5px;
         }
         .logo-icon-img { width: 34px; height: 34px; border: 2px solid var(--primary-forest); border-radius: 50%; object-fit: cover; }
+        
         .header-right { display: flex; align-items: center; gap: 8px; }
 
         .theme-toggle-btn {
             background: transparent; border: 1px solid var(--border-light); color: var(--text-main);
             padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;
-            display: flex; align-items: center; gap: 6px; height: 34px; text-transform: uppercase;
+            display: flex; align-items: center; gap: 6px; transition: 0.2s; height: 34px; text-transform: uppercase;
         }
+        .theme-toggle-btn:hover { background-color: var(--input-bg); border-color: var(--primary-forest); }
 
         .main-container { max-width: 1100px; margin: 75px auto 40px auto; padding: 0 15px; width: 100%; }
+        
         .content-card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px; box-shadow: var(--card-shadow); margin-bottom: 20px; }
         @media (min-width: 768px) { .content-card { padding: 25px; } }
 
         .btn-back { display: inline-flex; align-items: center; background: transparent; color: var(--text-main); border: 1px solid var(--border-light); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; text-decoration: none; margin-bottom: 15px; font-weight: 600; }
         .btn-back:hover { background: var(--input-bg); color: var(--primary-forest); }
 
-        h1.page-title { font-size: 22px; font-weight: 700; color: var(--primary-forest); margin-top: 0; margin-bottom: 8px; }
+        h1.page-title { font-size: 22px; font-weight: 700; color: var(--primary-forest); margin-top: 0; margin-bottom: 8px; line-height: 1.3; }
         .page-subtitle { font-size: 12.5px; color: var(--text-muted); margin-bottom: 20px; }
+
+        .archive-scroll-container { width: 100%; overflow-x: auto; white-space: nowrap; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
+        .archive-inner-flex { display: inline-flex; gap: 8px; align-items: center; }
 
         .passport-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 12px; }
         .form-group { margin-bottom: 10px; }
-        .form-group label { display: block; font-size: 11px; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; color: var(--text-main); }
+        .form-group label { display: block; font-size: 11px; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; color: var(--text-main); letter-spacing: 0.5px; }
         .form-group input, .form-group select, .form-group textarea {
             width: 100%; padding: 9px 12px; border: 1px solid var(--border-light); border-radius: 6px;
-            background: var(--input-bg); color: var(--text-main); font-family: inherit; font-size: 13px; outline: none; font-weight: 600;
+            background: var(--input-bg); color: var(--text-main); font-family: inherit; font-size: 13px;
+            outline: none; font-weight: 600;
         }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary-forest); background-color: var(--bg-card); }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: var(--primary-forest); background-color: var(--bg-card);
+        }
 
-        .archive-scroll-container { width: 100%; overflow-x: auto; white-space: nowrap; padding-bottom: 5px; }
-        .archive-inner-flex { display: inline-flex; gap: 8px; align-items: center; }
+        .btn-action-main {
+            background-color: var(--primary-forest); color: #fff; border: none; padding: 8px 14px;
+            border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
 
-        .offense-selector-box { background: rgba(45, 90, 39, 0.06); border: 2px solid var(--primary-forest); border-radius: 8px; padding: 14px; margin-bottom: 20px; }
-        .dynamic-fields-card { background: var(--input-bg); border: 1px solid var(--border-light); border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+        .offense-selector-box {
+            background: rgba(45, 90, 39, 0.06); border: 2px solid var(--primary-forest);
+            border-radius: 8px; padding: 14px; margin-bottom: 20px;
+        }
+
+        .dynamic-fields-card {
+            background: var(--input-bg); border: 1px solid var(--border-light);
+            border-radius: 8px; padding: 16px; margin-bottom: 20px;
+        }
+
+        /* ТАБЛИЦА МНОГОПОРОДНОСТИ РУБКИ */
+        .species-multitable { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 12px; background: var(--bg-card); border-radius: 6px; overflow: hidden; }
+        .species-multitable th, .species-multitable td { border: 1px solid var(--border-light); padding: 8px; text-align: left; }
+        .species-multitable th { background: rgba(59, 102, 52, 0.1); color: var(--primary-forest); font-weight: 700; }
+
+        /* ИНТЕРАКТИВНЫЙ БЛОК ФОТОФИКСАЦИИ */
+        .photo-card-row {
+            display: grid; grid-template-columns: 80px 1fr 2fr auto; gap: 10px; align-items: center;
+            background: var(--bg-card); padding: 10px; border-radius: 8px; border: 1px solid var(--border-light); margin-bottom: 10px;
+        }
+        @media(max-width: 700px) { .photo-card-row { grid-template-columns: 1fr; } }
+        .photo-preview-thumb { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-light); background: #eee; }
 
         .btn-calc {
             background-color: var(--primary-forest); color: #fff; border: none; padding: 14px;
@@ -149,14 +212,27 @@
         }
         .btn-calc:hover { background-color: #2c4e27; }
 
-        .result-box { background: var(--bg-card); border: 1.5px solid var(--primary-forest); border-radius: 10px; padding: 18px; margin-top: 20px; display: none; }
-        .result-box h3 { font-size: 16px; color: var(--primary-forest); margin-top: 0; margin-bottom: 12px; font-family: 'Merriweather', serif; }
+        .result-box {
+            background: var(--bg-card); border: 1.5px solid var(--primary-forest); border-radius: 10px;
+            padding: 18px; margin-top: 20px; display: none;
+        }
+        .result-box h3 {
+            font-size: 16px; color: var(--primary-forest); margin-top: 0; margin-bottom: 12px;
+            font-family: 'Merriweather', serif;
+        }
 
-        .docs-action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 16px; }
-        .btn-doc-print { padding: 12px; border-radius: 8px; font-weight: 700; font-size: 11.5px; text-transform: uppercase; cursor: pointer; text-align: center; border: none; color: #FFF; }
+        .docs-action-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 16px;
+        }
+        .btn-doc-print {
+            padding: 12px; border-radius: 8px; font-weight: 700; font-size: 11px;
+            text-transform: uppercase; cursor: pointer; text-align: center; border: none; color: #FFF; transition: 0.2s;
+        }
         .btn-doc-act { background: #1E3A1A; }
         .btn-doc-claim { background: #92400E; }
         .btn-doc-suit { background: #1E40AF; }
+        .btn-doc-photo { background: #4B5563; }
+        .btn-doc-xls { background: #107C41; }
 
         .print-tip-box {
             background: rgba(37, 99, 235, 0.08); border: 1px solid var(--info); border-radius: 8px;
@@ -164,7 +240,10 @@
         }
 
         /* ОФИЦИАЛЬНЫЙ СУДЕБНЫЙ ПЕЧАТНЫЙ БЛАНК А4 */
-        #printable-legal-sheet { display: none; background: #FFFFFF; color: #000000; font-family: 'Times New Roman', serif; line-height: 1.35; box-sizing: border-box; }
+        #printable-legal-sheet {
+            display: none; background: #FFFFFF; color: #000000;
+            font-family: 'Times New Roman', serif; line-height: 1.35; box-sizing: border-box;
+        }
         .legal-header-title { text-align: center; font-size: 14pt; font-weight: bold; margin-bottom: 3pt; text-transform: uppercase; }
         .legal-header-sub { text-align: center; font-size: 10pt; font-style: italic; margin-bottom: 12pt; color: #333; }
         .legal-passport-table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 12pt; }
@@ -180,11 +259,18 @@
             page-break-inside: avoid; break-inside: avoid;
         }
 
+        /* ГАЛЕРЕЯ ДЛЯ ПЕЧАТИ ФОТОТАБЛИЦЫ */
+        .print-photo-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15pt; margin-top: 15pt; page-break-inside: avoid;
+        }
+        .print-photo-item { border: 1px solid #000; padding: 6pt; text-align: center; font-size: 9.5pt; }
+        .print-photo-item img { max-width: 100%; height: 160pt; object-fit: contain; margin-bottom: 4pt; }
+
         @page { margin: 12mm; size: A4 portrait; }
         @media print {
             body { background: #FFFFFF !important; color: #000000 !important; padding: 0 !important; margin: 0 !important; }
             .header, .main-container, footer, #offline-blocker-screen, #lesovik-bottom-nav-bar { display: none !important; }
-            #printable-legal-sheet { display: block !important; width: 100% !important; }
+            #printable-legal-sheet { display: block !important; width: 100% !important; min-height: 100vh !important; padding: 0 !important; }
         }
     </style>
 </head>
@@ -202,7 +288,7 @@
 
 <div class="main-container">
     
-    <!-- 1. ПАСПОРТ ДЕЛА И ЛЕСНОГО УЧАСТКА -->
+    <!-- 1. ПАСПОРТ ДЕЛА И АРХИВ -->
     <div class="content-card">
         <h2 style="font-size: 17px; color: var(--primary-forest); margin-top: 0; margin-bottom: 4px; font-weight: 700;">
             Лесничество, реквизиты патрулирования и архив дел
@@ -225,7 +311,7 @@
                 <input type="text" id="j-coords" value="61°28'48&quot; с.ш. 50°30'06&quot; в.д." onfocus="this.select()">
             </div>
             <div class="form-group">
-                <label>Дата осмотра / выявления:</label>
+                <label>Дата выявления:</label>
                 <input type="date" id="j-date" value="2026-09-01">
             </div>
         </div>
@@ -252,78 +338,121 @@
         <div class="archive-scroll-container">
             <div class="archive-inner-flex">
                 <input type="text" id="j-archive-name" placeholder="Название дела..." value="Дело: Кв. 312 Рубка" style="width: 200px; padding: 7px 10px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 12px; font-weight: 600; background: var(--input-bg); color: var(--text-main);" onfocus="this.select()">
-                <button class="btn-action-main" style="background-color: var(--primary-forest); color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-size:11.5px; font-weight:700;" onclick="saveLegalToArchive()">💾 В архив дел</button>
+                <button class="btn-action-main" onclick="saveLegalToArchive()">💾 Сохранить дело</button>
                 <select id="j-archive-select" onchange="loadLegalFromArchive(this.value)" style="padding: 7px; border-radius: 6px; border: 1px solid var(--border-light); font-size: 12px; background: var(--input-bg); color: var(--text-main); font-weight: 600; min-width: 180px;">
                     <option value="">-- Выбрать из архива --</option>
                 </select>
-                <button class="btn-action-main" style="background-color: var(--fire-accent); color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-size:11.5px; font-weight:700;" onclick="deleteLegalFromArchive()">🗑️ Удалить</button>
+                <button class="btn-action-main" style="background-color: var(--fire-accent);" onclick="deleteLegalFromArchive()">🗑️ Удалить</button>
             </div>
         </div>
     </div>
 
-    <!-- 2. ВЫБОР СОСТАВА И РЕДАКТИРУЕМЫЕ СТАТЬИ ЗАКОНОВ -->
+    <!-- 2. ВЫБОР СОСТАВА И РЕДАКТОР -->
     <div class="content-card">
         <a href="index.html" class="btn-back">← На главную</a>
-        <h1 class="page-title">Лесничий ПРО: Полевой юрист</h1>
-        <p class="page-subtitle">Расчет ущерба и гибкий редактор нормативно-правовой базы (статьи УК, КоАП, ЛК и методики).</p>
+        <h1 class="page-title">Лесничий ПРО: Полевой юрист (Версия 4.5)</h1>
+        <p class="page-subtitle">Полный процессуальный комплекс по всем видам лесонарушений с учетом многопородности, справок РДС, типов почв, фототаблиц и выгрузки в Excel.</p>
 
         <!-- ВЫБОР ВИДА НАРУШЕНИЯ -->
         <div class="offense-selector-box">
             <div class="form-group" style="margin: 0;">
-                <label style="color: var(--primary-forest); font-size: 12px;">⚖️ Квалификация состава правонарушения (Выберите вид):</label>
+                <label style="color: var(--primary-forest); font-size: 12px;">⚖️ Квалификация состава правонарушения:</label>
                 <select id="offense-type" onchange="renderOffenseFields()" style="font-size: 13.5px; padding: 10px; font-weight: 700;">
-                    <option value="logging" selected>🌲 1. Незаконная рубка лесных насаждений (ст. 260 УК РФ / ст. 8.28 КоАП РФ)</option>
-                    <option value="fire">🔥 2. Лесной пожар / Уничтожение насаждений огнем (ст. 261 УК РФ / ст. 8.32 КоАП РФ)</option>
-                    <option value="quarry">⛏️ 3. Незаконный карьер / Выемка грунта и снятие почвы (ст. 8.6 КоАП РФ / ст. 254 УК РФ)</option>
-                    <option value="unremoved">🪵 4. Невывоз заготовленной древесины / Захламление лесосеки (ст. 8.25 КоАП РФ)</option>
-                    <option value="waste">🗑️ 5. Засорение лесов свалками и отходами (ст. 8.31 КоАП РФ)</option>
+                    <option value="logging" selected>🌲 1. Незаконная рубка (несколько пород, ст. 260 УК РФ / ст. 8.28 КоАП РФ)</option>
+                    <option value="fire">🔥 2. Лесной пожар + Справка РДС о затратах на тушение (ст. 261 УК РФ / ст. 8.32 КоАП РФ)</option>
+                    <option value="quarry">⛏️ 3. Незаконный карьер / Выемка грунта с учетом типа почв (ст. 8.6 КоАП РФ / ст. 254 УК РФ)</option>
+                    <option value="unremoved">🪵 4. Невывоз древесины (с указанием размеров и способа замера, ст. 8.25 КоАП РФ)</option>
+                    <option value="waste">🗑️ 5. Засорение свалками и классами опасности отходов (ст. 8.31 КоАП РФ)</option>
                     <option value="seizure">🚧 6. Самовольное занятие лесного участка / Постройки (ст. 7.9 КоАП РФ)</option>
-                    <option value="esd">🚛 7. Транспортировка древесины без ЭСД / Нарушение учета ЛесЕГАИС (ст. 8.28.1 КоАП РФ)</option>
+                    <option value="esd">🚛 7. Транспортировка без ЭСД (несколько машин / УАЗ с прицепом, ст. 8.28.1 КоАП РФ)</option>
                 </select>
             </div>
         </div>
 
-        <!-- ДИНАМИЧЕСКИЙ БЛОК ПАРАМЕТРОВ И РЕДАКТОР СТАТЕЙ -->
+        <!-- ДИНАМИЧЕСКИЙ БЛОК ПАРАМЕТРОВ -->
         <div class="dynamic-fields-card" id="dynamic-fields-container"></div>
+
+        <!-- БЛОК ФОТОФИКСАЦИИ С РЕАЛЬНЫМИ ФОТО -->
+        <div class="dynamic-fields-card">
+            <label style="color: var(--primary-forest); font-size: 12px; font-weight: 700; display:block; margin-bottom:8px;">📷 Фотофиксация и вещественные доказательства (Приложение №1 к Акту):</label>
+            <div id="photo-rows-container"></div>
+            <button class="btn-action-main" style="background:var(--primary-forest); font-size:11px; padding:7px 14px;" onclick="addPhotoRow()">➕ Добавить фото-фиксацию</button>
+        </div>
 
         <button class="btn-calc" onclick="calculateLegalOffense()">⚖️ Рассчитать ущерб и сформировать юридический пакет</button>
 
-        <!-- РЕЗУЛЬТИРУЮЩИЙ БЛОК -->
+        <!-- РЕЗУЛЬТАТЫ И КНОПКИ ПЕЧАТИ -->
         <div class="result-box" id="legal-result-box">
             <h3 id="res-legal-title">Юридическое заключение и расчет ущерба:</h3>
             <div id="res-legal-summary" style="font-size: 13px; line-height: 1.6;"></div>
 
             <div class="docs-action-grid">
-                <button class="btn-doc-print btn-doc-act" onclick="printDoc('act')">📄 1. Акт осмотра участка (PDF)</button>
-                <button class="btn-doc-print btn-doc-claim" onclick="printDoc('claim')">📬 2. Досудебная претензия (PDF)</button>
-                <button class="btn-doc-print btn-doc-suit" onclick="printDoc('suit')">⚖️ 3. Исковое заявление в суд (PDF)</button>
+                <button class="btn-doc-print btn-doc-act" onclick="printDoc('act')">📄 1. Акт осмотра (PDF)</button>
+                <button class="btn-doc-print btn-doc-claim" onclick="printDoc('claim')">📬 2. Претензия (PDF)</button>
+                <button class="btn-doc-print btn-doc-suit" onclick="printDoc('suit')">⚖️ 3. Исковое заявление (PDF)</button>
+                <button class="btn-doc-print btn-doc-photo" onclick="printDoc('phototable')">📷 4. Фототаблица (PDF)</button>
+                <button class="btn-doc-print btn-doc-xls" onclick="exportLegalToXLSX()">📊 Экспорт в Excel (.xlsx)</button>
             </div>
 
-            <!-- ИНСТРУКЦИЯ ПО УДАЛЕНИЮ КОЛОНТИТУЛОВ ПРИ ПЕЧАТИ -->
             <div class="print-tip-box">
                 <b>💡 Памятка для печати без лишних полей:</b><br>
-                Чтобы на распечатанном бланке не было системной даты и адреса страницы сверху/снизу, в открывшемся окне печати браузера найдите пункт <b>«Дополнительные настройки»</b> и <u>снимите галочку</u> с параметра <b>«Колонтитулы» (Headers and footers)</b>.
+                Чтобы на бланке не печатались дата браузера и URL-ссылка сверху/снизу листа, в окне печати откройте <b>«Дополнительные настройки»</b> и <u>снимите галочку</u> с параметра <b>«Колонтитулы» (Headers and footers)</b>.
             </div>
         </div>
     </div>
 </div>
 
-<!-- 3. ОФИЦИАЛЬНЫЙ БЛАНК ДЛЯ ПЕЧАТИ В PDF -->
+<!-- ОФИЦИАЛЬНЫЙ БЛАНК ДЛЯ ПЕЧАТИ В PDF -->
 <div id="printable-legal-sheet"></div>
 
 <script>
     let calculatedCaseData = null;
+    let photoItemsCount = 0;
 
-    // СТАНДАРТНАЯ БАЗА СТАТЕЙ ДЛЯ КАЖДОГО СОСТАВА (ПОЛНОСТЬЮ РЕДАКТИРУЕМЫЕ ПОЛЬЗОВАТЕЛЕМ)
     const defaultArticlesMap = {
         logging: "ст. 260 УК РФ, ст. 8.28 КоАП РФ, ст. 72, 99, 100 Лесного кодекса РФ, Постановление Правительства РФ от 29.12.2018 № 1730",
-        fire: "ст. 261 УК РФ, ст. 8.32 КоАП РФ, ст. 51, 100 Лесного кодекса РФ, Постановление Правительства РФ от 29.12.2018 № 1730",
-        quarry: "ст. 8.6 КоАП РФ, ст. 254 УК РФ, ст. 100 Лесного кодекса РФ, Постановление Правительства РФ от 22.07.2008 № 559",
-        unremoved: "ст. 8.25 КоАП РФ, Правила заготовки древесины (Приказ Минприроды № 211), ст. 72, 100 ЛК РФ",
-        waste: "ст. 8.31 КоАП РФ, ст. 100 Лесного кодекса РФ, СанПиН охраны лесов",
-        seizure: "ст. 7.9 КоАП РФ, ст. 72, 100 Лесного кодекса РФ, ст. 304 ГК РФ",
+        fire: "ст. 261 УК РФ, ст. 8.32 КоАП РФ, ст. 51, 100 Лесного кодекса РФ, Постановление Правительства РФ от 29.12.2018 № 1730, Справка региональной диспетчерской службы (РДС) о затратах на тушение",
+        quarry: "ст. 8.6 КоАП РФ, ст. 254 УК РФ, ст. 100 Лесного кодекса РФ, Постановление Правительства РФ от 22.07.2008 № 559, Приказ Минприроды России от 08.07.2010 № 238",
+        unremoved: "ст. 8.25 КоАП РФ, Правила заготовки древесины (Приказ Минприроды № 211), ст. 72, 100 Лесного кодекса РФ",
+        waste: "ст. 8.31 КоАП РФ, ст. 100 Лесного кодекса РФ, Правила санитарной безопасности в лесах",
+        seizure: "ст. 7.9 КоАП РФ, ст. 72, 100 Лесного кодекса РФ, ст. 304 Гражданского кодекса РФ",
         esd: "ст. 8.28.1 КоАП РФ, ст. 50.4 Лесного кодекса РФ, Постановление Правительства РФ от 02.06.2026 № 679"
     };
+
+    function addPhotoRow(desc = "Пень сосны с клеймом, азимут 45°", imgSrc = "") {
+        photoItemsCount++;
+        const container = document.getElementById('photo-rows-container');
+        const rowId = `photo-row-${photoItemsCount}`;
+        
+        container.insertAdjacentHTML('beforeend', `
+            <div class="photo-card-row" id="${rowId}">
+                <div>
+                    <img src="${imgSrc || 'logo.jpeg'}" class="photo-preview-thumb" id="prev-${rowId}">
+                    <input type="file" accept="image/*" style="display:none;" id="file-${rowId}" onchange="handlePhotoUpload(this, '${rowId}')">
+                    <button class="btn-action-main" style="padding:3px 6px; font-size:10px; width:100%; margin-top:3px;" onclick="document.getElementById('file-${rowId}').click()">Загрузить</button>
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label style="font-size:9.5px;">№ фото / Объект</label>
+                    <input type="text" class="p-num" value="Фото №${photoItemsCount}" style="font-size:11.5px; padding:6px;">
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label style="font-size:9.5px;">Описание / Азимут / Вещдок</label>
+                    <input type="text" class="p-desc" value="${desc}" style="font-size:11.5px; padding:6px;">
+                </div>
+                <button style="background:var(--danger); color:white; border:none; border-radius:4px; padding:6px 10px; cursor:pointer;" onclick="document.getElementById('${rowId}').remove()">✕</button>
+            </div>
+        `);
+    }
+
+    function handlePhotoUpload(input, rowId) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById(`prev-${rowId}`).src = e.target.result;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
 
     function renderOffenseFields() {
         const type = document.getElementById('offense-type').value;
@@ -334,165 +463,164 @@
 
         if (type === 'logging') {
             innerFields = `
-                <div class="passport-grid">
-                    <div class="form-group">
-                        <label>Преобладающая порода:</label>
-                        <select id="f-poroda">
-                            <option value="Ель">Ель (Е)</option>
-                            <option value="Сосна" selected>Сосна (С)</option>
-                            <option value="Береза">Береза (Б)</option>
-                            <option value="Осина">Осина (Ос)</option>
-                            <option value="Лиственница">Лиственница (Л)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Объем срубленной древесины (м³):</label>
-                        <input type="number" id="f-volume" value="18.4" step="0.1" onfocus="this.select()">
-                    </div>
-                    <div class="form-group">
-                        <label>Ставка платы за 1 м³ (руб.):</label>
-                        <input type="number" id="f-rate" value="266.45" step="0.01" onfocus="this.select()">
-                    </div>
-                    <div class="form-group">
-                        <label>Кратность таксы (Пост. Прав. № 1730):</label>
-                        <select id="f-mult">
-                            <option value="50">50-кратная (Защитные леса)</option>
-                            <option value="100" selected>100-кратная (Эксплуатационные / ООПТ)</option>
-                        </select>
-                    </div>
+                <label style="font-weight:700; font-size:12px; color:var(--primary-forest); margin-bottom:6px; display:block;">Ведомость незаконной рубки (многопородный перечет):</label>
+                <div style="overflow-x:auto;">
+                    <table class="species-multitable" id="logging-species-table">
+                        <thead>
+                            <tr><th>Порода</th><th>Объем (м³)</th><th>Ставка платы (руб.)</th><th>Кратность таксы</th><th>Удал.</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr class="log-row">
+                                <td>
+                                    <select class="l-poroda">
+                                        <option value="Сосна" selected>Сосна (С)</option>
+                                        <option value="Ель">Ель (Е)</option>
+                                        <option value="Береза">Береза (Б)</option>
+                                        <option value="Осина">Осина (Ос)</option>
+                                        <option value="Лиственница">Лиственница (Л)</option>
+                                        <option value="Кедр">Кедр (К)</option>
+                                    </select>
+                                </td>
+                                <td><input type="number" class="l-vol" value="12.5" step="0.1" onfocus="this.select()"></td>
+                                <td><input type="number" class="l-rate" value="266.45" step="0.01" onfocus="this.select()"></td>
+                                <td>
+                                    <select class="l-mult">
+                                        <option value="50">50-кратная (Защитные леса)</option>
+                                        <option value="100" selected>100-кратная (Эксплуатационные / ООПТ)</option>
+                                    </select>
+                                </td>
+                                <td><button style="background:var(--danger); color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;" onclick="this.closest('tr').remove()">✕</button></td>
+                            </tr>
+                            <tr class="log-row">
+                                <td>
+                                    <select class="l-poroda">
+                                        <option value="Сосна">Сосна (С)</option>
+                                        <option value="Ель" selected>Ель (Е)</option>
+                                        <option value="Береза">Береза (Б)</option>
+                                        <option value="Осина">Осина (Ос)</option>
+                                        <option value="Лиственница">Лиственница (Л)</option>
+                                        <option value="Кедр">Кедр (К)</option>
+                                    </select>
+                                </td>
+                                <td><input type="number" class="l-vol" value="8.0" step="0.1" onfocus="this.select()"></td>
+                                <td><input type="number" class="l-rate" value="240.04" step="0.01" onfocus="this.select()"></td>
+                                <td>
+                                    <select class="l-mult">
+                                        <option value="50">50-кратная (Защитные леса)</option>
+                                        <option value="100" selected>100-кратная (Эксплуатационные / ООПТ)</option>
+                                    </select>
+                                </td>
+                                <td><button style="background:var(--danger); color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;" onclick="this.closest('tr').remove()">✕</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
+                <button class="btn-action-main" style="font-size:11px; padding:6px 12px; margin-bottom:12px;" onclick="addLoggingRow()">➕ Добавить породу в ведомость</button>
             `;
         } else if (type === 'fire') {
             innerFields = `
                 <div class="passport-grid">
-                    <div class="form-group">
-                        <label>Площадь, пройденная огнем (га):</label>
-                        <input type="number" id="f-fire-area" value="3.5" step="0.1" onfocus="this.select()">
-                    </div>
-                    <div class="form-group">
-                        <label>Средний запас насаждения (м³/га):</label>
-                        <input type="number" id="f-fire-stock" value="180" onfocus="this.select()">
-                    </div>
-                    <div class="form-group">
-                        <label>Базовая ставка древесины (руб./м³):</label>
-                        <input type="number" id="f-fire-rate" value="210.00" onfocus="this.select()">
-                    </div>
-                    <div class="form-group">
-                        <label>Затраты на тушение пожара (руб.):</label>
-                        <input type="number" id="f-fire-cost" value="145000" onfocus="this.select()">
-                    </div>
+                    <div class="form-group"><label>Площадь пожара (га):</label><input type="number" id="f-fire-area" value="3.5" step="0.1" onfocus="this.select()"></div>
+                    <div class="form-group"><label>Запас насаждения (м³/га):</label><input type="number" id="f-fire-stock" value="180" onfocus="this.select()"></div>
+                    <div class="form-group"><label>Базовая ставка древесины (руб./м³):</label><input type="number" id="f-fire-rate" value="210.00" onfocus="this.select()"></div>
+                    <div class="form-group"><label>Справка РДС (№ и дата официальных затрат):</label><input type="text" id="f-fire-rds" value="Справка РДС Республики Коми № 42 от 02.09.2026 г." onfocus="this.select()"></div>
+                    <div class="form-group"><label>Прямые расходы на тушение пожара (руб.):</label><input type="number" id="f-fire-cost" value="145000" onfocus="this.select()"></div>
                 </div>
             `;
         } else if (type === 'quarry') {
             innerFields = `
                 <div class="passport-grid">
                     <div class="form-group">
-                        <label>Площадь незаконной выемки (м²):</label>
-                        <input type="number" id="f-quarry-area" value="450" onfocus="this.select()">
+                        <label>Категория почвы / грунта:</label>
+                        <select id="f-soil-type">
+                            <option value="Чернозем / Лесной плодородный слой" selected>Плодородный горизонт / Чернозем (наивысшая такса)</option>
+                            <option value="Торфяные почвы">Торфяные залежи лесного фонда</option>
+                            <option value="Суглинки / Песок карьерный">Песок карьерный / Суглинки / Глина</option>
+                        </select>
                     </div>
-                    <div class="form-group">
-                        <label>Глубина разработки (м):</label>
-                        <input type="number" id="f-quarry-depth" value="2.5" step="0.1" onfocus="this.select()">
-                    </div>
-                    <div class="form-group">
-                        <label>Такса вреда почве (руб./м²):</label>
-                        <input type="number" id="f-soil-tax" value="1200.00" onfocus="this.select()">
-                    </div>
-                    <div class="form-group">
-                        <label>Объем добытого грунта / песка (м³):</label>
-                        <input type="number" id="f-soil-vol" value="1125" onfocus="this.select()">
-                    </div>
+                    <div class="form-group"><label>Площадь незаконной выемки (м²):</label><input type="number" id="f-quarry-area" value="450" onfocus="this.select()"></div>
+                    <div class="form-group"><label>Такса за 1 м² порчи почв (руб.):</label><input type="number" id="f-soil-tax" value="1200.00" onfocus="this.select()"></div>
+                    <div class="form-group"><label>Объем изъятого грунта (м³):</label><input type="number" id="f-soil-vol" value="1125" onfocus="this.select()"></div>
                 </div>
             `;
         } else if (type === 'unremoved') {
             innerFields = `
                 <div class="passport-grid">
-                    <div class="form-group">
-                        <label>Объем невывезенной древесины (м³):</label>
-                        <input type="number" id="f-unrem-vol" value="120" onfocus="this.select()">
-                    </div>
-                    <div class="form-group">
-                        <label>Ставка платы за 1 м³ (руб.):</label>
-                        <input type="number" id="f-unrem-rate" value="240.00" onfocus="this.select()">
-                    </div>
-                    <div class="form-group">
-                        <label>Размер неустойки по договору (кратность):</label>
-                        <select id="f-unrem-mult">
-                            <option value="1">1-кратная стоимость</option>
-                            <option value="2">2-кратная стоимость</option>
-                            <option value="3" selected>3-кратная стоимость (Правила заготовки)</option>
-                        </select>
-                    </div>
+                    <div class="form-group"><label>Объем невывезенной древесины (м³):</label><input type="number" id="f-unrem-vol" value="120" onfocus="this.select()"></div>
+                    <div class="form-group"><label>Способ замера объема:</label><input type="text" id="f-unrem-method" value="Геодезический замер штабелей на верхнем складе" onfocus="this.select()"></div>
+                    <div class="form-group"><label>Размеры штабелей (ДхШхВ, м):</label><input type="text" id="f-unrem-size" value="Штабель №1: 15х4х2.5 м, плотность 0.70" onfocus="this.select()"></div>
+                    <div class="form-group"><label>Договор аренды / Лесная декларация:</label><input type="text" id="f-unrem-decl" value="Договор аренды № 45 от 15.01.2026 г." onfocus="this.select()"></div>
+                    <div class="form-group"><label>Ставка за 1 м³ (руб.):</label><input type="number" id="f-unrem-rate" value="240.00" onfocus="this.select()"></div>
                 </div>
             `;
         } else if (type === 'waste') {
             innerFields = `
                 <div class="passport-grid">
-                    <div class="form-group">
-                        <label>Площадь захламления / свалки (м²):</label>
-                        <input type="number" id="f-waste-area" value="280" onfocus="this.select()">
-                    </div>
+                    <div class="form-group"><label>Площадь свалки (м²):</label><input type="number" id="f-waste-area" value="280" onfocus="this.select()"></div>
                     <div class="form-group">
                         <label>Класс опасности отходов:</label>
                         <select id="f-waste-class">
-                            <option value="500">IV класс (Строительные отходы / ТКО)</option>
-                            <option value="1500" selected>III класс (Химические / Промышленные)</option>
+                            <option value="500">IV класс (ТКО / Строительные отходы)</option>
+                            <option value="1500" selected>III класс (Умеренно опасные / Нефтепродукты / Химвещества)</option>
+                            <option value="3000">I-II класс (Чрезвычайно опасные промышленные отходы)</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label>Сметные затраты на ликвидацию свалки (руб.):</label>
-                        <input type="number" id="f-waste-cost" value="85000" onfocus="this.select()">
-                    </div>
+                    <div class="form-group"><label>Смета ликвидации и рекультивации (руб.):</label><input type="number" id="f-waste-cost" value="85000" onfocus="this.select()"></div>
                 </div>
             `;
         } else if (type === 'seizure') {
             innerFields = `
                 <div class="passport-grid">
-                    <div class="form-group">
-                        <label>Площадь самовольного занятия (га):</label>
-                        <input type="number" id="f-seize-area" value="0.45" step="0.01" onfocus="this.select()">
-                    </div>
-                    <div class="form-group">
-                        <label>Характер занятия:</label>
-                        <input type="text" id="f-seize-desc" value="Возведение незаконного ограждения и построек" onfocus="this.select()">
-                    </div>
-                    <div class="form-group">
-                        <label>Базовая ставка аренды насаждения (руб./га):</label>
-                        <input type="number" id="f-seize-rate" value="45000" onfocus="this.select()">
-                    </div>
+                    <div class="form-group"><label>Площадь захвата участка (га):</label><input type="number" id="f-seize-area" value="0.45" step="0.01" onfocus="this.select()"></div>
+                    <div class="form-group"><label>Характер построек / ограждений:</label><input type="text" id="f-seize-desc" value="Забор металлический, фундамент под дом, склад" onfocus="this.select()"></div>
+                    <div class="form-group"><label>Базовая ставка аренды за 1 га (руб.):</label><input type="number" id="f-seize-rate" value="45000" onfocus="this.select()"></div>
                 </div>
             `;
         } else if (type === 'esd') {
             innerFields = `
                 <div class="passport-grid">
-                    <div class="form-group">
-                        <label>Марка и госномер лесовоза:</label>
-                        <input type="text" id="f-esd-car" value="КамАЗ с прицепом, г/н В777ОР 11" onfocus="this.select()">
-                    </div>
-                    <div class="form-group">
-                        <label>Объем древесины без ЭСД (м³):</label>
-                        <input type="number" id="f-esd-vol" value="38.5" onfocus="this.select()">
-                    </div>
-                    <div class="form-group">
-                        <label>Порода древесины:</label>
-                        <input type="text" id="f-esd-wood" value="Пиловочник хвойный (Ель/Сосна)" onfocus="this.select()">
-                    </div>
-                    <div class="form-group">
-                        <label>Штраф по ст. 8.28.1 КоАП РФ (руб.):</label>
-                        <input type="number" id="f-esd-fine" value="300000" onfocus="this.select()">
-                    </div>
+                    <div class="form-group"><label>Транспорт (марки, номера, прицепы):</label><input type="text" id="f-esd-car" value="Лесовоз Volvo FH (г/н А123ВС11) с прицепом (г/н Е456РО11)" onfocus="this.select()"></div>
+                    <div class="form-group"><label>Объем древесины без ЭСД (м³):</label><input type="number" id="f-esd-vol" value="38.5" onfocus="this.select()"></div>
+                    <div class="form-group"><label>Сортимент / Порода:</label><input type="text" id="f-esd-wood" value="Пиловочник хвойный (длина 6 м)" onfocus="this.select()"></div>
+                    <div class="form-group"><label>Штраф по ст. 8.28.1 КоАП РФ (руб.):</label><input type="number" id="f-esd-fine" value="300000" onfocus="this.select()"></div>
                 </div>
             `;
         }
 
-        // ДОБАВЛЯЕМ РЕДАКТИРУЕМЫЕ СТАТЬИ И ПРИКАЗЫ
         container.innerHTML = innerFields + `
             <div class="form-group" style="margin-top: 12px; border-top: 1px dashed var(--border-light); padding-top: 10px;">
-                <label style="color: var(--fire-accent);">✏️ Редактор правовой базы и статей (можно править вручную перед печатью):</label>
+                <label style="color: var(--fire-accent);">✏️ Редактор нормативной базы (статьи КоАП, УК, ЛК и приказы):</label>
                 <input type="text" id="f-custom-articles" value="${defaultArticlesMap[type]}" onfocus="this.select()">
-                <small style="color:var(--text-muted); font-size:10.5px;">*Эти статьи автоматически подставятся во все судебные бланки (акт, претензию и иск).</small>
+                <small style="color:var(--text-muted); font-size:10.5px;">*Статьи автоматически подставляются в шапку и мотивировочную часть всех 4 судебных документов.</small>
             </div>
         `;
+    }
+
+    function addLoggingRow() {
+        const tbody = document.querySelector('#logging-species-table tbody');
+        tbody.insertAdjacentHTML('beforeend', `
+            <tr class="log-row">
+                <td>
+                    <select class="l-poroda">
+                        <option value="Сосна">Сосна (С)</option>
+                        <option value="Ель">Ель (Е)</option>
+                        <option value="Береза" selected>Береза (Б)</option>
+                        <option value="Осина">Осина (Ос)</option>
+                        <option value="Лиственница">Лиственница (Л)</option>
+                        <option value="Кедр">Кедр (К)</option>
+                    </select>
+                </td>
+                <td><input type="number" class="l-vol" value="5.0" step="0.1" onfocus="this.select()"></td>
+                <td><input type="number" class="l-rate" value="132.99" step="0.01" onfocus="this.select()"></td>
+                <td>
+                    <select class="l-mult">
+                        <option value="50">50-кратная (Защитные леса)</option>
+                        <option value="100" selected>100-кратная (Эксплуатационные / ООПТ)</option>
+                    </select>
+                </td>
+                <td><button style="background:var(--danger); color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;" onclick="this.closest('tr').remove()">✕</button></td>
+            </tr>
+        `);
     }
 
     function calculateLegalOffense() {
@@ -505,115 +633,120 @@
         const authorFio = document.getElementById('j-fio-author').value;
         const violator = document.getElementById('j-violator').value;
         const address = document.getElementById('j-violator-address').value;
-        const articles = document.getElementById('f-custom-articles').value; // Берем из редактора!
+        const articles = document.getElementById('f-custom-articles').value;
 
         let title = "", totalSum = 0, detailsHtml = "", calcTableHtml = "";
+        let exportRows = [];
 
         if (type === 'logging') {
-            title = "Незаконная рубка лесных насаждений";
-            const poroda = document.getElementById('f-poroda').value;
-            const vol = parseFloat(document.getElementById('f-volume').value) || 0;
-            const rate = parseFloat(document.getElementById('f-rate').value) || 0;
-            const mult = parseInt(document.getElementById('f-mult').value) || 50;
-
-            totalSum = vol * rate * mult;
-            detailsHtml = `Вырублена древесина породы <b>${poroda}</b> в объеме <b>${vol} м³</b>. Кратность таксы: <b>${mult}</b>.`;
-            calcTableHtml = `
-                <tr><th>Порода</th><th>Объем (м³)</th><th>Ставка платы (руб.)</th><th>Кратность</th><th>Итого вред (руб.)</th></tr>
-                <tr><td>${poroda}</td><td>${vol}</td><td>${rate.toFixed(2)}</td><td>${mult}</td><td><b>${totalSum.toLocaleString('ru-RU', {minimumFractionDigits:2})}</b></td></tr>
-            `;
+            title = "Незаконная рубка лесных насаждений (многопородный перечет)";
+            calcTableHtml = `<tr><th>Порода</th><th>Объем (м³)</th><th>Ставка платы (руб.)</th><th>Кратность</th><th>Итого вред (руб.)</th></tr>`;
+            
+            const rows = document.querySelectorAll('.log-row');
+            rows.forEach(r => {
+                const poroda = r.querySelector('.l-poroda').value;
+                const vol = parseFloat(r.querySelector('.l-vol').value) || 0;
+                const rate = parseFloat(r.querySelector('.l-rate').value) || 0;
+                const mult = parseInt(r.querySelector('.l-mult').value) || 50;
+                const rowSum = vol * rate * mult;
+                totalSum += rowSum;
+                calcTableHtml += `<tr><td>${poroda}</td><td>${vol}</td><td>${rate.toFixed(2)}</td><td>${mult}</td><td><b>${rowSum.toLocaleString('ru-RU', {minimumFractionDigits:2})}</b></td></tr>`;
+                exportRows.push([poroda, vol, rate, mult, rowSum]);
+            });
+            detailsHtml = `Вырублены лесные насаждения нескольких пород по сводной перечетной ведомости.`;
         } else if (type === 'fire') {
             title = "Уничтожение лесных насаждений в результате пожара";
             const area = parseFloat(document.getElementById('f-fire-area').value) || 0;
             const stock = parseFloat(document.getElementById('f-fire-stock').value) || 0;
             const rate = parseFloat(document.getElementById('f-fire-rate').value) || 0;
+            const rdsDoc = document.getElementById('f-fire-rds').value;
             const cost = parseFloat(document.getElementById('f-fire-cost').value) || 0;
 
             const woodDamage = area * stock * rate;
             totalSum = woodDamage + cost;
-            detailsHtml = `Лесной пожар на площади <b>${area} га</b>. Уничтожено насаждений на сумму <b>${woodDamage.toLocaleString('ru-RU')} руб.</b> Затраты на тушение: <b>${cost.toLocaleString('ru-RU')} руб.</b>`;
-            calcTableHtml = `
-                <tr><th>Площадь (га)</th><th>Запас (м³/га)</th><th>Ставка древесины</th><th>Затраты на тушение</th><th>Итого ущерб (руб.)</th></tr>
-                <tr><td>${area}</td><td>${stock}</td><td>${rate.toFixed(2)} руб.</td><td>${cost.toLocaleString('ru-RU')} руб.</td><td><b>${totalSum.toLocaleString('ru-RU', {minimumFractionDigits:2})}</b></td></tr>
-            `;
+            detailsHtml = `Лесной пожар на площади ${area} га. Стоимость древесины: ${woodDamage.toLocaleString()} руб. Затраты на ликвидацию по ${rdsDoc}: ${cost.toLocaleString()} руб.`;
+            calcTableHtml = `<tr><th>Площадь пожара (га)</th><th>Запас (м³/га)</th><th>Справка РДС о затратах на тушение</th><th>Итого сумма ущерба (руб.)</th></tr>
+                             <tr><td>${area}</td><td>${stock}</td><td>${rdsDoc} (${cost.toLocaleString()} руб.)</td><td><b>${totalSum.toLocaleString('ru-RU', {minimumFractionDigits:2})}</b></td></tr>`;
+            exportRows.push(["Пожар лесной", area, stock, rdsDoc, totalSum]);
         } else if (type === 'quarry') {
             title = "Незаконная разработка карьера и порча почв лесного фонда";
             const area = parseFloat(document.getElementById('f-quarry-area').value) || 0;
-            const depth = parseFloat(document.getElementById('f-quarry-depth').value) || 0;
             const tax = parseFloat(document.getElementById('f-soil-tax').value) || 0;
+            const soilType = document.getElementById('f-soil-type').value;
             const vol = parseFloat(document.getElementById('f-soil-vol').value) || 0;
-
             totalSum = area * tax;
-            detailsHtml = `Снятие плодородного слоя и выемка грунта на площади <b>${area} м²</b> (объем добычи: <b>${vol} м³</b>).`;
-            calcTableHtml = `
-                <tr><th>Площадь разработки (м²)</th><th>Глубина (м)</th><th>Такса за порчу почв (руб./м²)</th><th>Итого ущерб (руб.)</th></tr>
-                <tr><td>${area}</td><td>${depth}</td><td>${tax.toFixed(2)}</td><td><b>${totalSum.toLocaleString('ru-RU', {minimumFractionDigits:2})}</b></td></tr>
-            `;
+            detailsHtml = `Снятие и выемка грунта (${soilType}) на площади ${area} м² (объем добычи: ${vol} м³).`;
+            calcTableHtml = `<tr><th>Категория почв</th><th>Площадь выемки (м²)</th><th>Такса вреда (руб./м²)</th><th>Итого вред почвам (руб.)</th></tr>
+                             <tr><td>${soilType}</td><td>${area}</td><td>${tax.toFixed(2)}</td><td><b>${totalSum.toLocaleString('ru-RU', {minimumFractionDigits:2})}</b></td></tr>`;
+            exportRows.push([soilType, area, tax, vol, totalSum]);
         } else if (type === 'unremoved') {
-            title = "Нарушение сроков вывозки древесины и очистки лесосеки";
+            title = "Нарушение сроков вывозки заготовленной древесины";
             const vol = parseFloat(document.getElementById('f-unrem-vol').value) || 0;
             const rate = parseFloat(document.getElementById('f-unrem-rate').value) || 0;
-            const mult = parseInt(document.getElementById('f-unrem-mult').value) || 3;
-
-            totalSum = vol * rate * mult;
-            detailsHtml = `Оставлено в лесу после завершения сроков <b>${vol} м³</b> заготовленной древесины.`;
-            calcTableHtml = `
-                <tr><th>Невывезенный объем (м³)</th><th>Ставка древесины (руб.)</th><th>Кратность неустойки</th><th>Итого неустойка (руб.)</th></tr>
-                <tr><td>${vol}</td><td>${rate.toFixed(2)}</td><td>${mult}</td><td><b>${totalSum.toLocaleString('ru-RU', {minimumFractionDigits:2})}</b></td></tr>
-            `;
+            const method = document.getElementById('f-unrem-method').value;
+            const size = document.getElementById('f-unrem-size').value;
+            const decl = document.getElementById('f-unrem-decl').value;
+            totalSum = vol * rate * 3;
+            detailsHtml = `Оставлено в лесу ${vol} м³ древесины по ${decl}. Способ замера: ${method}. Габариты: ${size}.`;
+            calcTableHtml = `<tr><th>Объем (м³)</th><th>Способ замера</th><th>Размеры штабелей / Декларация</th><th>Итого неустойка (руб.)</th></tr>
+                             <tr><td>${vol}</td><td>${method}</td><td>${size} (${decl})</td><td><b>${totalSum.toLocaleString('ru-RU', {minimumFractionDigits:2})}</b></td></tr>`;
+            exportRows.push([vol, method, size, decl, totalSum]);
         } else if (type === 'waste') {
             title = "Засорение лесов отходами производства и потребления";
             const area = parseFloat(document.getElementById('f-waste-area').value) || 0;
             const rate = parseFloat(document.getElementById('f-waste-class').value) || 0;
             const cost = parseFloat(document.getElementById('f-waste-cost').value) || 0;
-
             totalSum = (area * rate) + cost;
-            detailsHtml = `Свалка отходов на площади <b>${area} м²</b>. Вред лесной среде: <b>${(area * rate).toLocaleString('ru-RU')} руб.</b>`;
-            calcTableHtml = `
-                <tr><th>Площадь свалки (м²)</th><th>Вред среде (руб./м²)</th><th>Затраты на утилизацию</th><th>Итого сумма иска (руб.)</th></tr>
-                <tr><td>${area}</td><td>${rate.toFixed(2)}</td><td>${cost.toLocaleString('ru-RU')} руб.</td><td><b>${totalSum.toLocaleString('ru-RU', {minimumFractionDigits:2})}</b></td></tr>
-            `;
+            detailsHtml = `Свалка отходов на площади ${area} м². Затраты на ликвидацию и вывоз: ${cost.toLocaleString()} руб.`;
+            calcTableHtml = `<tr><th>Площадь свалки (м²)</th><th>Вред среде (руб./м²)</th><th>Смета утилизации отходов</th><th>Итого сумма требований (руб.)</th></tr>
+                             <tr><td>${area}</td><td>${rate.toFixed(2)}</td><td>${cost.toLocaleString()} руб.</td><td><b>${totalSum.toLocaleString('ru-RU', {minimumFractionDigits:2})}</b></td></tr>`;
+            exportRows.push([area, rate, cost, totalSum]);
         } else if (type === 'seizure') {
-            title = "Самовольное занятие лесного участка";
+            title = "Самовольное занятие лесного участка и возведение построек";
             const area = parseFloat(document.getElementById('f-seize-area').value) || 0;
             const rate = parseFloat(document.getElementById('f-seize-rate').value) || 0;
             const desc = document.getElementById('f-seize-desc').value;
-
             totalSum = area * rate * 3;
-            detailsHtml = `Самовольное использование <b>${area} га</b> земель лесного фонда: ${desc}.`;
-            calcTableHtml = `
-                <tr><th>Площадь участка (га)</th><th>Характер нарушения</th><th>Вред (3-кратная ставка)</th></tr>
-                <tr><td>${area}</td><td>${desc}</td><td><b>${totalSum.toLocaleString('ru-RU', {minimumFractionDigits:2})} руб.</b></td></tr>
-            `;
+            detailsHtml = `Самовольное ограждение и использование ${area} га земель лесного фонда: ${desc}.`;
+            calcTableHtml = `<tr><th>Площадь (га)</th><th>Характер нарушений / построек</th><th>Итого вред (3-кратная аренда, руб.)</th></tr>
+                             <tr><td>${area}</td><td>${desc}</td><td><b>${totalSum.toLocaleString('ru-RU', {minimumFractionDigits:2})}</b></td></tr>`;
+            exportRows.push([area, desc, rate, totalSum]);
         } else if (type === 'esd') {
             title = "Транспортировка древесины без электронного сопроводительного документа";
             const car = document.getElementById('f-esd-car').value;
             const vol = parseFloat(document.getElementById('f-esd-vol').value) || 0;
             const fine = parseFloat(document.getElementById('f-esd-fine').value) || 0;
             const wood = document.getElementById('f-esd-wood').value;
-
             totalSum = fine;
-            detailsHtml = `Транспортировка сортиментов (<b>${vol} м³</b>, ${wood}) на ТС <b>${car}</b> без оформленного QR-кода ЭСД во ФГИС ЛК.`;
-            calcTableHtml = `
-                <tr><th>Транспортное средство</th><th>Объем древесины</th><th>Статья КоАП РФ</th><th>Сумма штрафа (руб.)</th></tr>
-                <tr><td>${car}</td><td>${vol} м³ (${wood})</td><td>ст. 8.28.1 КоАП РФ</td><td><b>${totalSum.toLocaleString('ru-RU', {minimumFractionDigits:2})}</b></td></tr>
-            `;
+            detailsHtml = `Перевозка сортиментов (${vol} м³, ${wood}) на ТС ${car} без действующего QR-кода ЭСД во ФГИС ЛК.`;
+            calcTableHtml = `<tr><th>Транспортные средства</th><th>Объем и сортименты</th><th>Статья КоАП РФ</th><th>Сумма штрафа (руб.)</th></tr>
+                             <tr><td>${car}</td><td>${vol} м³ (${wood})</td><td>ст. 8.28.1 КоАП РФ</td><td><b>${totalSum.toLocaleString('ru-RU', {minimumFractionDigits:2})}</b></td></tr>`;
+            exportRows.push([car, vol, wood, totalSum]);
         }
 
+        let photoList = [];
+        document.querySelectorAll('.photo-card-row').forEach(row => {
+            photoList.push({
+                num: row.querySelector('.p-num').value,
+                desc: row.querySelector('.p-desc').value,
+                src: row.querySelector('.photo-preview-thumb').src
+            });
+        });
+
         calculatedCaseData = {
-            type, title, articles, totalSum, detailsHtml, calcTableHtml,
+            type, title, articles, totalSum, detailsHtml, calcTableHtml, photoList, exportRows,
             les, kv, coords, date, authorPos, authorFio, violator, address
         };
 
         const resBox = document.getElementById('legal-result-box');
         document.getElementById('res-legal-title').innerText = `Квалификация: ${title}`;
         document.getElementById('res-legal-summary').innerHTML = `
-            <b>Лесничество / Место:</b> ${les} (${kv}), GPS: ${coords}<br>
+            <b>Лесничество:</b> ${les} (${kv}), GPS: ${coords}<br>
             <b>Ответчик (нарушитель):</b> ${violator} (${address})<br>
-            <b>Нормативно-правовая база:</b> ${articles}<br>
+            <b>Нормы права:</b> ${articles}<br>
             <b>Обстоятельства:</b> ${detailsHtml}<br>
             <div style="font-size:16px; font-weight:800; color:var(--primary-forest); margin-top:8px;">
-                СУММА ТРЕБОВАНИЙ: ${totalSum.toLocaleString('ru-RU', {minimumFractionDigits: 2})} РУБЛЕЙ
+                СУММА ТРЕБОВАНИЙ К ВЗЫСКАНИЮ: ${totalSum.toLocaleString('ru-RU', {minimumFractionDigits: 2})} РУБЛЕЙ
             </div>
         `;
         resBox.style.display = 'block';
@@ -632,59 +765,102 @@
 
         if (docType === 'act') {
             headerText = "АКТ ОСМОТРА ЛЕСНОГО УЧАСТКА И ФИКСАЦИИ ПРАВОНАРУШЕНИЯ";
-            introText = `Мной, государственным лесным инспектором ${d.authorPos} ${d.authorFio}, произведен осмотр земель лесного фонда ${d.les}, квартал ${d.kv}. Географические координаты места нарушения: ${d.coords}. В ходе осмотра выявлен факт нарушения лесного законодательства: ${d.title}.`;
-            demandText = `Настоящий акт составлен для приобщения к материалам дела об административном / уголовном правонарушении и предъявления расчета ущерба нарушителю: ${d.violator}.`;
+            introText = `Мной, государственным лесным инспектором ${d.authorPos} ${d.authorFio}, произведен осмотр земель лесного фонда ${d.les}, квартал ${d.kv} (географические координаты: ${d.coords}). В ходе осмотра выявлен факт нарушения лесного законодательства: ${d.title}.`;
+            demandText = `Настоящий акт составлен для приобщения к материалам дела об административном / уголовном правонарушении и предъявления расчета вреда нарушителю: ${d.violator}.`;
         } else if (docType === 'claim') {
-            headerText = "ПРЕТЕНЗИЯ (ТРЕБОВАНИЕ О ДОБРОВОЛЬНОМ ВОЗМЕЩЕНИИ ВРЕДА)";
+            headerText = "ПРЕТЕНЗИЯ (О ДОБРОВОЛЬНОМ ВОЗМЕЩЕНИИ ВРЕДА ЛЕСАМ)";
             introText = `${d.les} уведомляет ${d.violator}, что ${dateStr} на участке ${d.kv} Вами совершено нарушение лесного законодательства (${d.title}). В результате действий лесному фонду РФ причинен материальный вред.`;
-            demandText = `Предлагаем Вам в добровольном порядке в 30-дневный срок со дня получения настоящей претензии перечислить сумму причиненного ущерба в размере <b>${d.totalSum.toLocaleString('ru-RU', {minimumFractionDigits: 2})} руб.</b> в доход федерального бюджета. В противном случае материалы будут переданы в суд для принудительного взыскания.`;
+            demandText = `Предлагаем в 30-дневный срок со дня получения настоящей претензии добровольно перечислить сумму ущерба в размере <b>${d.totalSum.toLocaleString('ru-RU', {minimumFractionDigits: 2})} руб.</b> в доход федерального бюджета. В противном случае материалы будут переданы в суд для принудительного взыскания.`;
         } else if (docType === 'suit') {
             headerText = "ИСКОВОЕ ЗАЯВЛЕНИЕ О ВОЗМЕЩЕНИИ ВРЕДА ЛЕСНОМУ ФОНДУ";
-            introText = `Истец (${d.les}) обращается в суд с исковым заявлением к ответчику ${d.violator} (адрес: ${d.address}) о взыскании вреда, причиненного лесам. ${dateStr} г. ответчик совершил правонарушение: ${d.title}. Нормативно-правовое обоснование: ${d.articles}.`;
+            introText = `Истец (${d.les}) обращается в суд с исковым заявлением к ответчику ${d.violator} (адрес: ${d.address}) о взыскании вреда, причиненного лесам. ${dateStr} г. ответчик совершил правонарушение: ${d.title}. Нормы права: ${d.articles}.`;
             demandText = `На основании ст. 72, 99, 100 Лесного кодекса РФ, ст. 1064 Гражданского кодекса РФ, ПРОШУ СУД: Взыскать с ${d.violator} в доход бюджета сумму причиненного вреда в размере <b>${d.totalSum.toLocaleString('ru-RU', {minimumFractionDigits: 2})} рублей</b>.`;
+        } else if (docType === 'phototable') {
+            headerText = "ПРИЛОЖЕНИЕ № 1: ФОТОТАБЛИЦА К АКТУ ОСМОТРА";
+            introText = `Фотографическая фиксация места совершения правонарушения, вещественных доказательств и объектов (${d.les}, ${d.kv}).`;
+            
+            let photoGridHtml = '<div class="print-photo-grid">';
+            d.photoList.forEach(ph => {
+                photoGridHtml += `
+                    <div class="print-photo-item">
+                        <img src="${ph.src}">
+                        <div><b>${ph.num}</b>: ${ph.desc}</div>
+                    </div>
+                `;
+            });
+            photoGridHtml += '</div>';
+
+            sheet.innerHTML = `
+                <div class="legal-header-title">${headerText}</div>
+                <div class="legal-header-sub">${introText}</div>
+                ${photoGridHtml}
+                <div class="legal-signatures-box">
+                    <div><b>Инспектор:</b><br>${d.authorPos}<br><br>________________ / ${d.authorFio} /<br><b>М.П.</b></div>
+                    <div><b>Участники осмотра / Понятые:</b><br><br>________________ / ________________ /</div>
+                </div>
+            `;
+            window.print();
+            return;
         }
 
         sheet.innerHTML = `
             <div class="legal-header-title">${headerText}</div>
             <div class="legal-header-sub">Официальный процессуальный документ лесной охраны РФ</div>
-
             <table class="legal-passport-table">
                 <tr><td><b>Лесничество:</b> ${d.les}</td><td><b>Местоположение:</b> ${d.kv}</td></tr>
                 <tr><td><b>Координаты GPS:</b> ${d.coords}</td><td><b>Дата составления:</b> ${dateStr} г.</td></tr>
                 <tr><td><b>Лицо, совершившее нарушение:</b> ${d.violator}</td><td><b>Адрес:</b> ${d.address}</td></tr>
             </table>
-
             <div class="legal-content-body">${introText}</div>
             <div class="legal-content-body"><b>Правовое основание:</b> ${d.articles}.</div>
             <div class="legal-content-body"><b>Фактические обстоятельства:</b> ${d.detailsHtml}</div>
-
             <div style="font-weight: bold; margin: 8pt 0 4pt 0; font-size: 11pt;">РАСЧЕТ РАЗМЕРА ВРЕДА / ИСКОВЫХ ТРЕБОВАНИЙ:</div>
-            <table class="legal-calc-table">
-                ${d.calcTableHtml}
-            </table>
-            <div style="text-align: right; font-weight: bold; font-size: 11.5pt; margin-bottom: 10pt;">
-                ИТОГО СУММА К ВЗЫСКАНИЮ: ${d.totalSum.toLocaleString('ru-RU', {minimumFractionDigits: 2})} РУБ.
-            </div>
-
+            <table class="legal-calc-table">${d.calcTableHtml}</table>
+            <div style="text-align: right; font-weight: bold; font-size: 11.5pt; margin-bottom: 10pt;">ИТОГО К ВЗЫСКАНИЮ: ${d.totalSum.toLocaleString('ru-RU', {minimumFractionDigits: 2})} РУБ.</div>
             <div class="legal-content-body">${demandText}</div>
-
             <div class="legal-signatures-box">
-                <div>
-                    <b>Государственный лесной инспектор:</b><br>
-                    ${d.authorPos}<br><br>
-                    ________________ / ${d.authorFio} /<br>
-                    <b>М.П.</b>
-                </div>
-                <div>
-                    <b>Отметка нарушителя / представителя:</b><br>
-                    ${d.violator}<br><br>
-                    Копию получил: _________________ / ФИО /<br>
-                    «_____» __________________ 2026 г.
-                </div>
+                <div><b>Государственный лесной инспектор:</b><br>${d.authorPos}<br><br>________________ / ${d.authorFio} /<br><b>М.П.</b></div>
+                <div><b>Отметка нарушителя:</b><br>${d.violator}<br><br>Копию получил: _________________</div>
             </div>
         `;
-
         window.print();
+    }
+
+    function exportLegalToXLSX() {
+        if (!calculatedCaseData) {
+            calculateLegalOffense();
+            if (!calculatedCaseData) return;
+        }
+
+        if (typeof XLSX === 'undefined') {
+            alert("Компонент Excel загружается, повторите через секунду.");
+            return;
+        }
+
+        const d = calculatedCaseData;
+        let rows = [
+            ["МАТЕРИАЛЫ ДЕЛА О ЛЕСОНАРУШЕНИИ"],
+            ["Сформировано в цифровом комплексе «Лесничий ПРО: Полевой юрист»"],
+            [],
+            ["Лесничество:", d.les, "Квартал / Выдел:", d.kv],
+            ["Координаты GPS:", d.coords, "Дата:", d.date],
+            ["Нарушитель:", d.violator, "Адрес:", d.address],
+            ["Квалификация:", d.title],
+            ["Нормативная база:", d.articles],
+            [],
+            ["ДЕТАЛИЗИРОВАННЫЙ РАСЧЕТ УЩЕРБА:"]
+        ];
+
+        d.exportRows.forEach(r => rows.push(r));
+
+        rows.push([]);
+        rows.push(["ИТОГО К ВЗЫСКАНИЮ (РУБ.):", d.totalSum]);
+        rows.push(["Составил:", d.authorPos, d.authorFio]);
+
+        const worksheet = XLSX.utils.aoa_to_sheet(rows);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Дело о лесонарушении");
+        XLSX.writeFile(workbook, `Лесонарушение_${d.kv.replace(/[^a-zA-Z0-9а-яА-Я]/g, '_')}.xlsx`);
     }
 
     function saveLegalToArchive() {
@@ -708,7 +884,7 @@
 
         archive.push(snapshot);
         localStorage.setItem('lesovik_jurist_archive', JSON.stringify(archive));
-        alert(`Дело "${name}" сохранено в архив!`);
+        alert(`Дело "${name}" успешно сохранено в архив устройства!`);
         updateLegalArchiveSelect();
     }
 
@@ -755,7 +931,7 @@
             archive.splice(index, 1);
             localStorage.setItem('lesovik_jurist_archive', JSON.stringify(archive));
             updateLegalArchiveSelect();
-            alert("Удалено.");
+            alert("Запись удалена.");
         }
     }
 
@@ -769,8 +945,11 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         renderOffenseFields();
+        addPhotoRow("Пень сосны с клеймом лесорубочного билета, азимут 45°");
+        addPhotoRow("Штабель невывезенной древесины на верхнем складе делянки");
         updateLegalArchiveSelect();
 
+        // Синхронизация с ядром LesovikCore
         if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
             const activeProj = window.LesovikCore.getActiveProject();
             if (activeProj && activeProj.passport) {
@@ -780,18 +959,6 @@
             }
         }
     });
-</script>
-
-<script src="lesovik-core.js"></script>
-
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw-busol-pro.js')
-        .then(reg => console.log('Служба Лесовик PRO зарегистрирована:', reg.scope))
-        .catch(err => console.error('Ошибка регистрации службы PRO:', err));
-    });
-  }
 </script>
 </body>
 </html>
