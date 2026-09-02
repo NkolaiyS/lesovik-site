@@ -1,7 +1,7 @@
 <!--  
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.  
   Свидетельство ИНН: 111801576622.  
-  Программное обеспечение: «Лесничий ПРО: Полевой юрист» (Экосистема Лесовик ПРО) (Версия 6.1 — Настройка фототаблицы под суд).  
+  Программное обеспечение: «Лесничий ПРО: Полевой юрист» (Экосистема Лесовик ПРО) (Версия 6.2 — Полная комплектация с РСЯ).  
   Правообладатель: Худяков Николай Сергеевич.  
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).  
 -->
@@ -44,6 +44,44 @@
 
     <!-- ПОДКЛЮЧЕНИЕ SHEETJS ДЛЯ ЭКСПОРТА В XLSX -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.mini.min.js"></script>
+
+    <!-- ПОДКЛЮЧЕНИЕ РЕКЛАМЫ РСЯ (ПОЛНОЭКРАННЫЙ И НИЖНИЙ БЛОКИ) -->
+    <script>window.yaContextCb = window.yaContextCb || []</script>
+    <script src="https://yandex.ru/ads/system/context.js" async></script>
+    <script>
+        // Touch Fullscreen
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-2",
+                "type": "fullscreen",
+                "platform": "touch"
+            })
+        });
+        // Touch FloorAd (Нижний прилипающий блок)
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-1",
+                "type": "floorAd",
+                "platform": "touch"
+            })
+        });
+        // Desktop Fullscreen
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-3",
+                "type": "fullscreen",
+                "platform": "desktop"
+            })
+        });
+        // Desktop FloorAd
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-4",
+                "type": "floorAd",
+                "platform": "desktop"
+            })
+        });
+    </script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:wght@400;700&display=swap');
@@ -109,7 +147,21 @@
             display: flex; align-items: center; gap: 6px; height: 34px; text-transform: uppercase;
         }
 
-        .main-container { max-width: 1100px; margin: 75px auto 40px auto; padding: 0 15px; width: 100%; }
+        /* ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ ПОД ШАПКОЙ */
+        .mobile-quick-nav {
+            display: flex; overflow-x: auto; white-space: nowrap; scrollbar-width: none;
+            padding: 10px 20px; background: var(--bg-card); border-bottom: 1px solid var(--border-light); gap: 16px;
+            position: sticky; top: 58px; z-index: 999;
+        }
+        .mobile-quick-nav::-webkit-scrollbar { display: none; }
+        .mobile-quick-nav a, .mobile-quick-nav button {
+            display: inline-block; font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+            color: var(--text-main); background: none; border: none; cursor: pointer; letter-spacing: 0.5px;
+            text-decoration: none;
+        }
+        .mobile-quick-nav a:hover, .mobile-quick-nav button:hover { color: var(--primary-forest); }
+
+        .main-container { max-width: 1100px; margin: 30px auto 40px auto; padding: 0 15px; width: 100%; }
         .content-card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px; box-shadow: var(--card-shadow); margin-bottom: 20px; }
         @media (min-width: 768px) { .content-card { padding: 25px; } }
 
@@ -195,7 +247,6 @@
         .legal-signature-table { width: 100%; border-collapse: collapse; border: none; margin-top: 10pt; font-size: 9.5pt; page-break-inside: avoid; }
         .legal-signature-table td { border: none; padding: 2pt 0; vertical-align: top; width: 50%; }
 
-        /* СТИЛИ ФОТОТАБЛИЦЫ С ВЫБОРОМ ФОРМАТА (1 ИЛИ 2 НА ЛИСТ) */
         .print-photo-page-single {
             width: 100%; height: 265mm; display: flex; flex-direction: column; justify-content: space-between;
             page-break-after: always; box-sizing: border-box; padding: 5mm; border: 1px solid #000; margin-bottom: 10mm;
@@ -208,10 +259,39 @@
         .print-photo-item-dual { border: 1px solid #000; padding: 5pt; text-align: center; font-size: 9pt; background: #fff; }
         .print-photo-item-dual img { max-width: 100%; height: 110mm; object-fit: contain; margin-bottom: 4pt; }
 
+        /* СТИЛИ МОДАЛЬНОГО ОКНА ПРОЧИХ РАЗДЕЛОВ */
+        .modal {
+            display: none; position: fixed; inset: 0; z-index: 3000;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+            align-items: center; justify-content: center; padding: 20px; overflow-y: auto;
+        }
+        .modal-content {
+            width: 100%; max-width: 580px; padding: 28px; position: relative;
+            border-radius: 14px; margin: auto; background: var(--bg-card);
+            border: 1px solid var(--primary-forest); display: flex; flex-direction: column; max-height: 90vh;
+            color: var(--text-main); box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .modal-close { position: absolute; top: 14px; right: 18px; font-size: 26px; cursor: pointer; opacity: 0.7; }
+        .modal-close:hover { opacity: 1; color: var(--primary-forest); }
+
+        .pages-scroll-body { overflow-y: auto; flex-grow: 1; padding-right: 5px; margin-bottom: 20px; }
+        .pages-cat-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--primary-forest); font-weight: 800; margin-bottom: 10px; margin-top: 18px; }
+        .pages-cat-title:first-child { margin-top: 0; }
+
+        .pages-link-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        @media (max-width: 550px) { .pages-link-grid { grid-template-columns: 1fr; } }
+
+        .pages-link-item {
+            padding: 12px 14px; background: var(--input-bg); border: 1px solid var(--border-light);
+            border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text-main); display: block; text-decoration: none;
+        }
+        .pages-link-item:hover { border-color: var(--primary-forest); color: var(--primary-forest); }
+        .modal-rsya-box { border-top: 1px solid var(--border-light); padding-top: 15px; margin-top: auto; text-align: center; }
+
         @page { margin: 8mm; size: A4 portrait; }
         @media print {
             body { background: #FFFFFF !important; color: #000000 !important; padding: 0 !important; margin: 0 !important; }
-            .header, .main-container, footer, nav, #lesovik-bottom-nav-bar, .lesovik-bottom-nav, #offline-blocker-screen, [class*="bottom-nav"] {
+            .header, .mobile-quick-nav, .main-container, footer, nav, #lesovik-bottom-nav-bar, .lesovik-bottom-nav, #offline-blocker-screen, [class*="bottom-nav"] {
                 display: none !important; visibility: hidden !important; height: 0 !important;
             }
             #printable-legal-sheet { display: block !important; width: 100% !important; }
@@ -228,6 +308,19 @@
     <div class="header-right">
         <button class="theme-toggle-btn" id="themeBtn">Тема</button>
     </div>
+</div>
+
+<!-- ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ ПОД ШАПКОЙ -->
+<div class="mobile-quick-nav">
+    <a href="index.html">Главная</a>
+    <a href="yurist.html" style="color: var(--primary-forest); font-weight: 800;">⚖️ Полевой юрист</a>
+    <a href="busol.html">Буссоль</a>
+    <a href="height.html">Высотомер</a>
+    <a href="diameter.html">Вилка</a>
+    <a href="bitterlich.html">Полнотомер</a>
+    <a href="mdo.html">Ведомость МДО</a>
+    <a href="journal.html">Полевой журнал</a>
+    <button onclick="openPagesModal()" style="color: var(--primary-forest);">Прочие разделы ▾</button>
 </div>
 
 <div class="main-container">
@@ -294,8 +387,8 @@
     <!-- 2. ВЫБОР СОСТАВА И КАЛЬКУЛЯЦИЯ -->
     <div class="content-card">
         <a href="index.html" class="btn-back">← На главную</a>
-        <h1 class="page-title">Лесничий ПРО: Полевой юрист (Версия 6.1)</h1>
-        <p class="page-subtitle">Полный процессуальный комплекс: выбор формата фототаблицы (1 или 2 фото на лист), редактор текста и архив дел.</p>
+        <h1 class="page-title">Лесничий ПРО: Полевой юрист (Версия 6.2)</h1>
+        <p class="page-subtitle">Полный процессуальный комплекс: расчет в тексте иска, интерактивный редактор, архив дел, фототаблица и гарантия печати ровно на 1 лист А4.</p>
 
         <div class="offense-selector-box">
             <div class="form-group" style="margin: 0;">
@@ -367,7 +460,62 @@
 
 <div id="printable-legal-sheet"></div>
 
+<!-- МОДАЛЬНОЕ ОКНО "ПРОЧИЕ РАЗДЕЛЫ" С БЛОКОМ РСЯ ВНИЗУ -->
+<div class="modal" id="pagesModal">
+    <div class="modal-content">
+        <div class="modal-close" onclick="closePagesModal()">&times;</div>
+        <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 15px; font-family: 'Merriweather', serif; color: var(--primary-forest);">Все разделы экосистемы Лесовик</h3>
+        
+        <div class="pages-scroll-body">
+            <div class="pages-cat-title">Правовая защита и суды</div>
+            <div class="pages-link-grid">
+                <a href="yurist.html" class="pages-link-item" style="color: var(--primary-forest); font-weight:800;">⚖️ Полевой юрист</a>
+                <a href="yurist.html" class="pages-link-item">Расчет ущерба (Пост. 1730)</a>
+            </div>
+
+            <div class="pages-cat-title">Таксация и измерения</div>
+            <div class="pages-link-grid">
+                <a href="busol.html" class="pages-link-item">Электронная буссоль</a>
+                <a href="height.html" class="pages-link-item">AR Высотомер</a>
+                <a href="diameter.html" class="pages-link-item">Оптическая вилка</a>
+                <a href="bitterlich.html" class="pages-link-item">Полнотомер Биттерлиха</a>
+                <a href="photo.html" class="pages-link-item">Фотофиксация делянок</a>
+            </div>
+
+            <div class="pages-cat-title">Расчеты и ведомости</div>
+            <div class="pages-link-grid">
+                <a href="mdo.html" class="pages-link-item">Ведомость МДО</a>
+                <a href="journal.html" class="pages-link-item">Полевой журнал</a>
+                <a href="fire.html" class="pages-link-item">Пожарный калькулятор</a>
+                <a href="tools.html" class="pages-link-item">Все инженерные модули</a>
+            </div>
+        </div>
+
+        <!-- БЛОК РСЯ ВНИЗУ МОДАЛЬНОГО ОКНА -->
+        <div class="modal-rsya-box">
+            <div id="yandex_rtb_R-A-19250236-1"></div>
+            <script>
+                window.yaContextCb.push(() => {
+                    Ya.Context.AdvManager.render({
+                        "blockId": "R-A-19250236-1",
+                        "renderTo": "yandex_rtb_R-A-19250236-1",
+                        "type": "floorAd",
+                        "platform": "touch"
+                    })
+                });
+            </script>
+        </div>
+    </div>
+</div>
+
 <script>
+    function openPagesModal() { document.getElementById('pagesModal').style.display = 'flex'; }
+    function closePagesModal() { document.getElementById('pagesModal').style.display = 'none'; }
+
+    window.onclick = function(event) {
+        if (event.target == document.getElementById('pagesModal')) closePagesModal();
+    }
+
     let calculatedCaseData = null;
     let photoItemsCount = 0;
 
