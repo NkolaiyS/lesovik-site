@@ -1551,132 +1551,132 @@
     }
 
     function takeInspectionPhoto() {
-    const video = document.getElementById('photo-video-feed');
-    if (!video || video.videoWidth === 0) {
-        showToast("Ожидание запуска камеры...");
-        return;
-    }
-
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-
-    // 1. Отрисовка кадра
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    const w = canvas.width;
-    const h = canvas.height;
-    const isPortrait = h > w;
-
-    // 2. Оптимальная высота подложки под 7 строк (30% вертикаль / 23% горизонталь)
-    const boxHeight = Math.round(h * (isPortrait ? 0.30 : 0.23));
-    const boxTop = h - boxHeight;
-
-    ctx.fillStyle = 'rgba(10, 18, 14, 0.90)';
-    ctx.fillRect(0, boxTop, w, boxHeight);
-
-    ctx.fillStyle = '#2D5A27';
-    ctx.fillRect(0, boxTop, w, Math.max(5, Math.round(h * 0.005)));
-
-    // 3. Расчет шага и комфортного шрифта
-    const lineSpacing = Math.round((boxHeight - (h * 0.02)) / 7.6);
-    const baseSize = Math.max(15, Math.round(lineSpacing * 0.70));
-    const paddingLeft = Math.round(w * 0.035);
-
-    // Подготовка данных
-    const nextPt = getNextPointNumber();
-    const prevPt = Math.max(1, nextPt - 1);
-
-    let lesStr = "Лесничество";
-    let kvStr = "-";
-    let delStr = "-";
-    let vydStr = "-";
-
-    if (window.LesovikCore && window.LesovikCore.getActiveProject) {
-        const actProj = window.LesovikCore.getActiveProject();
-        if (actProj && actProj.passport) {
-            lesStr = actProj.passport.lesnichestvo || lesStr;
-            kvStr = actProj.passport.kvartal || kvStr;
-            delStr = actProj.passport.delyanka || delStr;
-            vydStr = actProj.passport.vydel || vydStr;
+        const video = document.getElementById('photo-video-feed');
+        if (!video || video.videoWidth === 0) {
+            showToast("Ожидание запуска камеры...");
+            return;
         }
-    } else {
-        const rawProj = document.getElementById('project-name').value || '';
-        const matchKv = rawProj.match(/кв\.?\s*([^\s,]+)/i);
-        const matchVyd = rawProj.match(/выд\.?\s*([^\s,]+)/i);
-        const matchDel = rawProj.match(/дел\.?\s*([^\s,]+)/i);
-        if (matchKv) kvStr = matchKv[1];
-        if (matchVyd) vydStr = matchVyd[1];
-        if (matchDel) delStr = matchDel[1];
-        lesStr = rawProj.split(/кв/i)[0].trim() || "Уч. лесничество";
+
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+
+        // 1. Отрисовка кадра
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const w = canvas.width;
+        const h = canvas.height;
+        const isPortrait = h > w;
+
+        // 2. Умеренная аккуратная высота подложки
+        const boxHeight = Math.round(h * (isPortrait ? 0.25 : 0.18));
+        const boxTop = h - boxHeight;
+
+        ctx.fillStyle = 'rgba(10, 18, 14, 0.88)';
+        ctx.fillRect(0, boxTop, w, boxHeight);
+
+        ctx.fillStyle = '#2D5A27';
+        ctx.fillRect(0, boxTop, w, Math.max(4, Math.round(h * 0.005)));
+
+        // 3. Компактный аккуратный шрифт (без искусственного раздувания)
+        const baseSize = Math.max(13, Math.round(Math.min(w, h) * 0.022));
+        const lineSpacing = Math.round((boxHeight - (baseSize * 1.5)) / 7);
+        const paddingLeft = Math.round(w * 0.03);
+
+        // Подготовка данных
+        const nextPt = getNextPointNumber();
+        const prevPt = Math.max(1, nextPt - 1);
+
+        let lesStr = "Лесничество";
+        let kvStr = "-";
+        let delStr = "-";
+        let vydStr = "-";
+
+        if (window.LesovikCore && window.LesovikCore.getActiveProject) {
+            const actProj = window.LesovikCore.getActiveProject();
+            if (actProj && actProj.passport) {
+                lesStr = actProj.passport.lesnichestvo || lesStr;
+                kvStr = actProj.passport.kvartal || kvStr;
+                delStr = actProj.passport.delyanka || delStr;
+                vydStr = actProj.passport.vydel || vydStr;
+            }
+        } else {
+            const rawProj = document.getElementById('project-name').value || '';
+            const matchKv = rawProj.match(/кв\.?\s*([^\s,]+)/i);
+            const matchVyd = rawProj.match(/выд\.?\s*([^\s,]+)/i);
+            const matchDel = rawProj.match(/дел\.?\s*([^\s,]+)/i);
+            if (matchKv) kvStr = matchKv[1];
+            if (matchVyd) vydStr = matchVyd[1];
+            if (matchDel) delStr = matchDel[1];
+            lesStr = rawProj.split(/кв/i)[0].trim() || "Уч. лесничество";
+        }
+
+        const dmsStr = `${decimalToDMS(currentLat, true)}   ${decimalToDMS(currentLng, false)}`;
+        const ddStr = `${currentLat.toFixed(6)}°,  ${currentLng.toFixed(6)}°`;
+        const azStr = `${currentAzimuth.toFixed(1)}° (${getCardinalDirection(currentAzimuth)})`;
+        const dateStr = new Date().toLocaleString('ru-RU');
+
+        ctx.textAlign = 'left';
+        let currentY = boxTop + baseSize * 1.3;
+
+        // СТРОКА 1: Лесничество и Квартал
+        ctx.fillStyle = '#8FBC8F';
+        ctx.font = `bold ${baseSize}px 'Inter', sans-serif`;
+        ctx.fillText(`🌲 ${lesStr.toUpperCase()} • КВ. ${kvStr}`, paddingLeft, currentY);
+
+        // СТРОКА 2: Выдел, Делянка и Точка
+        currentY += lineSpacing;
+        ctx.fillStyle = '#A7F3D0';
+        ctx.font = `bold ${baseSize}px 'Inter', sans-serif`;
+        ctx.fillText(`ВЫД. ${vydStr} • ДЕЛ. ${delStr} • ТОЧКА Т-${nextPt}`, paddingLeft, currentY);
+
+        // СТРОКА 3: Координаты DMS
+        currentY += lineSpacing;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = `bold ${baseSize}px monospace`;
+        ctx.fillText(`DMS: ${dmsStr}`, paddingLeft, currentY);
+
+        // СТРОКА 4: Координаты DD
+        currentY += lineSpacing;
+        ctx.fillStyle = '#E2E8F0';
+        ctx.font = `bold ${baseSize}px monospace`;
+        ctx.fillText(`DD:  ${ddStr}`, paddingLeft, currentY);
+
+        // СТРОКА 5: Створ хода и азимут
+        currentY += lineSpacing;
+        ctx.fillStyle = '#FBBF24';
+        ctx.font = `bold ${baseSize}px 'Inter', monospace`;
+        ctx.fillText(`ХОД: Т${prevPt} ➔ Т${nextPt}  |  АЗИМУТ: ${azStr}`, paddingLeft, currentY);
+
+        // СТРОКА 6: Высота и точность GPS
+        currentY += lineSpacing;
+        ctx.fillStyle = '#38BDF8';
+        ctx.font = `bold ${baseSize}px monospace`;
+        ctx.fillText(`ВЫСОТА: ${currentAltitude} м  |  ТОЧНОСТЬ GPS: ±${currentAccuracy} м`, paddingLeft, currentY);
+
+        // СТРОКА 7: Дата, время и версия
+        currentY += lineSpacing;
+        ctx.fillStyle = '#94A3B8';
+        ctx.font = `normal ${baseSize}px monospace`;
+        ctx.fillText(`ВРЕМЯ: ${dateStr}  |  БГ-ХНС PRO 3.2`, paddingLeft, currentY);
+
+        // 4. Показ предпросмотра
+        const previewImg = document.getElementById('photo-preview-image');
+        previewImg.src = canvas.toDataURL('image/jpeg', 0.94);
+        previewImg.style.display = 'block';
+        video.style.display = 'none';
+
+        document.getElementById('photo-shutter-panel').style.display = 'none';
+        document.getElementById('photo-review-panel').style.display = 'flex';
+
+        canvas.toBlob((blob) => {
+            capturedPhotoBlob = blob;
+            capturedPhotoFileName = `Фото_Кв${kvStr}_Выд${vydStr}_Т${prevPt}-Т${nextPt}_${currentLat.toFixed(4)}_${currentLng.toFixed(4)}.jpg`;
+        }, 'image/jpeg', 0.94);
+
+        if (navigator.vibrate) navigator.vibrate([40, 50, 40]);
     }
-
-    const dmsStr = `${decimalToDMS(currentLat, true)}   ${decimalToDMS(currentLng, false)}`;
-    const ddStr = `${currentLat.toFixed(6)}°,  ${currentLng.toFixed(6)}°`;
-    const azStr = `${currentAzimuth.toFixed(1)}° (${getCardinalDirection(currentAzimuth)})`;
-    const dateStr = new Date().toLocaleString('ru-RU');
-
-    ctx.textAlign = 'left';
-    let currentY = boxTop + lineSpacing * 1.15;
-
-    // СТРОКА 1: Лесничество и Квартал
-    ctx.fillStyle = '#8FBC8F';
-    ctx.font = `bold ${baseSize}px 'Inter', sans-serif`;
-    ctx.fillText(`🌲 ${lesStr.toUpperCase()} • КВ. ${kvStr}`, paddingLeft, currentY);
-
-    // СТРОКА 2: Выдел, Делянка и Точка
-    currentY += lineSpacing;
-    ctx.fillStyle = '#A7F3D0';
-    ctx.font = `bold ${baseSize}px 'Inter', sans-serif`;
-    ctx.fillText(`ВЫД. ${vydStr} • ДЕЛ. ${delStr} • ТОЧКА Т-${nextPt}`, paddingLeft, currentY);
-
-    // СТРОКА 3: Координаты DMS
-    currentY += lineSpacing;
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = `bold ${baseSize}px monospace`;
-    ctx.fillText(`DMS: ${dmsStr}`, paddingLeft, currentY);
-
-    // СТРОКА 4: Координаты DD
-    currentY += lineSpacing;
-    ctx.fillStyle = '#E2E8F0';
-    ctx.font = `bold ${baseSize}px monospace`;
-    ctx.fillText(`DD:  ${ddStr}`, paddingLeft, currentY);
-
-    // СТРОКА 5: Створ хода и азимут
-    currentY += lineSpacing;
-    ctx.fillStyle = '#FBBF24';
-    ctx.font = `bold ${baseSize}px 'Inter', monospace`;
-    ctx.fillText(`ХОД: Т${prevPt} ➔ Т${nextPt}  |  АЗИМУТ: ${azStr}`, paddingLeft, currentY);
-
-    // СТРОКА 6: Высота и точность GPS
-    currentY += lineSpacing;
-    ctx.fillStyle = '#38BDF8';
-    ctx.font = `bold ${Math.round(baseSize * 0.95)}px monospace`;
-    ctx.fillText(`ВЫСОТА: ${currentAltitude} м  |  ТОЧНОСТЬ GPS: ±${currentAccuracy} м`, paddingLeft, currentY);
-
-    // СТРОКА 7: Дата, время и версия
-    currentY += lineSpacing;
-    ctx.fillStyle = '#94A3B8';
-    ctx.font = `normal ${Math.round(baseSize * 0.88)}px monospace`;
-    ctx.fillText(`ВРЕМЯ: ${dateStr}  |  БГ-ХНС PRO 3.2`, paddingLeft, currentY);
-
-    // 4. Показ предпросмотра
-    const previewImg = document.getElementById('photo-preview-image');
-    previewImg.src = canvas.toDataURL('image/jpeg', 0.94);
-    previewImg.style.display = 'block';
-    video.style.display = 'none';
-
-    document.getElementById('photo-shutter-panel').style.display = 'none';
-    document.getElementById('photo-review-panel').style.display = 'flex';
-
-    canvas.toBlob((blob) => {
-        capturedPhotoBlob = blob;
-        capturedPhotoFileName = `Фото_Кв${kvStr}_Выд${vydStr}_Т${prevPt}-Т${nextPt}_${currentLat.toFixed(4)}_${currentLng.toFixed(4)}.jpg`;
-    }, 'image/jpeg', 0.94);
-
-    if (navigator.vibrate) navigator.vibrate([40, 50, 40]);
-}
     function retakePhoto() {
         const video = document.getElementById('photo-video-feed');
         const previewImg = document.getElementById('photo-preview-image');
