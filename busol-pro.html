@@ -1562,49 +1562,73 @@
         canvas.height = video.videoHeight;
         const ctx = canvas.getContext('2d');
 
-        // Рисуем исходный кадр
+        // 1. Отрисовка исходного кадра камеры
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        // Формируем штамп инспектора
-        const projectName = document.getElementById('project-name').value || 'Делянка';
-        const nextPt = getNextPointNumber();
-        const prevPt = Math.max(1, nextPt - 1);
-        const dmsCoords = `${decimalToDMS(currentLat, true)} ${decimalToDMS(currentLng, false)}`;
-        const ddCoords = `DD: ${currentLat.toFixed(6)}°, ${currentLng.toFixed(6)}°`;
-        const azText = `Ход Т${prevPt} ➔ Т${nextPt} | Азимут визира: ${currentAzimuth.toFixed(1)}° (${getCardinalDirection(currentAzimuth)})`;
-        const altAccText = `Высота: ${currentAltitude} м | Точность GPS: ±${currentAccuracy} м`;
-        const dateStr = new Date().toLocaleString('ru-RU');
+        const w = canvas.width;
+        const h = canvas.height;
+        const isPortrait = h > w;
 
-        const boxHeight = Math.round(canvas.height * 0.22);
-        ctx.fillStyle = 'rgba(10, 20, 15, 0.84)';
-        ctx.fillRect(0, canvas.height - boxHeight, canvas.width, boxHeight);
+        // 2. Адаптивная высота подложки: 28% для вертикального кадра, 20% для горизонтального
+        const boxHeight = Math.round(h * (isPortrait ? 0.28 : 0.20));
+        const boxTop = h - boxHeight;
+
+        // Контрастный глубокий фон подложки с акцентной разделительной полосой
+        ctx.fillStyle = 'rgba(10, 18, 14, 0.88)';
+        ctx.fillRect(0, boxTop, w, boxHeight);
 
         ctx.fillStyle = '#2D5A27';
-        ctx.fillRect(0, canvas.height - boxHeight, canvas.width, 6);
+        ctx.fillRect(0, boxTop, w, Math.max(6, Math.round(h * 0.006)));
 
-        const baseFontSize = Math.max(16, Math.round(canvas.width * 0.024));
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = `bold ${baseFontSize * 1.2}px Inter, sans-serif`;
+        // 3. Расчет адаптивного крупного шрифта
+        // Привязываем базовый кегль к меньшей стороне кадра, чтобы надписи оставались крупными и не обрезались
+        const baseSize = Math.max(18, Math.round(Math.min(w, h) * (isPortrait ? 0.038 : 0.032)));
+        const paddingLeft = Math.round(w * 0.04);
+        const lineSpacing = isPortrait ? baseSize * 1.55 : baseSize * 1.4;
+
+        // Подготовка данных
+        const projectName = document.getElementById('project-name').value || 'Лесосека';
+        const nextPt = getNextPointNumber();
+        const prevPt = Math.max(1, nextPt - 1);
+        const dmsStr = `${decimalToDMS(currentLat, true)}   ${decimalToDMS(currentLng, false)}`;
+        const ddStr = `${currentLat.toFixed(6)}°,  ${currentLng.toFixed(6)}°`;
+        const azStr = `${currentAzimuth.toFixed(1)}° (${getCardinalDirection(currentAzimuth)})`;
+        const altAccStr = `Высота: ${currentAltitude} м  •  GPS: ±${currentAccuracy} м`;
+        const dateStr = new Date().toLocaleString('ru-RU');
+
         ctx.textAlign = 'left';
+        let currentY = boxTop + baseSize * 1.6;
 
-        let yPos = canvas.height - boxHeight + baseFontSize * 1.4;
+        // СТРОКА 1: Объект и номер точки (крупно, фирменный цвет)
         ctx.fillStyle = '#8FBC8F';
-        ctx.fillText(`🌲 ФОТОФИКСАЦИЯ СТОЛБА: ${projectName.toUpperCase()} • ТОЧКА Т-${nextPt}`, 20, yPos);
+        ctx.font = `bold ${Math.round(baseSize * 1.15)}px 'Inter', sans-serif`;
+        ctx.fillText(`🌲 ${projectName.toUpperCase()} • ТОЧКА Т-${nextPt}`, paddingLeft, currentY);
 
+        // СТРОКА 2: Координаты в градусах, минутах, секундах (DMS)
+        currentY += lineSpacing;
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = `bold ${baseFontSize}px monospace`;
-        yPos += baseFontSize * 1.35;
-        ctx.fillText(`DMS: ${dmsCoords}`, 20, yPos);
+        ctx.font = `bold ${baseSize}px monospace`;
+        ctx.fillText(`DMS: ${dmsStr}`, paddingLeft, currentY);
 
-        yPos += baseFontSize * 1.25;
-        ctx.fillText(`${ddCoords}  |  ${azText}`, 20, yPos);
+        // СТРОКА 3: Координаты в десятичных градусах (DD)
+        currentY += lineSpacing;
+        ctx.fillStyle = '#E2E8F0';
+        ctx.font = `bold ${baseSize}px monospace`;
+        ctx.fillText(`DD:  ${ddStr}`, paddingLeft, currentY);
 
-        yPos += baseFontSize * 1.25;
-        ctx.font = `normal ${baseFontSize * 0.9}px monospace`;
-        ctx.fillStyle = '#E0E0E0';
-        ctx.fillText(`${altAccText}  |  ${dateStr}  |  БГ-ХНС PRO 3.2`, 20, yPos);
+        // СТРОКА 4: Ход, створ и азимут
+        currentY += lineSpacing;
+        ctx.fillStyle = '#FBBF24'; // янтарно-желтый для четкой видимости азимута
+        ctx.font = `bold ${baseSize}px 'Inter', monospace`;
+        ctx.fillText(`ХОД: Т${prevPt} ➔ Т${nextPt}  |  АЗИМУТ: ${azStr}`, paddingLeft, currentY);
 
-        // Показываем предпросмотр
+        // СТРОКА 5: Точность GPS, высота, дата и версия ПО
+        currentY += lineSpacing;
+        ctx.fillStyle = '#A0AEC0';
+        ctx.font = `normal ${Math.round(baseSize * 0.88)}px monospace`;
+        ctx.fillText(`${altAccStr}  |  ${dateStr}  |  БГ-ХНС PRO 3.2`, paddingLeft, currentY);
+
+        // 4. Перевод в предпросмотр
         const previewImg = document.getElementById('photo-preview-image');
         previewImg.src = canvas.toDataURL('image/jpeg', 0.94);
         previewImg.style.display = 'block';
@@ -1620,7 +1644,6 @@
 
         if (navigator.vibrate) navigator.vibrate([40, 50, 40]);
     }
-
     function retakePhoto() {
         const video = document.getElementById('photo-video-feed');
         const previewImg = document.getElementById('photo-preview-image');
