@@ -176,14 +176,17 @@
                 font-family: 'Inter', sans-serif;
             `;
             blocker.innerHTML = `
-                <span style="font-size:50px; margin-bottom:15px;">📡</span>
-                <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:10px;">Требуется подключение к сети</h2>
-                <p style="max-width:450px; font-size:13px; opacity:0.85; line-height:1.5; margin-bottom:20px;">
-                    Бесплатные веб-сервисы работают исключительно при активном интернет-соединении.<br><br>
-                    Для автономной работы в глубоком лесу и тайге <b>без доступа к интернету</b> приобретите профессиональное оффлайн-приложение <b>БГ-ХНС PRO 3.2</b>.
+                <span style="font-size:46px; margin-bottom:12px;">📡</span>
+                <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:8px; font-size:20px;">Требуется подключение к сети</h2>
+                <div style="display:inline-block; background:rgba(230,126,34,0.2); border:1px solid #E67E22; color:#F59E0B; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:bold; margin-bottom:12px; text-transform:uppercase;">
+                    Тестовый доступ: 7 дней бесплатно
+                </div>
+                <p style="max-width:460px; font-size:12.5px; opacity:0.85; line-height:1.5; margin-bottom:18px;">
+                    Бесплатные онлайн-сервисы работают исключительно при активном интернет-соединении.<br><br>
+                    Для стабильной работы в глубоком лесу и тайге <b>полностью без доступа к интернету</b> используйте профессиональный автономный комплекс <b>БГ-ХНС PRO 3.2</b>.
                 </p>
-                <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; border:1px solid rgba(143,188,143,0.2); text-align:left; font-size:12px; max-width:450px; width:100%; box-sizing:border-box;">
-                    <b>Контакты для приобретения автономной программы:</b><br>
+                <div style="background:rgba(255,255,255,0.04); padding:14px; border-radius:8px; border:1px solid rgba(143,188,143,0.2); text-align:left; font-size:12px; max-width:460px; width:100%; box-sizing:border-box;">
+                    <b style="color:#8FBC8F; display:block; margin-bottom:6px;">Контакты для получения пробного доступа или приобретения:</b>
                     • Официальный дистрибьютор (ООО ТД «Сателлит»): <a href="mailto:a1983v@yandex.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none;">a1983v@yandex.ru</a><br>
                     • Разработчик ПО (ИП Худяков Н.С.): <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; font-weight:bold; text-decoration:none;">folgoal@gmail.com</a>
                 </div>
@@ -225,25 +228,43 @@
         const currentPath = window.location.pathname.toLowerCase();
         if (currentPath.includes('busol-pro.html') && !globalAuth.isPro) {
             document.body.innerHTML = `
-                <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:#111815; color:#F9FBF9; z-index:999999; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:'Inter', sans-serif; padding:20px; text-align:center; box-sizing:border-box;">
-                    <span style="font-size:50px; margin-bottom:15px;">🔒</span>
-                    <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:10px;">Доступ к «Буссоль PRO» ограничен</h2>
-                    <p style="max-width:480px; font-size:13px; opacity:0.85; line-height:1.5; margin-bottom:20px;">
-                        Данное устройство не зарегистрировано в реестре лицензий экосистемы «БГ-ХНС PRO».<br><br>
-                        Ваш родной ID устройства: <b style="color:#8FBC8F; font-family:monospace; font-size:15px;">${globalAuth.currentId}</b>
+                <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:#111815; color:#F9FBF9; z-index:999999; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:'Inter', sans-serif; padding:18px; text-align:center; box-sizing:border-box; overflow-y:auto;">
+                    <span style="font-size:44px; margin-bottom:8px;">🌲</span>
+                    <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin:0 0 6px 0; font-size:20px;">Цифровой комплекс «БГ-ХНС PRO 3.2»</h2>
+                    <div style="display:inline-block; background:rgba(230,126,34,0.2); border:1px solid #E67E22; color:#F59E0B; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:bold; margin-bottom:12px; text-transform:uppercase;">
+                        Пробный период: 7 дней бесплатно
+                    </div>
+                    
+                    <p style="max-width:500px; font-size:12.5px; opacity:0.85; line-height:1.5; margin:0 0 14px 0;">
+                        Для активации доступа передайте ID вашего устройства дистрибьютору или разработчику. Программа работает полностью автономно в тайге без интернета.
                     </p>
-                    <div style="background:rgba(255,255,255,0.04); padding:16px 20px; border-radius:10px; border:1px solid rgba(143,188,143,0.25); text-align:left; max-width:480px; width:100%; box-sizing:border-box; margin-bottom:20px;">
-                        <span style="display:block; font-size:11px; opacity:0.6; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; text-align:center; font-weight:bold;">Для активации доступа передайте ваш ID:</span>
-                        <div style="margin-bottom:12px; padding-bottom:10px; border-bottom:1px dashed rgba(255,255,255,0.1);">
-                            <span style="display:block; font-size:12px; font-weight:bold; color:#8FBC8F;">• Отдел продаж (ООО «Сателлит»):</span>
-                            <a href="mailto:a1983v@yandex.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none; font-size:13px; display:inline-block; margin-top:3px;">✉️ a1983v@yandex.ru</a>
+
+                    <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(143,188,143,0.25); border-radius:10px; padding:12px 14px; max-width:500px; width:100%; text-align:left; font-size:11.5px; margin-bottom:14px; box-sizing:border-box;">
+                        <span style="display:block; font-size:10.5px; opacity:0.6; text-transform:uppercase; font-weight:bold; margin-bottom:6px;">Единая база 6 инструментов в связке:</span>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px 10px; color:#E0E0E0; font-size:11px; margin-bottom:10px;">
+                            <div>🧭 Электронная буссоль PRO</div>
+                            <div>📏 Оптическая вилка</div>
+                            <div>🌲 AR-Высотомер кроны</div>
+                            <div>👁️ Полнотомер Биттерлиха</div>
+                            <div>📋 Полевой перечетный журнал</div>
+                            <div>📊 Ведомость МДО лесосек</div>
                         </div>
-                        <div>
-                            <span style="display:block; font-size:12px; font-weight:bold; color:#8FBC8F;">• Техническая поддержка (ИП Худяков Н.С.):</span>
-                            <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; font-weight:bold; text-decoration:none; font-size:13px; display:inline-block; margin-top:3px;">✉️ folgoal@gmail.com</a>
+                        <div style="border-top:1px dashed rgba(255,255,255,0.15); padding-top:8px; font-size:12px;">
+                            Ваш родной ID устройства: <b style="color:#8FBC8F; font-family:monospace; font-size:14px;">${globalAuth.currentId}</b>
                         </div>
                     </div>
-                    <a href="https://lesovik-pro.ru/index.html" style="background:#2D5A27; color:#FFF; text-decoration:none; padding:12px 24px; border-radius:8px; font-weight:bold; font-size:13px; text-transform:uppercase; box-shadow:0 4px 15px rgba(0,0,0,0.4); display:inline-block;">На главную страницу</a>
+
+                    <div style="background:rgba(255,255,255,0.03); padding:12px 16px; border-radius:10px; border:1px solid rgba(143,188,143,0.2); text-align:left; max-width:500px; width:100%; box-sizing:border-box; font-size:11.5px;">
+                        <span style="display:block; font-size:10px; opacity:0.6; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; font-weight:bold;">Контакты для активации лицензии:</span>
+                        <div style="margin-bottom:6px;">
+                            <span style="font-weight:bold; color:#8FBC8F;">• ООО ТД «Сателлит» (Отдел продаж):</span>
+                            <a href="mailto:a1983v@yandex.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none; display:inline-block; margin-left:4px;">✉️ a1983v@yandex.ru</a>
+                        </div>
+                        <div>
+                            <span style="font-weight:bold; color:#8FBC8F;">• ИП Худяков Н.С. (Разработка):</span>
+                            <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; font-weight:bold; text-decoration:none; display:inline-block; margin-left:4px;">✉️ folgoal@gmail.com</a>
+                        </div>
+                    </div>
                 </div>
             `;
             return true;
@@ -590,9 +611,9 @@
         }
     };
 
-    // МОДАЛЬНОЕ ОКНО ДЛЯ БЕСПЛАТНЫХ ПОЛЬЗОВАТЕЛЕЙ (С КОНТАКТАМИ ДЛЯ СВЯЗИ И ДИНАМИЧЕСКИМ ТЕКСТОМ)
+    // МОДАЛЬНОЕ ОКНО ДЛЯ БЕСПЛАТНЫХ ПОЛЬЗОВАТЕЛЕЙ
     window.showProPromoModal = function(customMessage) {
-        const defaultMsg = "Вы используете ознакомительную бесплатную версию. В профессиональном комплексе <b>БГ-ХНС PRO</b> все инструменты работают с максимальной точностью, без рекламы и автономно без интернета в тайге.";
+        const defaultMsg = "Вы используете ознакомительную бесплатную версию. В профессиональном комплексе <b>БГ-ХНС PRO 3.2</b> все инструменты работают с максимальной точностью, без рекламы и автономно без интернета в тайге.";
         const currentId = getCurrentDeviceId();
 
         let modal = document.getElementById('pro-promo-modal');
@@ -609,18 +630,20 @@
             <div id="pro-promo-modal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.78); z-index:99999; display:flex; align-items:center; justify-content:center; padding:15px; box-sizing:border-box; font-family:'Inter',sans-serif;">
                 <div style="background:#111815; color:#F9FBF9; border:1px solid #8FBC8F; border-radius:12px; max-width:500px; width:100%; padding:20px; position:relative; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
                     <button onclick="document.getElementById('pro-promo-modal').style.display='none'" style="position:absolute; top:12px; right:12px; background:transparent; border:none; color:#FFF; font-size:22px; cursor:pointer;">&times;</button>
-                    <div style="text-align:center; margin-bottom:15px;">
-                        <span style="font-size:40px;">🌲</span>
-                        <h3 style="font-family:'Merriweather',serif; color:#8FBC8F; margin:8px 0 5px 0;">Комплекс «БГ-ХНС PRO»</h3>
-                        <span style="font-size:11px; opacity:0.7; text-transform:uppercase;">Профессиональная лесотаксация и геодезия</span>
+                    <div style="text-align:center; margin-bottom:12px;">
+                        <span style="font-size:38px;">🌲</span>
+                        <h3 style="font-family:'Merriweather',serif; color:#8FBC8F; margin:6px 0 4px 0;">Комплекс «БГ-ХНС PRO 3.2»</h3>
+                        <div style="display:inline-block; background:rgba(230,126,34,0.2); border:1px solid #E67E22; color:#F59E0B; padding:2px 8px; border-radius:14px; font-size:10.5px; font-weight:bold; text-transform:uppercase;">
+                            Пробный период: 7 дней бесплатно
+                        </div>
                     </div>
-                    <p id="pro-promo-desc-text" style="font-size:12.5px; line-height:1.5; opacity:0.9; margin-bottom:15px; text-align:justify;">
+                    <p id="pro-promo-desc-text" style="font-size:12.5px; line-height:1.5; opacity:0.9; margin-bottom:14px; text-align:justify;">
                         ${customMessage ? `<b>Обратите внимание:</b> ${customMessage}<br><br>${defaultMsg}` : defaultMsg}
                     </p>
-                    <div style="background:rgba(255,255,255,0.04); padding:12px 15px; border-radius:8px; border:1px solid rgba(143,188,143,0.25); font-size:12px; margin-bottom:15px;">
+                    <div style="background:rgba(255,255,255,0.04); padding:12px 14px; border-radius:8px; border:1px solid rgba(143,188,143,0.25); font-size:12px; margin-bottom:14px;">
                         <span style="display:block; font-size:10.5px; opacity:0.7; text-transform:uppercase; margin-bottom:6px; font-weight:bold;">ID Вашего устройства: <b style="color:#8FBC8F; font-family:monospace; font-size:13px;">${currentId}</b></span>
-                        <div style="margin-bottom:8px;">
-                            <span style="font-weight:bold; color:#8FBC8F;">• ООО «Сателлит» (Официальный отдел продаж):</span><br>
+                        <div style="margin-bottom:6px;">
+                            <span style="font-weight:bold; color:#8FBC8F;">• ООО ТД «Сателлит» (Официальный отдел продаж):</span><br>
                             <a href="mailto:a1983v@yandex.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none;">✉️ a1983v@yandex.ru</a>
                         </div>
                         <div>
