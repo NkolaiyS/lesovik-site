@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Профессиональный лесной компас-визир и таежный спутниковый навигатор (Лесовик ПРО)» (Версия 6.2 Expert Default & Adaptive Layout Edition).
+  Программное обеспечение: «Профессиональный лесной компас-визир и таежный спутниковый навигатор (Лесовик ПРО)» (Версия 6.3 Full Field & Offline Edition).
   Правообладатель: Худяков Николай Сергеевич.
 -->
 <!DOCTYPE html>
@@ -223,9 +223,9 @@
         .btn-danger-clear { background-color: transparent; border: 1px solid var(--danger); color: var(--danger); }
         .btn-danger-clear:hover { background-color: var(--danger); color: white; }
 
-        /* ВЕРХНЯЯ ПАНЕЛЬ С КНОПКОЙ КАЛИБРОВКИ */
+        /* ВЕРХНЯЯ ПАНЕЛЬ НАД КОМПАСОМ */
         .top-stage-action-bar {
-            display: flex; justify-content: center; width: 100%; max-width: 500px; margin-bottom: 12px; z-index: 10;
+            display: grid; grid-template-columns: 1.2fr 1fr; gap: 8px; width: 100%; max-width: 500px; margin-bottom: 12px; z-index: 10;
         }
         .btn-top-bar {
             background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px);
@@ -234,8 +234,9 @@
             text-transform: uppercase; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%;
         }
         .btn-top-bar:hover { background: rgba(255, 255, 255, 0.28); }
+        .btn-guide-accent { background: rgba(230, 126, 34, 0.35); border-color: var(--accent); }
 
-        /* КНОПКА ПЕРЕКЛЮЧЕНИЯ РЕЖИМОВ (МЕЖДУ SOS И ФУЛЛСКРИНОМ) */
+        /* КНОПКА ПЕРЕКЛЮЧЕНИЯ РЕЖИМОВ */
         .btn-mode-toggle-bridge {
             background: #D97706; color: #FFF; border: 1px solid #F59E0B;
             font-weight: 800; font-size: 13px; padding: 12px; border-radius: 8px; cursor: pointer;
@@ -440,7 +441,7 @@
             padding: 6px 4px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;
         }
 
-        /* ИСПРАВЛЕНИЕ: ПОВЫШЕН Z-INDEX ДЛЯ ПЕРЕКРЫТИЯ ПОЛНОЭКРАННОГО КОМПАСА */
+        /* ПОВЫШЕННЫЙ Z-INDEX ДЛЯ ПЕРЕКРЫТИЯ ПОЛНОЭКРАННОГО КОМПАСА */
         .popup-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: var(--overlay-bg); z-index: 10000000 !important; display: none;
@@ -494,7 +495,7 @@
         .footer-pro-link a:hover { color: #FFF; }
         .footer-bottom { text-align: center; opacity: 0.6; }
 
-        /* АДАПТИВНОСТЬ: НА СМАРТФОНАХ ЭКРАН КОМПАСА ИДЕТ ПЕРВЫМ (ORDER: 1), А ПАНЕЛЬ НИЖЕ (ORDER: 2) */
+        /* АДАПТИВНОСТЬ: НА СМАРТФОНАХ ЭКРАН КОМПАСА ИДЕТ ПЕРВЫМ */
         @media (max-width: 950px) {
             .main-workspace { display: flex; flex-direction: column; }
             .compass-stage-container { order: 1; min-height: 520px; width: 100%; }
@@ -504,22 +505,48 @@
 </head>
 <body onclick="unlockAudioOnFirstGesture()" ontouchstart="unlockAudioOnFirstGesture()">
 
+    <!-- ПОП-АП: ПОДРОБНАЯ ИНСТРУКЦИЯ ПО РЕЖИМАМ И ОФЛАЙН-КАРТАМ -->
+    <div id="usage-guide-popup" class="popup-overlay" onclick="closePopupOuter('usage-guide-popup', event)">
+        <div class="popup-card">
+            <h3>📖 Инструкция по использованию компаса и навигатора</h3>
+            <div style="font-size: 13px; line-height: 1.6; color: var(--text-graphite);">
+                <p><b>🟢 1. Простой режим (для грибников и туристов):</b><br>
+                — Перед входом в лес нажмите большую зеленую кнопку <b>«🚗 Запомнить машину (или дом)»</b>.<br>
+                — В лесу на экране появится стрелка и луч, которые показывают, в какую сторону возвращаться, сколько метров осталось и сколько минут идти пешком.<br>
+                — Прибор и координаты ГЛОНАСС работают полностью <b>без интернета</b> по встроенному чипу смартфона.</p>
+
+                <p><b>⚙️ 2. Режим эксперта (для лесничих и охотников):</b><br>
+                — Включает фиксацию створов азимута (кнопка «Створ»), ввод магнитного склонения (+13.2° для СЗФО), дневник контрольных точек и выгрузку пройденного следа в KML-файл для программ лесоустройства.</p>
+
+                <div style="background: rgba(230, 126, 34, 0.1); border: 1.5px dashed var(--accent); border-radius: 8px; padding: 12px; margin: 12px 0;">
+                    <b style="color: var(--accent);">🗺️ Как сохранить карту для работы без интернета?</b><br>
+                    Сама графическая карта Яндекс требует интернета. Чтобы видеть подложку дорог и лесов офлайн, сделайте заранее дома:<br>
+                    1. Откройте официальное приложение <b>Яндекс Карты</b>.<br>
+                    2. Зайдите в свой профиль и выберите раздел <b>«Офлайн-карты»</b>.<br>
+                    3. Найдите свой регион/район и нажмите <b>«Скачать»</b>.<br>
+                    <i>* В нашем веб-приложении стрелка возврата и спутниковые координаты ГЛОНАСС гарантированно работают даже без скачанных карт!</i>
+                </div>
+            </div>
+            <button class="btn-action" onclick="closePopup('usage-guide-popup')">Понятно, спасибо!</button>
+        </div>
+    </div>
+
     <!-- ПОП-АП: ИНСТРУКЦИЯ ПО СКЛОНЕНИЮ И СЕВЕРУ -->
     <div id="north-info-popup" class="popup-overlay" onclick="closePopupOuter('north-info-popup', event)">
         <div class="popup-card">
             <h3>🧭 Памятка по точности и выбору Севера</h3>
             <p style="font-size:13px; line-height:1.6;">
-                <b>⚠️ ВАЖНОЕ ПРЕДУПРЕЖДЕНИЕ:</b> Магнитные датчики многих моделей смартфонов (особенно вблизи металлических предметов или в густом лесу) могут иметь аппаратную погрешность. Для спасения и точного выхода к людям <b>всегда используйте спутниковые координаты ГЛОНАСС и режим Навигатора</b>!<br><br>
+                <b>⚠️ ВАЖНОЕ ПРЕДУПРЕЖДЕНИЕ:</b> Магнитные датчики многих смартфонов (особенно около металлических ножей, пряжек или в чащобе) могут иметь погрешность. Для гарантированного выхода <b>всегда держите ориентир по спутниковым координатам ГЛОНАСС и стрелке возврата к авто</b>!<br><br>
                 <b>1. Что выбрать обычному грибнику и туристу:</b><br>
-                Оставьте значение <b>«Магнитный (N_магн)»</b>. Компас покажет прямое магнитное направление в лесу.<br><br>
+                Оставьте значение <b>«Магнитный (N_магн)»</b>. Компас покажет прямое магнитное направление стрелки в лесу.<br><br>
                 <b>2. Когда выбирать «Истинный (N_истин)»:</b><br>
-                Если вы сверяете азимут со спутниковой картой, планом лесничества или лесным квартальным столбом. Для Республики Коми и СЗФО восточное склонение составляет в среднем <b>+13.2°</b>.
+                Если вы сверяете азимут со спутниковой картой, планом лесничества или лесоустроительным столбом. Для Республики Коми и СЗФО восточное склонение составляет в среднем <b>+13.2°</b>.
             </p>
             <button class="btn-action" onclick="closePopup('north-info-popup')">Понятно</button>
         </div>
     </div>
 
-    <!-- ПОП-АП: ЭКСТРЕННАЯ ПОМОЩЬ SOS (ЗВОНОК 112 + SMS) -->
+    <!-- ПОП-АП: ЭКСТРЕННАЯ ПОМОЩЬ SOS (ЗВОНОК 112 + SMS) С УТОЧНЕНИЕМ ПО СВЯЗИ -->
     <div id="sos-dialog-popup" class="popup-overlay" onclick="closePopupOuter('sos-dialog-popup', event)">
         <div class="popup-card" style="border: 2px solid var(--danger);">
             <h3 style="color: var(--danger);">🆘 Экстренная помощь: Спасение 112</h3>
@@ -532,8 +559,8 @@
             </div>
 
             <p style="font-size: 13px; line-height: 1.5; color: var(--text-graphite);">
-                <b>⚠️ Главный приоритет — прямой голосовой звонок!</b><br>
-                Звонок на <b>112</b> бесплатный, проходит при нулевом балансе, без денег и даже без SIM-карты через любого доступного оператора связи.
+                <b>⚠️ Техническое правило вызова 112:</b><br>
+                Звонок на номер <b>112</b> бесплатный и проходит без денег на счете и даже без SIM-карты, <u>но только при условии наличия сигнала хотя бы одного сотового оператора в районе</u>. Если сигнал отсутствует полностью — выходите на ближайшую сухую возвышенность или широкую просеку/вырубку.
             </p>
 
             <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 14px;">
@@ -768,8 +795,9 @@
                 </div>
             </div>
 
-            <!-- ВЕРХНЯЯ ПАНЕЛЬ НАД КОМПАСОМ -->
+            <!-- ВЕРХНЯЯ ПАНЕЛЬ НАД КОМПАСОМ: КНОПКА ИНСТРУКЦИИ И КАЛИБРОВКИ -->
             <div class="top-stage-action-bar">
+                <button class="btn-top-bar btn-guide-accent" onclick="openPopup('usage-guide-popup')">📖 Инструкция</button>
                 <button class="btn-top-bar" onclick="requestDeviceOrientationPermission()">🧭 Запуск датчика</button>
             </div>
 
@@ -839,10 +867,11 @@
                     <button class="map-center-btn" onclick="centerMapOnUser()" title="Вернуть меня в центр">🎯</button>
                 </div>
 
+                <!-- ПАНЕЛЬ GPS С ЧЕСТНОЙ ПОГРЕШНОСТЬЮ ACCURACY -->
                 <div class="gps-overlay-grid">
                     <div class="gps-badge">Широта (ГЛОНАСС):<b id="gps-lat-label">61.668793°</b></div>
                     <div class="gps-badge">Долгота (ГЛОНАСС):<b id="gps-lon-label">50.836399°</b></div>
-                    <div class="gps-badge">Высота / Погр.:<b id="gps-alt-label">142 м (±3м)</b></div>
+                    <div class="gps-badge">Высота / Погрешность:<b id="gps-alt-label">142 м (±3м)</b></div>
                 </div>
 
                 <button class="btn-action btn-copy-coords" onclick="copyCoordinatesToClipboard()">📋 Скопировать координаты ГЛОНАСС в буфер</button>
@@ -1609,6 +1638,7 @@
             }
         }
 
+        // ЗАПУСК И ПОДСКАЗКА ПО КАЛИБРОВКЕ "ВОСЬМЕРКОЙ"
         function requestDeviceOrientationPermission() {
             unlockAudioOnFirstGesture();
             
@@ -1618,7 +1648,7 @@
                         window.removeEventListener('deviceorientation', handleOrientation, true);
                         window.addEventListener('deviceorientation', handleOrientation, true);
                         isSensorsInitialized = true;
-                        alert("Датчик компаса успешно запущен!");
+                        alert("Датчик компаса активирован!\n\n💡 Для максимальной точности покрутите телефон в воздухе плавным движением по траектории «восьмерки» (знака бесконечности).");
                     } else {
                         alert("Доступ к датчикам отклонен. Разрешите доступ в настройках браузера.");
                     }
@@ -1634,7 +1664,7 @@
                     window.addEventListener('deviceorientation', handleOrientation, true);
                 }
                 isSensorsInitialized = true;
-                alert("Датчик компаса активирован!");
+                alert("Датчик компаса активирован!\n\n💡 Если стрелка залипает — покрутите телефон в воздухе по траектории «восьмерки».");
             }
         }
 
@@ -1649,7 +1679,7 @@
 
         function copyCoordinatesToClipboard() {
             unlockAudioOnFirstGesture();
-            const text = `Широта: ${currentLat.toFixed(6)}°, Долгота: ${currentLon.toFixed(6)}° (Высота: ${currentAlt}м, ГЛОНАСС)`;
+            const text = `Широта: ${currentLat.toFixed(6)}°, Долгота: ${currentLon.toFixed(6)}° (Высота: ${currentAlt}м, Погрешность: ±${currentAcc}м, ГЛОНАСС)`;
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(text).then(() => {
                     alert(`Координаты скопированы в буфер:\n${text}`);
@@ -1663,7 +1693,7 @@
             unlockAudioOnFirstGesture();
             const latStr = currentLat.toFixed(6);
             const lonStr = currentLon.toFixed(6);
-            document.getElementById('sos-coords-preview').innerText = `Шир: ${latStr}°, Долг: ${lonStr}° (Высота: ${currentAlt}м)`;
+            document.getElementById('sos-coords-preview').innerText = `Шир: ${latStr}°, Долг: ${lonStr}° (Высота: ${currentAlt}м, ±${currentAcc}м)`;
             openPopup('sos-dialog-popup');
         }
 
@@ -1674,10 +1704,11 @@
         function sendEmergencySMS() {
             const latStr = currentLat.toFixed(6);
             const lonStr = currentLon.toFixed(6);
-            const msg = `SOS! Я потерялся в лесу. Мои координаты ГЛОНАСС: Широта ${latStr}, Долгота ${lonStr} (Высота ${currentAlt}м). Срочно нужна помощь!`;
+            const msg = `SOS! Я потерялся в лесу. Мои координаты ГЛОНАСС: Широта ${latStr}, Долгота ${lonStr} (Высота ${currentAlt}м, точность ±${currentAcc}м). Срочно нужна помощь!`;
             window.location.href = `sms:?body=${encodeURIComponent(msg)}`;
         }
 
+        // ЧЕСТНЫЙ ДИНАМИЧЕСКИЙ GPS С РАСЧЕТОМ ТОЧНОСТИ ACCURACY
         function initGPS() {
             if ("geolocation" in navigator) {
                 navigator.geolocation.watchPosition(
@@ -1688,11 +1719,19 @@
                         currentLat = pos.coords.latitude;
                         currentLon = pos.coords.longitude;
                         currentAlt = pos.coords.altitude ? Math.round(pos.coords.altitude) : 140;
-                        currentAcc = Math.round(pos.coords.accuracy);
+                        
+                        // Получаем реальную точность в метрах от браузера
+                        currentAcc = pos.coords.accuracy ? Math.round(pos.coords.accuracy) : 15;
 
                         document.getElementById('gps-lat-label').innerText = `${currentLat.toFixed(6)}°`;
                         document.getElementById('gps-lon-label').innerText = `${currentLon.toFixed(6)}°`;
-                        document.getElementById('gps-alt-label').innerText = `${currentAlt} м (±${currentAcc}м)`;
+                        
+                        const altLabel = document.getElementById('gps-alt-label');
+                        if (currentAcc > 25) {
+                            altLabel.innerHTML = `${currentAlt} м <span style="color:#E67E22; font-size:10.5px;">(±${currentAcc}м, поиск спутников)</span>`;
+                        } else {
+                            altLabel.innerText = `${currentAlt} м (±${currentAcc}м)`;
+                        }
 
                         if (trackBreadcrumbs.length > 0) {
                             const stepDist = calculateDistanceMeters(prevLat, prevLon, currentLat, currentLon);
@@ -2014,7 +2053,7 @@
                     manualZeroOffset = parseFloat(savedZero) || 0;
                 }
                 
-                // Проверяем сохраненный режим или ставим эксперт по умолчанию
+                // Экспертный режим активен по умолчанию
                 const savedExpert = localStorage.getItem('lesovik_mode_expert');
                 if (savedExpert === 'false') {
                     isExpertMode = false;
