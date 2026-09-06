@@ -150,33 +150,6 @@
 
         .camera-viewport-wrapper { position: relative; width: 100%; max-width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid var(--border-color); box-sizing: border-box; }
         #video-preview { width: 100%; height: 100%; object-fit: cover; transform-origin: center center; transition: transform 0.1s ease-out; }
-        
-        /* КНОПКА ФОТОФИКСАЦИИ В КАМЕРЕ */
-        .btn-photo-capture {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(20, 30, 25, 0.85);
-            border: 1.5px solid #8FBC8F;
-            color: #FFF;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            z-index: 95;
-            backdrop-filter: blur(6px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            transition: all 0.2s;
-        }
-        .btn-photo-capture:active {
-            transform: translateX(-50%) scale(0.95);
-            background: var(--forest-green);
-        }
 
         .digital-compass-disk-container {
             display: none;
@@ -431,7 +404,6 @@
         .top-right-status { top: 10px; right: 10px; text-align: right; }
         .bottom-center-angle { bottom: 10px; left: 50%; transform: translateX(-50%); background: rgba(22, 163, 74, 0.85); font-size: 16px; font-weight: 700; white-space: nowrap; border-radius: 30px; padding: 6px 16px; display: none; }
 
-        /* ИНДИКАТОР ТОЧНОСТИ GPS */
         .gps-accuracy-indicator {
             display: inline-block;
             font-size: 10.5px;
@@ -528,6 +500,67 @@
 
         .toast-notification { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #2D5A27; color: #FFF; padding: 10px 20px; border-radius: 8px; font-size: 12px; font-weight: bold; z-index: 99999; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3); text-align: center; }
 
+        /* ОТДЕЛЬНОЕ ПОЛНОЭКРАННОЕ ОКНО ФОТОФИКСАЦИИ */
+        .photo-modal-screen {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: #000;
+            z-index: 99999999;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .photo-modal-header {
+            position: absolute;
+            top: 10px; left: 12px; right: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 10;
+        }
+        .photo-hud-badge {
+            background: rgba(17, 24, 21, 0.85);
+            border: 1px solid #8FBC8F;
+            color: #FFF;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        .photo-modal-viewport {
+            position: relative;
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            background: #000;
+        }
+        #photo-video-feed {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        #photo-preview-image {
+            display: none;
+            width: 100%; height: 100%;
+            object-fit: contain;
+            background: #111;
+        }
+        .photo-modal-bottom-bar {
+            position: absolute;
+            bottom: 25px; left: 15px; right: 15px;
+            display: flex; justify-content: center; align-items: center; gap: 12px;
+            z-index: 10;
+        }
+        .btn-shutter-trigger {
+            width: 72px; height: 72px;
+            border-radius: 50%;
+            background: #FFF;
+            border: 6px solid rgba(45, 90, 39, 0.8);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .btn-shutter-trigger:active { transform: scale(0.92); }
+
         @media (max-width: 600px) { .glass-header { padding: 10px 12px; } .container { padding: 10px; margin-top: 70px; } .card { padding: 12px; margin-bottom: 12px; } }
     </style>
 </head>
@@ -545,6 +578,31 @@
             <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тема</button>
         </div>
     </header>
+
+    <!-- ОТДЕЛЬНОЕ ОКНО ИНСПЕКТОРСКОЙ ФОТОФИКСАЦИИ С ПРЕДПРОСМОТРОМ -->
+    <div id="photo-modal-screen" class="photo-modal-screen">
+        <div class="photo-modal-header">
+            <div class="photo-hud-badge">
+                <span id="photo-hud-shot-title" style="color:#8FBC8F; font-weight:bold; font-size:12px;">Т1 ➔ Т2 (Азимут: 0°)</span><br>
+                <span id="photo-hud-coords">GPS: поиск...</span>
+            </div>
+            <button class="fs-close-btn" style="padding:6px 12px; font-size:13px;" onclick="closePhotoModal()">✕ Закрыть</button>
+        </div>
+
+        <div class="photo-modal-viewport">
+            <video id="photo-video-feed" autoplay playsinline muted></video>
+            <img id="photo-preview-image" alt="Снимок с координатами">
+        </div>
+
+        <div class="photo-modal-bottom-bar" id="photo-shutter-panel">
+            <button class="btn-shutter-trigger" onclick="takeInspectionPhoto()" title="Сделать снимок"></button>
+        </div>
+
+        <div class="photo-modal-bottom-bar" id="photo-review-panel" style="display:none;">
+            <button class="btn-action btn-reset-zero" style="flex:1; background:rgba(0,0,0,0.7); color:#FFF; border:1px solid #FFF;" onclick="retakePhoto()">🔄 Переснять</button>
+            <button class="btn-action btn-set-zero" style="flex:1;" onclick="downloadInspectedPhoto()">💾 Сохранить в галерею</button>
+        </div>
+    </div>
 
     <!-- ПОЛНОЭКРАННОЕ ОКНО БУССОЛИ -->
     <div id="fullscreen-compass-modal" class="fullscreen-compass-modal">
@@ -660,7 +718,7 @@
             <h3>Полевая инструкция по отводу лесосеки (БГ-ХНС PRO 3.2)</h3>
             <ol class="instruction-steps">
                 <li><strong>Оптический визир (Вертикально):</strong> Наведите вертикальную нить экрана на веху угла делянки. Дождитесь зеленого уровня авиагоризонта и зафиксируйте румб в журнал.</li>
-                <li><strong>📷 Фотофиксация столба с координатами:</strong> Нажмите кнопку «📷 Фото столба» в видоискателе. Программа сформирует снимок с впеченным штампом точных координат, высоты и времени для официального отчета.</li>
+                <li><strong>📷 Фотофиксация столба с координатами:</strong> Нажмите кнопку «📷 Фото столба с координатами» в панели управления. Откроется отдельная камера, в кадре будут отображаться номер хода и азимут. Сделайте фото, проверьте качество и сохраните в галерею.</li>
                 <li><strong>Электронная буссоль (Горизонтально):</strong> Положите телефон горизонтально на ладонь. Совместите верхний торец устройства с вехой. Нажмите кнопку «🔍 Увеличить компас» для крупного лимба.</li>
                 <li><strong>📡 GPS-Курс (По 2 точкам):</strong> Нажмите «📍 Старт точки», пройдите 5–10 метров по визиру и нажмите «🏁 Зафиксировать вектор». Точки переключаются по цепочке (Т1, Т2, Т3...). Идеально при наличии ЛЭП или железа!</li>
                 <li><strong>📡 GPS-расчет расстояний:</strong> Нажмите «Сменить метод» ➔ «📡 GPS-расчет». Длина между зафиксированными точками посчитается автоматически со спутника (для Т1 будет прочерк).</li>
@@ -813,9 +871,6 @@
                 </div>
 
                 <div class="camera-viewport-wrapper">
-                    <!-- КНОПКА ФОТОФИКСАЦИИ С КООРДИНАТАМИ -->
-                    <button class="btn-photo-capture" onclick="capturePhotoWithWatermark()">📷 Фото столба с координатами</button>
-
                     <div id="digital-compass-disk" class="digital-compass-disk-container">
                         <div class="compass-device-sight-line"></div>
                         
@@ -865,6 +920,9 @@
                     
                     <button id="btn-capture" class="btn-action btn-lock-measure" onclick="captureMeasurement()" disabled>Поймайте уровень horizon</button>
                     
+                    <!-- КНОПКА ИНСПЕКТОРСКОЙ ФОТОФИКСАЦИИ В ЕДИНОМ СТИЛЕ -->
+                    <button class="btn-action btn-set-zero" style="grid-column: span 2; background:#1E3A1A; border:1px solid #8FBC8F; color:#8FBC8F;" onclick="openPhotoModal()">📷 Инспекторское фото столба с координатами</button>
+
                     <button id="btn-fullscreen-toggle" class="btn-fullscreen-toggle" onclick="openFullscreenCompass()">🔍 Увеличить компас (На весь экран)</button>
 
                     <button class="btn-instruction" onclick="openInstruction()">Инструкция для таксатора</button>
@@ -928,7 +986,7 @@
                     <span style="font-weight: 700; color: var(--forest-green); display: block; font-size: 12px; margin-bottom: 6px;">⚠️ РУКОВОДСТВО ТАКСАТОРУ ПО ИНСТРУМЕНТАМ БУССОЛИ:</span>
                     <ul style="font-size: 11px; line-height: 1.5; padding-left: 14px; margin: 0; opacity: 0.9; color: var(--text-graphite);">
                         <li style="margin-bottom: 4px;"><b>1. 👁️ Магнитный (Вертикально):</b> Держите смартфон вертикально перед глазами. Наведите нить визира на веху и совместите авиагоризонт до зеленого кольца.</li>
-                        <li style="margin-bottom: 4px;"><b>2. 📷 Фотофиксация со спутником:</b> Кнопка «📷 Фото столба» создает фото с впеченными координатами (DMS и DD), высотой, временем и точностью GPS. Больше не нужно снимать экран навигатора!</li>
+                        <li style="margin-bottom: 4px;"><b>2. 📷 Фотофиксация со спутником:</b> Кнопка «📷 Инспекторское фото» открывает камеру со створом хода, азимутом и координатами. Вы сразу проверяете фото и сохраняете в галерею.</li>
                         <li style="margin-bottom: 4px;"><b>3. 🧭 Буссоль (Лимб):</b> Положите смартфон горизонтально на ладонь. Работает как классическая буссоль БГ-1. Нажмите «🔍 Увеличить компас» для крупного лимба.</li>
                         <li style="margin-bottom: 4px;"><b>4. 📡 GPS-Курс (По 2 точкам):</b> Нажмите «📍 Старт точки», пройдите 5–10 метров по визиру и нажмите «🏁 Зафиксировать вектор». Точки переключаются по цепочке (Т1, Т2, Т3...).</li>
                         <li style="margin-bottom: 4px;"><b>5. 📏 Расчет расстояний по спутнику:</b> При выборе режима «📡 GPS-расчет» длина вычисляется автоматически по координатам со спутника (для первой стартовой точки ставится прочерк «—»).</li>
@@ -1001,11 +1059,11 @@
     let calibSectors = { q1: false, q2: false, q3: false, q4: false }; 
     let calibTiltOk = false; 
 
-    // GPS ПЕРЕМЕННЫЕ (С ЧЕСТНЫМ ДАТЧИКОМ ТОЧНОСТИ)
+    // GPS ПЕРЕМЕННЫЕ
     let currentLat = 61.4800; 
     let currentLng = 50.5016;
     let currentAltitude = 150;
-    let currentAccuracy = 0; // Честная системная точность в метрах
+    let currentAccuracy = 0;
 
     let gpsPoint1 = null; 
     let calculatedGpsAzimuth = null;
@@ -1023,6 +1081,10 @@
 
     let lastVibratedSector = -1; 
     let calibrationOffsetDecimal = 0.0;
+
+    let photoVideoStream = null;
+    let capturedPhotoBlob = null;
+    let capturedPhotoFileName = "";
 
     function showToast(msg) {
         const toast = document.getElementById('toast-message');
@@ -1388,7 +1450,6 @@
         return (brng + 360) % 360;
     }
 
-    // ЧЕСТНЫЙ ДАТЧИК ТОЧНОСТИ GPS СО СПУТНИКА
     function initGPS() {
         if (navigator.geolocation) {
             navigator.geolocation.watchPosition(
@@ -1405,6 +1466,7 @@
                     }
                     drawPolygon();
                     updateFsMapUI();
+                    updatePhotoModalHUD();
                 },
                 (error) => { console.error("Ошибка GPS:", error); },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -1437,11 +1499,61 @@
         if (fsAltEl) fsAltEl.innerText = altText;
     }
 
-    // --- МОДУЛЬ ФОТОФИКСАЦИИ СТОЛБОВ СО ШТАМПОМ КООРДИНАТ ---
-    function capturePhotoWithWatermark() {
-        const video = document.getElementById('video-preview');
+    // --- ОТДЕЛЬНОЕ ОКНО ИНСПЕКТОРСКОЙ ФОТОФИКСАЦИИ С ПРЕДПРОСМОТРОМ ---
+    function openPhotoModal() {
+        const modal = document.getElementById('photo-modal-screen');
+        modal.style.display = 'flex';
+        
+        retakePhoto();
+        startPhotoCamera();
+        updatePhotoModalHUD();
+    }
+
+    function closePhotoModal() {
+        stopPhotoCamera();
+        document.getElementById('photo-modal-screen').style.display = 'none';
+    }
+
+    async function startPhotoCamera() {
+        const video = document.getElementById('photo-video-feed');
+        try {
+            photoVideoStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+                audio: false
+            });
+            video.srcObject = photoVideoStream;
+        } catch (err) {
+            console.error("Ошибка запуска отдельной камеры:", err);
+            showToast("Камера недоступна");
+        }
+    }
+
+    function stopPhotoCamera() {
+        if (photoVideoStream) {
+            photoVideoStream.getTracks().forEach(t => t.stop());
+            photoVideoStream = null;
+        }
+        const video = document.getElementById('photo-video-feed');
+        if (video) video.srcObject = null;
+    }
+
+    function updatePhotoModalHUD() {
+        const hudTitle = document.getElementById('photo-hud-shot-title');
+        const hudCoords = document.getElementById('photo-hud-coords');
+        if (!hudTitle || !hudCoords) return;
+
+        const nextPt = getNextPointNumber();
+        const prevPt = Math.max(1, nextPt - 1);
+        const az = currentAzimuth.toFixed(1);
+        
+        hudTitle.innerText = `Ход Т${prevPt} ➔ Т${nextPt} • Азимут: ${az}°`;
+        hudCoords.innerText = `${decimalToDMS(currentLat, true)} ${decimalToDMS(currentLng, false)} (±${currentAccuracy}м)`;
+    }
+
+    function takeInspectionPhoto() {
+        const video = document.getElementById('photo-video-feed');
         if (!video || video.videoWidth === 0) {
-            showToast("❌ Камера еще не запустилась!");
+            showToast("Ожидание запуска камеры...");
             return;
         }
 
@@ -1450,29 +1562,26 @@
         canvas.height = video.videoHeight;
         const ctx = canvas.getContext('2d');
 
-        // 1. Отрисовываем исходный кадр камеры
+        // Рисуем исходный кадр
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        // 2. Параметры для штампа
+        // Формируем штамп инспектора
         const projectName = document.getElementById('project-name').value || 'Делянка';
-        const nextPtNum = getNextPointNumber();
-        const ptLabel = `ТОЧКА Т-${nextPtNum} (Столб №${nextPtNum})`;
+        const nextPt = getNextPointNumber();
+        const prevPt = Math.max(1, nextPt - 1);
         const dmsCoords = `${decimalToDMS(currentLat, true)} ${decimalToDMS(currentLng, false)}`;
         const ddCoords = `DD: ${currentLat.toFixed(6)}°, ${currentLng.toFixed(6)}°`;
-        const azText = `Азимут визира: ${currentAzimuth.toFixed(1)}° (${getCardinalDirection(currentAzimuth)})`;
-        const altAccText = `Высота: ${currentAltitude} м | Погрешность GPS: ±${currentAccuracy} м`;
+        const azText = `Ход Т${prevPt} ➔ Т${nextPt} | Азимут визира: ${currentAzimuth.toFixed(1)}° (${getCardinalDirection(currentAzimuth)})`;
+        const altAccText = `Высота: ${currentAltitude} м | Точность GPS: ±${currentAccuracy} м`;
         const dateStr = new Date().toLocaleString('ru-RU');
 
-        // 3. Формируем контрастную информационную плашку внизу кадра
         const boxHeight = Math.round(canvas.height * 0.22);
-        ctx.fillStyle = 'rgba(10, 20, 15, 0.82)';
+        ctx.fillStyle = 'rgba(10, 20, 15, 0.84)';
         ctx.fillRect(0, canvas.height - boxHeight, canvas.width, boxHeight);
 
-        // Верхняя разделительная полоса плашки
         ctx.fillStyle = '#2D5A27';
         ctx.fillRect(0, canvas.height - boxHeight, canvas.width, 6);
 
-        // 4. Отрисовка текста штампа
         const baseFontSize = Math.max(16, Math.round(canvas.width * 0.024));
         ctx.fillStyle = '#FFFFFF';
         ctx.font = `bold ${baseFontSize * 1.2}px Inter, sans-serif`;
@@ -1480,7 +1589,7 @@
 
         let yPos = canvas.height - boxHeight + baseFontSize * 1.4;
         ctx.fillStyle = '#8FBC8F';
-        ctx.fillText(`🌲 ФОТОФИКСАЦИЯ: ${projectName.toUpperCase()} • ${ptLabel}`, 20, yPos);
+        ctx.fillText(`🌲 ФОТОФИКСАЦИЯ СТОЛБА: ${projectName.toUpperCase()} • ТОЧКА Т-${nextPt}`, 20, yPos);
 
         ctx.fillStyle = '#FFFFFF';
         ctx.font = `bold ${baseFontSize}px monospace`;
@@ -1495,19 +1604,50 @@
         ctx.fillStyle = '#E0E0E0';
         ctx.fillText(`${altAccText}  |  ${dateStr}  |  БГ-ХНС PRO 3.2`, 20, yPos);
 
-        // 5. Сохранение файла на устройство
-        const fileName = `Фото_Т${nextPtNum}_${currentLat.toFixed(4)}_${currentLng.toFixed(4)}.jpg`;
-        const imageURI = canvas.toDataURL('image/jpeg', 0.92);
-        
-        const downloadLink = document.createElement('a');
-        downloadLink.download = fileName;
-        downloadLink.href = imageURI;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
+        // Показываем предпросмотр
+        const previewImg = document.getElementById('photo-preview-image');
+        previewImg.src = canvas.toDataURL('image/jpeg', 0.94);
+        previewImg.style.display = 'block';
+        video.style.display = 'none';
 
-        showToast(`📷 Снимок ${ptLabel} с координатами сохранен!`);
+        document.getElementById('photo-shutter-panel').style.display = 'none';
+        document.getElementById('photo-review-panel').style.display = 'flex';
+
+        canvas.toBlob((blob) => {
+            capturedPhotoBlob = blob;
+            capturedPhotoFileName = `Фото_Ход_Т${prevPt}-Т${nextPt}_${currentLat.toFixed(4)}_${currentLng.toFixed(4)}.jpg`;
+        }, 'image/jpeg', 0.94);
+
         if (navigator.vibrate) navigator.vibrate([40, 50, 40]);
+    }
+
+    function retakePhoto() {
+        const video = document.getElementById('photo-video-feed');
+        const previewImg = document.getElementById('photo-preview-image');
+        
+        previewImg.style.display = 'none';
+        video.style.display = 'block';
+
+        document.getElementById('photo-shutter-panel').style.display = 'flex';
+        document.getElementById('photo-review-panel').style.display = 'none';
+
+        capturedPhotoBlob = null;
+    }
+
+    function downloadInspectedPhoto() {
+        if (!capturedPhotoBlob) return;
+
+        const url = URL.createObjectURL(capturedPhotoBlob);
+        const link = document.createElement('a');
+        link.download = capturedPhotoFileName || 'Фото_Столба_Координаты.jpg';
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+        showToast("💾 Фото сохранено в галерею смартфона!");
+        closePhotoModal();
     }
 
     function startGpsLine() {
