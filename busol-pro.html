@@ -1515,18 +1515,31 @@
     }
 
     async function startPhotoCamera() {
-        const video = document.getElementById('photo-video-feed');
+    const video = document.getElementById('photo-video-feed');
+    try {
+        photoVideoStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { exact: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+            audio: false
+        });
+        video.srcObject = photoVideoStream;
+    } catch (err) {
+        // Fallback для устройств, где exact constraint не поддерживается
         try {
             photoVideoStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+                video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
                 audio: false
             });
             video.srcObject = photoVideoStream;
-        } catch (err) {
-            console.error("Ошибка запуска отдельной камеры:", err);
-            showToast("Камера недоступна");
+        } catch (e2) {
+            try {
+                photoVideoStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                video.srcObject = photoVideoStream;
+            } catch (e3) {
+                showToast("❌ Ошибка доступа к камере устройства");
+            }
         }
     }
+}
 
     function stopPhotoCamera() {
         if (photoVideoStream) {
@@ -1580,15 +1593,14 @@
     ctx.fillStyle = '#2D5A27';
     ctx.fillRect(0, boxTop, w, Math.max(4, Math.round(h * 0.005)));
 
-    // 3. Расчет шага и чуть более компактного шрифта
-    // Равномерно распределяем 7 строк в доступную высоту
+    // 3. Адаптивный расчет аккуратного шрифта (компактный кегль, в горизонтали чуть крупнее для читаемости)
     const availableHeight = boxHeight - (h * 0.015);
     const lineSpacing = Math.round(availableHeight / 7.6);
-    // Делаем шрифт чуть меньше (0.64 от межстрочного расстояния)
-    const baseSize = Math.max(14, Math.round(lineSpacing * 0.64));
+    const scaleMultiplier = isPortrait ? 0.64 : 0.82; 
+    const baseSize = Math.max(isPortrait ? 13 : 16, Math.round(lineSpacing * scaleMultiplier));
     const paddingLeft = Math.round(w * 0.035);
 
-    // Подготовка данных
+    // Подготовка данных паспорта и координат
     const nextPt = getNextPointNumber();
     const prevPt = Math.max(1, nextPt - 1);
 
