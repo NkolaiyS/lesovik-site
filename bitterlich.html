@@ -99,7 +99,7 @@
     <script src="https://yandex.ru/ads/system/context.js" async></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap');
 
         :root {
             --bg-paper: #F9FBF9;
@@ -246,29 +246,47 @@
         .ar-reticle-header { color: white; font-size: 10px; font-weight: bold; background: rgba(0,0,0,0.8); padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
         .ar-reticle-center-line { position: absolute; top: 0; bottom: 0; left: 50%; width: 1.5px; background: rgba(220, 38, 38, 0.85); }
 
+        /* ВЕРХНЯЯ СТРОКА ПАРАМЕТРОВ */
         .ar-hud-top { 
-            position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; align-items: center; gap: 6px; z-index: 100001; 
+            position: absolute; top: calc(10px + env(safe-area-inset-top, 0px)); left: 10px; right: 10px; 
+            display: flex; justify-content: space-between; align-items: center; gap: 6px; z-index: 100001; 
             background: rgba(0,0,0,0.75); padding: 6px 8px; border-radius: 8px; backdrop-filter: blur(8px); 
         }
-        .ar-hud-top select, .ar-hud-top input { background: #222; color: white; border: 1px solid #555; padding: 5px 6px; font-size: 11.5px; border-radius: 6px; outline: none; }
-        
-        .ar-hud-right-actions { display: flex; align-items: center; gap: 6px; }
-        .ar-info-btn { 
-            background: rgba(255, 255, 255, 0.15); color: #FFF; border: 1.5px solid rgba(255, 255, 255, 0.6); 
-            width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; 
-            font-weight: 800; font-size: 14px; cursor: pointer; transition: 0.2s; 
+        .ar-hud-top select, .ar-hud-top input { 
+            background: #222; color: white; border: 1px solid #555; padding: 6px 8px; font-size: 12px; border-radius: 6px; outline: none; 
         }
 
-        .ar-cal-bar {
-            position: absolute; top: 52px; left: 10px; right: 10px; z-index: 100001;
-            background: rgba(0,0,0,0.75); padding: 5px 8px; border-radius: 8px; backdrop-filter: blur(8px);
-            display: flex; align-items: center; justify-content: space-between; gap: 6px;
+        /* ВТОРАЯ СТРОКА: КНОПКИ ДЕЙСТВИЙ (ФОТО, СПРАВКА, ВЫХОД) */
+        .ar-hud-actions-bar {
+            position: absolute; top: calc(56px + env(safe-area-inset-top, 0px)); left: 10px; right: 10px; z-index: 100001;
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
         }
-        .ar-cal-label { color: #8FBC8F; font-size: 11px; font-weight: 700; white-space: nowrap; }
-        .ar-cal-btn {
-            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: white;
-            padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer;
+        .ar-hud-actions-bar .btn-ar-action {
+            flex: 1; padding: 8px 12px; font-size: 12px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; text-align: center;
         }
+        .ar-info-btn { 
+            background: rgba(255, 255, 255, 0.15); color: #FFF; border: 1.5px solid rgba(255, 255, 255, 0.6); 
+            width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; 
+            font-weight: 800; font-size: 15px; cursor: pointer; transition: 0.2s; flex-shrink: 0;
+        }
+        .ar-info-btn:active { background: var(--forest-green); border-color: var(--forest-green); }
+
+        /* ВЕРТИКАЛЬНАЯ ПАНЕЛЬ РЕГУЛИРОВКИ ВИЗИРА СПРАВА */
+        .ar-cal-vertical-bar {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 100001;
+            background: rgba(0,0,0,0.78); border: 1px solid rgba(255,255,255,0.25);
+            padding: 8px 6px; border-radius: 10px; backdrop-filter: blur(8px);
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .ar-cal-v-title { color: #8FBC8F; font-size: 9.5px; font-weight: 700; text-transform: uppercase; }
+        .ar-cal-v-val { color: #FFF; font-size: 12px; font-weight: 800; font-family: monospace; margin-bottom: 2px; }
+        .ar-cal-v-btn {
+            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.35); color: white;
+            width: 44px; height: 32px; border-radius: 6px; font-size: 11px; font-weight: 800; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .ar-cal-v-btn:active { background: var(--forest-green); }
 
         .ar-hud-bottom { 
             position: absolute; bottom: 85px; left: 10px; right: 10px; z-index: 100001; 
@@ -553,8 +571,9 @@
 
     <!-- МОДАЛЬНЫЙ ЭКРАН КАМЕРЫ С ОНЛАЙН-КАЛИБРОВКОЙ И КНОПКОЙ СПРАВКИ -->
     <div class="ar-modal" id="arModal">
+        <!-- 1-я строка: Порода, Высота H, Диаметр D -->
         <div class="ar-hud-top">
-            <select id="ar-species-select" onchange="syncFromARHUD()">
+            <select id="ar-species-select" style="flex: 2;" onchange="syncFromARHUD()">
                 <option value="Сосна">Сосна (С)</option>
                 <option value="Ель">Ель (Е)</option>
                 <option value="Береза">Береза (Б)</option>
@@ -563,22 +582,25 @@
                 <option value="Тополь">Тополь (Тп)</option>
                 <option value="Дуб">Дуб (Д)</option>
             </select>
-            <input type="number" id="ar-height-input" style="width: 55px;" placeholder="H, м" onchange="syncFromARHUD()">
-            <input type="number" id="ar-diameter-input" style="width: 55px;" placeholder="D, см" onchange="syncFromARHUD()">
-            
-            <div class="ar-hud-right-actions">
-                <button class="btn" style="padding:4px 8px; font-size:11px; width:auto; margin:0; background:#1E3A1A; border:1px solid #8FBC8F; color:#8FBC8F;" onclick="openPhotoModal()">📷 Фото</button>
-                <button class="ar-info-btn" onclick="openHelpModal()" title="Инструкция">?</button>
-                <button class="ar-close-btn" onclick="closeARCamera()">✕ Выход</button>
-            </div>
+            <input type="number" id="ar-height-input" style="flex: 1; max-width: 70px;" placeholder="H, м" onchange="syncFromARHUD()">
+            <input type="number" id="ar-diameter-input" style="flex: 1; max-width: 70px;" placeholder="D, см" onchange="syncFromARHUD()">
         </div>
 
-        <div class="ar-cal-bar">
-            <span class="ar-cal-label">Визир: <b id="ar-cal-display" style="color:white;">6.0%</b></span>
-            <button class="ar-cal-btn" onclick="stepReticleWidth(-1.0)">-1%</button>
-            <button class="ar-cal-btn" onclick="stepReticleWidth(-0.2)">-0.2%</button>
-            <button class="ar-cal-btn" onclick="stepReticleWidth(0.2)">+0.2%</button>
-            <button class="ar-cal-btn" onclick="stepReticleWidth(1.0)">+1%</button>
+        <!-- 2-я строка: Кнопки Фото, Справки и Закрытия -->
+        <div class="ar-hud-actions-bar">
+            <button class="ar-info-btn" onclick="openHelpModal()" title="Инструкция">?</button>
+            <button class="btn-ar-action" style="background: #1E3A1A; border: 1px solid #8FBC8F; color: #8FBC8F;" onclick="openPhotoModal()">📷 Фото точки</button>
+            <button class="btn-ar-action" style="background: rgba(220, 38, 38, 0.9); color: #FFF; max-width: 100px;" onclick="closeARCamera()">✕ Выход</button>
+        </div>
+
+        <!-- Вертикальная панель регулировки визира справа под пальцем -->
+        <div class="ar-cal-vertical-bar">
+            <span class="ar-cal-v-title">Визир</span>
+            <span class="ar-cal-v-val" id="ar-cal-display">6.0%</span>
+            <button class="ar-cal-v-btn" onclick="stepReticleWidth(1.0)">+1%</button>
+            <button class="ar-cal-v-btn" onclick="stepReticleWidth(0.2)">+0.2</button>
+            <button class="ar-cal-v-btn" onclick="stepReticleWidth(-0.2)">-0.2</button>
+            <button class="ar-cal-v-btn" onclick="stepReticleWidth(-1.0)">-1%</button>
         </div>
 
         <div class="ar-video-container">
@@ -1570,7 +1592,6 @@
                     try {
                         videoStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
                         video.srcObject = videoStream;
-                        modal.classList.add('active');
                     } catch (e3) {
                         alert("Ошибка доступа к камере: " + e3.message);
                     }
