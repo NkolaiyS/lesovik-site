@@ -312,14 +312,28 @@
         }
         #photo-video-feed { width: 100%; height: 100%; object-fit: cover; }
         #photo-preview-image { display: none; width: 100%; height: 100%; object-fit: contain; background: #111; }
+        
         .photo-modal-bottom-bar {
-            position: absolute; bottom: 25px; left: 15px; right: 15px;
-            display: flex; justify-content: center; align-items: center; gap: 12px; z-index: 10;
+            position: absolute;
+            bottom: calc(25px + env(safe-area-inset-bottom, 15px));
+            left: 15px; 
+            right: 15px;
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 12px; 
+            z-index: 10000000;
         }
         .btn-shutter-trigger {
-            width: 72px; height: 72px; border-radius: 50%; background: #FFF;
-            border: 6px solid rgba(45, 90, 39, 0.8); box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-            cursor: pointer; transition: transform 0.1s;
+            width: 68px; 
+            height: 68px; 
+            border-radius: 50%; 
+            background: #FFF;
+            border: 5px solid rgba(45, 90, 39, 0.85); 
+            box-shadow: 0 4px 18px rgba(0,0,0,0.7);
+            cursor: pointer; 
+            transition: transform 0.1s;
+            margin-bottom: 5px;
         }
         .btn-shutter-trigger:active { transform: scale(0.92); }
 
@@ -1157,24 +1171,27 @@
             canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
 
+            // 1. Отрисовка исходного кадра
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
             const w = canvas.width;
             const h = canvas.height;
             const isPortrait = h > w;
 
-            const boxHeight = Math.round(h * (isPortrait ? 0.28 : 0.20));
+            // 2. Адаптивная высота подложки под 8 строк
+            const boxHeight = Math.round(h * (isPortrait ? 0.30 : 0.22));
             const boxTop = h - boxHeight;
 
-            ctx.fillStyle = 'rgba(10, 18, 14, 0.90)';
+            ctx.fillStyle = 'rgba(10, 18, 14, 0.92)';
             ctx.fillRect(0, boxTop, w, boxHeight);
 
             ctx.fillStyle = '#2D5A27';
             ctx.fillRect(0, boxTop, w, Math.max(4, Math.round(h * 0.005)));
 
+            // 3. Расчёт шага и кегля под 8 строк
             const availableHeight = boxHeight - (h * 0.015);
-            const lineSpacing = Math.round(availableHeight / 7.6);
-            const scaleMultiplier = isPortrait ? 0.64 : 0.82;
+            const lineSpacing = Math.round(availableHeight / 8.6);
+            const scaleMultiplier = isPortrait ? 0.62 : 0.78;
             const baseSize = Math.max(isPortrait ? 12 : 15, Math.round(lineSpacing * scaleMultiplier));
             const paddingLeft = Math.round(w * 0.035);
 
@@ -1202,7 +1219,7 @@
             ctx.font = `bold ${baseSize}px 'Inter', sans-serif`;
             ctx.fillText(`🌲 ${lesStr.toUpperCase()} • КВ. ${kvStr}`, paddingLeft, currentY);
 
-            // СТРОКА 2: Выдел, Делянка и Точка Биттерлиха
+            // СТРОКА 2: Выдел, Делянка и Номер точки
             currentY += lineSpacing;
             ctx.fillStyle = '#A7F3D0';
             ctx.font = `bold ${baseSize}px 'Inter', sans-serif`;
@@ -1220,23 +1237,29 @@
             ctx.font = `bold ${baseSize}px monospace`;
             ctx.fillText(`DD:  ${ddStr}`, paddingLeft, currentY);
 
-            // СТРОКА 5: Параметры полнотомера и порода
+            // СТРОКА 5: Параметр шаблона полнотомера
             currentY += lineSpacing;
             ctx.fillStyle = '#FBBF24';
             ctx.font = `bold ${baseSize}px 'Inter', monospace`;
-            ctx.fillText(`ПОЛНОТОМЕР (K=${k})  |  ПОРОДА: ${sp} (H=${treeH}м, Разряд ${hClass})`, paddingLeft, currentY);
+            ctx.fillText(`ПОЛНОТОМЕР БИТТЕРЛИХА (Шаблон K=${k})`, paddingLeft, currentY);
 
-            // СТРОКА 6: Высота и точность GPS
+            // СТРОКА 6: Порода отдельной строкой
+            currentY += lineSpacing;
+            ctx.fillStyle = '#FDE68A';
+            ctx.font = `bold ${baseSize}px 'Inter', monospace`;
+            ctx.fillText(`ПОРОДА: ${sp} • H=${treeH}м, D=${treeD}см (Разряд ${hClass})`, paddingLeft, currentY);
+
+            // СТРОКА 7: Высота и точность GPS
             currentY += lineSpacing;
             ctx.fillStyle = '#38BDF8';
             ctx.font = `bold ${Math.round(baseSize * 0.94)}px monospace`;
             ctx.fillText(`ВЫСОТА: ${currentGPS.alt} м  |  ТОЧНОСТЬ GPS: ±${currentGPS.acc} м`, paddingLeft, currentY);
 
-            // СТРОКА 7: Дата, время и версия ПО
+            // СТРОКА 8: Дата, время и компактная подпись без «Лесовик»
             currentY += lineSpacing;
             ctx.fillStyle = '#94A3B8';
             ctx.font = `normal ${Math.round(baseSize * 0.88)}px monospace`;
-            ctx.fillText(`ВРЕМЯ: ${dateStr}  |  Лесовик Полнотомер PRO 3.8`, paddingLeft, currentY);
+            ctx.fillText(`ВРЕМЯ: ${dateStr}  |  Полнотомер PRO 3.8`, paddingLeft, currentY);
 
             const previewImg = document.getElementById('photo-preview-image');
             previewImg.src = canvas.toDataURL('image/jpeg', 0.94);
