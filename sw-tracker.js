@@ -1,5 +1,5 @@
 // Service Worker для автономного Навигатора Охотника и Рыбака
-const CACHE_NAME = 'lesovik-taktik-v7-9';
+const CACHE_NAME = 'lesovik-taktik-v8-0';
 const ASSETS_TO_CACHE = [
   '/tracker.html',
   '/tracker.webmanifest',
