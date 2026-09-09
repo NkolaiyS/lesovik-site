@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Автономный спутниковый навигатор и тактический компас охотника и рыбака (Лесовик ТАКТИК PRO)» (Версия 7.5 Field & Offline Weather Edition).
+  Программное обеспечение: «Автономный спутниковый навигатор и тактический компас охотника и рыбака (Лесовик ТАКТИК PRO)» (Версия 7.6 Kalman Stabilized & Spirit Level Edition).
   Правообладатель: Худяков Николай Сергеевич.
 -->
 <!DOCTYPE html>
@@ -35,8 +35,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <title>Навигатор охотника и рыбака онлайн: Спутниковая карта на весь экран, компас ГЛОНАСС без интернета, точки стоянок и барометр клева</title>
-    <meta name="description" content="Бесплатный автономный GPS/ГЛОНАСС навигатор для охоты и рыбалки без интернета. Полноэкранная карта глубин и лесов, компас возврата к авто и лодке, солунарный барометр клева рыбы, прогноз погоды на 3 дня с кешированием.">
-    <meta name="keywords" content="навигатор для рыбалки без интернета, навигатор для охотников глонасс, карта глубин онлайн, компас в лесу на телефоне, прогноз погоды на 3 дня офлайн, солунарный календарь рыбака, барометр клева рыбы, точки стоянки лодки, лесовик про">
+    <meta name="description" content="Бесплатный автономный GPS/ГЛОНАСС навигатор для охоты и рыбалки без интернета. Полноэкранная карта глубин и лесов, компас с фильтром Калмана и пузырьковым уровнем, солунарный барометр клева, прогноз погоды на 3 дня.">
+    <meta name="keywords" content="навигатор для рыбалки без интернета, навигатор для охотников глонасс, карта глубин онлайн, компас с уровнем онлайн, фильтр калмана компас, солунарный календарь рыбака, барометр клева рыбы, точки стоянки лодки, лесовик про">
     <link rel="canonical" href="https://lesovik-pro.ru/tracker.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
 
@@ -395,7 +395,7 @@
             opacity: 0.7;
         }
 
-        /* ПРАВАЯ ПРИБОРНАЯ СЦЕНА (КОМПАС ИЛИ КАРТА) */
+        /* ПРАВАЯ ПРИБОРНАЯ СЦЕНА */
         .compass-stage-container {
             background-color: var(--compass-bg);
             border: 1px solid var(--border-color);
@@ -429,12 +429,12 @@
             overflow-y: auto !important;
         }
 
-        /* ВЕРТИКАЛЬНЫЙ БЛОК КНОПОК ПО ПРАВОМУ КРАЮ В ПОЛНОМ ЭКРАНЕ */
+        /* ВЕРТИКАЛЬНЫЙ БЛОК КНОПОК ПО ПРАВОМУ КРАЮ ВВЕРХУ (НЕ ЗАКРЫВАЕТ ЛИМБ) */
         .fs-floating-vertical-side {
             position: absolute;
             right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
+            top: 24%;
+            transform: none;
             display: none;
             flex-direction: column;
             gap: 12px;
@@ -445,11 +445,11 @@
         }
 
         .fs-side-btn {
-            background: rgba(18, 26, 23, 0.9);
+            background: rgba(18, 26, 23, 0.92);
             backdrop-filter: blur(8px);
             border: 1.5px solid var(--forest-green);
             color: #FFF;
-            padding: 12px 10px;
+            padding: 10px 8px;
             border-radius: 10px;
             font-size: 11px;
             font-weight: 800;
@@ -459,8 +459,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
-            min-width: 68px;
+            gap: 3px;
+            min-width: 62px;
             text-align: center;
         }
         .fs-side-btn:active { transform: scale(0.95); }
@@ -547,7 +547,7 @@
             width: 100%;
             height: 100%;
             transform-origin: 50% 50%;
-            transition: transform 0.08s ease-out;
+            transition: transform 0.05s linear;
         }
 
         #beacon-target-arrow-layer {
@@ -582,6 +582,47 @@
             transform: translateY(-50%);
             pointer-events: none;
             z-index: 7;
+        }
+
+        /* ПУЗЫРЬКОВЫЙ УРОВЕНЬ ПО ЦЕНТРУ ЛИМБА */
+        .bullseye-level-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 44px;
+            height: 44px;
+            transform: translate(-50%, -50%);
+            border: 1.5px solid rgba(143, 188, 143, 0.6);
+            border-radius: 50%;
+            background: rgba(10, 15, 13, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 8;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.8);
+        }
+        .bullseye-level-target {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border: 1px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+        }
+        .level-bubble {
+            width: 12px;
+            height: 12px;
+            background: #22C55E;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #22C55E;
+            position: absolute;
+            transform: translate(0px, 0px);
+            transition: transform 0.08s ease-out, background-color 0.2s;
+        }
+        .level-bubble.level-perfect {
+            background: #00FF66;
+            box-shadow: 0 0 12px #00FF66;
         }
 
         .target-beacon-card {
@@ -697,7 +738,7 @@
             padding-bottom: 6px;
         }
 
-        /* БЛОКИ РЕКЛАМЫ РСЯ В МОДАЛКАХ С РЕКОМЕНДУЕМОЙ ВЫСОТОЙ */
+        /* БЛОКИ РЕКЛАМЫ РСЯ В МОДАЛКАХ */
         .rsya-modal-wrapper {
             background: var(--bg-paper);
             border: 1px dashed var(--border-color);
@@ -844,7 +885,6 @@
                 💡 <b>Для работы в тайге:</b> Данные автоматически сохраняются в памяти устройства. При слабом интернете (2G / Edge) или его полном отсутствии страница мгновенно берет прогноз из кеша.
             </p>
 
-            <!-- БЛОК РСЯ В МОДАЛКЕ ПОГОДЫ R-A-19250236-6 -->
             <div class="rsya-modal-wrapper">
                 <div id="yandex_rtb_R-A-19250236-weather"></div>
             </div>
@@ -859,16 +899,15 @@
             <h3>📖 Инструкция навигатора охотника и рыбака</h3>
             <div style="font-size: 13px; line-height: 1.6;">
                 <p><b>1. Быстрый возврат к лодке, лагерю или авто:</b><br>
-                Перед выходом на водоем или в тайгу нажмите <b>«⚓ Моя лодка»</b> или <b>«🚗 Моё авто»</b>. Прибор сохранит спутниковую точку в память. Оранжевая стрелка и направляющий луч укажут прямое направление, дистанцию в метрах и время хода.</p>
+                Перед выходом на водоем или в тайгу нажмите <b>«⚓ Моя лодка»</b> или <b>«🚗 Моё авто»</b>. Прибор сохранит спутниковую точку в память. Оранжевая стрелка и луч укажут прямое направление, дистанцию и время хода.</p>
 
-                <p><b>2. Полноэкранный режим карты и компаса:</b><br>
-                Нажмите зеленую кнопку <b>«⛶ Карта и компас во весь экран»</b>. Кнопки «Свернуть» и «SOS» расположены вертикально справа по центру края смартфона и не мешают переключению режимов снизу.</p>
+                <p><b>2. Пузырьковый уровень в центре лимба:</b><br>
+                Для точной работы магнитного компаса держите зеленый шарик ровно в центральном кольце. При сильном наклоне смартфона точность компаса снижается.</p>
 
-                <p><b>3. Калибровка датчика компаса:</b><br>
-                Если стрелка замирает, нажмите «🧭 Калибровка» в шапке и покрутите смартфон в воздухе плавной «восьмеркой».</p>
+                <p><b>3. Фильтр Калмана и стабилизация:</b><br>
+                В прибор встроен математический фильтр Калмана. При резких движениях и рывках система автоматически усредняет колебания, устраняя хаотичное дергание стрелки.</p>
             </div>
 
-            <!-- БЛОК РСЯ В МОДАЛКЕ ИНСТРУКЦИИ -->
             <div class="rsya-modal-wrapper">
                 <div id="yandex_rtb_R-A-19250236-modal-inst"></div>
             </div>
@@ -896,7 +935,6 @@
                 </p>
             </div>
 
-            <!-- БЛОК РСЯ В МОДАЛКЕ СОЛУНАРА -->
             <div class="rsya-modal-wrapper">
                 <div id="yandex_rtb_R-A-19250236-modal-sol"></div>
             </div>
@@ -930,7 +968,6 @@
                 </button>
             </div>
 
-            <!-- БЛОК РСЯ В МОДАЛКЕ SOS -->
             <div class="rsya-modal-wrapper">
                 <div id="yandex_rtb_R-A-19250236-modal-sos"></div>
             </div>
@@ -957,7 +994,6 @@
 
         <div class="header-tier-bottom">
             <button class="btn-nav" onclick="requestDeviceOrientationPermission()">🧭 Калибровка</button>
-            <!-- РЕЖИМ КРАСНОГО ГЛАЗА С РЕГУЛИРОВКОЙ ЯРКОСТИ -->
             <button class="btn-nav btn-red-eye" onclick="cycleNightVision()" id="btn-night-mode">🔴 Красный: Выкл</button>
             <button class="btn-nav" onclick="openWeather3DaysModal()">🌦️ Прогноз на 3 дня</button>
             <button class="btn-nav" onclick="openPopup('solunar-popup')">🌙 Луна и Барометр</button>
@@ -1073,7 +1109,7 @@
         <!-- ПРАВАЯ ЧАСТЬ: ПРИБОРНАЯ СЦЕНА -->
         <main class="compass-stage-container" id="compass-stage">
             
-            <!-- ВЕРТИКАЛЬНЫЕ КНОПКИ В ПОЛНОМ ЭКРАНЕ СПРАВА ПО ЦЕНТРУ -->
+            <!-- ВЕРТИКАЛЬНЫЙ БЛОК КНОПОК ПО ПРАВОМУ КРАЮ ВВЕРХУ (НЕ ЗАКРЫВАЕТ ЛИМБ) -->
             <div class="fs-floating-vertical-side">
                 <button class="fs-side-btn" onclick="toggleCustomFullscreen()">
                     <span>✕</span>
@@ -1104,7 +1140,7 @@
                     <button onclick="stopNavigationToBeacon()" style="background:transparent; border:1px solid #FFF; color:#FFF; border-radius:4px; font-size:10px; margin-left:8px; padding:2px 6px; cursor:pointer;">Отмена</button>
                 </div>
 
-                <!-- ДИСК КОМПАСА -->
+                <!-- ДИСК КОМПАСА С УРОВНЕМ-ШАРИКОМ ПО ЦЕНТРУ -->
                 <div class="compass-dial-container" id="compass-dial-view">
                     
                     <svg id="beacon-target-arrow-layer" viewBox="0 0 400 400">
@@ -1114,6 +1150,12 @@
 
                     <div class="crosshair-line-v"></div>
                     <div class="crosshair-line-h"></div>
+
+                    <!-- ПУЗЫРЬКОВЫЙ УРОВЕНЬ ПО ЦЕНТРУ ЛИМБА -->
+                    <div class="bullseye-level-container" title="Пузырьковый уровень горизонта: держите шарик в центре для идеальной точности">
+                        <div class="bullseye-level-target"></div>
+                        <div class="level-bubble" id="spirit-level-bubble"></div>
+                    </div>
 
                     <svg id="compass-svg-disc" viewBox="0 0 400 400">
                         <g id="svg-ticks-group"></g>
@@ -1311,7 +1353,50 @@
     <script>
         const WEATHER_API_KEY = '247c067b320c444c869130443262805';
 
-        let currentAzimuth = 0;
+        // --- МАТЕМАТИЧЕСКИЙ ФИЛЬТР КАЛМАНА ДЛЯ КОМПАСА С УСТРАНЕНИЕМ РЫВКОВ ---
+        class CompassKalmanFilter {
+            constructor(q = 0.02, r = 0.4) {
+                this.q = q; // Шум процесса (динамика поворота)
+                this.r = r; // Базовый шум измерений датчика
+                this.x = null; // Оценка азимута
+                this.p = 1.0;  // Ошибка оценки
+            }
+
+            filter(measurement) {
+                if (this.x === null) {
+                    this.x = measurement;
+                    return this.x;
+                }
+
+                // Расчет кратчайшей разницы между углами через 0°/360°
+                let diff = measurement - this.x;
+                while (diff < -180) diff += 360;
+                while (diff > 180) diff -= 360;
+
+                // Адаптивное усреднение: при резких рывках фильтр динамически гасит колебания
+                let absDiff = Math.abs(diff);
+                let dynamicR = this.r;
+                if (absDiff > 12) {
+                    // При сильной тряске увеличиваем сопротивление шуму
+                    dynamicR = this.r * (1 + (absDiff / 8));
+                }
+
+                // Шаг прогноза
+                this.p = this.p + this.q;
+
+                // Шаг коррекции
+                let k = this.p / (this.p + dynamicR);
+                this.x = (this.x + k * diff + 360) % 360;
+                this.p = (1 - k) * this.p;
+
+                return this.x;
+            }
+        }
+
+        const compassKalman = new CompassKalmanFilter(0.015, 0.45);
+
+        let rawAzimuth = 0;
+        let filteredAzimuth = 0;
         let manualZeroOffset = 0;
         let currentLat = 61.668793;
         let currentLon = 50.836399;
@@ -1324,8 +1409,6 @@
         let trackBreadcrumbs = [];
 
         let isFullscreen = false;
-        
-        // РЕЖИМ КРАСНОГО ГЛАЗА (4 УРОВНЯ: 0 - Выкл, 1 - 100%, 2 - 60%, 3 - 30%)
         let nightVisionLevel = 0; 
 
         let yMap = null;
@@ -1335,13 +1418,12 @@
 
         let audioCtx = null;
 
-        // ФЛАГИ ЛЕНИВОЙ ОТРИСОВКИ РСЯ В МОДАЛКАХ
         let isWeatherAdRendered = false;
         let isInstAdRendered = false;
         let isSolunarAdRendered = false;
         let isSosAdRendered = false;
 
-        // ПЕРЕКЛЮЧАТЕЛЬ ТЕМ (СВЕТЛАЯ / ТЕМНАЯ)
+        // ПЕРЕКЛЮЧАТЕЛЬ ТЕМ
         function toggleTheme() {
             const root = document.documentElement;
             const currentTheme = root.getAttribute('data-theme');
@@ -1354,7 +1436,7 @@
             }
         }
 
-        // РЕГУЛИРОВКА ЯРКОСТИ «КРАСНЫЙ ГЛАЗ» (ВЫКЛ -> 100% -> 60% -> 30%)
+        // РЕГУЛИРОВКА ЯРКОСТИ «КРАСНЫЙ ГЛАЗ» (ВЫКЛ -> 100% -> 65% -> 35%)
         function cycleNightVision() {
             nightVisionLevel = (nightVisionLevel + 1) % 4;
             const root = document.documentElement;
@@ -1393,7 +1475,7 @@
         // КАЛИБРОВКА НУЛЯ НА СЕВЕР
         function calibrateZeroToNorth() {
             unlockAudioOnFirstGesture();
-            manualZeroOffset = (360 - currentAzimuth) % 360;
+            manualZeroOffset = (360 - filteredAzimuth) % 360;
             localStorage.setItem('lesovik_manual_zero', manualZeroOffset);
             alert("Шкала совмещена! Текущее направление выставлено как точный СЕВЕР (0°).");
             updateCompassDisplay();
@@ -1465,6 +1547,7 @@
             return `СЗ: ${(360 - deg).toFixed(1)}°`;
         }
 
+        // ОБРАБОТКА ДАТЧИКОВ (КАЛМАН + ПУЗЫРЬКОВЫЙ УРОВЕНЬ ГОРИЗОНТА)
         function handleOrientation(e) {
             let heading = null;
             if (e.webkitCompassHeading !== undefined) {
@@ -1474,13 +1557,45 @@
             }
 
             if (heading !== null) {
-                currentAzimuth = heading;
+                rawAzimuth = heading;
+                // Пропускаем через фильтр Калмана
+                filteredAzimuth = compassKalman.filter(rawAzimuth);
                 updateCompassDisplay();
+            }
+
+            // Обработка пузырькового уровня шарика (крен и тангаж)
+            if (e.gamma !== null && e.beta !== null) {
+                updateSpiritLevel(e.gamma, e.beta);
+            }
+        }
+
+        // ОБНОВЛЕНИЕ ШАРИКА УРОВНЯ В ЦЕНТРЕ ЛИМБА
+        function updateSpiritLevel(gamma, beta) {
+            const bubble = document.getElementById('spirit-level-bubble');
+            if (!bubble) return;
+
+            // Ограничение диапазона движения шарика в пределах внутреннего кружка (радиус 14px)
+            const maxTilt = 18; // градусов наклона
+            const maxPx = 14;   // максимальный сдвиг в пикселях
+
+            let clampedGamma = Math.max(-maxTilt, Math.min(maxTilt, gamma));
+            let clampedBeta = Math.max(-maxTilt, Math.min(maxTilt, beta));
+
+            let dx = (clampedGamma / maxTilt) * maxPx;
+            let dy = (clampedBeta / maxTilt) * maxPx;
+
+            bubble.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`;
+
+            // Если телефон удерживается почти идеально горизонтально (наклон < 3°)
+            if (Math.abs(gamma) < 3.0 && Math.abs(beta) < 3.0) {
+                bubble.classList.add('level-perfect');
+            } else {
+                bubble.classList.remove('level-perfect');
             }
         }
 
         function updateCompassDisplay() {
-            let displayed = (currentAzimuth + manualZeroOffset + 360) % 360;
+            let displayed = (filteredAzimuth + manualZeroOffset + 360) % 360;
             document.getElementById('azimuth-deg-label').innerText = `${Math.round(displayed)}°`;
             document.getElementById('azimuth-rumb-label').innerText = getRumbString(displayed);
             document.getElementById('compass-svg-disc').style.transform = `rotate(${-displayed}deg)`;
@@ -1494,7 +1609,7 @@
                     if (res === 'granted') {
                         window.removeEventListener('deviceorientation', handleOrientation, true);
                         window.addEventListener('deviceorientation', handleOrientation, true);
-                        alert("Датчик компаса активирован!\n\n💡 Покрутите телефон в воздухе плавной «восьмеркой» для калибровки.");
+                        alert("Датчики компаса и горизонта активированы!\n\n💡 Покрутите телефон в воздухе «восьмеркой» и держите шарик в центре для калибровки.");
                     }
                 }).catch(() => {});
             } else {
@@ -1503,7 +1618,7 @@
                 } else if ('ondeviceorientation' in window) {
                     window.addEventListener('deviceorientation', handleOrientation, true);
                 }
-                alert("Датчик активирован!\n\n💡 Покрутите телефон в воздухе плавной «восьмеркой» для точной калибровки.");
+                alert("Датчики активированы!\n\n💡 Покрутите телефон в воздухе «восьмеркой» и держите шарик в центре для калибровки.");
             }
         }
 
@@ -1568,7 +1683,7 @@
             document.getElementById('beacon-dist-label').innerText = dist > 1000 ? `${(dist/1000).toFixed(2)} км` : `${dist} м`;
             document.getElementById('beacon-time-label').innerText = walkMinutes > 60 ? `~${(walkMinutes/60).toFixed(1)} ч` : `~${walkMinutes} мин`;
 
-            const relativeAngle = (targetBearing - currentAzimuth + 360) % 360;
+            const relativeAngle = (targetBearing - filteredAzimuth + 360) % 360;
             arrowLayer.style.display = 'block';
             arrowLayer.style.transform = `rotate(${relativeAngle}deg)`;
 
@@ -1733,7 +1848,7 @@
             }
         }
 
-        // РАЗВОРОТ НА ПОЛНЫЙ ЭКРАН 100VW / 100VH
+        // РАЗВОРОТ НА ПОЛНЫЙ ЭКРАН
         function toggleCustomFullscreen() {
             unlockAudioOnFirstGesture();
             const stage = document.getElementById('compass-stage');
@@ -1795,7 +1910,6 @@
 
         // ЗАЩИТА ОТ СЛАБОГО ИНТЕРНЕТА И КЕШИРОВАНИЕ ПОГОДЫ НА 3 ДНЯ
         async function fetchWeather(query) {
-            // 1. Проверяем наличие кеша
             const cachedWeather = localStorage.getItem('lesovik_cached_weather_3days');
             const cachedTime = localStorage.getItem('lesovik_cached_weather_time');
             
@@ -1807,14 +1921,12 @@
                 } catch(e) {}
             }
 
-            // 2. Проверяем сеть (если 2G или оффлайн, не мучаем сеть)
             const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
             if (connection && (connection.effectiveType === '2g' || connection.effectiveType === 'slow-2g' || !navigator.onLine)) {
                 console.log("Слабая сеть. Используется кеш.");
                 return;
             }
 
-            // 3. Запрос с жестким тайм-аутом 2.5 секунды через AbortController
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 2500);
 
@@ -1826,7 +1938,6 @@
                 if (!res.ok) throw new Error();
                 const d = await res.json();
 
-                // Сохраняем в кеш для тайги
                 const nowStr = new Date().toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
                 localStorage.setItem('lesovik_cached_weather_3days', JSON.stringify(d));
                 localStorage.setItem('lesovik_cached_weather_time', nowStr);
@@ -2123,7 +2234,6 @@
             initGPS();
             calculateSolunarPhase();
 
-            // Автозапрос погоды с защитой от слабого интернета
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (p) => fetchWeather(`${p.coords.latitude},${p.coords.longitude}`),
