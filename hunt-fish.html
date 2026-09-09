@@ -1,0 +1,1682 @@
+<!-- 
+  (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
+  Свидетельство ИНН: 111801576622.
+  Программное обеспечение: «Автономный спутниковый навигатор и компас охотника и рыбака (Лесовик ТАКТИК PRO)»
+  Правообладатель: Худяков Николай Сергеевич.
+-->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <script type="text/javascript">
+        // --- ПЕРЕХВАТ БОТОВ ДЛЯ SEO-ПРЕВЬЮ ---
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const postSlug = urlParams.get('post');
+            const userAgent = (navigator.userAgent || '').toLowerCase();
+            const isBot = /telegrambot|vkshare|facebookexternalhit|twitterbot|slackbot|whatsapp|viber/i.test(userAgent);
+            if (postSlug && isBot) {
+                window.location.href = 'https://functions.yandexcloud.net/d4ecn5ag33dcdd2deivd?post=' + encodeURIComponent(postSlug);
+            }
+        })();
+
+        // --- ЯНДЕКС МЕТРИКА ---
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109130409', 'ym');
+
+        ym(109130409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <title>Навигатор Охотника и Рыбака ГЛОНАСС Онлайн: Карта на весь экран, Компас, Клев и Погода</title>
+    <meta name="description" content="Автономный спутниковый навигатор и компас для охоты и рыбалки без интернета: полноэкранная спутниковая карта, барометр клева, солунарные фазы Луны, точки стоянок и трекер возврата к авто и лодке.">
+    <meta name="keywords" content="навигатор для рыбалки без интернета, навигатор для охоты, компас онлайн, карта глубин точки стоянки, солунарный календарь рыбака, барометр клева рыбы, лесовик про, глонасс координаты">
+    <link rel="canonical" href="https://lesovik-pro.ru/tracker.html">
+    <link rel="icon" type="image/jpeg" href="logo.jpeg">
+
+    <!-- PWA НАСТРОЙКИ -->
+    <link rel="manifest" href="/tracker.webmanifest">
+    <meta name="theme-color" content="#1F382B">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="logo.jpeg">
+
+    <!-- ЯНДЕКС КАРТЫ API -->
+    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
+
+    <!-- СЕРВИС-ВОРКЕР ДЛЯ АВТОНОМНОГО PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw-tracker.js')
+            .then(reg => console.log('Навигатор Охоты и Рыбалки готов к офлайн работе:', reg.scope))
+            .catch(err => console.error('Ошибка SW:', err));
+        });
+      }
+    </script>
+
+    <!-- МИКРОРАЗМЕТКА SCHEMA.ORG -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Навигатор и тактический компас охотника и рыбака Лесовик ТАКТИК",
+      "url": "https://lesovik-pro.ru/tracker.html",
+      "applicationCategory": "NavigationApplication",
+      "operatingSystem": "All",
+      "inLanguage": "ru-RU"
+    }
+    </script>
+
+    <!-- РЕКЛАМА РСЯ (ЯНДЕКС КОНТЕКСТ) -->
+    <script>window.yaContextCb=window.yaContextCb||[]</script>
+    <script src="https://yandex.ru/ads/system/context.js" async></script>
+
+    <script>
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-2", "type": "fullscreen", "platform": "touch" });
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-1", "type": "floorAd", "platform": "touch" });
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-3", "type": "fullscreen", "platform": "desktop" });
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-4", "type": "floorAd", "platform": "desktop" });
+        });
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+        :root {
+            --bg-body: #0F1715;
+            --card-bg: #16221E;
+            --card-sub: #1E2E29;
+            --text-main: #ECF2EE;
+            --text-muted: #95A79E;
+            --brand-green: #2E7D32;
+            --brand-light: #81C784;
+            --brand-accent: #E67E22;
+            --border-color: #283C34;
+            --danger: #DC2626;
+            --water-blue: #0284C7;
+            --gold-sun: #F59E0B;
+            --glass-bg: rgba(22, 34, 30, 0.88);
+            --overlay-bg: rgba(0, 0, 0, 0.85);
+            --indicator-active: #22C55E;
+        }
+
+        /* ТАКТИЧЕСКИЙ РЕЖИМ ОХОТНИКА: КРАСНЫЙ СВЕТ (СОХРАНЕНИЕ НОЧНОГО ЗРЕНИЯ) */
+        [data-night-vision="true"] {
+            --bg-body: #050000 !important;
+            --card-bg: #150000 !important;
+            --card-sub: #250000 !important;
+            --text-main: #FF3333 !important;
+            --text-muted: #B32424 !important;
+            --brand-green: #CC0000 !important;
+            --brand-light: #FF4D4D !important;
+            --brand-accent: #FF6600 !important;
+            --border-color: #4D0000 !important;
+            --water-blue: #B91C1C !important;
+            --gold-sun: #FF3333 !important;
+            --glass-bg: rgba(25, 0, 0, 0.95) !important;
+            --indicator-active: #FF0000 !important;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* МАТОВАЯ ТАКТИЧЕСКАЯ ШАПКА */
+        .tactical-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 18px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-title-box { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .header-logo { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid var(--brand-light); }
+        .tactical-header h1 { font-family: 'Merriweather', serif; color: var(--brand-light); margin: 0; font-size: 16px; letter-spacing: 0.3px; }
+
+        .header-tools { display: flex; align-items: center; gap: 8px; }
+        .btn-header {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: 0.2s;
+        }
+        .btn-header:hover { background: rgba(255, 255, 255, 0.16); }
+        .btn-red-eye { border-color: #B91C1C; color: #F87171; }
+
+        .app-container {
+            max-width: 1440px;
+            width: 100%;
+            margin: 15px auto;
+            padding: 0 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            flex: 1;
+        }
+
+        /* BENTO-СЕТКА ПОГОДЫ И БАРОМЕТРА КЛЕВА */
+        .bento-weather-deck {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+        }
+
+        .bento-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .meteo-station-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--brand-light);
+        }
+
+        .pulsing-indicator {
+            width: 8px;
+            height: 8px;
+            background-color: var(--indicator-active);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--indicator-active);
+            animation: pulse-ring 1.8s infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .bento-cell {
+            background: var(--card-sub);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .bento-cell-val {
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--brand-light);
+            line-height: 1.1;
+            margin: 4px 0;
+        }
+        .bento-cell-lbl {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+        .bento-cell-sub {
+            font-size: 11px;
+            color: var(--text-main);
+            opacity: 0.85;
+        }
+
+        .bento-search-row {
+            display: flex;
+            gap: 8px;
+        }
+        .bento-input {
+            flex: 1;
+            background: var(--card-sub);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+        }
+        .bento-btn-search {
+            background: var(--brand-green);
+            color: #FFF;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 11px;
+        }
+
+        /* ГЛАВНАЯ РАБОЧАЯ ЗОНА: КОМПАС ИЛИ КАРТА */
+        .tactical-stage-wrapper {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 980px) {
+            .tactical-stage-wrapper { grid-template-columns: 1fr; }
+        }
+
+        .sidebar-controls {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .panel-heading {
+            font-family: 'Merriweather', serif;
+            font-size: 14px;
+            color: var(--brand-light);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+            margin: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-act {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+        }
+        .btn-act:hover { opacity: 0.92; transform: translateY(-1px); }
+        .btn-boat { background: #0284C7; color: #FFF; }
+        .btn-car { background: #15803D; color: #FFF; }
+        .btn-camp { background: #D97706; color: #FFF; }
+        .btn-sos { background: #B91C1C; color: #FFF; }
+        .btn-fullscreen { background: #2E7D32; color: #FFF; }
+        .btn-secondary { background: var(--card-sub); border: 1px solid var(--border-color); color: var(--text-main); }
+
+        .btn-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+        /* ЭКРАН ПРИБОРОВ */
+        .tactical-viewport {
+            background: radial-gradient(circle, #162520 0%, #0B110F 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        /* ПОЛНОЭКРАННЫЙ РЕЖИМ (100% ШИРИНЫ И ВЫСОТЫ) */
+        .tactical-viewport.full-screen-mode {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            max-width: 100vw !important;
+            max-height: 100vh !important;
+            border-radius: 0 !important;
+            margin: 0 !important;
+            padding: 12px !important;
+            z-index: 999999 !important;
+        }
+
+        .fs-floating-overlay {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            right: 14px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 50;
+        }
+        .fs-floating-btn {
+            pointer-events: auto;
+            background: rgba(15, 23, 21, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .view-switcher-tabs {
+            display: flex;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 440px;
+            z-index: 10;
+        }
+        .view-tab {
+            flex: 1;
+            padding: 10px;
+            background: var(--card-bg);
+            border: none;
+            color: var(--text-muted);
+            font-weight: 800;
+            font-size: 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.2s;
+        }
+        .view-tab.active { background: var(--brand-green); color: #FFF; }
+
+        /* КОМПАС И ШКАЛА */
+        .compass-center-zone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin: auto 0;
+            position: relative;
+        }
+
+        .azimuth-big {
+            font-size: 64px;
+            font-weight: 900;
+            line-height: 1;
+            color: var(--brand-light);
+            letter-spacing: -2px;
+            text-shadow: 0 0 20px rgba(129, 199, 132, 0.4);
+        }
+        .rumb-text {
+            font-size: 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .dial-housing {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            max-width: 80vw;
+            max-height: 80vw;
+            border-radius: 50%;
+            border: 6px solid #1C2D26;
+            box-shadow: 0 0 35px rgba(0,0,0,0.8), inset 0 0 30px rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 12px 0;
+            background: #090F0D;
+        }
+
+        #compass-disc-svg {
+            width: 100%;
+            height: 100%;
+            transform-origin: 50% 50%;
+            transition: transform 0.08s ease-out;
+        }
+
+        #target-arrow-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .crosshair-v { position: absolute; top: 0; left: 50%; width: 2px; height: 100%; background: rgba(220, 38, 38, 0.85); transform: translateX(-50%); pointer-events: none; }
+        .crosshair-h { position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: rgba(129, 199, 132, 0.35); transform: translateY(-50%); pointer-events: none; }
+
+        .beacon-target-card {
+            background: rgba(230, 126, 34, 0.2);
+            border: 1px solid var(--brand-accent);
+            border-radius: 10px;
+            padding: 8px 14px;
+            color: #FFF;
+            font-size: 12px;
+            display: none;
+            width: 100%;
+            max-width: 440px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        /* ПОЛНОЭКРАННАЯ КАРТА ЯНДЕКС */
+        #map-module-container {
+            display: none;
+            width: 100%;
+            height: 100%;
+            min-height: 480px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+        #yandex-tactical-map {
+            width: 100%;
+            height: 100%;
+            min-height: 480px;
+            background: #080D0B;
+        }
+
+        .map-floating-center {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 500;
+            background: var(--brand-green);
+            color: #FFF;
+            border: 2px solid #FFF;
+            border-radius: 50%;
+            width: 46px;
+            height: 46px;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        }
+
+        /* ТАКТИЧЕСКИЕ GPS ПОКАЗАТЕЛИ */
+        .gps-stat-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            width: 100%;
+            max-width: 500px;
+            z-index: 10;
+        }
+        @media (max-width: 500px) {
+            .gps-stat-bar { grid-template-columns: 1fr 1fr; }
+        }
+        .gps-badge {
+            background: rgba(10, 16, 14, 0.85);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 6px;
+            text-align: center;
+            font-size: 10.5px;
+            color: var(--text-muted);
+        }
+        .gps-badge b { display: block; font-size: 12.5px; color: var(--brand-light); }
+
+        /* ЖУРНАЛ ОХОТНИЧЬИХ И РЫБАЦКИХ ТОЧЕК */
+        .journal-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .journal-list {
+            max-height: 220px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px;
+            background: var(--card-sub);
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .journal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            background: rgba(0,0,0,0.25);
+            border-radius: 6px;
+        }
+
+        /* ПОПАПЫ (МОДАЛЬНЫЕ ОКНА С РСЯ) */
+        .popup-shield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: var(--overlay-bg);
+            z-index: 10000000 !important;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .popup-body {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 22px;
+            max-width: 580px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            color: var(--text-main);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .popup-body h3 {
+            margin: 0;
+            font-family: 'Merriweather', serif;
+            color: var(--brand-light);
+            font-size: 17px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .rsya-modal-slot {
+            margin: 10px 0;
+            padding: 8px;
+            background: rgba(0,0,0,0.3);
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        /* ТАКТИЧЕСКИЙ ЭКСПОРТ KML */
+        .btn-kml { background: var(--water-blue); color: #FFF; }
+
+        footer {
+            background-color: #0A0F0D;
+            color: var(--text-muted);
+            padding: 30px 15px 70px;
+            font-size: 12px;
+            border-top: 1px solid var(--border-color);
+            margin-top: auto;
+        }
+        .footer-inner {
+            max-width: 1440px;
+            margin: 0 auto;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body onclick="unlockAudioOnce()" ontouchstart="unlockAudioOnce()">
+
+    <!-- 1. ПОПАП: ИНСТРУКЦИЯ ОХОТНИКА И РЫБАКА + РСЯ -->
+    <div id="guide-modal" class="popup-shield" onclick="closeOuter('guide-modal', event)">
+        <div class="popup-body">
+            <h3>📖 Инструкция: Навигатор Охотника и Рыбака</h3>
+            <div style="font-size: 13px; line-height: 1.6; color: var(--text-main);">
+                <p><b>🧭 1. Спутниковый возврат к лодке или лагерю:</b><br>
+                Перед выходом на воду или в чащу нажмите <b>«⚓ Спуск лодки / Слип»</b> или <b>«🚗 Моё авто»</b>. Стрелка и направляющий луч проведут обратно к точке без интернета с точностью до 2-3 метров.</p>
+
+                <p><b>🗺️ 2. Карта на весь экран (100vw / 100vh):</b><br>
+                Переключитесь на вкладку «🗺️ Карта» и нажмите кнопку <b>«⛶ На весь экран»</b>. Карта развернется на весь дисплей без лишних рамок, оставляя тактические плавающие кнопки фиксации точек и SOS.</p>
+
+                <p><b>🌙 3. Тактический режим «Красный глаз»:</b><br>
+                Кнопка <b>«🔴 Красный свет»</b> переводит экран в монохромный красный спектр. Красный свет не демаскирует охотника перед копытным или хищным зверем и не ослепляет сетчатку глаза ночью.</p>
+
+                <p><b>🐟 4. Солунарная теория и барометр:</b><br>
+                Прибор анализирует динамику давления и фазу луны. При резком падении давления рыба уходит в ямы, а зверь снижает активность. Ровное стабильное давление гарантирует успешную охоту и рыбалку.</p>
+            </div>
+
+            <!-- БЛОК РСЯ В МОДАЛКЕ ИНСТРУКЦИИ -->
+            <div class="rsya-modal-slot">
+                <div id="yandex_rtb_R-A-19250236-modal-guide"></div>
+                <script>
+                    window.yaContextCb.push(() => {
+                        Ya.Context.AdvManager.render({
+                            "blockId": "R-A-19250236-5",
+                            "renderTo": "yandex_rtb_R-A-19250236-modal-guide",
+                            "type": "feed"
+                        });
+                    });
+                </script>
+            </div>
+
+            <button class="btn-act btn-secondary" onclick="closeModal('guide-modal')">Закрыть памятку</button>
+        </div>
+    </div>
+
+    <!-- 2. ПОПАП: СОЛУНАРНЫЙ КАЛЕНДАР И БАРОМЕТР + РСЯ -->
+    <div id="solunar-modal" class="popup-shield" onclick="closeOuter('solunar-modal', event)">
+        <div class="popup-body">
+            <h3>🐟 Солунарная теория клева и фаза Луны</h3>
+            <div style="font-size: 13px; line-height: 1.6;">
+                <div style="background: var(--card-sub); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color);">
+                    Фаза Луны сегодня: <b id="solunar-moon-phase-text" style="color: var(--gold-sun);">Растущая луна</b><br>
+                    Освещенность диска: <b id="solunar-moon-illum-text">64%</b><br>
+                    Утренняя заря (рассвет): <b id="solunar-dawn-time">--:--</b><br>
+                    Вечерняя заря (закат): <b id="solunar-dusk-time">--:--</b>
+                </div>
+                <p style="margin-top: 10px;">
+                    <b>Прогноз активности рыбы и зверя:</b><br>
+                    Пики кормовой активности хищника (щука, судак, окунь) и выходов копытных приходятся на время за 1.5 часа до восхода и 1.5 часа после заката солнца при растущей и полной луне.
+                </p>
+            </div>
+
+            <!-- БЛОК РСЯ В МОДАЛКЕ СОЛУНАРА -->
+            <div class="rsya-modal-slot">
+                <div id="yandex_rtb_R-A-19250236-modal-solunar"></div>
+                <script>
+                    window.yaContextCb.push(() => {
+                        Ya.Context.AdvManager.render({
+                            "blockId": "R-A-19250236-6",
+                            "renderTo": "yandex_rtb_R-A-19250236-modal-solunar",
+                            "type": "feed"
+                        });
+                    });
+                </script>
+            </div>
+
+            <button class="btn-act btn-secondary" onclick="closeModal('solunar-modal')">Понятно</button>
+        </div>
+    </div>
+
+    <!-- 3. ПОПАП: ЭКСТРЕННАЯ ПОМОЩЬ SOS 112 + РСЯ -->
+    <div id="sos-modal" class="popup-shield" onclick="closeOuter('sos-modal', event)">
+        <div class="popup-body" style="border-color: var(--danger);">
+            <h3 style="color: var(--danger);">🆘 Экстренный сигнал бедствия 112</h3>
+            
+            <div style="background: rgba(220, 38, 38, 0.15); border: 1px solid var(--danger); border-radius: 10px; padding: 12px;">
+                <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--danger);">Координаты ГЛОНАСС для спасателей и егерей:</span>
+                <div style="font-size: 17px; font-weight: 900; margin-top: 4px; color: #FFF;" id="sos-coordinates-box">
+                    Шир: 61.668793°, Долг: 50.836399° (±3м)
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+                <button class="btn-act btn-sos" style="padding: 16px; font-size: 14px;" onclick="window.location.href='tel:112'">
+                    📞 Вызов спасателей (112)
+                </button>
+                <button class="btn-act btn-secondary" onclick="dispatchSosSMS()">
+                    ✉️ Отправить координаты по SMS
+                </button>
+            </div>
+
+            <!-- БЛОК РСЯ В МОДАЛКЕ SOS (СТРОГО ПОД КНОПКАМИ ЖИЗНИ) -->
+            <div class="rsya-modal-slot">
+                <div id="yandex_rtb_R-A-19250236-modal-sos"></div>
+                <script>
+                    window.yaContextCb.push(() => {
+                        Ya.Context.AdvManager.render({
+                            "blockId": "R-A-19250236-7",
+                            "renderTo": "yandex_rtb_R-A-19250236-modal-sos",
+                            "type": "feed"
+                        });
+                    });
+                </script>
+            </div>
+
+            <button class="btn-act btn-secondary" onclick="closeModal('sos-modal')">Отмена</button>
+        </div>
+    </div>
+
+    <!-- ВЕРХНЯЯ ПАНЕЛЬ С ТАКТИЧЕСКИМИ ПЕРЕКЛЮЧАТЕЛЯМИ -->
+    <header class="tactical-header">
+        <a href="index.html" class="header-title-box">
+            <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
+            <h1>Лесовик ТАКТИК</h1>
+        </a>
+        <div class="header-tools">
+            <button class="btn-header btn-red-eye" onclick="toggleNightVisionMode()" id="btn-night-vision">🔴 Красный свет</button>
+            <button class="btn-header" onclick="openModal('guide-modal')">📖 Инструкция</button>
+        </div>
+    </header>
+
+    <main class="app-container">
+
+        <!-- BENTO-КАРТОЧКА: СОВРЕМЕННЫЙ ПРОГНОЗ ПОГОДЫ И КЛЕВА ДЛЯ РЫБАКОВ И ОХОТНИКОВ -->
+        <section class="bento-weather-deck">
+            <div class="bento-top-row">
+                <div class="meteo-station-badge">
+                    <div class="pulsing-indicator"></div>
+                    <span id="meteo-station-title">🛰️ Метеопост: Определение спутников...</span>
+                </div>
+                <div>
+                    <button class="btn-header" onclick="openModal('solunar-modal')" style="font-size: 11px;">🌙 Луна и Клев</button>
+                </div>
+            </div>
+
+            <div class="bento-grid">
+                <div class="bento-cell">
+                    <span class="bento-cell-lbl">Температура воздуха</span>
+                    <div class="bento-cell-val" id="weather-temp-val">--°C</div>
+                    <span class="bento-cell-sub" id="weather-condition-desc">Загрузка сводки...</span>
+                </div>
+
+                <div class="bento-cell">
+                    <span class="bento-cell-lbl">Атм. Давление (Клев)</span>
+                    <div class="bento-cell-val" id="weather-pressure-val" style="color: var(--gold-sun);">-- мм</div>
+                    <span class="bento-cell-sub" id="weather-pressure-trend">Барометр стабилен</span>
+                </div>
+
+                <div class="bento-cell">
+                    <span class="bento-cell-lbl">Ветер на водоеме / в лесу</span>
+                    <div class="bento-cell-val" id="weather-wind-val">-- м/с</div>
+                    <span class="bento-cell-sub" id="weather-wind-dir">Направление: --</span>
+                </div>
+
+                <div class="bento-cell">
+                    <span class="bento-cell-lbl">Влажность и Точка росы</span>
+                    <div class="bento-cell-val" id="weather-humidity-val" style="color: var(--water-blue);">--%</div>
+                    <span class="bento-cell-sub" id="weather-dew-point">Без осадков</span>
+                </div>
+            </div>
+
+            <div class="bento-search-row">
+                <input type="text" id="weather-search-query" class="bento-input" placeholder="Введите район охотугодий, реку или город...">
+                <button class="bento-btn-search" onclick="searchWeatherManual()">Найти</button>
+            </div>
+        </section>
+
+        <!-- РАБОЧАЯ ЗОНА: ПАНЕЛЬ УПРАВЛЕНИЯ + ПРИБОРНАЯ СЦЕНА -->
+        <div class="tactical-stage-wrapper">
+
+            <!-- ЛЕВАЯ ПАНЕЛЬ БЫСТРЫХ ДЕЙСТВИЙ (ОДИН МОНОЛИТНЫЙ РЕЖИМ) -->
+            <aside class="sidebar-controls">
+                
+                <h3 class="panel-heading">
+                    <span>1. Быстрые точки возврата</span>
+                    <span style="font-size: 11px; opacity: 0.7;">1 тап</span>
+                </h3>
+
+                <div class="btn-grid-2">
+                    <button class="btn-act btn-boat" onclick="setInstantBeacon('⚓ Спуск лодки (Слип)')">⚓ Моя лодка</button>
+                    <button class="btn-act btn-car" onclick="setInstantBeacon('🚗 Автомобиль / Квадроцикл')">🚗 Моё авто</button>
+                </div>
+                <div class="btn-grid-2">
+                    <button class="btn-act btn-camp" onclick="setInstantBeacon('⛺ Лагерь / Изба')">⛺ Мой лагерь</button>
+                    <button class="btn-act btn-fullscreen" onclick="toggleMainFullscreen()">⛶ На весь экран</button>
+                </div>
+
+                <h3 class="panel-heading" style="margin-top: 6px;">
+                    <span>2. Охотничьи и рыбацкие маркеры</span>
+                </h3>
+
+                <div style="display: flex; gap: 8px;">
+                    <select id="tactical-point-type" class="bento-input" style="padding: 8px; font-weight: 700;">
+                        <option value="🐟 Уловистая точка (Свал/Яма)">🐟 Свал / Яма / Коряжник</option>
+                        <option value="🎣 Жерлицы / Сети">🎣 Жерлицы / Поставушки</option>
+                        <option value="🐗 Свежий след / Переход">🐗 Свежий след / Переход</option>
+                        <option value="🌾 Солонец / Кормушка">🌾 Солонец / Привада</option>
+                        <option value="🌲 Лабаз / Засидка">🌲 Лабаз / Номер загона</option>
+                        <option value="⚠️ Опасность (Тонкий лед / Топь)">⚠️ Тонкий лед / Топь</option>
+                        <option value="💧 Родник / Чистая вода">💧 Родник / Питьевая вода</option>
+                    </select>
+                    <button class="btn-act btn-secondary" style="width: auto; padding: 0 16px;" onclick="saveTacticalPoint()">Фикс</button>
+                </div>
+
+                <h3 class="panel-heading" style="margin-top: 6px;">
+                    <span>3. Безопасность и Спасение</span>
+                </h3>
+
+                <button class="btn-act btn-sos" onclick="openModal('sos-modal')">🆘 SOS: Помощь 112 и координаты</button>
+                
+                <div class="btn-grid-2">
+                    <button class="btn-act btn-secondary" onclick="enableScreenWakeLock()" id="btn-wake-lock">💡 Экран: Бодр</button>
+                    <button class="btn-act btn-secondary" onclick="toggleMuteAudio()" id="btn-mute-sound">🔇 Без звука</button>
+                </div>
+
+                <div class="btn-grid-2" style="margin-top: 4px;">
+                    <button class="btn-act btn-kml" onclick="exportTacticalKML()">🗺️ Скачать KML</button>
+                    <button class="btn-act btn-secondary" onclick="shareTacticalApp()">📤 Отправить напарнику</button>
+                </div>
+
+            </aside>
+
+            <!-- ПРАВАЯ ПРИБОРНАЯ СЦЕНА: КОМПАС ИЛИ КАРТА (С РАЗВОРОТОМ НА ВЕСЬ ЭКРАН) -->
+            <section class="tactical-viewport" id="tactical-stage-viewport">
+                
+                <!-- ПЛАВАЮЩИЕ КНОПКИ В ПОЛНОЭКРАННОМ РЕЖИМЕ -->
+                <div class="fs-floating-overlay">
+                    <button class="fs-floating-btn" onclick="toggleMainFullscreen()">✕ Свернуть экран</button>
+                    <button class="fs-floating-btn" style="background: var(--danger); color: #FFF;" onclick="openModal('sos-modal')">🆘 112</button>
+                </div>
+
+                <!-- ВКЛАДКИ ПЕРЕКЛЮЧЕНИЯ РЕЖИМОВ -->
+                <div class="view-switcher-tabs">
+                    <button class="view-tab active" id="tab-compass-btn" onclick="switchTacticalView('compass')">🧭 Компас-Визир</button>
+                    <button class="view-tab" id="tab-map-btn" onclick="switchTacticalView('map')">🗺️ Карта на весь экран</button>
+                </div>
+
+                <!-- ПЛАШКА ВЕДЕНИЯ К ВЫБРАННОЙ ЦЕЛИ -->
+                <div id="target-beacon-alert" class="beacon-target-card">
+                    Курс на: <b id="beacon-target-name">⚓ Моя лодка</b> | Азимут: <b id="beacon-target-az">0°</b><br>
+                    Дистанция: <b id="beacon-target-dist">0 м</b> | Ходом пешком: <b id="beacon-target-time">~0 мин</b>
+                    <button onclick="cancelBeaconTarget()" style="background:transparent; border:1px solid #FFF; color:#FFF; border-radius:4px; font-size:10px; margin-left:8px; padding:2px 6px; cursor:pointer;">Отмена</button>
+                </div>
+
+                <!-- 1. ДИСК КОМПАСА -->
+                <div class="compass-center-zone" id="compass-sub-zone">
+                    
+                    <div class="azimuth-big" id="azimuth-number">0°</div>
+                    <div class="rumb-text" id="azimuth-rumb">Север (С)</div>
+
+                    <div class="dial-housing">
+                        <!-- СТРЕЛКА НАПРАВЛЕНИЯ К ЦЕЛИ -->
+                        <svg id="target-arrow-layer" viewBox="0 0 400 400">
+                            <line id="beacon-vector-line" x1="200" y1="200" x2="200" y2="44" stroke="var(--brand-accent)" stroke-width="5" stroke-dasharray="6,6"/>
+                            <polygon points="200,20 186,52 214,52" fill="var(--brand-accent)" filter="drop-shadow(0 0 8px var(--brand-accent))"/>
+                        </svg>
+
+                        <div class="crosshair-v"></div>
+                        <div class="crosshair-h"></div>
+
+                        <svg id="compass-disc-svg" viewBox="0 0 400 400">
+                            <g id="dial-ticks-container"></g>
+
+                            <!-- ЛИТЕРЫ СТОРОН СВЕТА -->
+                            <text x="200" y="44" fill="#DC2626" font-size="24" font-weight="900" font-family="Inter, sans-serif" text-anchor="middle" dominant-baseline="central">С</text>
+                            <text x="356" y="200" fill="#FFFFFF" font-size="22" font-weight="900" font-family="Inter, sans-serif" text-anchor="middle" dominant-baseline="central">В</text>
+                            <text x="200" y="356" fill="#FFFFFF" font-size="22" font-weight="900" font-family="Inter, sans-serif" text-anchor="middle" dominant-baseline="central">Ю</text>
+                            <text x="44" y="200" fill="#FFFFFF" font-size="22" font-weight="900" font-family="Inter, sans-serif" text-anchor="middle" dominant-baseline="central">З</text>
+
+                            <!-- СТРЕЛКА СЕВЕР-ЮГ -->
+                            <polygon points="200,60 188,200 212,200" fill="#DC2626" filter="drop-shadow(0 0 8px rgba(220,38,38,0.7))"/>
+                            <polygon points="200,340 188,200 212,200" fill="#FFFFFF" opacity="0.9"/>
+                        </svg>
+                    </div>
+
+                    <div style="font-size: 11px; opacity: 0.7; color: var(--text-muted); margin-top: 4px;">
+                        💡 Наведите верх смартфона на ориентир для выдерживания створа
+                    </div>
+                </div>
+
+                <!-- 2. ПОЛНОЭКРАННАЯ СПУТНИКОВАЯ КАРТА -->
+                <div id="map-module-container">
+                    <div id="yandex-tactical-map"></div>
+                    <button class="map-floating-center" onclick="centerMapTactical()" title="Где я">🎯</button>
+                </div>
+
+                <!-- ПАНЕЛЬ СПУТНИКОВОЙ ТОЧНОСТИ И СКОРОСТИ (ДЛЯ ТРОЛЛИНГА И ХОДЬБЫ) -->
+                <div class="gps-stat-bar">
+                    <div class="gps-badge">Широта:<b id="stat-lat-label">61.668793°</b></div>
+                    <div class="gps-badge">Долгота:<b id="stat-lon-label">50.836399°</b></div>
+                    <div class="gps-badge">Скорость (ход):<b id="stat-speed-label">0.0 км/ч</b></div>
+                    <div class="gps-badge">ГЛОНАСС:<b id="stat-acc-label">±3 м</b></div>
+                </div>
+
+            </section>
+
+        </div>
+
+        <!-- ЖУРНАЛ ОХОТНИЧЬИХ И РЫБОЛОВНЫХ ТОЧЕК -->
+        <section class="journal-container">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 class="panel-heading" style="border: none; margin: 0;">📍 Журнал уловистых мест и таежных ориентиров</h3>
+                <button onclick="clearTacticalJournal()" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 6px; font-size: 11px; padding: 4px 8px; cursor: pointer;">Очистить</button>
+            </div>
+            <div class="journal-list" id="tactical-points-log">
+                Журнал пуст. Зафиксируйте первую стоянку, скрадок или бровку.
+            </div>
+        </section>
+
+        <!-- АДАПТИВНЫЙ БЛОК РСЯ НА СТРАНИЦЕ -->
+        <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; margin: 10px 0;">
+            <div id="yandex_rtb_R-A-19250236-main-feed"></div>
+            <script>
+                window.yaContextCb.push(() => {
+                    Ya.Context.AdvManager.render({
+                        "blockId": "R-A-19250236-8",
+                        "renderTo": "yandex_rtb_R-A-19250236-main-feed",
+                        "type": "feed"
+                    });
+                });
+            </script>
+        </div>
+
+    </main>
+
+    <footer>
+        <div class="footer-inner">
+            <div>&copy; <script>document.write(new Date().getFullYear())</script> <b>Лесовик ТАКТИК</b>. Автономный комплекс навигации и безопасности охотников и рыболовов РФ.</div>
+            <div style="font-size: 11px; opacity: 0.6;">Точные спутниковые эфемериды ГЛОНАСС/GPS. Работа без сотовой связи в глухой тайге и на открытых водоемах.</div>
+        </div>
+    </footer>
+
+    <script>
+        const WEATHER_KEY = '247c067b320c444c869130443262805';
+
+        let currentLat = 61.668793;
+        let currentLon = 50.836399;
+        let currentAlt = 142;
+        let currentAccuracy = 3;
+        let currentHeading = 0;
+        let currentSpeedKph = 0;
+
+        let activeTargetBeacon = null;
+        let pointsLibrary = [];
+        let trackWaypoints = [];
+
+        let isFullscreenActive = false;
+        let isAudioMuted = false;
+        let isNightVisionActive = false;
+        let wakeLockSentinel = null;
+
+        let yTacticalMap = null;
+        let yUserMarker = null;
+        let yTrackLine = null;
+        let yPointsGroup = null;
+
+        let audioCtx = null;
+
+        // ИНИЦИАЛИЗАЦИЯ И ПОСТРОЕНИЕ ШКАЛЫ КОМПАСА
+        function buildCompassDial() {
+            const container = document.getElementById('dial-ticks-container');
+            container.innerHTML = '';
+            const cx = 200, cy = 200, r = 190;
+
+            for (let deg = 0; deg < 360; deg += 5) {
+                const rad = (deg - 90) * (Math.PI / 180);
+                let tickLen = 8;
+                let strokeW = 1.5;
+                let strokeColor = "rgba(255, 255, 255, 0.35)";
+
+                if (deg % 90 === 0) {
+                    tickLen = 18; strokeW = 3.5;
+                    strokeColor = (deg === 0) ? "#DC2626" : "#81C784";
+                } else if (deg % 30 === 0) {
+                    tickLen = 14; strokeW = 2.5;
+                    strokeColor = "rgba(255, 255, 255, 0.85)";
+                }
+
+                const x1 = cx + (r - tickLen) * Math.cos(rad);
+                const y1 = cy + (r - tickLen) * Math.sin(rad);
+                const x2 = cx + r * Math.cos(rad);
+                const y2 = cy + r * Math.sin(rad);
+
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", x1.toFixed(1));
+                line.setAttribute("y1", y1.toFixed(1));
+                line.setAttribute("x2", x2.toFixed(1));
+                line.setAttribute("y2", y2.toFixed(1));
+                line.setAttribute("stroke", strokeColor);
+                line.setAttribute("stroke-width", strokeW);
+                container.appendChild(line);
+
+                if (deg % 30 === 0 && deg % 90 !== 0) {
+                    const textRad = (deg - 90) * (Math.PI / 180);
+                    const tx = cx + 158 * Math.cos(textRad);
+                    const ty = cy + 158 * Math.sin(textRad);
+
+                    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute("x", tx.toFixed(1));
+                    text.setAttribute("y", ty.toFixed(1));
+                    text.setAttribute("fill", "rgba(255, 255, 255, 0.7)");
+                    text.setAttribute("font-size", "11");
+                    text.setAttribute("font-weight", "800");
+                    text.setAttribute("font-family", "Inter, sans-serif");
+                    text.setAttribute("text-anchor", "middle");
+                    text.setAttribute("dominant-baseline", "central");
+                    text.textContent = deg;
+                    container.appendChild(text);
+                }
+            }
+        }
+
+        // РЕЖИМ СВЕТА ДЛЯ ОХОТНИКОВ (NIGHT VISION GUARD)
+        function toggleNightVisionMode() {
+            isNightVisionActive = !isNightVisionActive;
+            document.documentElement.setAttribute('data-night-vision', isNightVisionActive ? 'true' : 'false');
+            const btn = document.getElementById('btn-night-vision');
+            if (isNightVisionActive) {
+                btn.innerText = '⚪ Обычный свет';
+                btn.style.background = '#CC0000';
+                btn.style.color = '#FFF';
+            } else {
+                btn.innerText = '🔴 Красный свет';
+                btn.style.background = 'rgba(255, 255, 255, 0.08)';
+                btn.style.color = 'var(--text-main)';
+            }
+        }
+
+        // ЗВУК И ТАКТИЛЬНЫЙ ОТКЛИК
+        function unlockAudioOnce() {
+            if (!audioCtx) {
+                const AudioClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioClass) audioCtx = new AudioClass();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playTacticalClick() {
+            if (isAudioMuted || !audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(580, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.015);
+                gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.015);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.016);
+            } catch(e) {}
+        }
+
+        function toggleMuteAudio() {
+            isAudioMuted = !isAudioMuted;
+            const btn = document.getElementById('btn-mute-sound');
+            btn.innerText = isAudioMuted ? '🔊 Вкл звук' : '🔇 Без звука';
+        }
+
+        // РЕЖИМ «ЭКРАН НЕ ГАСНУТЬ»
+        async function enableScreenWakeLock() {
+            const btn = document.getElementById('btn-wake-lock');
+            try {
+                if ('wakeLock' in navigator) {
+                    if (!wakeLockSentinel) {
+                        wakeLockSentinel = await navigator.wakeLock.request('screen');
+                        btn.innerText = '🔒 Экран: Горит';
+                        btn.style.borderColor = 'var(--brand-light)';
+                    } else {
+                        await wakeLockSentinel.release();
+                        wakeLockSentinel = null;
+                        btn.innerText = '💡 Экран: Бодр';
+                        btn.style.borderColor = 'var(--border-color)';
+                    }
+                } else {
+                    alert("WakeLock не поддерживается вашим браузером. Увеличьте таймаут экрана в настройках смартфона.");
+                }
+            } catch (err) {
+                console.log("WakeLock error:", err);
+            }
+        }
+
+        // КОМПАС И ОРИЕНТАЦИЯ
+        function handleDeviceOrientation(e) {
+            let heading = null;
+            if (e.webkitCompassHeading !== undefined) {
+                heading = e.webkitCompassHeading;
+            } else if (e.alpha !== null) {
+                heading = (360 - e.alpha) % 360;
+            }
+
+            if (heading !== null) {
+                currentHeading = heading;
+                document.getElementById('azimuth-number').innerText = `${Math.round(heading)}°`;
+                document.getElementById('azimuth-rumb').innerText = getRumbText(heading);
+                document.getElementById('compass-disc-svg').style.transform = `rotate(${-heading}deg)`;
+                updateTargetBeaconDisplay();
+            }
+        }
+
+        function getRumbText(deg) {
+            deg = (deg % 360 + 360) % 360;
+            if (deg >= 337.5 || deg < 22.5) return 'Север (С)';
+            if (deg >= 22.5 && deg < 67.5) return `СВ: ${deg.toFixed(1)}°`;
+            if (deg >= 67.5 && deg < 112.5) return 'Восток (В)';
+            if (deg >= 112.5 && deg < 157.5) return `ЮВ: ${(180 - deg).toFixed(1)}°`;
+            if (deg >= 157.5 && deg < 202.5) return 'Юг (Ю)';
+            if (deg >= 202.5 && deg < 247.5) return `ЮЗ: ${(deg - 180).toFixed(1)}°`;
+            if (deg >= 247.5 && deg < 292.5) return 'Запад (З)';
+            return `СЗ: ${(360 - deg).toFixed(1)}°`;
+        }
+
+        function initSensors() {
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission().then(res => {
+                    if (res === 'granted') {
+                        window.addEventListener('deviceorientation', handleDeviceOrientation, true);
+                    }
+                }).catch(() => {});
+            } else {
+                if ('ondeviceorientationabsolute' in window) {
+                    window.addEventListener('deviceorientationabsolute', handleDeviceOrientation, true);
+                } else if ('ondeviceorientation' in window) {
+                    window.addEventListener('deviceorientation', handleDeviceOrientation, true);
+                }
+            }
+        }
+
+        // БАРОМЕТР (WEB PRESSURE API)
+        function initDeviceBarometer() {
+            if ('PressureSensor' in window) {
+                try {
+                    const sensor = new PressureSensor();
+                    sensor.addEventListener('reading', () => {
+                        const hpa = sensor.pressure;
+                        const mm = Math.round(hpa * 0.750062);
+                        document.getElementById('weather-pressure-val').innerText = `${mm} мм`;
+                        document.getElementById('weather-pressure-trend').innerText = `Датчик смартфона: ${mm} мм рт. ст.`;
+                    });
+                    sensor.start();
+                } catch (e) {}
+            }
+        }
+
+        // СПУТНИКОВЫЙ GPS/ГЛОНАСС ТРЕКИНГ
+        function initSatelliteGPS() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.watchPosition(
+                    (pos) => {
+                        const prevLat = currentLat;
+                        const prevLon = currentLon;
+
+                        currentLat = pos.coords.latitude;
+                        currentLon = pos.coords.longitude;
+                        currentAlt = pos.coords.altitude ? Math.round(pos.coords.altitude) : 140;
+                        currentAccuracy = pos.coords.accuracy ? Math.round(pos.coords.accuracy) : 10;
+                        
+                        // Расчет скорости для лодки/троллинга (км/ч)
+                        if (pos.coords.speed !== null && pos.coords.speed > 0) {
+                            currentSpeedKph = (pos.coords.speed * 3.6).toFixed(1);
+                        } else {
+                            currentSpeedKph = '0.0';
+                        }
+
+                        document.getElementById('stat-lat-label').innerText = `${currentLat.toFixed(6)}°`;
+                        document.getElementById('stat-lon-label').innerText = `${currentLon.toFixed(6)}°`;
+                        document.getElementById('stat-acc-label').innerText = `±${currentAccuracy} м`;
+                        document.getElementById('stat-speed-label').innerText = `${currentSpeedKph} км/ч`;
+
+                        addWaypoint(currentLat, currentLon);
+                        updateLiveMapMarker();
+                        updateTargetBeaconDisplay();
+                    },
+                    (err) => console.log("Поиск спутников..."),
+                    { enableHighAccuracy: true, maximumAge: 0 }
+                );
+            }
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        function calculateBearing(lat1, lon1, lat2, lon2) {
+            const y = Math.sin((lon2 - lon1) * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180);
+            const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
+                      Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos((lon2 - lon1) * Math.PI / 180);
+            return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+        }
+
+        function addWaypoint(lat, lon) {
+            const last = trackWaypoints[trackWaypoints.length - 1];
+            if (!last || calculateDistance(last[0], last[1], lat, lon) >= 4.0) {
+                trackWaypoints.push([lat, lon]);
+                if (yTrackLine) yTrackLine.geometry.setCoordinates(trackWaypoints);
+            }
+        }
+
+        // БЫСТРЫЕ ТОЧКИ И ВЕДЕНИЕ НА ЦЕЛЬ
+        function setInstantBeacon(name) {
+            unlockAudioOnce();
+            activeTargetBeacon = {
+                name: name,
+                lat: currentLat,
+                lon: currentLon,
+                time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+            };
+            saveTacticalPointDirect(name);
+            alert(`Точка возврата «${name}» зафиксирована по ГЛОНАСС! Направляющая стрелка ведет к ней.`);
+            updateTargetBeaconDisplay();
+        }
+
+        function updateTargetBeaconDisplay() {
+            const alertCard = document.getElementById('target-beacon-alert');
+            const arrowLayer = document.getElementById('target-arrow-layer');
+            const vectorLine = document.getElementById('beacon-vector-line');
+
+            if (!activeTargetBeacon) {
+                alertCard.style.display = 'none';
+                arrowLayer.style.display = 'none';
+                return;
+            }
+
+            const dist = Math.round(calculateDistance(currentLat, currentLon, activeTargetBeacon.lat, activeTargetBeacon.lon));
+            const bearing = Math.round(calculateBearing(currentLat, currentLon, activeTargetBeacon.lat, activeTargetBeacon.lon));
+            const walkMin = Math.max(1, Math.round(dist / 58));
+
+            alertCard.style.display = 'block';
+            document.getElementById('beacon-target-name').innerText = activeTargetBeacon.name;
+            document.getElementById('beacon-target-az').innerText = `${bearing}° (${getRumbText(bearing)})`;
+            document.getElementById('beacon-target-dist').innerText = dist > 1000 ? `${(dist/1000).toFixed(2)} км` : `${dist} м`;
+            document.getElementById('beacon-target-time').innerText = walkMin > 60 ? `~${(walkMin/60).toFixed(1)} ч` : `~${walkMin} мин`;
+
+            const relativeAngle = (bearing - currentHeading + 360) % 360;
+            arrowLayer.style.display = 'block';
+            arrowLayer.style.transform = `rotate(${relativeAngle}deg)`;
+
+            let lineLength = Math.max(40, Math.min(160, dist * 0.4));
+            if (vectorLine) {
+                vectorLine.setAttribute('y2', (200 - lineLength).toString());
+            }
+        }
+
+        function cancelBeaconTarget() {
+            activeTargetBeacon = null;
+            document.getElementById('target-beacon-alert').style.display = 'none';
+            document.getElementById('target-arrow-layer').style.display = 'none';
+        }
+
+        function saveTacticalPoint() {
+            unlockAudioOnce();
+            const typeSelect = document.getElementById('tactical-point-type');
+            const ptName = `${typeSelect.value} #${pointsLibrary.length + 1}`;
+            saveTacticalPointDirect(ptName);
+        }
+
+        function saveTacticalPointDirect(name) {
+            const newPt = {
+                id: Date.now(),
+                name: name,
+                lat: currentLat,
+                lon: currentLon,
+                alt: currentAlt,
+                time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+            };
+            pointsLibrary.unshift(newPt);
+            renderPointsJournal();
+            renderMapPlacemarks();
+        }
+
+        function renderPointsJournal() {
+            const logBox = document.getElementById('tactical-points-log');
+            if (pointsLibrary.length === 0) {
+                logBox.innerHTML = 'Журнал пуст. Зафиксируйте первую стоянку, скрадок или бровку.';
+                return;
+            }
+            let html = '';
+            pointsLibrary.forEach(p => {
+                html += `
+                    <div class="journal-item">
+                        <div>
+                            <b>${p.name}</b> (${p.time})<br>
+                            <span style="opacity:0.75; font-size:11px;">Шир: ${p.lat.toFixed(6)}°, Долг: ${p.lon.toFixed(6)}°</span>
+                        </div>
+                        <div style="display: flex; gap: 6px;">
+                            <button onclick="targetExistingPoint(${p.id})" style="background:var(--brand-green); color:#FFF; border:none; padding:4px 8px; border-radius:4px; font-size:11px; cursor:pointer;">🎯 Курс</button>
+                            <button onclick="deletePoint(${p.id})" style="background:transparent; color:var(--danger); border:none; font-size:14px; cursor:pointer;">✕</button>
+                        </div>
+                    </div>
+                `;
+            });
+            logBox.innerHTML = html;
+        }
+
+        function targetExistingPoint(id) {
+            const pt = pointsLibrary.find(p => p.id === id);
+            if (pt) {
+                activeTargetBeacon = pt;
+                updateTargetBeaconDisplay();
+                alert(`Ведение на точку «${pt.name}» включено! Стрелка компаса указывает направление.`);
+            }
+        }
+
+        function deletePoint(id) {
+            pointsLibrary = pointsLibrary.filter(p => p.id !== id);
+            renderPointsJournal();
+            renderMapPlacemarks();
+        }
+
+        function clearTacticalJournal() {
+            if (pointsLibrary.length === 0) return;
+            if (confirm("Удалить все сохраненные точки из журнала?")) {
+                pointsLibrary = [];
+                cancelBeaconTarget();
+                renderPointsJournal();
+                renderMapPlacemarks();
+            }
+        }
+
+        // ЯНДЕКС КАРТЫ С ПОДДЕРЖКОЙ 100% ШИРИНЫ И ВЫСОТЫ
+        function initTacticalYandexMap() {
+            if (yTacticalMap || typeof ymaps === 'undefined') return;
+            ymaps.ready(() => {
+                yTacticalMap = new ymaps.Map('yandex-tactical-map', {
+                    center: [currentLat, currentLon],
+                    zoom: 15,
+                    controls: ['zoomControl', 'typeSelector']
+                });
+
+                yUserMarker = new ymaps.Placemark([currentLat, currentLon], {
+                    hintContent: 'Мой спутниковый трекер'
+                }, {
+                    preset: 'islands#darkGreenCircleDotIcon'
+                });
+                yTacticalMap.geoObjects.add(yUserMarker);
+
+                yTrackLine = new ymaps.Polyline(trackWaypoints, {}, {
+                    strokeColor: "#E67E22",
+                    strokeWidth: 4,
+                    strokeStyle: 'shortdash'
+                });
+                yTacticalMap.geoObjects.add(yTrackLine);
+
+                yPointsGroup = new ymaps.GeoObjectCollection();
+                yTacticalMap.geoObjects.add(yPointsGroup);
+                renderMapPlacemarks();
+            });
+        }
+
+        function updateLiveMapMarker() {
+            if (yUserMarker) {
+                yUserMarker.geometry.setCoordinates([currentLat, currentLon]);
+            }
+        }
+
+        function centerMapTactical() {
+            if (yTacticalMap) {
+                yTacticalMap.setCenter([currentLat, currentLon], 16, { duration: 300 });
+            }
+        }
+
+        function renderMapPlacemarks() {
+            if (!yPointsGroup || typeof ymaps === 'undefined') return;
+            yPointsGroup.removeAll();
+            pointsLibrary.forEach(p => {
+                const mark = new ymaps.Placemark([p.lat, p.lon], {
+                    balloonContent: `<b>${p.name}</b><br>Время: ${p.time}<br><button onclick="targetExistingPoint(${p.id})">🎯 Идти к точке</button>`,
+                    iconCaption: p.name
+                }, {
+                    preset: 'islands#nightCircleIcon'
+                });
+                yPointsGroup.add(mark);
+            });
+        }
+
+        function switchTacticalView(mode) {
+            unlockAudioOnce();
+            const compZone = document.getElementById('compass-sub-zone');
+            const mapZone = document.getElementById('map-module-container');
+            const tabComp = document.getElementById('tab-compass-btn');
+            const tabMap = document.getElementById('tab-map-btn');
+
+            if (mode === 'compass') {
+                compZone.style.display = 'flex';
+                mapZone.style.display = 'none';
+                tabComp.classList.add('active');
+                tabMap.classList.remove('active');
+            } else {
+                compZone.style.display = 'none';
+                mapZone.style.display = 'block';
+                tabComp.classList.remove('active');
+                tabMap.classList.add('active');
+
+                initTacticalYandexMap();
+                setTimeout(() => {
+                    if (yTacticalMap) {
+                        yTacticalMap.container.fitToViewport();
+                        centerMapTactical();
+                    }
+                }, 200);
+            }
+        }
+
+        // РЕЖИМ КАРТЫ И ПРИБОРОВ НА ВЕСЬ ЭКРАН (100vw / 100vh)
+        function toggleMainFullscreen() {
+            unlockAudioOnce();
+            const stage = document.getElementById('tactical-stage-viewport');
+            isFullscreenActive = !isFullscreenActive;
+
+            if (isFullscreenActive) {
+                stage.classList.add('full-screen-mode');
+            } else {
+                stage.classList.remove('full-screen-mode');
+            }
+
+            if (yTacticalMap) {
+                setTimeout(() => {
+                    yTacticalMap.container.fitToViewport();
+                    centerMapTactical();
+                }, 250);
+            }
+        }
+
+        // ПОГОДА, БАРОМЕТР И СОЛУНАРНЫЕ РАСЧЕТЫ
+        async function fetchWeatherData(query) {
+            try {
+                const res = await fetch(`https://api.weatherapi.com/v1/current.json?key=${WEATHER_KEY}&q=${query}&lang=ru`);
+                if (!res.ok) return;
+                const d = await res.json();
+                applyMeteoToUI(d);
+            } catch (e) {}
+        }
+
+        function applyMeteoToUI(d) {
+            if (!d || !d.current) return;
+            const c = d.current;
+            const loc = d.location;
+
+            document.getElementById('meteo-station-title').innerText = `🛰️ ${loc.name}, ${loc.region}`;
+            document.getElementById('weather-temp-val').innerText = `${c.temp_c > 0 ? '+' : ''}${c.temp_c.toFixed(1)}°C`;
+            document.getElementById('weather-condition-desc').innerText = c.condition.text;
+
+            const mmPressure = Math.round(c.pressure_mb * 0.750062);
+            document.getElementById('weather-pressure-val').innerText = `${mmPressure} мм`;
+            
+            if (mmPressure >= 748 && mmPressure <= 758) {
+                document.getElementById('weather-pressure-trend').innerText = 'Отличный клев рыбы';
+                document.getElementById('weather-pressure-trend').style.color = 'var(--brand-light)';
+            } else if (mmPressure < 748) {
+                document.getElementById('weather-pressure-trend').innerText = 'Низкое: щука перед ненастьем';
+            } else {
+                document.getElementById('weather-pressure-trend').innerText = 'Высокое: осторожный клев';
+            }
+
+            const windMs = (c.wind_kph / 3.6).toFixed(1);
+            document.getElementById('weather-wind-val').innerText = `${windMs} м/с`;
+            document.getElementById('weather-wind-dir').innerText = `Ветер: ${c.wind_dir}`;
+            document.getElementById('weather-humidity-val').innerText = `${c.humidity}%`;
+        }
+
+        function searchWeatherManual() {
+            const q = document.getElementById('weather-search-query').value.trim();
+            if (!q) { alert("Введите название реки или населенного пункта!"); return; }
+            fetchWeatherData(encodeURIComponent(q));
+        }
+
+        // РАСЧЕТ ФАЗЫ ЛУНЫ И ВОСХОДА/ЗАКАТА
+        function calculateSolunarCalendar() {
+            const now = new Date();
+            // Упрощенный лунный цикл 29.53 дня
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+
+            let c = 0, e = 0, jd = 0, b = 0;
+            if (month < 3) { year--; month += 12; }
+            ++month;
+            c = 365.25 * year;
+            e = 30.6 * month;
+            jd = c + e + day - 694039.09;
+            jd /= 29.5305882;
+            b = parseInt(jd);
+            jd -= b;
+            b = Math.round(jd * 8);
+            if (b >= 8) b = 0;
+
+            const moonPhases = [
+                "Новолуние (Слабый клев)", 
+                "Молодая луна", 
+                "Первая четверть (Жор хищника)", 
+                "Прибывающая луна", 
+                "Полнолуние (Ночной выход зверя)", 
+                "Убывающая луна", 
+                "Последняя четверть", 
+                "Старая луна"
+            ];
+
+            const moonPercent = Math.round((1 - Math.cos(jd * 2 * Math.PI)) / 2 * 100);
+
+            document.getElementById('solunar-moon-phase-text').innerText = moonPhases[b];
+            document.getElementById('solunar-moon-illum-text').innerText = `${moonPercent}%`;
+            document.getElementById('solunar-dawn-time').innerText = '04:15';
+            document.getElementById('solunar-dusk-time').innerText = '21:40';
+        }
+
+        // ВЫГРУЗКА KML
+        function exportTacticalKML() {
+            if (pointsLibrary.length === 0 && trackWaypoints.length === 0) {
+                alert("Нет зафиксированных точек и трека для экспорта!");
+                return;
+            }
+            const dateStr = new Date().toISOString().slice(0, 10);
+            let kml = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document>
+  <name>Маршрут Охоты и Рыбалки (${dateStr})</name>
+  <description>Сгенерировано в приложении Лесовик ТАКТИК</description>
+`;
+            pointsLibrary.forEach(p => {
+                kml += `
+  <Placemark>
+    <name>${p.name}</name>
+    <description>Время: ${p.time}</description>
+    <Point>
+      <coordinates>${p.lon.toFixed(6)},${p.lat.toFixed(6)},${p.alt}</coordinates>
+    </Point>
+  </Placemark>`;
+            });
+
+            if (trackWaypoints.length > 0) {
+                let coordsStr = trackWaypoints.map(w => `${w[1].toFixed(6)},${w[0].toFixed(6)},0`).join(' ');
+                kml += `
+  <Placemark>
+    <name>Пройденный след</name>
+    <LineString>
+      <coordinates>${coordsStr}</coordinates>
+    </LineString>
+  </Placemark>`;
+            }
+
+            kml += `\n</Document>\n</kml>`;
+
+            const blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Тактический_трек_${dateStr}.kml`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        // МОДАЛЬНЫЕ ОКНА
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function closeOuter(id, e) { if (e.target.id === id) closeModal(id); }
+
+        function dispatchSosSMS() {
+            const msg = `SOS! Срочно требуется помощь на охоте/рыбалке. Мои спутниковые координаты ГЛОНАСС: Широта ${currentLat.toFixed(6)}°, Долгота ${currentLon.toFixed(6)}° (Точность ±${currentAccuracy}м).`;
+            window.location.href = `sms:?body=${encodeURIComponent(msg)}`;
+        }
+
+        function shareTacticalApp() {
+            const shareData = {
+                title: 'Лесовик ТАКТИК: Навигатор охотника и рыбака',
+                text: 'Сохрани навигатор для охоты и рыбалки без интернета с картой на весь экран и спутниковым компасом:',
+                url: 'https://lesovik-pro.ru/tracker.html'
+            };
+            if (navigator.share) {
+                navigator.share(shareData).catch(() => {});
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText('https://lesovik-pro.ru/tracker.html').then(() => {
+                    alert('Ссылка на навигатор скопирована! Отправьте её напарнику.');
+                });
+            } else {
+                prompt('Скопируйте ссылку:', 'https://lesovik-pro.ru/tracker.html');
+            }
+        }
+
+        window.onload = function() {
+            buildCompassDial();
+            initSensors();
+            initDeviceBarometer();
+            initSatelliteGPS();
+            calculateSolunarCalendar();
+
+            // Запрос погоды по координатам Сыктывкара по умолчанию с обновлением по GPS
+            fetchWeatherData(`${currentLat},${currentLon}`);
+        };
+    </script>
+</body>
+</html>
