@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Автономный спутниковый навигатор и тактический компас охотника и рыбака (Лесовик ТАКТИК PRO)» (Версия 8.5 Field Photo HUD & GIS Edition).
+  Программное обеспечение: «Автономный спутниковый навигатор и тактический компас охотника и рыбака (Лесовик ТАКТИК PRO)» (Версия 8.9 Fullscreen Optical HUD & Dynamic GIS Edition).
   Правообладатель: Худяков Николай Сергеевич.
 -->
 <!DOCTYPE html>
@@ -35,8 +35,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <title>Навигатор охотника и рыбака онлайн: Спутниковая карта на весь экран, компас ГЛОНАСС без интернета, точки стоянок и барометр клева</title>
-    <meta name="description" content="Бесплатный автономный GPS/ГЛОНАСС навигатор для охоты и рыбалки без интернета. Полевая фотофиксация с координатами, загрузка тяжелых карт KML/KMZ без лимитов, компас с фильтром Калмана и пузырьковым уровнем.">
-    <meta name="keywords" content="навигатор для рыбалки без интернета, фотофиксация с координатами на фото, загрузка карт kml kmz большого объема, компас с уровнем онлайн, фильтр калмана компас, солунарный календарь рыбака, барометр клева рыбы, точки стоянки лодки, лесовик про">
+    <meta name="description" content="Бесплатный автономный GPS/ГЛОНАСС навигатор для охоты и рыбалки без интернета. Полноэкранная полевая камера с зумом и координатами, загрузка карт KML/KMZ с автоцентрированием, компас с фильтром Калмана.">
+    <meta name="keywords" content="навигатор для рыбалки без интернета, фотофиксация с координатами на фото, полноэкранная камера зум, загрузка карт kml kmz большого объема, компас с уровнем онлайн, фильтр калмана компас, солунарный календарь рыбака, барометр клева рыбы, точки стоянки лодки, лесовик про">
     <link rel="canonical" href="https://lesovik-pro.ru/tracker.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
 
@@ -71,7 +71,7 @@
       "@type": "WebApplication",
       "name": "Лесовик ТАКТИК: Навигатор и компас охотника и рыбака",
       "url": "https://lesovik-pro.ru/tracker.html",
-      "description": "Автономная система полевой навигации с поддержкой загрузки больших карт KML/KMZ, фотофиксацией с координатами и ориентированием по спутникам ГЛОНАСС.",
+      "description": "Автономная система полевой навигации с поддержкой загрузки больших карт KML/KMZ через IndexedDB, полноэкранной фотофиксацией с координатами и ориентированием по спутникам ГЛОНАСС.",
       "applicationCategory": "NavigationApplication",
       "operatingSystem": "All",
       "inLanguage": "ru-RU"
@@ -794,42 +794,161 @@
         .forecast-day-temp { font-size: 16px; font-weight: 900; }
         .forecast-day-info { font-size: 10.5px; opacity: 0.85; line-height: 1.3; }
 
-        /* ОКНО ФОТОФИКСАЦИИ С КАМЕРОЙ И ВПЕКАНИЕМ HUD */
-        .photo-preview-container {
-            position: relative;
-            width: 100%;
-            height: 340px;
-            background: #000;
-            border-radius: 10px;
+        /* ============================================================ */
+        /* ПОЛНОЭКРАННАЯ ПОЛЕВАЯ КАМЕРА С ЗУМОМ (100% ЭКРАНА)           */
+        /* ============================================================ */
+        #fullscreen-camera-stage {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000000;
+            z-index: 99999999 !important;
             overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
+
         #camera-video-stream {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
+
         #photo-captured-canvas {
             display: none;
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        .camera-hud-overlay {
+
+        /* 4 ВЕРТИКАЛЬНЫЕ КНОПКИ ЗУМА СПРАВА ПО ЦЕНТРУ */
+        .camera-zoom-side-panel {
             position: absolute;
-            bottom: 10px;
-            left: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.65);
-            padding: 6px 10px;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .btn-zoom-step {
+            width: 48px;
+            height: 48px;
+            background: rgba(18, 26, 23, 0.85);
+            backdrop-filter: blur(8px);
+            border: 2px solid var(--forest-green);
+            color: #FFFFFF;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            transition: 0.15s;
+        }
+        .btn-zoom-step:active {
+            transform: scale(0.92);
+            background: var(--forest-green);
+        }
+
+        /* ВСПЛЫВАЮЩАЯ ПЛАШКА ЗНАЧЕНИЯ ЗУМА */
+        .zoom-level-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            border: 1px solid var(--forest-green);
+            color: #22C55E;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            font-family: monospace;
+            z-index: 100;
+        }
+
+        /* КНОПКА ЗАКРЫТЬ КАМЕРУ ВВЕРХУ СЛЕВА */
+        .btn-camera-close-top {
+            position: absolute;
+            top: max(16px, env(safe-area-inset-top));
+            left: 16px;
+            background: rgba(0,0,0,0.75);
+            border: 1.5px solid #FFF;
+            color: #FFF;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        /* СЛУЖЕБНЫЙ ШТАМП КООРДИНАТ ГЛОНАСС ВНИЗУ */
+        .camera-live-hud {
+            position: absolute;
+            bottom: 110px;
+            left: 16px;
+            right: 70px;
+            background: rgba(0, 0, 0, 0.72);
+            border-left: 3px solid var(--indicator-live);
+            padding: 8px 12px;
             border-radius: 6px;
             color: #FFF;
-            font-size: 11px;
-            line-height: 1.4;
+            font-size: 11.5px;
             font-family: monospace;
+            line-height: 1.4;
             pointer-events: none;
+            z-index: 100;
+        }
+
+        /* НИЖНЯЯ ПАНЕЛЬ ДЕЙСТВИЙ (ФОТО ИЛИ ПЕРЕСНЯТЬ / СОХРАНИТЬ) */
+        .camera-bottom-actions-dock {
+            position: absolute;
+            bottom: max(20px, env(safe-area-inset-bottom));
+            left: 16px;
+            right: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .btn-trigger-shutter {
+            width: 74px;
+            height: 74px;
+            background: #FFFFFF;
+            border: 6px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s;
+        }
+        .btn-trigger-shutter:active {
+            transform: scale(0.92);
+        }
+        .btn-shutter-inner {
+            width: 54px;
+            height: 54px;
+            background: #DC2626;
+            border-radius: 50%;
+        }
+
+        .review-photo-buttons-grid {
+            display: none;
+            width: 100%;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 14px;
         }
 
         .faq-accordion-section {
@@ -912,48 +1031,53 @@
     <!-- СКРЫТЫЙ ВЫБОР ФАЙЛА КАРТЫ -->
     <input type="file" id="custom-map-file-input" accept=".kml,.kmz,.geojson,.json" style="display: none;" onchange="handleCustomMapFileUpload(event)">
 
-    <!-- 1. ПОПАП: ПОЛЕВАЯ ФОТОФИКСАЦИЯ С КООРДИНАТАМИ -->
-    <div id="photo-camera-popup" class="popup-overlay">
-        <div class="popup-card">
-            <h3>📷 Полевая фотофиксация объекта с координатами</h3>
-            
-            <div class="photo-preview-container">
-                <video id="camera-video-stream" autoplay playsinline></video>
-                <canvas id="photo-captured-canvas"></canvas>
-                <div class="camera-hud-overlay" id="camera-hud-preview">
-                    GPS: Определение...
-                </div>
-            </div>
+    <!-- ============================================================ -->
+    <!-- ПОЛНОЭКРАННЫЙ ВИДОИСКАТЕЛЬ КАМЕРЫ (100% ЭКРАНА С ЗУМОМ)      -->
+    <!-- ============================================================ -->
+    <div id="fullscreen-camera-stage">
+        <!-- КНОПКА ЗАКРЫТЬ КАМЕРУ ВВЕРХУ СЛЕВА -->
+        <button class="btn-camera-close-top" onclick="closePhotoCameraModal()" title="Закрыть камеру">✕</button>
 
-            <!-- БЛОК КНОПОК УПРАВЛЕНИЯ КАДРОМ -->
-            <div id="camera-action-controls" style="display: flex; gap: 8px; margin-top: 4px;">
-                <button class="btn-action btn-photo-main" onclick="takeCoordinatesPhoto()">
-                    📸 Сделать снимок
-                </button>
-            </div>
+        <!-- ЗНАЧЕНИЕ ТЕКУЩЕГО ЗУМА ВВЕРХУ СПРАВА -->
+        <div class="zoom-level-badge" id="zoom-indicator-text">1.0x</div>
 
-            <!-- БЛОК ПОСЛЕ ФИКСАЦИИ: ПЕРЕСНЯТЬ СЛЕВА, СОХРАНИТЬ В ГАЛЕРЕЮ СПРАВА -->
-            <div id="camera-review-controls" style="display: none; grid-template-columns: 1fr 1.3fr; gap: 10px; margin-top: 4px;">
-                <button class="btn-action btn-secondary" onclick="retakePhoto()">
+        <!-- 4 ВЕРТИКАЛЬНЫЕ КНОПКИ ЗУМА СПРАВА -->
+        <div class="camera-zoom-side-panel">
+            <button class="btn-zoom-step" onclick="adjustCameraZoom(1.0)">+1x</button>
+            <button class="btn-zoom-step" onclick="adjustCameraZoom(0.1)">+0.1x</button>
+            <button class="btn-zoom-step" onclick="adjustCameraZoom(-0.1)">-0.1x</button>
+            <button class="btn-zoom-step" onclick="adjustCameraZoom(-1.0)">-1x</button>
+        </div>
+
+        <!-- ВИДЕОПОТОК И ХОЛСТ СНИМКА -->
+        <video id="camera-video-stream" autoplay playsinline></video>
+        <canvas id="photo-captured-canvas"></canvas>
+
+        <!-- ВПЕКАЕМЫЙ HUD С КООРДИНАТАМИ И АЗИМУТОМ -->
+        <div class="camera-live-hud" id="camera-hud-preview">
+            🛰️ ГЛОНАСС: Запрос спутников...
+        </div>
+
+        <!-- НИЖНЯЯ ПАНЕЛЬ ДЕЙСТВИЙ -->
+        <div class="camera-bottom-actions-dock">
+            <!-- КНОПКА СПУСКА ЗАТВОРА ДО СНИМКА -->
+            <button class="btn-trigger-shutter" id="btn-camera-shutter" onclick="takeCoordinatesPhoto()">
+                <div class="btn-shutter-inner"></div>
+            </button>
+
+            <!-- КНОПКИ ПОСЛЕ ФИКСАЦИИ: ПЕРЕСНЯТЬ СЛЕВА / СОХРАНИТЬ СПРАВА -->
+            <div class="review-photo-buttons-grid" id="camera-review-controls">
+                <button class="btn-action btn-secondary" style="padding: 14px; font-size: 13px;" onclick="retakePhoto()">
                     🔄 Переснять
                 </button>
-                <button class="btn-action btn-boat" onclick="saveCapturedPhotoToDevice()">
+                <button class="btn-action btn-boat" style="padding: 14px; font-size: 13px;" onclick="saveCapturedPhotoToDevice()">
                     💾 Сохранить в галерею
                 </button>
             </div>
-
-            <!-- БЛОК РСЯ В МОДАЛКЕ ФОТОФИКСАЦИИ -->
-            <div class="rsya-modal-wrapper">
-                <div id="yandex_rtb_R-A-19250236-photo"></div>
-            </div>
-
-            <button class="btn-action" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-graphite); font-size: 11px; padding: 6px;" onclick="closePhotoCameraModal()">
-                ✕ Закрыть камеру
-            </button>
         </div>
     </div>
 
-    <!-- 2. ПОПАП: УПРАВЛЕНИЕ СВОЕЙ КАРТОЙ (INDEXEDDB ДЛЯ БОЛЬШИХ ФАЙЛОВ) -->
+    <!-- 1. ПОПАП: УПРАВЛЕНИЕ СВОЕЙ КАРТОЙ -->
     <div id="custom-map-popup" class="popup-overlay" onclick="closePopupOuter('custom-map-popup', event)">
         <div class="popup-card">
             <h3>📁 Моя офлайн-карта (KML / KMZ без лимитов)</h3>
@@ -978,7 +1102,6 @@
                 </button>
             </div>
 
-            <!-- БЛОК РСЯ В МОДАЛКЕ СВОЕЙ КАРТЫ -->
             <div class="rsya-modal-wrapper">
                 <div id="yandex_rtb_R-A-19250236-custom-map"></div>
             </div>
@@ -987,7 +1110,7 @@
         </div>
     </div>
 
-    <!-- 3. ПОПАП: ПРОГНОЗ ПОГОДЫ НА 3 ДНЯ -->
+    <!-- 2. ПОПАП: ПРОГНОЗ ПОГОДЫ НА 3 ДНЯ -->
     <div id="weather-3days-popup" class="popup-overlay" onclick="closePopupOuter('weather-3days-popup', event)">
         <div class="popup-card">
             <h3>🌦️ Прогноз погоды на 3 дня (Офлайн-кеш)</h3>
@@ -1013,7 +1136,6 @@
                 </div>
             </div>
 
-            <!-- БЛОК РСЯ В МОДАЛКЕ ПОГОДЫ -->
             <div class="rsya-modal-wrapper">
                 <div id="yandex_rtb_R-A-19250236-weather"></div>
             </div>
@@ -1022,7 +1144,7 @@
         </div>
     </div>
 
-    <!-- 4. ПОПАП: ИНСТРУКЦИЯ -->
+    <!-- 3. ПОПАП: ИНСТРУКЦИЯ -->
     <div id="usage-guide-popup" class="popup-overlay" onclick="closePopupOuter('usage-guide-popup', event)">
         <div class="popup-card">
             <h3>📖 Инструкция навигатора охотника и рыбака</h3>
@@ -1032,7 +1154,6 @@
                 <p><b>3. Фильтр Калмана:</b> Стрелка компаса плавно стабилизируется даже при тряске и ходьбе.</p>
             </div>
 
-            <!-- БЛОК РСЯ В МОДАЛКЕ ИНСТРУКЦИИ -->
             <div class="rsya-modal-wrapper">
                 <div id="yandex_rtb_R-A-19250236-modal-inst"></div>
             </div>
@@ -1041,7 +1162,7 @@
         </div>
     </div>
 
-    <!-- 5. ПОПАП: СОЛУНАРНЫЙ КАЛЕНДАР И БАРОМЕТР (ПОЛНЫЙ ЭКСПЕРТНЫЙ ТЕКСТ) -->
+    <!-- 4. ПОПАП: СОЛУНАРНЫЙ КАЛЕНДАР И БАРОМЕТР (ПОЛНЫЙ ЭКСПЕРТНЫЙ ТЕКСТ) -->
     <div id="solunar-popup" class="popup-overlay" onclick="closePopupOuter('solunar-popup', event)">
         <div class="popup-card">
             <h3>🐟 Солунарная теория клева и фаза Луны</h3>
@@ -1055,7 +1176,7 @@
 
                 <p style="margin-top: 10px;">
                     <b>Суть солунарной теории:</b><br>
-                    Гравитационное влияние Луны и Солнца напрямую воздействует на активность гидробионтов и лесных обитателей. Максимальная активность рыбы и выход дичи (Major periods) совпадают с моментами восхода, захода Луны, а также нахождением ее в зените.
+                    Гравитационное влияние Луны и Солнца напрямую воздействует на активность гидробионтов и лесных обитателей. Максимальная активность рыбы и выход дичи совпадают с моментами восхода, захода Луны, а также нахождением ее в зените.
                 </p>
 
                 <p>
@@ -1066,7 +1187,6 @@
                 </p>
             </div>
 
-            <!-- БЛОК РСЯ В МОДАЛКЕ СОЛУНАРА -->
             <div class="rsya-modal-wrapper">
                 <div id="yandex_rtb_R-A-19250236-modal-sol"></div>
             </div>
@@ -1075,7 +1195,7 @@
         </div>
     </div>
 
-    <!-- 6. ПОПАП: SOS 112 -->
+    <!-- 5. ПОПАП: SOS 112 -->
     <div id="sos-popup" class="popup-overlay" onclick="closePopupOuter('sos-popup', event)">
         <div class="popup-card" style="border: 2px solid var(--danger);">
             <h3 style="color: var(--danger);">🆘 Экстренная помощь: Спасение 112</h3>
@@ -1095,7 +1215,6 @@
                 </button>
             </div>
 
-            <!-- БЛОК РСЯ В МОДАЛКЕ SOS -->
             <div class="rsya-modal-wrapper">
                 <div id="yandex_rtb_R-A-19250236-modal-sos"></div>
             </div>
@@ -1124,7 +1243,7 @@
             <button class="btn-nav" onclick="requestDeviceOrientationPermission()">🧭 Калибровка</button>
             <button class="btn-nav btn-red-eye" onclick="cycleNightVision()" id="btn-night-mode">🔴 Красный: Выкл</button>
             <button class="btn-nav" onclick="openPopup('custom-map-popup')">📁 Своя карта</button>
-            <button class="btn-nav" onclick="openPhotoCameraModal()">📷 Фотофиксация</button>
+            <button class="btn-nav btn-photo-main" onclick="openPhotoCameraModal()">📷 Фотофиксация</button>
             <button class="btn-nav" onclick="openWeather3DaysModal()">🌦️ Прогноз на 3 дня</button>
             <button class="btn-nav" onclick="openPopup('solunar-popup')">🌙 Луна и Барометр</button>
             <button class="btn-nav" onclick="openPopup('usage-guide-popup')">📖 Инструкция</button>
@@ -1208,7 +1327,7 @@
                     <button class="btn-action btn-camp" onclick="setReturnBeacon('⛺ Лагерь / Изба')">⛺ Лагерь / Изба</button>
                     <button class="btn-action btn-secondary" onclick="stopNavigationToBeacon()">⏹️ Сбросить цель</button>
                 </div>
-                <!-- КНОПКА СТЕРЕТЬ СЛЕД В ВИДЕ ДЛИННОЙ ПОЛОСЫ ПОД КНОПКАМИ -->
+                <!-- КНОПКА СТЕРЕТЬ СЛЕД ПОД КНОПКАМИ -->
                 <div style="margin-top: 6px;">
                     <button class="btn-action btn-secondary" style="font-size: 11px; padding: 7px;" onclick="clearOnlyTrack()">
                         〰️ Стереть пройденный след (ходы)
@@ -1247,7 +1366,6 @@
 
         <main class="compass-stage-container" id="compass-stage">
             
-            <!-- ПРАВАЯ ВЕРТИКАЛЬНАЯ ПАНЕЛЬ С КНОПКОЙ ФОТОФИКСАЦИИ НАД СВЕРНУТЬ -->
             <div class="fs-floating-vertical-side">
                 <button class="fs-side-btn btn-photo-side" onclick="openPhotoCameraModal()">
                     <span>📷</span>
@@ -1435,7 +1553,7 @@
                 </div>
                 <div class="accordion-content">
                     <ul>
-                        <li><b>Опрокидывание лодки:</b> Не пытайтесь плыть в тяжелой одежде к далекому берегу. Держитесь за борт перевернутой лодки.</li>
+                        <li><b>Опрокидывание лодки (оверкиль):</b> Не пытайтесь плыть в тяжелой одежде к далекому берегу. Держитесь за борт перевернутой лодки.</li>
                         <li><b>Провал под лед:</b> Раскиньте руки в стороны по кромке льда. С помощью «спасалок» зацепитесь за лед, вытолкните тело ногами в горизонтальное положение и перекатывайтесь в сторону своего следа.</li>
                     </ul>
                 </div>
@@ -1491,7 +1609,7 @@
     <script>
         const WEATHER_API_KEY = '247c067b320c444c869130443262805';
 
-        // --- ЛОКАЛЬНАЯ БАЗА INDEXEDDB ДЛЯ ТЯЖЕЛЫХ КАРТ ---
+        // --- БАЗА INDEXEDDB ДЛЯ ТЯЖЕЛЫХ КАРТ (8-50+ МБ) ---
         const DB_NAME = 'LesovikTaktikDB';
         const DB_VERSION = 1;
         const STORE_NAME = 'custom_map_store';
@@ -1605,14 +1723,17 @@
 
         let audioCtx = null;
         let videoStream = null;
+        let videoTrack = null;
+        let currentZoomValue = 1.0;
+        let minZoomLimit = 1.0;
+        let maxZoomLimit = 1.0;
 
-        // ФЛАГИ ЛЕНИВОЙ ОТРИСОВКИ РСЯ ДЛЯ ВСЕХ МОДАЛОК
+        // ФЛАГИ ЛЕНИВОЙ ОТРИСОВКИ РСЯ
         let isWeatherAdRendered = false;
         let isInstAdRendered = false;
         let isSolunarAdRendered = false;
         let isSosAdRendered = false;
         let isCustomMapAdRendered = false;
-        let isPhotoAdRendered = false;
 
         function toggleTheme() {
             const root = document.documentElement;
@@ -1949,7 +2070,7 @@
         }
 
         // ============================================================
-        // ОБРАБОТКА ТЯЖЕЛЫХ КАРТ (KML / KMZ) БЕЗ ЛИМИТОВ ПАМЯТИ
+        // ОБРАБОТКА И ХРАНЕНИЕ ТЯЖЕЛЫХ КАРТ (KML / KMZ) БЕЗ ЛИМИТОВ
         // ============================================================
         async function handleCustomMapFileUpload(e) {
             const file = e.target.files[0];
@@ -1982,7 +2103,7 @@
                     await saveMapToIndexedDB(geojson, file.name);
 
                     updateCustomMapInfoUI(file.name, geojson.features.length, file.size);
-                    applyCustomGeoDataToYandexMap();
+                    applyCustomGeoDataToYandexMap(true); // Центрируем карту на объектах
                     redrawOfflineVectorCanvas();
                     alert(`Карта «${file.name}» успешно загружена (${geojson.features.length} объектов) и сохранена в память телефона!`);
                 } else {
@@ -2010,6 +2131,7 @@
                 const nameEl = pm.querySelector('name');
                 const name = nameEl ? nameEl.textContent.trim() : 'Объект';
 
+                // 1. Полигоны (включая MultiGeometry)
                 const polygons = pm.querySelectorAll('Polygon');
                 polygons.forEach(poly => {
                     const outerCoordsEl = poly.querySelector('outerBoundaryIs LinearRing coordinates');
@@ -2017,7 +2139,7 @@
                         const rawCoords = outerCoordsEl.textContent.trim().split(/\s+/);
                         const ring = rawCoords.map(c => {
                             const parts = c.split(',').map(Number);
-                            return [parts[0], parts[1]];
+                            return [parts[0], parts[1]]; // [lon, lat]
                         }).filter(c => !isNaN(c[0]) && !isNaN(c[1]));
 
                         if (ring.length > 2) {
@@ -2030,6 +2152,7 @@
                     }
                 });
 
+                // 2. Линии (просеки, визиры, дороги)
                 const lineStrings = pm.querySelectorAll('LineString');
                 lineStrings.forEach(ls => {
                     const coordsEl = ls.querySelector('coordinates');
@@ -2050,6 +2173,7 @@
                     }
                 });
 
+                // 3. Точки
                 const points = pm.querySelectorAll('Point');
                 points.forEach(pt => {
                     const coordsEl = pt.querySelector('coordinates');
@@ -2073,7 +2197,7 @@
             const info = document.getElementById('custom-map-info-text');
             if (info) {
                 const sizeStr = sizeBytes > 0 ? `(${(sizeBytes / (1024*1024)).toFixed(1)} МБ)` : '';
-                info.innerHTML = `🟢 <b>${fileName}</b> ${sizeStr}<br><small style="color:var(--forest-light);">${count} объектов сохранено в памяти IndexedDB</small>`;
+                info.innerHTML = `🟢 <b>${fileName}</b> ${sizeStr}<br><small style="color:var(--forest-light);">${count} объектов сохранено в базе IndexedDB</small>`;
             }
         }
 
@@ -2094,7 +2218,8 @@
             }
         }
 
-        function applyCustomGeoDataToYandexMap() {
+        // ПРИВЯЗКА КАРТЫ С АВТОМАТИЧЕСКИМ МАСШТАБИРОВАНИЕМ
+        function applyCustomGeoDataToYandexMap(autoCenter = false) {
             if (!yMap || !customGeoData || typeof ymaps === 'undefined') return;
             if (yCustomGeoObject) yMap.geoObjects.remove(yCustomGeoObject);
 
@@ -2114,7 +2239,7 @@
                 } else if (geom.type === 'Polygon') {
                     const coords = geom.coordinates[0].map(c => [c[1], c[0]]);
                     const poly = new ymaps.Polygon([coords], { hintContent: props.name }, {
-                        fillColor: 'rgba(56, 189, 248, 0.15)',
+                        fillColor: 'rgba(56, 189, 248, 0.18)',
                         strokeColor: '#0284C7',
                         strokeWidth: 2
                     });
@@ -2130,10 +2255,18 @@
             });
 
             yMap.geoObjects.add(yCustomGeoObject);
+
+            // АВТОМАТИЧЕСКОЕ ЦЕНТРИРОВАНИЕ НА ВАШИХ ОБЪЕКТАХ
+            if (autoCenter && yCustomGeoObject.getBounds()) {
+                yMap.setBounds(yCustomGeoObject.getBounds(), {
+                    checkZoomRange: true,
+                    duration: 400
+                });
+            }
         }
 
         // ============================================================
-        // ОФЛАЙН ВЕКТОРНЫЙ ПЛАНШЕТ
+        // ОФЛАЙН ВЕКТОРНЫЙ ХОЛСТ
         // ============================================================
         function toggleOfflineCanvasMode() {
             isOfflineCanvasActive = !isOfflineCanvasActive;
@@ -2268,41 +2401,49 @@
         }
 
         // ============================================================
-        // ПОЛЕВАЯ ФОТОФИКСАЦИЯ С ВПЕКАНИЕМ КООРДИНАТ ГЛОНАСС В ПИКСЕЛИ
+        // ПОЛНОЭКРАННАЯ КАМЕРА С ОПТИЧЕСКИМ ЗУМОМ И ВПЕКАНИЕМ В КАДР
         // ============================================================
         function updateCameraHUD() {
             const hud = document.getElementById('camera-hud-preview');
             if (hud) {
                 const now = new Date().toLocaleString('ru-RU');
-                hud.innerHTML = `🛰️ ГЛОНАСС: ${currentLat.toFixed(6)}°, ${currentLon.toFixed(6)}° (±${currentAccuracy}м)<br>🧭 Азимут: ${Math.round(filteredAzimuth)}° | Выс: ${currentAlt}м | ${now}`;
+                hud.innerHTML = `🛰️ ГЛОНАСС: ${currentLat.toFixed(6)}°, ${currentLon.toFixed(6)}° (±${currentAccuracy}м)<br>🧭 Азимут: ${Math.round(filteredAzimuth)}° | Высота: ${currentAlt}м | ${now}`;
             }
         }
 
         async function openPhotoCameraModal() {
-            document.getElementById('photo-camera-popup').style.display = 'flex';
+            const stage = document.getElementById('fullscreen-camera-stage');
+            stage.style.display = 'block';
             document.getElementById('camera-video-stream').style.display = 'block';
             document.getElementById('photo-captured-canvas').style.display = 'none';
-            document.getElementById('camera-action-controls').style.display = 'flex';
+            document.getElementById('btn-camera-shutter').style.display = 'flex';
             document.getElementById('camera-review-controls').style.display = 'none';
-
-            // Ленивая отрисовка РСЯ в окне камеры
-            if (!isPhotoAdRendered) {
-                window.yaContextCb = window.yaContextCb || [];
-                window.yaContextCb.push(() => {
-                    Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-6", "renderTo": "yandex_rtb_R-A-19250236-photo" });
-                });
-                isPhotoAdRendered = true;
-            }
 
             try {
                 videoStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: { ideal: "environment" } },
+                    video: { 
+                        facingMode: { ideal: "environment" },
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    },
                     audio: false
                 });
                 const videoEl = document.getElementById('camera-video-stream');
                 videoEl.srcObject = videoStream;
+
+                videoTrack = videoStream.getVideoTracks()[0];
+                if (videoTrack) {
+                    const capabilities = videoTrack.getCapabilities ? videoTrack.getCapabilities() : {};
+                    if (capabilities.zoom) {
+                        minZoomLimit = capabilities.zoom.min || 1.0;
+                        maxZoomLimit = capabilities.zoom.max || 5.0;
+                        currentZoomValue = minZoomLimit;
+                    }
+                }
+                updateZoomIndicator();
             } catch (err) {
                 alert("Не удалось получить доступ к камере устройства.");
+                closePhotoCameraModal();
             }
             updateCameraHUD();
         }
@@ -2311,8 +2452,37 @@
             if (videoStream) {
                 videoStream.getTracks().forEach(track => track.stop());
                 videoStream = null;
+                videoTrack = null;
             }
-            document.getElementById('photo-camera-popup').style.display = 'none';
+            document.getElementById('fullscreen-camera-stage').style.display = 'none';
+        }
+
+        // РЕГУЛИРОВКА ЗУМА КАМЕРЫ (+1x, +0.1x, -0.1x, -1x)
+        function adjustCameraZoom(delta) {
+            if (!videoTrack) return;
+            const capabilities = videoTrack.getCapabilities ? videoTrack.getCapabilities() : {};
+
+            if (capabilities.zoom) {
+                let targetZoom = currentZoomValue + delta;
+                targetZoom = Math.max(minZoomLimit, Math.min(maxZoomLimit, targetZoom));
+                currentZoomValue = targetZoom;
+
+                videoTrack.applyConstraints({
+                    advanced: [{ zoom: currentZoomValue }]
+                }).catch(() => {});
+
+                updateZoomIndicator();
+            } else {
+                // Программный CSS-зум при отсутствии аппаратной поддержки камерой
+                currentZoomValue = Math.max(1.0, Math.min(4.0, currentZoomValue + delta));
+                document.getElementById('camera-video-stream').style.transform = `scale(${currentZoomValue.toFixed(1)})`;
+                updateZoomIndicator();
+            }
+        }
+
+        function updateZoomIndicator() {
+            const badge = document.getElementById('zoom-indicator-text');
+            if (badge) badge.innerText = `${currentZoomValue.toFixed(1)}x`;
         }
 
         function takeCoordinatesPhoto() {
@@ -2323,51 +2493,84 @@
             canvas.width = video.videoWidth || 1280;
             canvas.height = video.videoHeight || 720;
 
-            // 1. Рисуем реальный кадр с камеры
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            // Если был программный зум, масштабируем центральную область
+            if (!videoTrack?.getCapabilities?.()?.zoom && currentZoomValue > 1.0) {
+                const sw = canvas.width / currentZoomValue;
+                const sh = canvas.height / currentZoomValue;
+                const sx = (canvas.width - sw) / 2;
+                const sy = (canvas.height - sh) / 2;
+                ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            }
 
-            // 2. Впекаем служебный тактический штамп (HUD) в пиксели
-            const pad = 20;
-            const boxHeight = 75;
-            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-            ctx.fillRect(pad, canvas.height - boxHeight - pad, canvas.width - (pad * 2), boxHeight);
+            // Впекание служебного штампа ГЛОНАСС в пиксели
+            const pad = 24;
+            const boxH = 80;
+            ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+            ctx.fillRect(pad, canvas.height - boxH - pad, canvas.width - (pad * 2), boxH);
 
             ctx.strokeStyle = "#22C55E";
-            ctx.lineWidth = 2;
-            ctx.strokeRect(pad, canvas.height - boxHeight - pad, canvas.width - (pad * 2), boxHeight);
+            ctx.lineWidth = 2.5;
+            ctx.strokeRect(pad, canvas.height - boxH - pad, canvas.width - (pad * 2), boxH);
 
             ctx.fillStyle = "#FFFFFF";
-            ctx.font = "bold 20px monospace";
-            ctx.fillText(`ГЛОНАСС: ${currentLat.toFixed(6)}°, ${currentLon.toFixed(6)}° (±${currentAccuracy}м)`, pad + 15, canvas.height - pad - 46);
+            ctx.font = "bold 22px monospace";
+            ctx.fillText(`ГЛОНАСС: ${currentLat.toFixed(6)}°, ${currentLon.toFixed(6)}° (±${currentAccuracy}м)`, pad + 16, canvas.height - pad - 48);
 
             ctx.fillStyle = "#8FBC8F";
-            ctx.font = "17px monospace";
+            ctx.font = "18px monospace";
             const timeStr = new Date().toLocaleString('ru-RU');
-            ctx.fillText(`Азимут: ${Math.round(filteredAzimuth)}° | Высота: ${currentAlt}м | Дата: ${timeStr}`, pad + 15, canvas.height - pad - 18);
+            ctx.fillText(`Азимут: ${Math.round(filteredAzimuth)}° | Выс: ${currentAlt}м | ${timeStr}`, pad + 16, canvas.height - pad - 18);
 
-            // Переключаем интерфейс на режим проверки кадра
+            // Переключение на кнопки проверки кадра
             video.style.display = 'none';
             canvas.style.display = 'block';
-            document.getElementById('camera-action-controls').style.display = 'none';
+            document.getElementById('btn-camera-shutter').style.display = 'none';
             document.getElementById('camera-review-controls').style.display = 'grid';
         }
 
         function retakePhoto() {
             document.getElementById('camera-video-stream').style.display = 'block';
             document.getElementById('photo-captured-canvas').style.display = 'none';
-            document.getElementById('camera-action-controls').style.display = 'flex';
+            document.getElementById('btn-camera-shutter').style.display = 'flex';
             document.getElementById('camera-review-controls').style.display = 'none';
         }
 
-        function saveCapturedPhotoToDevice() {
+        // НАДЕЖНОЕ СОХРАНЕНИЕ В ГАЛЕРЕЮ
+        async function saveCapturedPhotoToDevice() {
             const canvas = document.getElementById('photo-captured-canvas');
-            const link = document.createElement('a');
             const dateCode = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-            link.download = `ТАКТИК_Фото_${dateCode}.jpg`;
-            link.href = canvas.toDataURL('image/jpeg', 0.92);
-            link.click();
-            alert("Снимок со спутниковыми координатами сохранен в галерею!");
-            closePhotoCameraModal();
+            const fileName = `ТАКТИК_Фото_${dateCode}.jpg`;
+
+            canvas.toBlob(async (blob) => {
+                if (!blob) return;
+
+                // 1. Попытка через нативный системный диалог смартфона
+                if (navigator.canShare && navigator.canShare({ files: [new File([blob], fileName, { type: 'image/jpeg' })] })) {
+                    try {
+                        await navigator.share({
+                            files: [new File([blob], fileName, { type: 'image/jpeg' })],
+                            title: 'Снимок с координатами'
+                        });
+                        alert("Снимок успешно сохранен в медиатеку!");
+                        closePhotoCameraModal();
+                        return;
+                    } catch (e) {}
+                }
+
+                // 2. Стандартная загрузка через виртуальную ссылку
+                const a = document.createElement('a');
+                a.download = fileName;
+                a.href = URL.createObjectURL(blob);
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+
+                alert("Снимок со спутниковыми координатами сохранен в галерею смартфона!");
+                closePhotoCameraModal();
+            }, 'image/jpeg', 0.94);
         }
 
         // ============================================================
@@ -2738,9 +2941,6 @@
             setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
 
-        // ============================================================
-        // МОДАЛКИ С ЛЕНИВОЙ ОТРИСОВКОЙ РСЯ ВО ВСЕХ ОКНАХ
-        // ============================================================
         function openPopup(id) { 
             document.getElementById(id).style.display = 'flex'; 
 
