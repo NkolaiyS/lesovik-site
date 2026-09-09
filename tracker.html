@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Автономный спутниковый навигатор и тактический компас охотника и рыбака (Лесовик ТАКТИК PRO)» (Версия 8.0 Offline Custom Maps & GIS Edition).
+  Программное обеспечение: «Автономный спутниковый навигатор и тактический компас охотника и рыбака (Лесовик ТАКТИК PRO)» (Версия 8.2 IndexedDB Big-Files & Offline GIS Edition).
   Правообладатель: Худяков Николай Сергеевич.
 -->
 <!DOCTYPE html>
@@ -35,8 +35,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <title>Навигатор охотника и рыбака онлайн: Спутниковая карта на весь экран, компас ГЛОНАСС без интернета, точки стоянок и барометр клева</title>
-    <meta name="description" content="Бесплатный автономный GPS/ГЛОНАСС навигатор для охоты и рыбалки без интернета. Загрузка своих карт KML/KMZ с кварталами и визирами, компас с фильтром Калмана и пузырьковым уровнем, солунарный барометр клева.">
-    <meta name="keywords" content="навигатор для рыбалки без интернета, загрузка карт kml kmz в телефон, карта кварталов лесничества офлайн, компас с уровнем онлайн, фильтр калмана компас, солунарный календарь рыбака, барометр клева рыбы, точки стоянки лодки, лесовик про">
+    <meta name="description" content="Бесплатный автономный GPS/ГЛОНАСС навигатор для охоты и рыбалки без интернета. Загрузка тяжелых карт KML/KMZ без лимитов памяти, компас с фильтром Калмана и пузырьковым уровнем, солунарный барометр клева.">
+    <meta name="keywords" content="навигатор для рыбалки без интернета, загрузка карт kml kmz большого объема, карта кварталов лесничества офлайн, компас с уровнем онлайн, фильтр калмана компас, солунарный календарь рыбака, барометр клева рыбы, точки стоянки лодки, лесовик про">
     <link rel="canonical" href="https://lesovik-pro.ru/tracker.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
 
@@ -47,7 +47,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.jpeg">
 
-    <!-- БИБЛИОТЕКА ДЛЯ ЧТЕНИЯ KMZ (АРХИВОВ KML) В ОФЛАЙНЕ -->
+    <!-- БИБЛИОТЕКА ДЛЯ РАСПАКОВКИ KMZ В ОФЛАЙНЕ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <!-- ОФИЦИАЛЬНОЕ API ЯНДЕКС КАРТ -->
@@ -71,7 +71,7 @@
       "@type": "WebApplication",
       "name": "Лесовик ТАКТИК: Навигатор и компас охотника и рыбака",
       "url": "https://lesovik-pro.ru/tracker.html",
-      "description": "Автономная система полевой навигации с поддержкой загрузки пользовательских карт KML/KMZ, солунарного прогнозирования клева и ориентирования по спутникам ГЛОНАСС.",
+      "description": "Автономная система полевой навигации с поддержкой загрузки больших пользовательских карт KML/KMZ через IndexedDB, солунарного прогнозирования клева и ориентирования по спутникам ГЛОНАСС.",
       "applicationCategory": "NavigationApplication",
       "operatingSystem": "All",
       "inLanguage": "ru-RU"
@@ -166,7 +166,6 @@
             transition: background-color 0.25s, color 0.25s;
         }
 
-        /* ДВУХЭТАЖНАЯ ТАКТИЧЕСКАЯ ШАПКА */
         .glass-header-deck {
             position: sticky;
             top: 0;
@@ -262,7 +261,6 @@
             color: #DC2626;
         }
 
-        /* ГЛАВНАЯ РАБОЧАЯ СЕТКА */
         .main-workspace {
             display: grid;
             grid-template-columns: 440px 1fr;
@@ -283,7 +281,6 @@
             .control-panel { order: 2; }
         }
 
-        /* ЛЕВАЯ ПАНЕЛЬ ПРИБОРОВ */
         .control-panel {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -335,7 +332,6 @@
         .btn-secondary { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); }
         .btn-secondary:hover { background: var(--forest-green); color: #FFF; }
 
-        /* BENTO-СЕТКА ПОГОДЫ И КЛЕВА */
         .bento-weather-deck {
             background: var(--card-sub);
             border: 1px solid var(--border-color);
@@ -397,7 +393,6 @@
             opacity: 0.7;
         }
 
-        /* ПРАВАЯ ПРИБОРНАЯ СЦЕНА */
         .compass-stage-container {
             background-color: var(--compass-bg);
             border: 1px solid var(--border-color);
@@ -414,7 +409,6 @@
             transition: all 0.3s ease;
         }
 
-        /* ПОЛНЫЙ ЭКРАН */
         .compass-stage-container.custom-fullscreen {
             position: fixed !important;
             top: 0 !important;
@@ -431,7 +425,7 @@
             overflow-y: auto !important;
         }
 
-        /* ВЕРТИКАЛЬНЫЙ БЛОК КНОПОК ПО ПРАВОМУ КРАЮ ВВЕРХУ (НЕ ЗАКРЫВАЕТ ЛИМБ) */
+        /* КНОПКИ В ПОЛНОМ ЭКРАНЕ СПРАВА ВВЕРХУ */
         .fs-floating-vertical-side {
             position: absolute;
             right: 12px;
@@ -586,7 +580,7 @@
             z-index: 7;
         }
 
-        /* ПУЗЫРЬКОВЫЙ УРОВЕНЬ ПО ЦЕНТРУ ЛИМБА */
+        /* ПУЗЫРЬКОВЫЙ УРОВЕНЬ */
         .bullseye-level-container {
             position: absolute;
             top: 50%;
@@ -642,7 +636,7 @@
         }
         .target-beacon-card b { color: var(--forest-light); font-size: 14px; }
 
-        /* КАРТА НАВИГАТОРА (ОНЛАЙН И ОФЛАЙН ВЕКТОРНЫЙ ПЛАНШЕТ) */
+        /* КАРТА НАВИГАТОРА */
         #yandex-map-view {
             display: none;
             width: 100%;
@@ -661,7 +655,6 @@
             background: #1B2621;
         }
 
-        /* ПОЛНОСТЬЮ АВТОНОМНЫЙ ХОЛСТ КАРТЫ ДЛЯ ТАЙГИ БЕЗ СЕТИ */
         #offline-vector-canvas {
             display: none;
             position: absolute;
@@ -720,7 +713,6 @@
         }
         .gps-badge b { display: block; font-size: 12px; color: var(--forest-light); }
 
-        /* ПОПАПЫ (МОДАЛКИ) */
         .popup-overlay {
             position: fixed;
             top: 0;
@@ -772,7 +764,6 @@
             overflow: hidden;
         }
 
-        /* СЕТКА ПРОГНОЗА ПОГОДЫ НА 3 ДНЯ */
         .forecast-3days-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -796,7 +787,6 @@
         .forecast-day-temp { font-size: 16px; font-weight: 900; }
         .forecast-day-info { font-size: 10.5px; opacity: 0.85; line-height: 1.3; }
 
-        /* АККОРДЕОН-ЭНЦИКЛОПЕДИЯ */
         .faq-accordion-section {
             max-width: 1600px;
             margin: 25px auto;
@@ -874,15 +864,15 @@
 </head>
 <body onclick="unlockAudioOnFirstGesture()" ontouchstart="unlockAudioOnFirstGesture()">
 
-    <!-- СКРЫТЫЙ INPUT ДЛЯ ЗАГРУЗКИ КАРТЫ ПОЛЬЗОВАТЕЛЯ (KML / KMZ / GEOJSON) -->
+    <!-- СКРЫТЫЙ ВЫБОР ФАЙЛА КАРТЫ -->
     <input type="file" id="custom-map-file-input" accept=".kml,.kmz,.geojson,.json" style="display: none;" onchange="handleCustomMapFileUpload(event)">
 
-    <!-- 1. ПОПАП: УПРАВЛЕНИЕ СВОЕЙ КАРТОЙ (ОФЛАЙН КВАРТАЛЫ И ВИЗИРЫ) -->
+    <!-- 1. ПОПАП: УПРАВЛЕНИЕ СВОЕЙ КАРТОЙ (INDEXEDDB ДЛЯ БОЛЬШИХ ФАЙЛОВ) -->
     <div id="custom-map-popup" class="popup-overlay" onclick="closePopupOuter('custom-map-popup', event)">
         <div class="popup-card">
-            <h3>📁 Моя офлайн-карта (Кварталы, визиры, делянки)</h3>
+            <h3>📁 Моя офлайн-карта (KML / KMZ без лимитов)</h3>
             <div style="font-size: 13px; line-height: 1.6;">
-                <p>Загрузите файл со своей квартальной сетью, границами охотугодий или визирами делянок. Файл сохранится в памяти устройства и будет отображаться на карте <b>даже без интернета</b>.</p>
+                <p>Загрузите карту кварталов, границ угодий или визиров. Благодаря базе IndexedDB теперь поддерживаются тяжелые файлы <b>8 МБ, 20 МБ и более</b>. Они сохраняются в памяти телефона навсегда.</p>
                 <div style="background: var(--card-sub); border: 1px dashed var(--forest-green); padding: 10px; border-radius: 8px; text-align: center;">
                     <div id="custom-map-info-text" style="font-size: 12px; font-weight: 700; color: var(--forest-green); margin-bottom: 8px;">
                         Файл карты не загружен
@@ -940,19 +930,14 @@
         </div>
     </div>
 
-    <!-- 3. ПОПАП: ИНСТРУКЦИЯ ПО НАВИГАТОРУ И КАРТАМ -->
+    <!-- 3. ПОПАП: ИНСТРУКЦИЯ -->
     <div id="usage-guide-popup" class="popup-overlay" onclick="closePopupOuter('usage-guide-popup', event)">
         <div class="popup-card">
             <h3>📖 Инструкция навигатора охотника и рыбака</h3>
             <div style="font-size: 13px; line-height: 1.6;">
-                <p><b>1. Быстрый возврат к лодке или авто:</b><br>
-                Перед выходом на водоем нажмите «⚓ Моя лодка» или «🚗 Моё авто». Оранжевая стрелка и направляющий луч укажут направление, дистанцию в метрах и расчетное время хода.</p>
-
-                <p><b>2. Загрузка своей карты без интернета:</b><br>
-                Нажмите кнопку «📁 Своя карта» и выберите файл `.kml`, `.kmz` или `.geojson`. Ваши квартальные столбы, границы угодий и лесные дороги отобразятся прямо поверх спутниковых координат.</p>
-
-                <p><b>3. Фильтр Калмана и пузырьковый уровень:</b><br>
-                Держите зеленый шарик в центре для исключения погрешности магнитного датчика. Математический фильтр Калмана автоматически сглаживает рывки при ходьбе и на волнах.</p>
+                <p><b>1. Быстрый возврат:</b> Нажмите «⚓ Моя лодка» или «🚗 Моё авто». Оранжевая стрелка и луч укажут прямое направление и дистанцию.</p>
+                <p><b>2. Карты без интернета:</b> Загружайте файлы `.kml` и `.kmz` любого размера. База данных IndexedDB сохранит их прямо на вашем смартфоне.</p>
+                <p><b>3. Фильтр Калмана:</b> Стрелка компаса плавно стабилизируется даже при тряске и ходьбе.</p>
             </div>
 
             <div class="rsya-modal-wrapper">
@@ -969,10 +954,9 @@
             <h3>🐟 Солунарная теория клева и фаза Луны</h3>
             <div style="font-size: 13px; line-height: 1.6;">
                 <div style="background: var(--card-sub); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
-                    Фаза Луны сегодня: <b id="popup-moon-phase" style="color: var(--accent);">Растущая луна</b><br>
+                    Фаза Луны: <b id="popup-moon-phase" style="color: var(--accent);">Растущая луна</b><br>
                     Освещенность диска: <b id="popup-moon-percent">62%</b><br>
-                    Утренняя заря (рассвет): <b id="popup-solar-dawn">--:--</b><br>
-                    Вечерняя заря (закат): <b id="popup-solar-dusk">--:--</b>
+                    Рассвет: <b id="popup-solar-dawn">--:--</b> | Закат: <b id="popup-solar-dusk">--:--</b>
                 </div>
             </div>
 
@@ -988,11 +972,10 @@
     <div id="sos-popup" class="popup-overlay" onclick="closePopupOuter('sos-popup', event)">
         <div class="popup-card" style="border: 2px solid var(--danger);">
             <h3 style="color: var(--danger);">🆘 Экстренная помощь: Спасение 112</h3>
-            
             <div style="background: rgba(220, 38, 38, 0.12); border: 1px solid var(--danger); border-radius: 8px; padding: 10px;">
-                <span style="font-size: 10.5px; font-weight: 800; color: var(--danger); text-transform: uppercase;">Спутниковые координаты ГЛОНАСС для передачи:</span>
+                <span style="font-size: 10.5px; font-weight: 800; color: var(--danger); text-transform: uppercase;">Спутниковые координаты ГЛОНАСС:</span>
                 <div style="font-size: 16px; font-weight: 900; color: var(--text-graphite); margin-top: 4px;" id="sos-coords-preview">
-                    Шир: 61.668793°, Долг: 50.836399° (H: 142м)
+                    Шир: 61.668793°, Долг: 50.836399°
                 </div>
             </div>
 
@@ -1043,7 +1026,6 @@
 
     <div class="main-workspace">
 
-        <!-- ЛЕВАЯ ПАНЕЛЬ ПРИБОРОВ И МЕТЕОСВОДКИ -->
         <aside class="control-panel">
             
             <div class="bento-weather-deck">
@@ -1088,17 +1070,14 @@
                 </button>
             </div>
 
-            <!-- ГЛАВНАЯ КНОПКА ПОЛНОГО ЭКРАНА -->
             <div>
                 <button class="btn-action btn-fullscreen-main" onclick="toggleCustomFullscreen()">⛶ Карта и компас во весь экран</button>
             </div>
 
-            <!-- КНОПКА ЭКСТРЕННОЙ ПОМОЩИ SOS -->
             <div>
                 <button class="btn-action btn-sos" onclick="openSOSDialog()">🆘 SOS: Спасение 112 и координаты</button>
             </div>
 
-            <!-- БЫСТРЫЙ ВОЗВРАТ НА ВОДЕ И В ЛЕСУ -->
             <div>
                 <div class="panel-section-title">
                     <span>1. Запомнить стоянку (1 тап)</span>
@@ -1113,7 +1092,6 @@
                 </div>
             </div>
 
-            <!-- МАРКЕРЫ МЕСТ -->
             <div>
                 <div class="panel-section-title">
                     <span>2. Тактические маркеры мест</span>
@@ -1136,7 +1114,6 @@
                 </div>
             </div>
 
-            <!-- ТАКТИЧЕСКИЙ ЭКСПОРТ KML И ЗАГРУЗКА КАРТЫ -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <button class="btn-action btn-boat" onclick="exportTrackToKML()">🗺️ Скачать KML</button>
                 <button class="btn-action btn-secondary" onclick="openPopup('custom-map-popup')">📁 Своя карта</button>
@@ -1144,10 +1121,8 @@
 
         </aside>
 
-        <!-- ПРАВАЯ ЧАСТЬ: ПРИБОРНАЯ СЦЕНА -->
         <main class="compass-stage-container" id="compass-stage">
             
-            <!-- ВЕРТИКАЛЬНЫЙ БЛОК КНОПОК ПО ПРАВОМУ КРАЮ ВВЕРХУ -->
             <div class="fs-floating-vertical-side">
                 <button class="fs-side-btn" onclick="toggleCustomFullscreen()">
                     <span>✕</span>
@@ -1159,7 +1134,6 @@
                 </button>
             </div>
 
-            <!-- ПЕРЕКЛЮЧАТЕЛЬ ЭКРАНОВ: КОМПАС-ВИЗИР / КАРТА -->
             <div class="view-mode-tabs">
                 <button id="tab-btn-compass" class="view-tab-btn active" onclick="switchMainView('compass')">🧭 Компас-Визир</button>
                 <button id="tab-btn-map" class="view-tab-btn" onclick="switchMainView('map')">🗺️ Навигатор-Карта</button>
@@ -1178,7 +1152,7 @@
                     <button onclick="stopNavigationToBeacon()" style="background:transparent; border:1px solid #FFF; color:#FFF; border-radius:4px; font-size:10px; margin-left:8px; padding:2px 6px; cursor:pointer;">Отмена</button>
                 </div>
 
-                <!-- ДИСК КОМПАСА С УРОВНЕМ-ШАРИКОМ ПО ЦЕНТРУ -->
+                <!-- ДИСК КОМПАСА С УРОВНЕМ -->
                 <div class="compass-dial-container" id="compass-dial-view">
                     
                     <svg id="beacon-target-arrow-layer" viewBox="0 0 400 400">
@@ -1189,8 +1163,7 @@
                     <div class="crosshair-line-v"></div>
                     <div class="crosshair-line-h"></div>
 
-                    <!-- ПУЗЫРЬКОВЫЙ УРОВЕНЬ ПО ЦЕНТРУ ЛИМБА -->
-                    <div class="bullseye-level-container" title="Пузырьковый уровень горизонта: держите шарик в центре для идеальной точности">
+                    <div class="bullseye-level-container" title="Пузырьковый уровень горизонта">
                         <div class="bullseye-level-target"></div>
                         <div class="level-bubble" id="spirit-level-bubble"></div>
                     </div>
@@ -1208,7 +1181,7 @@
                     </svg>
                 </div>
 
-                <!-- КАРТА НАВИГАТОРА (ЯНДЕКС КАРТЫ + АВТОНОМНЫЙ ХОЛСТ) -->
+                <!-- КАРТА НАВИГАТОРА -->
                 <div id="yandex-map-view">
                     <div id="yandex-map-canvas"></div>
                     <canvas id="offline-vector-canvas"></canvas>
@@ -1219,7 +1192,6 @@
                     </div>
                 </div>
 
-                <!-- ПАНЕЛЬ СПУТНИКОВЫХ ДАННЫХ -->
                 <div class="gps-overlay-grid">
                     <div class="gps-badge">Широта:<b id="gps-lat-label">61.668793°</b></div>
                     <div class="gps-badge">Долгота:<b id="gps-lon-label">50.836399°</b></div>
@@ -1390,6 +1362,58 @@
     <script>
         const WEATHER_API_KEY = '247c067b320c444c869130443262805';
 
+        // --- ЛОКАЛЬНАЯ БАЗА INDEXEDDB ДЛЯ ТЯЖЕЛЫХ КАРТ (8-50+ МБ) ---
+        const DB_NAME = 'LesovikTaktikDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'custom_map_store';
+
+        function openMapDatabase() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    }
+                };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async function saveMapToIndexedDB(geojson, fileName) {
+            const db = await openMapDatabase();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                store.put({ id: 'active_custom_map', data: geojson, name: fileName, timestamp: Date.now() });
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+
+        async function loadMapFromIndexedDB() {
+            const db = await openMapDatabase();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.get('active_custom_map');
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async function deleteMapFromIndexedDB() {
+            const db = await openMapDatabase();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                store.delete('active_custom_map');
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+
         // --- МАТЕМАТИЧЕСКИЙ ФИЛЬТР КАЛМАНА ДЛЯ КОМПАСА ---
         class CompassKalmanFilter {
             constructor(q = 0.02, r = 0.4) {
@@ -1438,7 +1462,6 @@
         let tacticalPoints = [];
         let trackBreadcrumbs = [];
 
-        // ПОЛЬЗОВАТЕЛЬСКИЙ ВЕКТОРНЫЙ СЛОЙ (KML / KMZ / GEOJSON)
         let customGeoData = null;
         let isOfflineCanvasActive = false;
 
@@ -1458,7 +1481,6 @@
         let isSolunarAdRendered = false;
         let isSosAdRendered = false;
 
-        // ПЕРЕКЛЮЧАТЕЛЬ ТЕМ
         function toggleTheme() {
             const root = document.documentElement;
             const currentTheme = root.getAttribute('data-theme');
@@ -1471,7 +1493,6 @@
             }
         }
 
-        // РЕГУЛИРОВКА ЯРКОСТИ «КРАСНЫЙ ГЛАЗ»
         function cycleNightVision() {
             nightVisionLevel = (nightVisionLevel + 1) % 4;
             const root = document.documentElement;
@@ -1496,7 +1517,6 @@
             }
         }
 
-        // РАЗБЛОКИРОВКА АУДИО
         function unlockAudioOnFirstGesture() {
             if (!audioCtx) {
                 const AudioClass = window.AudioContext || window.webkitAudioContext;
@@ -1507,7 +1527,6 @@
             }
         }
 
-        // КАЛИБРОВКА НУЛЯ НА СЕВЕР
         function calibrateZeroToNorth() {
             unlockAudioOnFirstGesture();
             manualZeroOffset = (360 - filteredAzimuth) % 360;
@@ -1516,7 +1535,6 @@
             updateCompassDisplay();
         }
 
-        // ПОСТРОЕНИЕ ДИСКА КОМПАСА
         function buildSvgCompassTicks() {
             const group = document.getElementById('svg-ticks-group');
             group.innerHTML = '';
@@ -1582,7 +1600,6 @@
             return `СЗ: ${(360 - deg).toFixed(1)}°`;
         }
 
-        // ОБРАБОТКА ДАТЧИКОВ (КАЛМАН + ПУЗЫРЬКОВЫЙ УРОВЕНЬ)
         function handleOrientation(e) {
             let heading = null;
             if (e.webkitCompassHeading !== undefined) {
@@ -1652,7 +1669,6 @@
             }
         }
 
-        // ДИСТАНЦИЯ И АЗИМУТ
         function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
             const R = 6371000;
             const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -1670,7 +1686,6 @@
             return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
         }
 
-        // БЫСТРАЯ ФИКСАЦИЯ ЛОДКИ / АВТО / ЛАГЕРЯ
         function setReturnBeacon(name) {
             unlockAudioOnFirstGesture();
             activeReturnBeacon = {
@@ -1723,7 +1738,6 @@
             }
         }
 
-        // ТАКТИЧЕСКИЕ ТОЧКИ
         function saveCurrentTacticalPoint() {
             const val = document.getElementById('tactical-point-select').value;
             saveSpecificPoint(`${val} #${tacticalPoints.length + 1}`);
@@ -1798,13 +1812,16 @@
         }
 
         // ============================================================
-        // ОБРАБОТКА ПОЛЬЗОВАТЕЛЬСКИХ КАРТ (KML, KMZ, GEOJSON)
+        // ОБРАБОТКА И ХРАНЕНИЕ ТЯЖЕЛЫХ КАРТ (KML / KMZ) БЕЗ ЛИМИТОВ
         // ============================================================
         async function handleCustomMapFileUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
 
             const name = file.name.toLowerCase();
+            const info = document.getElementById('custom-map-info-text');
+            if (info) info.innerHTML = `⏳ <i>Обработка файла (${(file.size / (1024*1024)).toFixed(1)} МБ)...</i>`;
+
             try {
                 let geojson = null;
 
@@ -1815,7 +1832,7 @@
                     const zip = new JSZip();
                     const unzipped = await zip.loadAsync(file);
                     const kmlFile = Object.values(unzipped.files).find(f => f.name.toLowerCase().endsWith('.kml'));
-                    if (!kmlFile) throw new Error("Внутри KMZ не найден KML файл");
+                    if (!kmlFile) throw new Error("Внутри архива KMZ не найден KML файл");
                     const kmlText = await kmlFile.async("string");
                     geojson = parseKmlToGeoJson(kmlText);
                 } else if (name.endsWith('.kml')) {
@@ -1825,95 +1842,117 @@
 
                 if (geojson && geojson.features && geojson.features.length > 0) {
                     customGeoData = geojson;
-                    localStorage.setItem('lesovik_custom_map_data', JSON.stringify(geojson));
-                    localStorage.setItem('lesovik_custom_map_name', file.name);
 
-                    updateCustomMapInfoUI(file.name, geojson.features.length);
+                    // Сохраняем тяжелый файл в IndexedDB (без ограничения 5 МБ)
+                    await saveMapToIndexedDB(geojson, file.name);
+
+                    updateCustomMapInfoUI(file.name, geojson.features.length, file.size);
                     applyCustomGeoDataToYandexMap();
                     redrawOfflineVectorCanvas();
-                    alert(`Карта «${file.name}» успешно загружена (${geojson.features.length} объектов) и сохранена в память!`);
+                    alert(`Карта «${file.name}» успешно загружена (${geojson.features.length} объектов) и сохранена в память телефона!`);
                 } else {
-                    alert("Не удалось распознать векторные объекты в файле.");
+                    alert("Не удалось распознать векторные объекты в файле. Проверьте координаты.");
+                    if (info) info.innerText = 'Ошибка: объекты не найдены';
                 }
             } catch (err) {
                 console.error(err);
                 alert("Ошибка обработки карты. Проверьте корректность файла KML/KMZ.");
+                if (info) info.innerText = 'Ошибка чтения файла';
             }
         }
 
-        // ПАРСИНГ KML В GEOJSON ДЛЯ АВТОНОМНОЙ РАБОТЫ
+        // НАДЕЖНЫЙ ПАРСИНГ СЛОЖНЫХ KML (С ПОДДЕРЖКОЙ MULTIGEOMETRY)
         function parseKmlToGeoJson(kmlText) {
             const parser = new DOMParser();
             const xml = parser.parseFromString(kmlText, 'text/xml');
+            
+            const parseError = xml.querySelector('parsererror');
+            if (parseError) {
+                console.error('XML Parse Error:', parseError.textContent);
+                return null;
+            }
+
             const placemarks = xml.querySelectorAll('Placemark');
             const features = [];
 
             placemarks.forEach(pm => {
-                const name = pm.querySelector('name') ? pm.querySelector('name').textContent : 'Объект';
-                
-                // Полигоны (выделы/кварталы)
-                const polygon = pm.querySelector('Polygon coordinates');
-                if (polygon) {
-                    const rawCoords = polygon.textContent.trim().split(/\s+/);
-                    const ring = rawCoords.map(c => {
-                        const [lon, lat] = c.split(',').map(Number);
-                        return [lon, lat];
-                    }).filter(c => !isNaN(c[0]) && !isNaN(c[1]));
-                    if (ring.length > 2) {
-                        features.push({
-                            type: 'Feature',
-                            properties: { name: name, type: 'polygon' },
-                            geometry: { type: 'Polygon', coordinates: [ring] }
-                        });
-                    }
-                }
+                const nameEl = pm.querySelector('name');
+                const name = nameEl ? nameEl.textContent.trim() : 'Объект';
 
-                // Линии (просеки/визиры/границы)
-                const lineString = pm.querySelector('LineString coordinates');
-                if (lineString) {
-                    const rawCoords = lineString.textContent.trim().split(/\s+/);
-                    const line = rawCoords.map(c => {
-                        const [lon, lat] = c.split(',').map(Number);
-                        return [lon, lat];
-                    }).filter(c => !isNaN(c[0]) && !isNaN(c[1]));
-                    if (line.length > 1) {
-                        features.push({
-                            type: 'Feature',
-                            properties: { name: name, type: 'line' },
-                            geometry: { type: 'LineString', coordinates: line }
-                        });
-                    }
-                }
+                // 1. Полигоны (включая MultiGeometry)
+                const polygons = pm.querySelectorAll('Polygon');
+                polygons.forEach(poly => {
+                    const outerCoordsEl = poly.querySelector('outerBoundaryIs LinearRing coordinates');
+                    if (outerCoordsEl) {
+                        const rawCoords = outerCoordsEl.textContent.trim().split(/\s+/);
+                        const ring = rawCoords.map(c => {
+                            const parts = c.split(',').map(Number);
+                            return [parts[0], parts[1]]; // [lon, lat]
+                        }).filter(c => !isNaN(c[0]) && !isNaN(c[1]));
 
-                // Точки (столбы/стоянки)
-                const point = pm.querySelector('Point coordinates');
-                if (point) {
-                    const [lon, lat] = point.textContent.trim().split(',').map(Number);
-                    if (!isNaN(lon) && !isNaN(lat)) {
-                        features.push({
-                            type: 'Feature',
-                            properties: { name: name, type: 'point' },
-                            geometry: { type: 'Point', coordinates: [lon, lat] }
-                        });
+                        if (ring.length > 2) {
+                            features.push({
+                                type: 'Feature',
+                                properties: { name: name, type: 'polygon' },
+                                geometry: { type: 'Polygon', coordinates: [ring] }
+                            });
+                        }
                     }
-                }
+                });
+
+                // 2. Линии (просеки, визиры, реки, дороги)
+                const lineStrings = pm.querySelectorAll('LineString');
+                lineStrings.forEach(ls => {
+                    const coordsEl = ls.querySelector('coordinates');
+                    if (coordsEl) {
+                        const rawCoords = coordsEl.textContent.trim().split(/\s+/);
+                        const line = rawCoords.map(c => {
+                            const parts = c.split(',').map(Number);
+                            return [parts[0], parts[1]];
+                        }).filter(c => !isNaN(c[0]) && !isNaN(c[1]));
+
+                        if (line.length > 1) {
+                            features.push({
+                                type: 'Feature',
+                                properties: { name: name, type: 'line' },
+                                geometry: { type: 'LineString', coordinates: line }
+                            });
+                        }
+                    }
+                });
+
+                // 3. Точки
+                const points = pm.querySelectorAll('Point');
+                points.forEach(pt => {
+                    const coordsEl = pt.querySelector('coordinates');
+                    if (coordsEl) {
+                        const parts = coordsEl.textContent.trim().split(',').map(Number);
+                        if (!isNaN(parts[0]) && !isNaN(parts[1])) {
+                            features.push({
+                                type: 'Feature',
+                                properties: { name: name, type: 'point' },
+                                geometry: { type: 'Point', coordinates: [parts[0], parts[1]] }
+                            });
+                        }
+                    }
+                });
             });
 
             return { type: 'FeatureCollection', features: features };
         }
 
-        function updateCustomMapInfoUI(fileName, count) {
+        function updateCustomMapInfoUI(fileName, count, sizeBytes = 0) {
             const info = document.getElementById('custom-map-info-text');
             if (info) {
-                info.innerHTML = `🟢 <b>${fileName}</b> (${count} гео-объектов). Сохранено в офлайн-память.`;
+                const sizeStr = sizeBytes > 0 ? `(${(sizeBytes / (1024*1024)).toFixed(1)} МБ)` : '';
+                info.innerHTML = `🟢 <b>${fileName}</b> ${sizeStr}<br><small style="color:var(--forest-light);">${count} объектов сохранено в базе IndexedDB</small>`;
             }
         }
 
-        function clearCustomMapLayer() {
+        async function clearCustomMapLayer() {
             if (confirm("Удалить загруженную пользовательскую карту из памяти?")) {
                 customGeoData = null;
-                localStorage.removeItem('lesovik_custom_map_data');
-                localStorage.removeItem('lesovik_custom_map_name');
+                await deleteMapFromIndexedDB();
 
                 const info = document.getElementById('custom-map-info-text');
                 if (info) info.innerText = 'Файл карты не загружен';
@@ -1923,7 +1962,7 @@
                     yCustomGeoObject = null;
                 }
                 redrawOfflineVectorCanvas();
-                alert("Карта удалена.");
+                alert("Карта удалена из памяти.");
             }
         }
 
@@ -1966,7 +2005,7 @@
         }
 
         // ============================================================
-        // АВТОНОМНЫЙ ВЕКТОРНЫЙ ПЛАНШЕТ ДЛЯ ТАЙГИ БЕЗ ИНТЕРНЕТА
+        // АВТОНОМНЫЙ ВЕКТОРНЫЙ ПЛАНШЕТ С АВТОМАСШТАБИРОВАНИЕМ
         // ============================================================
         function toggleOfflineCanvasMode() {
             isOfflineCanvasActive = !isOfflineCanvasActive;
@@ -2004,7 +2043,6 @@
             const cx = w / 2;
             const cy = h / 2;
 
-            // Очистка темным фоном для экономии батареи в лесу
             ctx.fillStyle = "#0A100D";
             ctx.fillRect(0, 0, w, h);
 
@@ -2019,8 +2057,7 @@
                 ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
             }
 
-            // Масштаб: ~100 метров на 50 пикселей
-            const meterScale = 0.5; // пикселей на метр
+            const meterScale = 0.5;
 
             function toScreenXY(lat, lon) {
                 const dNorth = (lat - currentLat) * 111320;
@@ -2028,12 +2065,12 @@
                 return [cx + dEast * meterScale, cy - dNorth * meterScale];
             }
 
-            // 1. Отрисовка загруженной карты (KML / KMZ / GeoJSON)
+            // 1. Отрисовка загруженной карты KML/KMZ
             if (customGeoData && customGeoData.features) {
                 customGeoData.features.forEach(f => {
                     const geom = f.geometry;
                     ctx.strokeStyle = "#38BDF8";
-                    ctx.fillStyle = "rgba(56, 189, 248, 0.2)";
+                    ctx.fillStyle = "rgba(56, 189, 248, 0.18)";
                     ctx.lineWidth = 2;
 
                     if (geom.type === 'LineString') {
@@ -2077,7 +2114,7 @@
                 ctx.stroke();
             }
 
-            // 3. Отрисовка сохраненных точек (стоянки / метки)
+            // 3. Точки стоянок и меток
             tacticalPoints.forEach(pt => {
                 const [sx, sy] = toScreenXY(pt.lat, pt.lon);
                 ctx.fillStyle = "#F59E0B";
@@ -2089,7 +2126,7 @@
                 ctx.fillText(pt.name, sx + 8, sy + 3);
             });
 
-            // 4. Позиция пользователя (центр)
+            // 4. Позиция пользователя (ГЛОНАСС центр)
             ctx.fillStyle = "#22C55E";
             ctx.beginPath();
             ctx.arc(cx, cy, 7, 0, Math.PI * 2);
@@ -2098,7 +2135,7 @@
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // Вектор текущего курса
+            // Вектор курса
             const headingRad = (filteredAzimuth - 90) * Math.PI / 180;
             ctx.strokeStyle = "#DC2626";
             ctx.lineWidth = 2.5;
@@ -2189,7 +2226,6 @@
                 btnCompass.classList.remove('active');
                 btnMap.classList.add('active');
 
-                // Проверяем онлайн статус
                 if (!navigator.onLine) {
                     toggleOfflineCanvasMode();
                 } else {
@@ -2204,7 +2240,6 @@
             }
         }
 
-        // РАЗВОРОТ НА ПОЛНЫЙ ЭКРАН
         function toggleCustomFullscreen() {
             unlockAudioOnFirstGesture();
             const stage = document.getElementById('compass-stage');
@@ -2226,7 +2261,6 @@
             }
         }
 
-        // СПУТНИКОВЫЙ GPS/ГЛОНАСС
         function initGPS() {
             if ("geolocation" in navigator) {
                 navigator.geolocation.watchPosition(
@@ -2267,7 +2301,6 @@
             }
         }
 
-        // ЗАЩИТА ОТ СЛАБОГО ИНТЕРНЕТА И КЕШИРОВАНИЕ ПОГОДЫ
         async function fetchWeather(query) {
             const cachedWeather = localStorage.getItem('lesovik_cached_weather_3days');
             const cachedTime = localStorage.getItem('lesovik_cached_weather_time');
@@ -2430,7 +2463,6 @@
             document.getElementById('popup-solar-dusk').innerText = '21:38';
         }
 
-        // ЭКСПОРТ KML
         function exportTrackToKML() {
             if (tacticalPoints.length === 0 && trackBreadcrumbs.length === 0) {
                 alert("Нет данных для экспорта!");
@@ -2478,7 +2510,6 @@
             setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
 
-        // МОДАЛКИ С ЛЕНИВОЙ ОТРИСОВКОЙ РСЯ
         function openPopup(id) { 
             document.getElementById(id).style.display = 'flex'; 
 
@@ -2562,7 +2593,7 @@
             item.classList.toggle('active');
         }
 
-        function loadSavedStorage() {
+        async function loadSavedStorage() {
             try {
                 const pts = localStorage.getItem('lesovik_tactical_points');
                 if (pts) tacticalPoints = JSON.parse(pts);
@@ -2579,12 +2610,15 @@
                 const theme = localStorage.getItem('lesovik_theme');
                 if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
 
-                // Восстановление своей карты из офлайн-памяти
-                const savedMap = localStorage.getItem('lesovik_custom_map_data');
-                const savedMapName = localStorage.getItem('lesovik_custom_map_name');
-                if (savedMap) {
-                    customGeoData = JSON.parse(savedMap);
-                    updateCustomMapInfoUI(savedMapName || 'Офлайн-карта', customGeoData.features.length);
+                // Восстановление тяжелой карты из IndexedDB
+                try {
+                    const savedDbRecord = await loadMapFromIndexedDB();
+                    if (savedDbRecord && savedDbRecord.data) {
+                        customGeoData = savedDbRecord.data;
+                        updateCustomMapInfoUI(savedDbRecord.name || 'Офлайн-карта', customGeoData.features.length);
+                    }
+                } catch(dbErr) {
+                    console.warn("IndexedDB недоступен:", dbErr);
                 }
 
                 renderPointsList();
