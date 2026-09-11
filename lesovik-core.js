@@ -33,6 +33,7 @@
         "HNS-1XG4-JL61C0": new Date(2026, 8, 10), // Терянское лесничество 10 сентября
         "HNS-MCER-ZB2MG6": new Date(2026, 8, 10), // Терянское лесничество 10 сентября ссылка
         "HNS-GTST-KSRJIE": new Date(2026, 8, 15), // Игорь на 7 дней до 15 сентября
+        "HNS-GGQK-8JRTNF": new Date(2026, 8, 17), // Игорь на 7 дней до 17 сентября
     };
 
     function generateWebDeviceId() {
