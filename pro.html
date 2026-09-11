@@ -1,0 +1,570 @@
+<!-- 
+  (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
+  Свидетельство ИНН: 111801576622.
+  Программный комплекс: «Электронная буссоль БГ-ХНС PRO для лесоустройства и отвода лесосек».
+  Официальный лендинг: https://lesovik-pro.ru/pro.html
+-->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Буссоль для лесников БГ-ХНС PRO • Отвод лесосек и экспорт в KML для ФГИС ЛК в смартфоне</title>
+    <meta name="description" content="Профессиональное приложение для отвода и таксации лесосек прямо со смартфона без интернета. Оптический визир через камеру, расчет площади участка, вычет неэксплуатационных зон и экспорт в KML/KMZ для ФГИС ЛК.">
+    <meta name="keywords" content="буссоль для лесников, буссоль для телефона, программа для отвода лесосек, экспорт делянки в kml фгис лк, электронная буссоль бг-хнс pro, лесоустроительные приборы, лесовик про">
+    <link rel="canonical" href="https://lesovik-pro.ru/pro.html">
+    <link rel="icon" type="image/jpeg" href="logo.jpeg">
+
+    <!-- Open Graph для красивого превью в мессенджерах -->
+    <meta property="og:title" content="Буссоль БГ-ХНС PRO • Замените громоздкие приборы смартфоном">
+    <meta property="og:description" content="Отвод лесосек, съемка делянок камерой, расчет площади и экспорт в KML для ФГИС ЛК полностью без интернета в тайге.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://lesovik-pro.ru/pro.html">
+    <meta property="og:image" content="https://lesovik-pro.ru/logo.jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+        :root {
+            --bg-main: #0B120E;
+            --bg-card: #131E18;
+            --bg-card-hover: #1A2921;
+            --border-color: #23372B;
+            --forest-green: #2D5A27;
+            --forest-light: #8FBC8F;
+            --accent-orange: #E67E22;
+            --text-light: #F4F7F4;
+            --text-muted: #A3B8A8;
+            --vk-color: #0077FF;
+            --max-color: #2563EB;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-light);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* НАВИГАЦИОННАЯ ШАПКА */
+        header {
+            position: sticky; top: 0; z-index: 1000;
+            background: rgba(11, 18, 14, 0.92);
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 24px;
+        }
+        .header-wrap {
+            max-width: 1240px; margin: 0 auto;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .brand {
+            display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit;
+        }
+        .brand img {
+            width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--forest-light);
+        }
+        .brand-text b {
+            font-family: 'Merriweather', serif; font-size: 18px; color: var(--forest-light); display: block;
+        }
+        .brand-text span {
+            font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;
+        }
+        .header-actions {
+            display: flex; align-items: center; gap: 10px;
+        }
+        .btn-header-chat {
+            padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+        .btn-vk { background: var(--vk-color); color: #FFF; }
+        .btn-max { background: var(--max-color); color: #FFF; }
+        .btn-header-chat:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        @media (max-width: 600px) {
+            .btn-max { display: none; }
+            .brand-text span { display: none; }
+        }
+
+        /* HERO СЕКЦИЯ */
+        .hero-section {
+            max-width: 1240px; margin: 50px auto 70px; padding: 0 24px;
+            display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 50px; align-items: center;
+        }
+        @media (max-width: 960px) {
+            .hero-section { grid-template-columns: 1fr; margin-top: 30px; gap: 40px; text-align: center; }
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(45, 90, 39, 0.25); border: 1px solid var(--forest-light);
+            color: var(--forest-light); font-size: 12px; font-weight: 800; text-transform: uppercase;
+            padding: 6px 14px; border-radius: 20px; letter-spacing: 0.5px; margin-bottom: 20px;
+        }
+        .hero-title {
+            font-family: 'Merriweather', serif; font-size: 42px; line-height: 1.25;
+            color: #FFFFFF; margin-bottom: 20px; font-weight: 900;
+        }
+        .hero-title span { color: var(--accent-orange); }
+        @media (max-width: 600px) { .hero-title { font-size: 28px; } }
+        .hero-subtitle {
+            font-size: 17px; color: var(--text-muted); margin-bottom: 30px; line-height: 1.6;
+        }
+        .hero-cta-buttons {
+            display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 35px;
+        }
+        @media (max-width: 960px) {
+            .hero-cta-buttons { justify-content: center; }
+        }
+        .btn-cta-main {
+            background: linear-gradient(135deg, #E67E22 0%, #D35400 100%);
+            color: #FFFFFF; font-weight: 800; font-size: 15px; text-transform: uppercase;
+            padding: 16px 28px; border-radius: 10px; text-decoration: none;
+            box-shadow: 0 6px 20px rgba(230, 126, 34, 0.35); transition: 0.2s;
+            display: inline-flex; align-items: center; gap: 10px;
+        }
+        .btn-cta-main:hover { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(230, 126, 34, 0.5); }
+        .btn-cta-sub {
+            background: transparent; border: 1.5px solid var(--border-color); color: var(--text-light);
+            font-weight: 700; font-size: 14px; padding: 16px 24px; border-radius: 10px;
+            text-decoration: none; transition: 0.2s;
+        }
+        .btn-cta-sub:hover { border-color: var(--forest-light); color: var(--forest-light); }
+
+        .hero-stats {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; border-top: 1px solid var(--border-color); padding-top: 24px;
+        }
+        .hero-stat-item b {
+            display: block; font-size: 22px; color: var(--forest-light); font-weight: 900;
+        }
+        .hero-stat-item span {
+            font-size: 12px; color: var(--text-muted);
+        }
+
+        /* ТЕЛЕФОННЫЙ МОКАП ДЛЯ СКРИНШОТОВ (9:16) */
+        .phone-mockup-wrapper {
+            position: relative; display: flex; justify-content: center; align-items: center;
+        }
+        .phone-case {
+            width: 320px; height: 650px; background: #000;
+            border: 10px solid #23372B; border-radius: 46px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(45,90,39,0.25);
+            position: relative; overflow: hidden; display: flex; flex-direction: column;
+        }
+        .phone-notch {
+            width: 120px; height: 22px; background: #23372B; border-radius: 0 0 14px 14px;
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 10;
+        }
+        .phone-screen {
+            width: 100%; height: 100%; object-fit: cover; background: #131E18;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px;
+        }
+        .phone-placeholder-badge {
+            background: var(--forest-green); color: #FFF; padding: 6px 12px; border-radius: 20px;
+            font-size: 11px; font-weight: 800; margin-bottom: 12px; text-transform: uppercase;
+        }
+
+        /* СЕКЦИИ САЙТА */
+        section {
+            max-width: 1240px; margin: 0 auto 90px; padding: 0 24px;
+        }
+        .section-header {
+            text-align: center; margin-bottom: 50px;
+        }
+        .section-tag {
+            color: var(--accent-orange); font-size: 12px; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; display: block;
+        }
+        .section-title {
+            font-family: 'Merriweather', serif; font-size: 32px; color: #FFFFFF; font-weight: 800;
+        }
+        @media (max-width: 600px) { .section-title { font-size: 24px; } }
+
+        /* ТАБЛИЦА СРАВНЕНИЯ */
+        .comparison-table-wrap {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: 16px; overflow-x: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        table.comparison-table {
+            width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; min-width: 600px;
+        }
+        table.comparison-table th {
+            background: #192921; padding: 18px 22px; font-weight: 800; border-bottom: 2px solid var(--border-color);
+        }
+        table.comparison-table td {
+            padding: 16px 22px; border-bottom: 1px solid var(--border-color); vertical-align: top;
+        }
+        .col-bad { color: #E74C3C; }
+        .col-pro { color: #2ECC71; font-weight: 700; background: rgba(45, 90, 39, 0.1); }
+
+        /* СЕТКА ПРЕИМУЩЕСТВ И ФОТО-МОДУЛЕЙ */
+        .features-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+        }
+        @media (max-width: 900px) { .features-grid { grid-template-columns: 1fr; } }
+        .feature-card {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 30px 24px; display: flex; flex-direction: column;
+            transition: transform 0.25s, border-color 0.25s;
+        }
+        .feature-card:hover {
+            transform: translateY(-4px); border-color: var(--forest-light);
+        }
+        .feature-icon {
+            font-size: 36px; margin-bottom: 18px; line-height: 1;
+        }
+        .feature-card h3 {
+            font-family: 'Merriweather', serif; font-size: 19px; color: #FFF; margin-bottom: 12px;
+        }
+        .feature-card p {
+            font-size: 14px; color: var(--text-muted); line-height: 1.6;
+        }
+
+        /* ГАЛЕРЕЯ СКРИНШОТОВ (3 ВЕРТИКАЛЬНЫХ ФОТО) */
+        .screens-gallery-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px;
+        }
+        @media (max-width: 900px) { .screens-gallery-grid { grid-template-columns: 1fr; max-width: 380px; margin: 0 auto; } }
+        .screen-card-box {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: 20px; padding: 20px; text-align: center;
+        }
+        .screen-img-frame {
+            width: 100%; height: 480px; border-radius: 14px; overflow: hidden;
+            background: #0D1511; border: 1px solid var(--border-color);
+            margin-bottom: 16px; position: relative;
+        }
+        .screen-img-frame img {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+        }
+        .screen-stub {
+            width: 100%; height: 100%; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 20px; color: var(--text-muted);
+            background: radial-gradient(circle at center, #192921 0%, #0D1511 100%);
+        }
+        .screen-card-box h4 {
+            font-family: 'Merriweather', serif; font-size: 16px; color: #FFF; margin-bottom: 6px;
+        }
+        .screen-card-box p {
+            font-size: 12.5px; color: var(--text-muted); line-height: 1.4;
+        }
+
+        /* БЛОК АВТОРА / ДОВЕРИЯ */
+        .author-box {
+            background: linear-gradient(135deg, #131E18 0%, #0E1612 100%);
+            border: 2px solid var(--forest-green); border-radius: 20px; padding: 40px;
+            display: grid; grid-template-columns: 180px 1fr; gap: 35px; align-items: center;
+        }
+        @media (max-width: 800px) { .author-box { grid-template-columns: 1fr; text-align: center; padding: 25px; } }
+        .author-avatar {
+            width: 160px; height: 160px; border-radius: 50%; border: 3px solid var(--forest-light);
+            object-fit: cover; margin: 0 auto;
+        }
+        .author-info h3 {
+            font-family: 'Merriweather', serif; font-size: 24px; color: #FFF; margin-bottom: 8px;
+        }
+        .author-post {
+            color: var(--forest-light); font-size: 13px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px; margin-bottom: 14px;
+        }
+        .author-desc {
+            font-size: 14.5px; color: var(--text-muted); line-height: 1.6;
+        }
+
+        /* ФИНАЛЬНЫЙ БЛОК ДЛЯ ЗАКАЗА И СВЯЗИ */
+        .cta-final-box {
+            background: radial-gradient(circle at top right, rgba(230,126,34,0.15), transparent 70%), var(--bg-card);
+            border: 2px solid var(--accent-orange); border-radius: 24px; padding: 50px 30px;
+            text-align: center; max-width: 900px; margin: 0 auto;
+        }
+        .cta-final-box h2 {
+            font-family: 'Merriweather', serif; font-size: 34px; color: #FFF; margin-bottom: 14px; font-weight: 900;
+        }
+        @media (max-width: 600px) { .cta-final-box h2 { font-size: 24px; } }
+        .cta-final-box p {
+            font-size: 16px; color: var(--text-muted); margin-bottom: 30px; max-width: 650px; margin-left: auto; margin-right: auto;
+        }
+        .contact-channel-row {
+            display: flex; justify-content: center; flex-wrap: wrap; gap: 14px;
+        }
+        .btn-channel {
+            padding: 16px 28px; border-radius: 12px; font-size: 14px; font-weight: 800;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-channel:hover { transform: translateY(-2px); }
+        .btn-channel-vk {
+            background: #0077FF; color: #FFF; box-shadow: 0 6px 20px rgba(0,119,255,0.35);
+        }
+        .btn-channel-max {
+            background: #2563EB; color: #FFF; box-shadow: 0 6px 20px rgba(37,99,235,0.35);
+        }
+        .btn-channel-mail {
+            background: #2D3E36; color: #FFF; border: 1px solid var(--border-color);
+        }
+
+        /* ПОДВАЛ */
+        footer {
+            border-top: 1px solid var(--border-color); padding: 40px 24px 60px;
+            text-align: center; color: var(--text-muted); font-size: 13px;
+        }
+        footer a { color: var(--forest-light); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <!-- ШАПКА -->
+    <header>
+        <div class="header-wrap">
+            <a href="https://lesovik-pro.ru/" class="brand">
+                <img src="logo.jpeg" alt="Лесовик ПРО" onerror="this.style.display='none'">
+                <div class="brand-text">
+                    <b>Лесовик ПРО</b>
+                    <span>Инженерные лесные приборы</span>
+                </div>
+            </a>
+            <div class="header-actions">
+                <a href="https://vk.ru/im?sel=nikolay_ns" target="_blank" rel="noopener noreferrer" class="btn-header-chat btn-vk">
+                    💬 Написать в VK
+                </a>
+                <a href="https://max.ru/u/f9LHodD0cOIK9HTj7hxePXbYd7c42O-leOqiGHA_T2MtkDnS1Jrj4iVQAy8" target="_blank" rel="noopener noreferrer" class="btn-header-chat btn-max">
+                    📢 Профиль в MAX
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO БЛОК -->
+    <div class="hero-section">
+        <div class="hero-content">
+            <div class="hero-badge">⭐ Официальная разработка • Регистрация ПО</div>
+            <h1 class="hero-title">
+                Электронная буссоль <span>БГ-ХНС PRO</span>: отвод лесосек в смартфоне
+            </h1>
+            <p class="hero-subtitle">
+                Замените тяжёлые приборы, буссоли и блокноты. Замеряйте румбы через камеру смартфона, рассчитывайте площадь участка в реальном времени и экспортируйте готовый KML для загрузки во <b>ФГИС ЛК</b> без интернета в тайге.
+            </p>
+            <div class="hero-cta-buttons">
+                <a href="#order-section" class="btn-cta-main">
+                    🚀 Запросить доступ к PRO
+                </a>
+                <a href="#comparison" class="btn-cta-sub">
+                    Сравнить с буссолью БГ-1 ↓
+                </a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat-item">
+                    <b>100%</b>
+                    <span>Офлайн в тайге</span>
+                </div>
+                <div class="hero-stat-item">
+                    <b>ФГИС ЛК</b>
+                    <span>Экспорт в KML / KMZ</span>
+                </div>
+                <div class="hero-stat-item">
+                    <b>±0.5°</b>
+                    <span>Фильтр Калмана</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- МОКАП ТЕЛЕФОНА С ПЕРВЫМ ВЕРТИКАЛЬНЫМ СКРИНШОТОМ -->
+        <div class="phone-mockup-wrapper">
+            <div class="phone-case">
+                <div class="phone-notch"></div>
+                <!-- ПУТЬ К ВЕРТИКАЛЬНОМУ СКРИНШОТУ №1 (Hero Screen) -->
+                <img src="pro-screen-1.png" alt="Интерфейс Буссоль БГ-ХНС PRO" class="phone-screen" onerror="this.style.display='none'; document.getElementById('stub-1').style.display='flex';">
+                <div class="phone-screen screen-stub" id="stub-1" style="display: none;">
+                    <div class="phone-placeholder-badge">Оптический визир камеры</div>
+                    <div style="font-size: 40px; margin-bottom: 10px;">🧭</div>
+                    <b>pro-screen-1.png</b>
+                    <p style="margin-top: 8px; font-size: 11px;">Скриншот визира буссоли на фоне просеки</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ТАБЛИЦА СРАВНЕНИЯ -->
+    <section id="comparison">
+        <div class="section-header">
+            <span class="section-tag">Экономика и скорость</span>
+            <h2 class="section-title">Классическая буссоль БГ-1 против смартфона БГ-ХНС PRO</h2>
+        </div>
+        <div class="comparison-table-wrap">
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Параметр съемки</th>
+                        <th>Классический метод (БГ-1 / Штатив)</th>
+                        <th class="col-pro">Электронная буссоль БГ-ХНС PRO</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Оборудование в поле</b></td>
+                        <td class="col-bad">Чемодан, тренога-штатив, буссоль (вес 4–6 кг)</td>
+                        <td class="col-pro">Обычный смартфон в кармане спецодежды</td>
+                    </tr>
+                    <tr>
+                        <td><b>Стоимость комплекта</b></td>
+                        <td class="col-bad">45 000 – 120 000 ₽ + поверки приборов</td>
+                        <td class="col-pro">Доступная лицензия на сезон полевых работ</td>
+                    </tr>
+                    <tr>
+                        <td><b>Выгрузка во ФГИС ЛК</b></td>
+                        <td class="col-bad">Ручная перебивка румбов в офисе, частые ошибки</td>
+                        <td class="col-pro">Мгновенный экспорт в KML / KMZ прямо на делянке</td>
+                    </tr>
+                    <tr>
+                        <td><b>Расчет площади участка</b></td>
+                        <td class="col-bad">Только вечером за компьютером в камералке</td>
+                        <td class="col-pro">Мгновенно на ходу: площадь (га), периметр, невязка</td>
+                    </tr>
+                    <tr>
+                        <td><b>Работа в тайге без сети</b></td>
+                        <td>Да (механика)</td>
+                        <td class="col-pro">Да (100% автономно по чипу ГЛОНАСС)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ГАЛЕРЕЯ ИНТЕРФЕЙСА: 3 ВЕРТИКАЛЬНЫХ СКРИНШОТА -->
+    <section>
+        <div class="section-header">
+            <span class="section-tag">Живой полевой интерфейс</span>
+            <h2 class="section-title">Как устроен рабочий экран специалиста</h2>
+        </div>
+        <div class="screens-gallery-grid">
+            
+            <!-- СКРИНШОТ 1 -->
+            <div class="screen-card-box">
+                <div class="screen-img-frame">
+                    <!-- ПУТЬ К ВЕРТИКАЛЬНОМУ СКРИНШОТУ №1 -->
+                    <img src="pro-screen-1.png" alt="Визир через камеру" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="screen-stub" style="display: none;">
+                        <span style="font-size: 32px; margin-bottom: 8px;">📷</span>
+                        <b>pro-screen-1.png</b>
+                        <span style="font-size: 11px; margin-top: 4px;">Визир камеры и замер румбов</span>
+                    </div>
+                </div>
+                <h4>1. Оптический визир камеры</h4>
+                <p>Наведение перекрестия на визирную вешку или столб с компенсацией наклона смартфона.</p>
+            </div>
+
+            <!-- СКРИНШОТ 2 -->
+            <div class="screen-card-box">
+                <div class="screen-img-frame">
+                    <!-- ПУТЬ К ВЕРТИКАЛЬНОМУ СКРИНШОТУ №2 -->
+                    <img src="pro-screen-2.png" alt="Замкнутый контур делянки" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="screen-stub" style="display: none;">
+                        <span style="font-size: 32px; margin-bottom: 8px;">📐</span>
+                        <b>pro-screen-2.png</b>
+                        <span style="font-size: 11px; margin-top: 4px;">Полигон участка и площадь</span>
+                    </div>
+                </div>
+                <h4>2. Расчет полигона делянки</h4>
+                <p>Автоматическое замыкание контура, контроль линейной невязки и вычет неэксплуатационных зон.</p>
+            </div>
+
+            <!-- СКРИНШОТ 3 -->
+            <div class="screen-card-box">
+                <div class="screen-img-frame">
+                    <!-- ПУТЬ К ВЕРТИКАЛЬНОМУ СКРИНШОТУ №3 -->
+                    <img src="pro-screen-3.png" alt="Экспорт в KML для ФГИС ЛК" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="screen-stub" style="display: none;">
+                        <span style="font-size: 32px; margin-bottom: 8px;">💾</span>
+                        <b>pro-screen-3.png</b>
+                        <span style="font-size: 11px; margin-top: 4px;">Экспорт KML и фототаблица</span>
+                    </div>
+                </div>
+                <h4>3. Выгрузка KML и фототаблиц</h4>
+                <p>Создание готового архива для ФГИС ЛК и фотофиксация столбов с впечёнными координатами.</p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ОСНОВНЫЕ ВОЗМОЖНОСТИ -->
+    <section>
+        <div class="section-header">
+            <span class="section-tag">Функционал</span>
+            <h2 class="section-title">Создано практиками для работы в суровых условиях</h2>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🛰️</div>
+                <h3>Спутники ГЛОНАСС без интернета</h3>
+                <p>Приложение не требует сотовой вышки. Все вычисления геометрии, румбов и координат происходят локально на процессоре смартфона.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎛️</div>
+                <h3>Фильтр Калмана против тряски</h3>
+                <p>Специальный математический алгоритм сглаживает естественную дрожь рук и влияние магнитного железа, фиксируя чистый азимут линии.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📄</div>
+                <h3>Формирование ведомости МДО</h3>
+                <p>Прямая интеграция с полевым журналом и перечетными ведомостями. Передавайте готовые полевые замеры без ручной рутины.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- БЛОК АВТОРА / ДОВЕРИЯ -->
+    <section>
+        <div class="author-box">
+            <img src="logo.jpeg" alt="Николай Сергеевич Худяков" class="author-avatar" onerror="this.style.display='none'">
+            <div class="author-info">
+                <div class="author-post">Разработчик экосистемы Лесовик ПРО</div>
+                <h3>Худяков Николай Сергеевич</h3>
+                <p class="author-desc">
+                    «Как практик, отдавший лесному хозяйству более 11 лет службы, я знаю, каково работать на делянках в тайге: когда мороз, сырость, связь на нуле, а отчет для ведомств нужен идеальный. Комплекс БГ-ХНС PRO разработан именно для того, чтобы инженер или мастер леса тратил силы на работу, а не на борьбу со старыми железными приборами».
+                </p>
+                <div style="margin-top: 14px; font-size: 12px; color: var(--forest-light); font-weight: 700;">
+                    Свидетельство о регистрации ПО • Индивидуальный предприниматель • ИНН 111801576622
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ФИНАЛЬНЫЙ БЛОК ДЛЯ ЗАКАЗА И СВЯЗИ -->
+    <section id="order-section">
+        <div class="cta-final-box">
+            <h2>Получите доступ к БГ-ХНС PRO</h2>
+            <p>
+                Свяжитесь со мной напрямую, чтобы обсудить внедрение для вашей компании, получить установочный пакет или индивидуальную консультацию по отводу лесосек.
+            </p>
+            <div class="contact-channel-row">
+                <a href="https://vk.ru/nikolay_ns" target="_blank" rel="noopener noreferrer" class="btn-channel btn-channel-vk">
+                    🔵 Написать лично в VK
+                </a>
+                <a href="https://vk.ru/im?sel=nikolay_ns" target="_blank" rel="noopener noreferrer" class="btn-channel btn-channel-vk" style="background:#0055cc;">
+                    💬 Диалог в мессенджере VK
+                </a>
+                <a href="https://max.ru/u/f9LHodD0cOIK9HTj7hxePXbYd7c42O-leOqiGHA_T2MtkDnS1Jrj4iVQAy8" target="_blank" rel="noopener noreferrer" class="btn-channel btn-channel-max">
+                    📢 Связаться в MAX
+                </a>
+                <a href="mailto:folgoal@gmail.com" class="btn-channel btn-channel-mail">
+                    ✉️ folgoal@gmail.com
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ПОДВАЛ -->
+    <footer>
+        <p>&copy; 2026 ИП Худяков Николай Сергеевич. Все права защищены. <br>
+        Сыктывкар, Республика Коми • <a href="https://lesovik-pro.ru/">Главная страница «Лесовик ПРО»</a> • <a href="https://journal.lesovik-pro.ru/">Лесной журнал</a></p>
+    </footer>
+
+</body>
+</html>
