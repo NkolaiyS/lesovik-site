@@ -1,0 +1,632 @@
+<!-- 
+  (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
+  Свидетельство ИНН: 111801576622.
+  Программное обеспечение: «Лесоустроительный конвертер координат (Лесовик ПРО)».
+  Официальный сайт: https://lesovik-pro.ru/
+-->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <!-- 1. Единое ядро защиты, лицензий и тем -->
+    <script src="lesovik-core.js"></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <title>Лесоустроительный конвертер координат: KML, KMZ, GeoJSON, CSV, TXT | Лесовик ПРО</title>
+    <meta name="description" content="Бесплатный онлайн-конвертер лесоустроительных форматов: преобразование файлов делянок и квартальных сеток между KML, KMZ, GeoJSON, CSV и TXT для ФГИС ЛК и навигаторов.">
+    <meta name="keywords" content="конвертер kml в csv, kmz в geojson, координаты делянки фгис лк, каталог координат txt, лесовик про конвертер, координаты границы лесосеки">
+    <link rel="canonical" href="https://lesovik-pro.ru/converter.html">
+    <link rel="icon" type="image/jpeg" href="logo.jpeg">
+
+    <!-- Библиотека JSZip для распаковки KMZ на лету без сервера -->
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --bg-paper: #F9FBF9;
+            --text-graphite: #333333;
+            --forest-green: #2D5A27;
+            --forest-light: #8FBC8F;
+            --border-color: #E0E0E0;
+            --card-bg: #FFFFFF;
+            --glass-bg: rgba(249, 251, 249, 0.88);
+            --footer-bg: #2C3531;
+            --danger: #DC2626;
+            --info: #2563EB;
+            --success: #16A34A;
+        }
+
+        [data-theme="dark"] {
+            --bg-paper: #1A2421;
+            --text-graphite: #F9FBF9;
+            --forest-green: #8FBC8F;
+            --forest-light: #2D5A27;
+            --border-color: #3A4F46;
+            --card-bg: #22302B;
+            --glass-bg: rgba(26, 36, 33, 0.88);
+            --footer-bg: #111815;
+        }
+
+        *, *:before, *:after { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+        
+        html, body {
+            width: 100%; max-width: 100%; overflow-x: hidden;
+            background-color: var(--bg-paper); color: var(--text-graphite);
+            font-family: 'Inter', sans-serif; line-height: 1.5;
+            display: flex; flex-direction: column; min-height: 100vh;
+        }
+
+        .glass-header {
+            position: sticky; top: 0; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 20px; background: var(--glass-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; min-width: 0; }
+        .header-logo { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid var(--forest-green); flex-shrink: 0; }
+        .glass-header h1 { font-family: 'Merriweather', serif; color: var(--forest-green); margin: 0; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .btn-back {
+            display: inline-flex; align-items: center; background: transparent; color: var(--forest-green);
+            border: 1px solid var(--forest-green); padding: 6px 12px; border-radius: 8px;
+            cursor: pointer; font-weight: 600; text-decoration: none; font-size: 12px;
+        }
+        .theme-toggle {
+            background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green);
+            padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700;
+        }
+
+        .container { max-width: 1000px; width: 100%; margin: 20px auto 40px; padding: 0 14px; flex: 1; }
+
+        .card {
+            background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+            padding: 18px; margin-bottom: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .card h2 { font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 18px; margin-bottom: 6px; }
+        .subtitle { font-size: 12px; color: var(--text-graphite); opacity: 0.75; margin-bottom: 16px; }
+
+        /* ЗОНА ПЕРЕТАСКИВАНИЯ (DRAG & DROP) */
+        .drop-zone {
+            border: 2px dashed var(--forest-green); border-radius: 12px;
+            padding: 30px 16px; text-align: center; background: rgba(45, 90, 39, 0.04);
+            cursor: pointer; transition: background 0.2s, border-color 0.2s;
+            position: relative;
+        }
+        .drop-zone.dragover { background: rgba(45, 90, 39, 0.12); border-color: var(--success); }
+        .drop-icon { font-size: 40px; margin-bottom: 8px; display: block; }
+        .drop-text { font-size: 14px; font-weight: 700; color: var(--forest-green); margin-bottom: 4px; }
+        .drop-hint { font-size: 11.5px; opacity: 0.75; }
+
+        /* ИНФО-ПАНЕЛЬ ЗАГРУЖЕННОГО ОБЪЕКТА */
+        .file-info-badge {
+            display: none; background: rgba(45, 90, 39, 0.08); border: 1px solid var(--forest-green);
+            border-radius: 8px; padding: 10px 14px; margin-top: 14px; font-size: 12.5px;
+            justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+        }
+
+        /* ПАНЕЛЬ ЭКСПОРТА */
+        .export-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px;
+        }
+        @media (max-width: 680px) { .export-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 380px) { .export-grid { grid-template-columns: 1fr; } }
+
+        .btn-export {
+            background-color: var(--forest-green); color: #fff; border: none; padding: 12px 8px;
+            border-radius: 8px; font-size: 12px; font-weight: 700; text-transform: uppercase;
+            cursor: pointer; text-align: center; transition: opacity 0.2s, transform 0.1s;
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+        }
+        .btn-export:disabled { background: #888 !important; opacity: 0.5; cursor: not-allowed; }
+        .btn-export:not(:disabled):hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-export.kml-btn { background: #1B5E20; }
+        .btn-export.geojson-btn { background: #0284C7; }
+        .btn-export.csv-btn { background: #107C41; }
+        .btn-export.txt-btn { background: #475569; }
+
+        /* ХОЛСТ ПРЕДПРОСМОТРА */
+        .preview-canvas-box {
+            position: relative; width: 100%; aspect-ratio: 16/9; max-height: 380px;
+            background: #000; border-radius: 10px; overflow: hidden; margin-top: 14px;
+            border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center;
+        }
+        #previewCanvas { width: 100%; height: 100%; display: block; }
+        .canvas-overlay-stats {
+            position: absolute; bottom: 8px; left: 8px; right: 8px;
+            background: rgba(0,0,0,0.75); color: #FFF; padding: 6px 10px;
+            border-radius: 6px; font-family: monospace; font-size: 11px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* ТАБЛИЦА ТОЧЕК */
+        .table-responsive {
+            width: 100%; overflow-x: auto; max-height: 280px; overflow-y: auto;
+            border: 1px solid var(--border-color); border-radius: 8px; margin-top: 14px;
+        }
+        .coords-table {
+            width: 100%; border-collapse: collapse; font-size: 11.5px; text-align: left;
+        }
+        .coords-table th, .coords-table td {
+            padding: 7px 10px; border-bottom: 1px solid var(--border-color);
+        }
+        .coords-table th {
+            position: sticky; top: 0; background: var(--card-bg);
+            color: var(--forest-green); font-weight: 700; text-transform: uppercase; font-size: 10.5px;
+        }
+
+        footer {
+            background-color: var(--footer-bg); color: #E0E0E0; padding: 25px 14px;
+            text-align: center; font-size: 12px; margin-top: auto;
+        }
+        footer a { color: var(--forest-light); text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <header class="glass-header">
+        <a href="index.html" class="logo-container">
+            <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
+            <h1>Лесовик Конвертер</h1>
+        </a>
+        <div class="header-right">
+            <a href="index.html" class="btn-back">← На главную</a>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тема</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <h2>Лесоустроительный конвертер координат</h2>
+            <div class="subtitle">Быстрый перевод файлов делянок и полигонов между форматами KML, KMZ, GeoJSON, CSV и TXT без отправки на сервер.</div>
+
+            <!-- ЗОНА ЗАГРУЗКИ ФАЙЛА -->
+            <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                <span class="drop-icon">📂</span>
+                <div class="drop-text">Нажмите для выбора или перетащите файл сюда</div>
+                <div class="drop-hint">Поддерживаются: .KML, .KMZ (ФГИС ЛК), .GeoJSON, .JSON, .CSV, .TXT</div>
+                <input type="file" id="fileInput" accept=".kml,.kmz,.geojson,.json,.csv,.txt" style="display:none;" onchange="handleFileSelected(event)">
+            </div>
+
+            <!-- ИНФО О ФАЙЛЕ -->
+            <div class="file-info-badge" id="fileInfoBadge">
+                <div>
+                    <b id="infoFileName" style="color:var(--forest-green);">Файл: не выбран</b><br>
+                    <span id="infoStats">Точек: 0 • Полигонов: 0</span>
+                </div>
+                <button class="btn-back" style="padding:4px 8px; font-size:11px;" onclick="resetConverter()">Сбросить</button>
+            </div>
+
+            <!-- ПРЕДПРОСМОТР ЧЕРТЕЖА -->
+            <div class="preview-canvas-box" id="canvasBox" style="display:none;">
+                <canvas id="previewCanvas"></canvas>
+                <div class="canvas-overlay-stats">
+                    <span id="canvasAreaText">Площадь: 0.0000 га</span>
+                    <span id="canvasPerimeterText">Периметр: 0 м</span>
+                </div>
+            </div>
+
+            <!-- ТАБЛИЦА ТОЧЕК -->
+            <div class="table-responsive" id="tableBox" style="display:none;">
+                <table class="coords-table">
+                    <thead>
+                        <tr>
+                            <th>№</th>
+                            <th>Широта (Lat / С.Ш.)</th>
+                            <th>Долгота (Lon / В.Д.)</th>
+                            <th>Градусы DMS (WGS-84)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="coordsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- КНОПКИ ЭКСПОРТА -->
+        <div class="card">
+            <h2>Экспорт в нужный формат</h2>
+            <div class="subtitle">Выберите целевой формат для сохранения на ваше устройство:</div>
+            
+            <div class="export-grid">
+                <button class="btn-export kml-btn" id="btnExportKML" onclick="exportData('kml')" disabled>
+                    <span>🗺️ В KML</span>
+                    <small>Для ФГИС ЛК</small>
+                </button>
+                <button class="btn-export geojson-btn" id="btnExportGeoJSON" onclick="exportData('geojson')" disabled>
+                    <span>🌐 В GeoJSON</span>
+                    <small>Для QGIS / ГИС</small>
+                </button>
+                <button class="btn-export csv-btn" id="btnExportCSV" onclick="exportData('csv')" disabled>
+                    <span>📊 В CSV</span>
+                    <small>Для Excel (Таблицы)</small>
+                </button>
+                <button class="btn-export txt-btn" id="btnExportTXT" onclick="exportData('txt')" disabled>
+                    <span>📄 В TXT</span>
+                    <small>Каталог координат</small>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        &copy; 2026 Лесовик ПРО. Модуль конвертации лесных геопространственных данных.
+    </footer>
+
+    <script>
+        // Глобальный массив распознанных полигонов: [ [ {lat, lon}, ... ], ... ]
+        let parsedPolygons = [];
+        let currentFileName = "Делянка";
+
+        // Drag & Drop события
+        const dropZone = document.getElementById('dropZone');
+        ['dragenter', 'dragover'].forEach(name => {
+            dropZone.addEventListener(name, (e) => { e.preventDefault(); dropZone.classList.add('dragover'); }, false);
+        });
+        ['dragleave', 'drop'].forEach(name => {
+            dropZone.addEventListener(name, (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); }, false);
+        });
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length) processFile(files[0]);
+        });
+
+        function handleFileSelected(event) {
+            const file = event.target.files[0];
+            if (file) processFile(file);
+        }
+
+        async function processFile(file) {
+            currentFileName = file.name.replace(/\.[^/.]+$/, "");
+            const ext = file.name.split('.').pop().toLowerCase();
+            parsedPolygons = [];
+
+            try {
+                if (ext === 'kmz') {
+                    const zip = new JSZip();
+                    const zipData = await zip.loadAsync(file);
+                    const kmlFileName = Object.keys(zipData.files).find(name => name.toLowerCase().endsWith('.kml'));
+                    if (kmlFileName) {
+                        const text = await zipData.files[kmlFileName].async('string');
+                        parseKML(text);
+                    } else {
+                        alert("Внутри архива KMZ не найден файл KML!");
+                        return;
+                    }
+                } else if (ext === 'kml') {
+                    const text = await file.text();
+                    parseKML(text);
+                } else if (ext === 'geojson' || ext === 'json') {
+                    const text = await file.text();
+                    parseGeoJSON(text);
+                } else if (ext === 'csv' || ext === 'txt') {
+                    const text = await file.text();
+                    parseCSVorTXT(text);
+                } else {
+                    alert("Неподдерживаемый формат файла!");
+                    return;
+                }
+
+                updateUIafterLoad(file.name);
+            } catch (err) {
+                console.error(err);
+                alert("Ошибка чтения файла: " + err.message);
+            }
+        }
+
+        // Парсер KML
+        function parseKML(xmlText) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+            const coordNodes = xmlDoc.getElementsByTagName("coordinates");
+
+            for (let i = 0; i < coordNodes.length; i++) {
+                const rawCoords = coordNodes[i].textContent.trim().split(/\s+/);
+                const poly = [];
+                rawCoords.forEach(str => {
+                    const parts = str.split(',');
+                    if (parts.length >= 2) {
+                        const lon = parseFloat(parts[0]);
+                        const lat = parseFloat(parts[1]);
+                        if (!isNaN(lat) && !isNaN(lon)) poly.push({ lat, lon });
+                    }
+                });
+                if (poly.length > 0) parsedPolygons.push(poly);
+            }
+        }
+
+        // Парсер GeoJSON
+        function parseGeoJSON(jsonText) {
+            const data = JSON.parse(jsonText);
+            const extract = (geom) => {
+                if (!geom) return;
+                if (geom.type === 'Polygon') {
+                    geom.coordinates.forEach(ring => {
+                        const poly = ring.map(pt => ({ lon: pt[0], lat: pt[1] }));
+                        if (poly.length) parsedPolygons.push(poly);
+                    });
+                } else if (geom.type === 'MultiPolygon') {
+                    geom.coordinates.forEach(polyArr => {
+                        polyArr.forEach(ring => {
+                            const poly = ring.map(pt => ({ lon: pt[0], lat: pt[1] }));
+                            if (poly.length) parsedPolygons.push(poly);
+                        });
+                    });
+                } else if (geom.type === 'LineString') {
+                    const poly = geom.coordinates.map(pt => ({ lon: pt[0], lat: pt[1] }));
+                    if (poly.length) parsedPolygons.push(poly);
+                }
+            };
+
+            if (data.type === 'FeatureCollection' && data.features) {
+                data.features.forEach(f => extract(f.geometry));
+            } else if (data.type === 'Feature') {
+                extract(data.geometry);
+            } else {
+                extract(data);
+            }
+        }
+
+        // Парсер CSV и TXT каталогов
+        function parseCSVorTXT(text) {
+            const lines = text.split(/\r?\n/);
+            const poly = [];
+            lines.forEach(line => {
+                const clean = line.trim();
+                if (!clean || clean.startsWith('#')) return;
+                // Разделители: запятая, точка с запятой, табуляция или пробелы
+                const parts = clean.split(/[,;\t\s]+/).filter(Boolean);
+                if (parts.length >= 2) {
+                    // Проверяем: либо X Y, либо № X Y
+                    let val1 = parseFloat(parts[0]);
+                    let val2 = parseFloat(parts[1]);
+                    if (isNaN(val1) || (parts.length >= 3 && !isNaN(parseFloat(parts[2])))) {
+                        val1 = parseFloat(parts[1]);
+                        val2 = parseFloat(parts[2]);
+                    }
+                    // Эвристика: если широта больше долготы для РФ (обычно широта 45-75, долгота 20-180)
+                    let lat = val1, lon = val2;
+                    if (val1 > 180 || val2 > 180) {
+                        // Возможно местная система координат (МСК), берем как есть
+                        lat = val1; lon = val2;
+                    } else if (val1 > 80 && val2 <= 80) {
+                        lat = val2; lon = val1;
+                    }
+                    if (!isNaN(lat) && !isNaN(lon)) poly.push({ lat, lon });
+                }
+            });
+            if (poly.length > 0) parsedPolygons.push(poly);
+        }
+
+        // Обновление интерфейса
+        function updateUIafterLoad(fileName) {
+            if (!parsedPolygons.length) {
+                alert("В файле не обнаружены координаты или полигоны!");
+                return;
+            }
+
+            let totalPoints = 0;
+            parsedPolygons.forEach(p => totalPoints += p.length);
+
+            document.getElementById('fileInfoBadge').style.display = 'flex';
+            document.getElementById('infoFileName').innerText = "Файл: " + fileName;
+            document.getElementById('infoStats').innerText = `Полигонов/контуров: ${parsedPolygons.length} • Всего точек: ${totalPoints}`;
+
+            document.getElementById('canvasBox').style.display = 'flex';
+            document.getElementById('tableBox').style.display = 'block';
+
+            // Разблокировка кнопок экспорта
+            ['btnExportKML', 'btnExportGeoJSON', 'btnExportCSV', 'btnExportTXT'].forEach(id => {
+                document.getElementById(id).disabled = false;
+            });
+
+            renderTable();
+            drawPreview();
+        }
+
+        function resetConverter() {
+            parsedPolygons = [];
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileInfoBadge').style.display = 'none';
+            document.getElementById('canvasBox').style.display = 'none';
+            document.getElementById('tableBox').style.display = 'none';
+            ['btnExportKML', 'btnExportGeoJSON', 'btnExportCSV', 'btnExportTXT'].forEach(id => {
+                document.getElementById(id).disabled = true;
+            });
+        }
+
+        // Отрисовка таблицы
+        function renderTable() {
+            const tbody = document.getElementById('coordsTableBody');
+            tbody.innerHTML = '';
+            let ptIdx = 1;
+            parsedPolygons.forEach(poly => {
+                poly.forEach(pt => {
+                    const dms = toDMS(pt.lat, true) + " " + toDMS(pt.lon, false);
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><b>Т-${ptIdx++}</b></td>
+                            <td>${pt.lat.toFixed(6)}°</td>
+                            <td>${pt.lon.toFixed(6)}°</td>
+                            <td><small style="font-family:monospace;">${dms}</small></td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        // Отрисовка чертежа на холсте
+        function drawPreview() {
+            const canvas = document.getElementById('previewCanvas');
+            const box = document.getElementById('canvasBox');
+            canvas.width = box.clientWidth;
+            canvas.height = box.clientHeight;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = "#111815";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            let allLats = [], allLons = [];
+            parsedPolygons.forEach(poly => {
+                poly.forEach(pt => { allLats.push(pt.lat); allLons.push(pt.lon); });
+            });
+
+            const minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
+            const minLon = Math.min(...allLons), maxLon = Math.max(...allLons);
+
+            const pad = 40;
+            const w = canvas.width - pad * 2;
+            const h = canvas.height - pad * 2;
+
+            const scaleX = w / Math.max(maxLon - minLon, 0.0001);
+            const scaleY = h / Math.max(maxLat - minLat, 0.0001);
+            const scale = Math.min(scaleX, scaleY);
+
+            const toPix = (pt) => ({
+                x: pad + (pt.lon - minLon) * scale + (w - (maxLon - minLon) * scale) / 2,
+                y: canvas.height - (pad + (pt.lat - minLat) * scale + (h - (maxLat - minLat) * scale) / 2)
+            });
+
+            // Расчет площади первого полигона
+            let areaSqMeters = 0;
+            let perimeterMeters = 0;
+            if (parsedPolygons.length > 0) {
+                const first = parsedPolygons[0];
+                for (let i = 0; i < first.length; i++) {
+                    const j = (i + 1) % first.length;
+                    const p1 = first[i], p2 = first[j];
+                    // Приближенный расчет площади
+                    const x1 = p1.lon * 111320 * Math.cos(p1.lat * Math.PI / 180);
+                    const y1 = p1.lat * 110540;
+                    const x2 = p2.lon * 111320 * Math.cos(p2.lat * Math.PI / 180);
+                    const y2 = p2.lat * 110540;
+                    areaSqMeters += (x1 * y2 - x2 * y1);
+                    perimeterMeters += Math.hypot(x2 - x1, y2 - y1);
+                }
+                areaSqMeters = Math.abs(areaSqMeters / 2);
+            }
+
+            document.getElementById('canvasAreaText').innerText = `Площадь: ${(areaSqMeters / 10000).toFixed(4)} га`;
+            document.getElementById('canvasPerimeterText').innerText = `Периметр: ${Math.round(perimeterMeters)} м`;
+
+            // Рисуем полигоны
+            parsedPolygons.forEach(poly => {
+                ctx.beginPath();
+                poly.forEach((pt, i) => {
+                    const pix = toPix(pt);
+                    if (i === 0) ctx.moveTo(pix.x, pix.y);
+                    else ctx.lineTo(pix.x, pix.y);
+                });
+                ctx.closePath();
+                ctx.fillStyle = "rgba(45, 90, 39, 0.25)";
+                ctx.fill();
+                ctx.strokeStyle = "#8FBC8F";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Точки вершин
+                poly.forEach((pt, i) => {
+                    const pix = toPix(pt);
+                    ctx.beginPath();
+                    ctx.arc(pix.x, pix.y, 3.5, 0, Math.PI * 2);
+                    ctx.fillStyle = i === 0 ? "#DC2626" : "#22C55E";
+                    ctx.fill();
+                });
+            });
+        }
+
+        // Преобразование в DMS
+        function toDMS(coordinate, isLatitude) {
+            const absolute = Math.abs(coordinate);
+            const degrees = Math.floor(absolute);
+            const minutesNotTruncated = (absolute - degrees) * 60;
+            const minutes = Math.floor(minutesNotTruncated);
+            const seconds = ((minutesNotTruncated - minutes) * 60).toFixed(1);
+            const dir = isLatitude ? (coordinate >= 0 ? "N" : "S") : (coordinate >= 0 ? "E" : "W");
+            return `${degrees}°${minutes}'${seconds}"${dir}`;
+        }
+
+        // ЭКСПОРТ В ВЫБРАННЫЙ ФОРМАТ
+        function exportData(format) {
+            if (!parsedPolygons.length) return;
+
+            let output = "";
+            let mimeType = "text/plain";
+            let fileExt = format;
+
+            if (format === 'kml') {
+                mimeType = "application/vnd.google-earth.kml+xml";
+                output = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n  <name>${currentFileName}</name>\n`;
+                parsedPolygons.forEach((poly, idx) => {
+                    output += `  <Placemark>\n    <name>Контур ${idx + 1}</name>\n    <Polygon>\n      <outerBoundaryIs>\n        <LinearRing>\n          <coordinates>\n`;
+                    poly.forEach(pt => { output += `            ${pt.lon},${pt.lat},0\n`; });
+                    // Замыкаем
+                    if (poly.length && (poly[0].lat !== poly[poly.length - 1].lat || poly[0].lon !== poly[poly.length - 1].lon)) {
+                        output += `            ${poly[0].lon},${poly[0].lat},0\n`;
+                    }
+                    output += `          </coordinates>\n        </LinearRing>\n      </outerBoundaryIs>\n    </Polygon>\n  </Placemark>\n`;
+                });
+                output += `</Document>\n</kml>`;
+            } else if (format === 'geojson') {
+                mimeType = "application/geo+json";
+                const features = parsedPolygons.map((poly, idx) => {
+                    const coords = poly.map(pt => [pt.lon, pt.lat]);
+                    if (coords.length && (coords[0][0] !== coords[coords.length - 1][0] || coords[0][1] !== coords[coords.length - 1][1])) {
+                        coords.push(coords[0]);
+                    }
+                    return {
+                        type: "Feature",
+                        properties: { id: idx + 1, name: `Контур ${idx + 1}` },
+                        geometry: { type: "Polygon", coordinates: [coords] }
+                    };
+                });
+                output = JSON.stringify({ type: "FeatureCollection", features }, null, 2);
+            } else if (format === 'csv') {
+                mimeType = "text/csv;charset=utf-8;";
+                output = "Номер;Широта_DD;Долгота_DD;Координаты_DMS\n";
+                let idx = 1;
+                parsedPolygons.forEach(poly => {
+                    poly.forEach(pt => {
+                        const dms = `${toDMS(pt.lat, true)} ${toDMS(pt.lon, false)}`;
+                        output += `Т-${idx++};${pt.lat.toFixed(6)};${pt.lon.toFixed(6)};"${dms}"\n`;
+                    });
+                });
+            } else if (format === 'txt') {
+                mimeType = "text/plain;charset=utf-8;";
+                let idx = 1;
+                parsedPolygons.forEach(poly => {
+                    poly.forEach(pt => {
+                        output += `${idx++}\t${pt.lat.toFixed(6)}\t${pt.lon.toFixed(6)}\n`;
+                    });
+                });
+            }
+
+            const blob = new Blob([output], { type: mimeType });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `${currentFileName}_converted.${fileExt}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+        }
+
+        function toggleTheme() {
+            const body = document.documentElement;
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+            if (parsedPolygons.length) drawPreview();
+        }
+    </script>
+</body>
+</html>
