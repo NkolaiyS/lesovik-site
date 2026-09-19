@@ -1,0 +1,503 @@
+<!-- 
+  (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
+  Свидетельство ИНН: 111801576622.
+  Программное обеспечение: «Калькулятор класса бонитета и запаса леса (Лесовик ПРО)».
+  Официальный сайт: https://lesovik-pro.ru/
+-->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <script type="text/javascript">
+        // --- ПЕРЕХВАТ БОТОВ ДЛЯ SEO-ПРЕВЬЮ ---
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const postSlug = urlParams.get('post');
+            const userAgent = (navigator.userAgent || '').toLowerCase();
+            const isBot = /telegrambot|vkshare|facebookexternalhit|twitterbot|slackbot|whatsapp|viber/i.test(userAgent);
+            if (postSlug && isBot) {
+                window.location.href = 'https://functions.yandexcloud.net/d4ecn5ag33dcdd2deivd?post=' + encodeURIComponent(postSlug);
+            }
+        })();
+
+        // --- ЯНДЕКС МЕТРИКА ---
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109130409', 'ym');
+
+        ym(109130409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <title>Калькулятор бонитета и запаса леса онлайн по возрасту и высоте | Лесовик ПРО</title>
+    <meta name="description" content="Бесплатный лесотаксационный калькулятор: расчет класса бонитета по шкале Орлова, таблицам хода роста (ТХР), определение запаса стволовой древесины на 1 га и относительной полноты.">
+    <meta name="keywords" content="калькулятор бонитета леса, определение класса бонитета по орлову, шкала орлова бонитет, расчет запаса древесины на 1 га, таблицы хода роста тхр, лесотаксационный калькулятор, лесовик про">
+    <link rel="canonical" href="https://lesovik-pro.ru/bonitet.html">
+    <link rel="icon" type="image/jpeg" href="logo.jpeg">
+
+    <!-- РЕКЛАМА РСЯ (МОБИЛЬНЫЙ OVERLAY) -->
+    <script>window.yaContextCb=window.yaContextCb||[]</script>
+    <script src="https://yandex.ru/ads/system/context.js" async></script>
+
+    <script>
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-7",
+                "type": "overlay",
+                "platform": "touch"
+            });
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-1",
+                "type": "floorAd",
+                "platform": "touch"
+            });
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-3",
+                "type": "fullscreen",
+                "platform": "desktop"
+            });
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-4",
+                "type": "floorAd",
+                "platform": "desktop"
+            });
+        });
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --bg-paper: #F9FBF9;
+            --text-graphite: #333333;
+            --forest-green: #2D5A27;
+            --forest-light: #8FBC8F;
+            --border-color: #E0E0E0;
+            --card-bg: #FFFFFF;
+            --glass-bg: rgba(249, 251, 249, 0.88);
+            --footer-bg: #2C3531;
+            --danger: #DC2626;
+            --info: #2563EB;
+            --success: #16A34A;
+            --accent: #E67E22;
+        }
+
+        [data-theme="dark"] {
+            --bg-paper: #1A2421;
+            --text-graphite: #F9FBF9;
+            --forest-green: #8FBC8F;
+            --forest-light: #2D5A27;
+            --border-color: #3A4F46;
+            --card-bg: #22302B;
+            --glass-bg: rgba(26, 36, 33, 0.88);
+            --footer-bg: #111815;
+            --accent: #F39C12;
+        }
+
+        *, *:before, *:after { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            outline: none; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        html, body {
+            width: 100%; max-width: 100%; overflow-x: hidden;
+            background-color: var(--bg-paper); color: var(--text-graphite);
+            font-family: 'Inter', sans-serif; line-height: 1.5;
+            display: flex; flex-direction: column; min-height: 100vh;
+        }
+
+        .glass-header {
+            position: sticky; top: 0; z-index: 2000;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 24px; background: var(--glass-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            width: 100%; max-width: 100%;
+        }
+
+        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; min-width: 0; }
+        .header-logo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--forest-green); flex-shrink: 0; }
+        .glass-header h1 { font-family: 'Merriweather', serif; color: var(--forest-green); margin: 0; font-size: 19px; white-space: nowrap; }
+
+        .header-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        .btn-back {
+            display: inline-flex; align-items: center; gap: 6px; background: transparent;
+            color: var(--forest-green); border: 1px solid var(--forest-green);
+            padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 700;
+            text-decoration: none; font-size: 12px;
+        }
+        .theme-toggle {
+            background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green);
+            padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            height: 36px; text-transform: uppercase;
+        }
+
+        main { flex: 1; width: 100%; max-width: 100%; overflow: hidden; }
+        .container { max-width: 960px; width: 100%; margin: 20px auto 40px; padding: 0 14px; }
+
+        .card {
+            background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+            padding: 20px 18px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            width: 100%;
+        }
+        .card h2 { font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 18px; margin-bottom: 6px; }
+        .subtitle { font-size: 12.5px; color: var(--text-graphite); opacity: 0.8; margin-bottom: 18px; line-height: 1.45; }
+
+        .grid-inputs {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 16px;
+        }
+        @media (max-width: 600px) {
+            .grid-inputs { grid-template-columns: 1fr; gap: 12px; }
+        }
+
+        .form-group { width: 100%; display: flex; flex-direction: column; }
+        .form-group label {
+            font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--forest-green);
+            margin-bottom: 5px;
+        }
+        .form-group input, .form-group select {
+            width: 100%; padding: 11px 12px; border: 1px solid var(--border-color); border-radius: 8px;
+            background-color: var(--bg-paper); color: var(--text-graphite);
+            font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 600;
+        }
+
+        .btn-calc {
+            background-color: var(--forest-green); color: #fff; border: none; padding: 13px;
+            width: 100%; border-radius: 8px; cursor: pointer; font-weight: 800; text-transform: uppercase;
+            font-size: 12.5px; letter-spacing: 0.5px; transition: transform 0.1s, opacity 0.2s;
+        }
+        .btn-calc:hover { opacity: 0.95; transform: translateY(-1px); }
+
+        /* РЕЗУЛЬТАТЫ РАСЧЕТА */
+        .results-box {
+            display: none; background: rgba(45, 90, 39, 0.06); border: 2px solid var(--forest-green);
+            border-radius: 12px; padding: 18px; margin-top: 20px;
+        }
+        .bonitet-badge-row {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+            border-bottom: 1px dashed var(--border-color); padding-bottom: 14px; margin-bottom: 14px;
+        }
+        .bonitet-title { font-size: 13px; font-weight: 700; text-transform: uppercase; }
+        .bonitet-class-val {
+            font-size: 28px; font-weight: 900; color: var(--forest-green); font-family: 'Merriweather', serif;
+        }
+        
+        .metrics-cards-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px;
+        }
+        @media (max-width: 600px) {
+            .metrics-cards-grid { grid-template-columns: 1fr; }
+        }
+        .metric-card {
+            background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px;
+            padding: 12px; text-align: center;
+        }
+        .metric-card-lbl { font-size: 10.5px; font-weight: 700; text-transform: uppercase; opacity: 0.75; margin-bottom: 4px; display: block; }
+        .metric-card-val { font-size: 20px; font-weight: 900; color: var(--forest-green); }
+
+        .txr-info-note {
+            font-size: 12px; line-height: 1.5; opacity: 0.85; background: var(--card-bg);
+            border-radius: 6px; padding: 10px 12px; border-left: 3px solid var(--forest-green);
+        }
+
+        /* РЕКЛАМНЫЙ БАННЕР 90-110 PX */
+        .modal-ad-banner-box {
+            width: 100%; min-height: 90px; max-height: 110px; margin: 16px 0 0 0;
+            display: flex; justify-content: center; align-items: center; overflow: hidden;
+            border-radius: 8px; background: rgba(0, 0, 0, 0.03); border: 1px dashed var(--border-color);
+        }
+
+        footer {
+            background-color: var(--footer-bg); color: #E0E0E0; padding: 25px 16px;
+            text-align: center; font-size: 12px; margin-top: auto; width: 100%;
+        }
+        footer a { color: var(--forest-light); text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <header class="glass-header">
+        <a href="index.html" class="logo-container">
+            <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
+            <h1>Лесовик Бонитет</h1>
+        </a>
+        <div class="header-right">
+            <a href="tools.html" class="btn-back">Инструменты</a>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тема</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <h2>Определение класса бонитета и запаса древесины</h2>
+            <div class="subtitle">Инженерный расчёт класса бонитета по общей шкале М. М. Орлова, определение нормального запаса по таблицам хода роста (ТХР) и полноты древостоя.</div>
+
+            <div class="grid-inputs">
+                <div class="form-group">
+                    <label>Преобладающая порода</label>
+                    <select id="tree-species" onchange="autoAdjustOrigin()">
+                        <option value="pine" selected>Сосна (семенная)</option>
+                        <option value="spruce">Ель (семенная)</option>
+                        <option value="larch">Лиственница (семенная)</option>
+                        <option value="cedar">Кедр / Сосна сибирская</option>
+                        <option value="birch">Береза (семенная / порослевая)</option>
+                        <option value="aspen">Осина (порослевая)</option>
+                        <option value="oak_seed">Дуб (семенной)</option>
+                        <option value="oak_sprout">Дуб (порослевой)</option>
+                        <option value="alder">Ольха черная</option>
+                        <option value="linden">Липа</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Происхождение насаждения</label>
+                    <select id="tree-origin">
+                        <option value="seed" selected>Семенное насаждение</option>
+                        <option value="sprout">Порослевое насаждение</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Средний возраст древостоя (лет)</label>
+                    <input type="number" id="tree-age" value="80" min="5" max="250" placeholder="Например: 80">
+                </div>
+
+                <div class="form-group">
+                    <label>Средняя высота H (м)</label>
+                    <input type="number" id="tree-height" value="24.5" step="0.1" min="1" max="55" placeholder="Например: 24.5">
+                </div>
+
+                <div class="form-group">
+                    <label>Фактическая полнота (или оставьте 1.0)</label>
+                    <input type="number" id="tree-density" value="0.7" step="0.05" min="0.3" max="1.3" placeholder="0.3 - 1.0">
+                </div>
+
+                <div class="form-group">
+                    <label>Лесотаксационный район</label>
+                    <select id="tree-region">
+                        <option value="taiga" selected>Северо-Западная и Европейская тайга</option>
+                        <option value="center">Центральный район хвойно-широколиственных лесов</option>
+                        <option value="ural_siberia">Урал и Западная Сибирь</option>
+                        <option value="esiberia">Восточная Сибирь и Дальний Восток</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn-calc" onclick="calculateForestBonitet()">Рассчитать класс бонитета и запас</button>
+
+            <!-- БЛОК РЕЗУЛЬТАТОВ -->
+            <div class="results-box" id="resultsBox">
+                <div class="bonitet-badge-row">
+                    <div>
+                        <span class="bonitet-title">Класс бонитета насаждения:</span>
+                        <div style="font-size:11.5px; opacity:0.8;">По общебонитировочной шкале проф. М. М. Орлова</div>
+                    </div>
+                    <div class="bonitet-class-val" id="resBonitetClass">II</div>
+                </div>
+
+                <div class="metrics-cards-grid">
+                    <div class="metric-card">
+                        <span class="metric-card-lbl">Нормальный запас (при P=1.0)</span>
+                        <div class="metric-card-val" id="resNormalStock">360 м³/га</div>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-card-lbl">Запас при полноте <span id="resCurDensity">0.7</span></span>
+                        <div class="metric-card-val" id="resActualStock" style="color:var(--accent);">252 м³/га</div>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-card-lbl">Средний прирост</span>
+                        <div class="metric-card-val" id="resGrowthRate">3.2 м³/год</div>
+                    </div>
+                </div>
+
+                <div class="txr-info-note" id="resDescriptionNote">
+                    Порода: Сосна. При возрасте 80 лет и высоте 24.5 м древостой относится ко <b>II классу бонитета</b> высокой продуктивности.
+                </div>
+            </div>
+
+            <!-- БЛОК РСЯ 90-110 PX ВЫСОТОЙ (КАК В ТРЕКЕРЕ) -->
+            <div class="modal-ad-banner-box">
+                <div id="yandex_rtb_R-A-19250236-bonitet-1"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Справочная шкала бонитетов М. М. Орлова (для 100 лет)</h2>
+            <div class="subtitle">Эталонные высоты семенных насаждений в возрасте 100 лет:</div>
+            
+            <div style="overflow-x:auto; font-size:12px;">
+                <table style="width:100%; border-collapse:collapse; min-width:380px;">
+                    <thead>
+                        <tr style="border-bottom:2px solid var(--border-color); color:var(--forest-green); text-align:left;">
+                            <th style="padding:6px;">Класс бонитета</th>
+                            <th style="padding:6px;">Ia</th>
+                            <th style="padding:6px;">I</th>
+                            <th style="padding:6px;">II</th>
+                            <th style="padding:6px;">III</th>
+                            <th style="padding:6px;">IV</th>
+                            <th style="padding:6px;">V</th>
+                            <th style="padding:6px;">Va / Vб</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom:1px solid var(--border-color);">
+                            <td style="padding:6px;"><b>Высота в 100 лет</b></td>
+                            <td style="padding:6px;">≥ 31 м</td>
+                            <td style="padding:6px;">28–30 м</td>
+                            <td style="padding:6px;">25–27 м</td>
+                            <td style="padding:6px;">21–24 м</td>
+                            <td style="padding:6px;">17–20 м</td>
+                            <td style="padding:6px;">12–16 м</td>
+                            <td style="padding:6px;">≤ 11 м</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        &copy; 2026 <a href="index.html">Лесовик ПРО</a>. Лесотаксационный калькулятор продуктивности насаждений.
+    </footer>
+
+    <script>
+        let isAdRendered = false;
+
+        function autoAdjustOrigin() {
+            const sp = document.getElementById('tree-species').value;
+            const originSelect = document.getElementById('tree-origin');
+            if (sp === 'aspen' || sp === 'oak_sprout') {
+                originSelect.value = 'sprout';
+            } else {
+                originSelect.value = 'seed';
+            }
+        }
+
+        // Расчет класса бонитета по шкале Орлова
+        function getOrlovBonitetClass(age, height, isSeed) {
+            // Базовые границы высоты для класса I в зависимости от возраста (интерполяция сетки Орлова)
+            // Возрастные коэффициенты редукции к 100 годам
+            let ageFactor = 1.0;
+            if (age <= 20) ageFactor = 0.22;
+            else if (age <= 40) ageFactor = 0.52;
+            else if (age <= 60) ageFactor = 0.74;
+            else if (age <= 80) ageFactor = 0.89;
+            else if (age <= 100) ageFactor = 1.0;
+            else if (age <= 120) ageFactor = 1.07;
+            else if (age <= 140) ageFactor = 1.12;
+            else ageFactor = 1.16;
+
+            // Порослевые насаждения растут быстрее в молодости, но раньше затухают
+            if (!isSeed) {
+                if (age <= 40) ageFactor *= 1.18;
+                else ageFactor *= 0.94;
+            }
+
+            // Приводим фактическую высоту к 100 годам
+            const reducedHeight = height / ageFactor;
+
+            if (reducedHeight >= 31.0) return "Iа";
+            if (reducedHeight >= 27.5) return "I";
+            if (reducedHeight >= 24.0) return "II";
+            if (reducedHeight >= 20.5) return "III";
+            if (reducedHeight >= 16.5) return "IV";
+            if (reducedHeight >= 11.5) return "V";
+            if (reducedHeight >= 7.5) return "Vа";
+            return "Vб";
+        }
+
+        // Оценка запаса при нормальной полноте 1.0 по таблицам хода роста (ТХР)
+        function estimateNormalStock(sp, age, bClass, height) {
+            let baseFactor = 14.5;
+            if (sp === 'pine') baseFactor = 15.0;
+            else if (sp === 'spruce') baseFactor = 16.2;
+            else if (sp === 'larch') baseFactor = 15.5;
+            else if (sp === 'birch') baseFactor = 12.8;
+            else if (sp === 'aspen') baseFactor = 14.8;
+            else if (sp.startsWith('oak')) baseFactor = 13.5;
+
+            let classMod = 1.0;
+            if (bClass === 'Iа') classMod = 1.25;
+            else if (bClass === 'I') classMod = 1.12;
+            else if (bClass === 'II') classMod = 1.0;
+            else if (bClass === 'III') classMod = 0.86;
+            else if (bClass === 'IV') classMod = 0.72;
+            else if (bClass === 'V') classMod = 0.55;
+            else classMod = 0.40;
+
+            // Видовая высота * сумма площадей сечений при нормальной полноте
+            let normalStock = height * baseFactor * classMod;
+            if (age < 30) normalStock *= 0.65;
+            else if (age < 50) normalStock *= 0.85;
+
+            return Math.round(normalStock);
+        }
+
+        function calculateForestBonitet() {
+            const sp = document.getElementById('tree-species').value;
+            const spName = document.getElementById('tree-species').selectedOptions[0].text;
+            const origin = document.getElementById('tree-origin').value;
+            const age = parseInt(document.getElementById('tree-age').value) || 80;
+            const height = parseFloat(document.getElementById('tree-height').value) || 24;
+            const density = parseFloat(document.getElementById('tree-density').value) || 0.7;
+
+            const isSeed = (origin === 'seed');
+            const bClass = getOrlovBonitetClass(age, height, isSeed);
+            const normalStock = estimateNormalStock(sp, age, bClass, height);
+            const actualStock = Math.round(normalStock * density);
+            const growthRate = (actualStock / Math.max(1, age)).toFixed(1);
+
+            document.getElementById('resBonitetClass').innerText = bClass;
+            document.getElementById('resNormalStock').innerText = `${normalStock} м³/га`;
+            document.getElementById('resCurDensity').innerText = density.toFixed(2);
+            document.getElementById('resActualStock').innerText = `${actualStock} м³/га`;
+            document.getElementById('resGrowthRate').innerText = `${growthRate} м³/год`;
+
+            document.getElementById('resDescriptionNote').innerHTML = `
+                Порода: <b>${spName}</b>. При возрасте <b>${age} лет</b> и средней высоте <b>${height} м</b> насаждение отнесено к <b>${bClass} классу бонитета</b>.
+                При полноте <b>${density.toFixed(2)}</b> эксплуатационный запас составляет ориентировочно <b>${actualStock} м³ на гектар</b>.
+            `;
+
+            document.getElementById('resultsBox').style.display = 'block';
+
+            // Ленивая отрисовка рекламы РСЯ
+            if (!isAdRendered) {
+                window.yaContextCb = window.yaContextCb || [];
+                window.yaContextCb.push(() => {
+                    Ya.Context.AdvManager.render({
+                        "blockId": "R-A-19250236-6",
+                        "renderTo": "yandex_rtb_R-A-19250236-bonitet-1"
+                    });
+                });
+                isAdRendered = true;
+            }
+        }
+
+        function toggleTheme() {
+            const body = document.documentElement;
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+    </script>
+</body>
+</html>
