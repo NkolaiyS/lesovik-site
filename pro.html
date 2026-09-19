@@ -10,7 +10,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Финская буссоль Suunto KB-14 против смартфона БГ-ХНС PRO • Отвод лесосек и экспорт в KML для ФГИС ЛК</title>
-    <meta name="description" content="Финская буссоль Suunto KB-14 против смартфона БГ-ХНС PRO. Профессиональное приложение для отвода лесосек без интернета: оптический визир через камеру, мерная вилка, высотомер, полнотомер, перечетный журнал и МДО, окупаемость оборудования и экспорт в KML для ФГИС ЛК.">
+    <meta name="description" content="Финская буссоль Suunto KB-14 против смартфона БГ-ХНС PRO. Профессиональное приложение для отвода лесосек без интернета: оптический визир через камеру, расчет площади, окупаемость оборудования и экспорт в KML для ФГИС ЛК.">
     <meta name="keywords" content="финская буссоль suunto kb-14 против смартфона бг-хнс pro, электронная буссоль для телефона, программа для отвода лесосек, мерная вилка онлайн, высотомер для леса, полнотомер биттерлиха, перечетная ведомость, мдо лесосек, экспорт делянки в kml фгис лк, лесовик про">
     <link rel="canonical" href="https://lesovik-pro.ru/pro.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
@@ -576,12 +576,12 @@
                 </div>
 
                 <div class="res-item">
-                    <span>Экономия рабочего времени (комплекс 6-в-1 вместо рутины и Абрис+):</span>
+                    <span id="res-time-saved-label">Экономия рабочего времени (комплекс 6-в-1 вместо рутины и Абрис+):</span>
                     <b class="res-highlight-orange" id="res-time-saved">44 ч / мес</b>
                 </div>
 
                 <div class="res-item">
-                    <span>Чистая финансовая выгода (за вычетом тарифа):</span>
+                    <span id="res-net-profit-label">Чистая финансовая выгода за выбранный период:</span>
                     <b class="res-highlight-green" id="res-net-profit">+125 500 ₽</b>
                 </div>
 
@@ -782,20 +782,35 @@
             const hardwareCost = users * 28000;
             document.getElementById('res-hardware-cost').innerText = `${hardwareCost.toLocaleString('ru-RU')} ₽ (на ${users} ${getUsersWord(users)})`;
 
-            // 3. Экономия рабочего времени на камералке перед Абрис+ (учитывая комплекс 6-в-1)
-            const hoursSavedPerPlot = Math.round(avgArea * 0.3 + 3.5); 
-            const totalHoursSaved = plotsPerMonth * hoursSavedPerPlot * users;
-            document.getElementById('res-time-saved').innerText = `${totalHoursSaved} ч / мес`;
+            // 3. Экономия рабочего времени на камералке и таксации (комплекс 6-в-1: вилка, высотомер, полнотомер, перечет, МДО и Абрис+)
+            // Учитываем, что полный полевой комплекс 6-в-1 экономит колоссальное время не только на абрисе, но и на замерах деревьев
+            const hoursSavedPerPlot = Math.round(avgArea * 0.4 + 5.0); 
+            const totalMonthlyHours = plotsPerMonth * hoursSavedPerPlot * users;
 
-            // 4. Финансовая экономия ФОТ в месяц
+            // Определяем горизонт периода для отображения
+            let periodMonths = 1;
+            let periodLabel = "за 1 месяц";
+            if (tariffKey === 'year') {
+                periodMonths = 12;
+                periodLabel = "за 1 год подписки";
+            } else if (tariffKey.includes('perpetual')) {
+                periodMonths = 36; // Для бессрочных лицензий считаем экономию за 3 года активной работы
+                periodLabel = "за 3 года использования";
+            }
+
+            const totalPeriodHours = totalMonthlyHours * periodMonths;
+            document.getElementById('res-time-saved').innerText = `${totalPeriodHours} ч (${totalMonthlyHours} ч/мес)`;
+            document.getElementById('res-time-saved-label').innerText = `Экономия времени (${periodLabel}, комплекс 6-в-1 + Абрис+):`;
+
+            // 4. Финансовая экономия ФОТ за период
             const hourlyRate = dayCost / 8;
-            const monthlyMoneySaved = Math.round(totalHoursSaved * hourlyRate);
+            const totalPeriodMoneySaved = Math.round(totalPeriodHours * hourlyRate);
 
-            // 5. Итоговая чистая выгода за период (затраты на Suunto + сэкономленный ФОТ за период минус стоимость тарифа)
-            let periodMonths = (tariffKey === 'year') ? 12 : ((tariffKey.includes('perpetual')) ? 6 : 1);
-            let totalPeriodBenefit = (monthlyMoneySaved * periodMonths) + hardwareCost - baseTariffPrice;
+            // 5. Итоговая чистая выгода за выбранный период (экономия ФОТ + сэкономленное железо Suunto минус цена тарифа)
+            const totalPeriodBenefit = totalPeriodMoneySaved + hardwareCost - baseTariffPrice;
             
             document.getElementById('res-net-profit').innerText = `+${totalPeriodBenefit.toLocaleString('ru-RU')} ₽`;
+            document.getElementById('res-net-profit-label').innerText = `Чистая финансовая выгода (${periodLabel}, за вычетом тарифа):`;
 
             // 6. Окупаемость
             const paybackEl = document.getElementById('res-payback-term');
@@ -805,21 +820,21 @@
                 paybackEl.innerText = "Окупается в течение первой недели";
             }
 
-            // 7. Формирование ссылки mailto для Андрея с готовыми данными
+            // 7. Формирование ссылки mailto для Андрея с расширенными деталями
             const mailBtn = document.getElementById('btn-mail-to-andrew');
             const discountNote = (isSubTariff && users >= 3) ? "Применена командная скидка 20% (от 3-х устройств)." : "Стандартные условия.";
             
             const emailSubject = encodeURIComponent(`Запрос расчета БГ-ХНС PRO: Тариф [${tariffNameStr}], ${users} устр.`);
             const emailBody = encodeURIComponent(
                 `Здравствуйте, Андрей!\n\n` +
-                `Сделал расчёт на сайте по тарифу «${tariffNameStr}»:\n` +
+                `Сделал расчёт окупаемости на сайте по тарифу «${tariffNameStr}»:\n` +
                 `• Количество устройств / специалистов: ${users}\n` +
                 `• Отводов в месяц на бригаду: ${plotsPerMonth}\n` +
                 `• Средняя площадь одной делянки: ${avgArea} га\n` +
                 `• Стоимость выбранного тарифа БГ-ХНС PRO: ${baseTariffPrice.toLocaleString('ru-RU')} руб.\n` +
-                `• Затраты на покупку Suunto (альтернатива): ${hardwareCost.toLocaleString('ru-RU')} руб.\n` +
-                `• Экономия времени на камералке и комплексе 6-в-1: ${totalHoursSaved} ч/мес\n` +
-                `• Итоговая чистая выгода: +${totalPeriodBenefit.toLocaleString('ru-RU')} руб.\n` +
+                `• Альтернативные затраты на Suunto: ${hardwareCost.toLocaleString('ru-RU')} руб.\n` +
+                `• Экономия времени (${periodLabel}): ${totalPeriodHours} ч (${totalMonthlyHours} ч/мес)\n` +
+                `• Итоговая чистая финансовая выгода: +${totalPeriodBenefit.toLocaleString('ru-RU')} руб.\n` +
                 `• Скидка: ${discountNote}\n\n` +
                 `Прошу связаться со мной для выставления счета / предоставления тестового доступа на 7 дней.\n\n` +
                 `Мои контактные данные: `
