@@ -479,16 +479,29 @@
         </div>
     </section>
 
-    <!-- ИНТЕРАКТИВНЫЙ КАЛЬКУЛЯТОР ВЫГОДЫ (БЕЗ СБОРА ДАННЫХ, ПРЯМОЕ ПИСЬМО АНДРЕЮ) -->
+    <!-- ИНТЕРАКТИВНЫЙ КАЛЬКУЛЯТОР ВЫГОДЫ И ВЫБОРА ТАРИФА -->
     <section id="roi-calculator">
         <div class="section-header">
             <span class="section-tag">Интерактивная экономика</span>
-            <h2 class="section-title">Калькулятор выгоды: Suunto и «Абрис+» против БГ-ХНС PRO</h2>
+            <h2 class="section-title">Калькулятор окупаемости и выбора тарифа</h2>
         </div>
 
         <div class="calc-wrapper">
             <div class="calc-controls">
-                <!-- 1. Количество специалистов / устройств -->
+                <!-- 1. Выбор тарифа -->
+                <div class="calc-group">
+                    <div class="calc-label-row">
+                        <span>Выберите вариант лицензии:</span>
+                    </div>
+                    <select id="calc-tariff-select" onchange="calculateROI()" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: #141F1A; color: #FFF; font-size: 13.5px; font-weight: 700; cursor: pointer;">
+                        <option value="month">Помесячный тест (4 000 ₽ / мес)</option>
+                        <option value="year">Годовая подписка (31 000 ₽ / год)</option>
+                        <option value="perpetual_1">Бессрочно на 1 устройство (45 000 ₽ разово)</option>
+                        <option value="perpetual_2" selected>Бессрочно на 2 устройства (60 000 ₽ разово — хит!)</option>
+                    </select>
+                </div>
+
+                <!-- 2. Количество специалистов / устройств -->
                 <div class="calc-group">
                     <div class="calc-label-row">
                         <span>Количество инженеров / устройств:</span>
@@ -497,12 +510,12 @@
                     <input type="range" id="range-users" min="1" max="10" step="1" value="1" oninput="calculateROI()">
                     <div class="range-limits">
                         <span>1 чел</span>
-                        <span>от 3-х скидка 20%!</span>
+                        <span>от 3-х скидка 20% на подписки!</span>
                         <span>10 чел</span>
                     </div>
                 </div>
 
-                <!-- 2. Количество делянок в месяц -->
+                <!-- 3. Количество делянок в месяц -->
                 <div class="calc-group">
                     <div class="calc-label-row">
                         <span>Кол-во делянок (отводов) в месяц на бригаду:</span>
@@ -515,7 +528,7 @@
                     </div>
                 </div>
 
-                <!-- 3. Средняя площадь одной делянки (до 50 га) -->
+                <!-- 4. Средняя площадь одной делянки (до 50 га) -->
                 <div class="calc-group">
                     <div class="calc-label-row">
                         <span>Средняя площадь одной делянки (до 50 га):</span>
@@ -531,7 +544,7 @@
                     </div>
                 </div>
 
-                <!-- 4. Стоимость дня инженера -->
+                <!-- 5. Стоимость дня инженера -->
                 <div class="calc-group">
                     <div class="calc-label-row">
                         <span>Стоимость 1 рабочего дня таксатора:</span>
@@ -545,7 +558,7 @@
                 </div>
             </div>
 
-            <!-- Результаты расчета и прямая отправка Андрею на почту -->
+            <!-- Результаты расчета с расшифровкой и прямой отправкой Андрею -->
             <div class="calc-results-card">
                 <!-- Блок специальной скидки 20% -->
                 <div id="bulk-discount-badge" style="display:none; background:rgba(46, 204, 113, 0.15); border:1px solid #2ECC71; color:#2ECC71; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:800; text-align:center;">
@@ -553,30 +566,35 @@
                 </div>
 
                 <div class="res-item">
-                    <span>Экономия на покупке оптики Suunto:</span>
+                    <span>Стоимость выбранной лицензии:</span>
+                    <b style="font-size: 18px; color: #FFF;" id="res-tariff-cost">60 000 ₽</b>
+                </div>
+
+                <div class="res-item">
+                    <span>Экономия на покупке оптики Suunto (вместо железа):</span>
                     <b class="res-highlight-blue" id="res-hardware-saved">28 000 ₽</b>
                 </div>
 
                 <div class="res-item">
-                    <span>Экономия времени камералки (перед «Абрис+»):</span>
+                    <span>Экономия рабочего времени (камералка в поле):</span>
                     <b class="res-highlight-orange" id="res-time-saved">44 ч / мес</b>
                 </div>
 
                 <div class="res-item">
-                    <span>Чистая ежемесячная экономия фонда оплаты:</span>
-                    <b class="res-highlight-green" id="res-money-saved">27 500 ₽ / мес</b>
+                    <span>Чистая финансовая выгода (за вычетом тарифа):</span>
+                    <b class="res-highlight-green" id="res-net-profit">+125 500 ₽</b>
                 </div>
 
                 <div class="res-item">
-                    <span>Срок окупаемости затрат:</span>
-                    <b style="font-size: 14.5px; color: #FFF;" id="res-payback-term">Окупается на 1-й же делянке</b>
+                    <span>Срок полной окупаемости программы:</span>
+                    <b style="font-size: 15px; color: #FFF;" id="res-payback-term">Окупается на 1-й же делянке</b>
                 </div>
 
                 <hr class="calc-divider">
 
                 <div style="display:flex; flex-direction:column; gap:10px;">
                     <a id="btn-mail-to-andrew" href="mailto:a1983v@yandex.ru" class="btn-calc-submit">
-                        ✉️ Отправить готовый расчёт Андрею на почту
+                        ✉️ Отправить этот расчёт Андрею на почту
                     </a>
                     <a href="https://max.ru/join/Gyqmpm-xCVOcBlYKZkp6LhAzm5KgXoSYvbO8qUrWLqs" target="_blank" rel="noopener noreferrer" class="btn-cta-sub" style="text-align:center; font-size:12.5px; padding:11px;">
                         💬 Обсудить расчёт в чате MAX ↗
@@ -714,43 +732,72 @@
         Сыктывкар, Республика Коми • <a href="https://lesovik-pro.ru/">Главная страница «Лесовик ПРО»</a> • <a href="https://lesovik-pro.ru/tools.html">Инженерные модули</a></p>
     </footer>
 
-    <!-- СКРИПТ КАЛЬКУЛЯТОРА ВЫГОДЫ И ГЕНЕРАЦИИ ПИСЬМА АНДРЕЮ -->
+    <!-- СКРИПТ КАЛЬКУЛЯТОРА ТАРИФОВ И ГЕНЕРАЦИИ ПИСЬМА АНДРЕЮ -->
     <script>
         function calculateROI() {
+            const tariffKey = document.getElementById('calc-tariff-select').value;
             const users = parseInt(document.getElementById('range-users').value) || 1;
             const plotsPerMonth = parseInt(document.getElementById('range-plots').value) || 1;
             const avgArea = parseInt(document.getElementById('range-area').value) || 5;
             const dayCost = parseInt(document.getElementById('range-daycost').value) || 5000;
 
-            // Отображение значений под ползунками
+            // Вывод текста под ползунками
             document.getElementById('val-users').innerText = `${users} ${getUsersWord(users)}`;
             document.getElementById('val-plots').innerText = `${plotsPerMonth} ${getPlotsWord(plotsPerMonth)}`;
             document.getElementById('val-area').innerText = `${avgArea} га`;
             document.getElementById('val-daycost').innerText = `${dayCost.toLocaleString('ru-RU')} ₽`;
 
-            // Управление плашкой скидки 20% от 3 пользователей
+            // Управление плашкой скидки 20% (применяется для подписок при users >= 3)
             const discountBadge = document.getElementById('bulk-discount-badge');
-            if (users >= 3) {
+            const isSubTariff = (tariffKey === 'month' || tariffKey === 'year');
+            if (isSubTariff && users >= 3) {
                 discountBadge.style.display = 'block';
             } else {
                 discountBadge.style.display = 'none';
             }
 
-            // 1. Экономия на покупке "железа" Suunto KB-14 (28 000 руб на каждого специалиста)
-            const hardwareSaved = users * 28000;
-            document.getElementById('res-hardware-saved').innerText = `${hardwareSaved.toLocaleString('ru-RU')} ₽ (на ${users} приб.)`;
+            // 1. Расчет стоимости выбранной лицензии
+            let baseTariffPrice = 0;
+            let tariffNameStr = '';
+            let discountMultiplier = (isSubTariff && users >= 3) ? 0.8 : 1.0; // Скидка 20%
 
-            // 2. Экономия времени против ручной перебивки в Абрис+
+            if (tariffKey === 'month') {
+                baseTariffPrice = 4000 + Math.max(0, users - 1) * 3000;
+                tariffNameStr = 'Помесячный тест';
+            } else if (tariffKey === 'year') {
+                baseTariffPrice = users * 31000 * discountMultiplier;
+                tariffNameStr = 'Годовая подписка';
+            } else if (tariffKey === 'perpetual_1') {
+                baseTariffPrice = users * 45000;
+                tariffNameStr = 'Бессрочно (1 устройство)';
+            } else if (tariffKey === 'perpetual_2') {
+                const pairs = Math.ceil(users / 2);
+                baseTariffPrice = pairs * 60000;
+                tariffNameStr = 'Бессрочно (Пакет 2 устройства)';
+            }
+            baseTariffPrice = Math.round(baseTariffPrice);
+            document.getElementById('res-tariff-cost').innerText = `${baseTariffPrice.toLocaleString('ru-RU')} ₽`;
+
+            // 2. Экономия на покупке оптики Suunto KB-14 (28 000 руб на каждого специалиста)
+            const hardwareSaved = users * 28000;
+            document.getElementById('res-hardware-saved').innerText = `${hardwareSaved.toLocaleString('ru-RU')} ₽ (вместо Suunto)`;
+
+            // 3. Экономия рабочего времени на камералке перед Абрис+
             const hoursSavedPerPlot = Math.round(avgArea * 0.3 + 3.5); 
-            const totalHoursSaved = plotsPerMonth * hoursSavedPerPlot;
+            const totalHoursSaved = plotsPerMonth * hoursSavedPerPlot * users;
             document.getElementById('res-time-saved').innerText = `${totalHoursSaved} ч / мес`;
 
-            // 3. Финансовая экономия ФОТ в месяц
+            // 4. Финансовая экономия ФОТ в месяц
             const hourlyRate = dayCost / 8;
-            const totalMoneySaved = Math.round(totalHoursSaved * hourlyRate);
-            document.getElementById('res-money-saved').innerText = `${totalMoneySaved.toLocaleString('ru-RU')} ₽ / мес`;
+            const monthlyMoneySaved = Math.round(totalHoursSaved * hourlyRate);
 
-            // 4. Окупаемость
+            // 5. Чистая финансовая выгода (выгода от камералки + железа - стоимость тарифа)
+            let periodMonths = (tariffKey === 'year') ? 12 : ((tariffKey.includes('perpetual')) ? 6 : 1);
+            let totalPeriodBenefit = (monthlyMoneySaved * periodMonths) + hardwareSaved - baseTariffPrice;
+            
+            document.getElementById('res-net-profit').innerText = `+${totalPeriodBenefit.toLocaleString('ru-RU')} ₽`;
+
+            // 6. Окупаемость
             const paybackEl = document.getElementById('res-payback-term');
             if (plotsPerMonth >= 1) {
                 paybackEl.innerText = "Окупается на 1-й же делянке (за 1 день работы)";
@@ -758,22 +805,23 @@
                 paybackEl.innerText = "Окупается в течение первой недели полевых выездов";
             }
 
-            // 5. Динамическое формирование ссылки mailto для отправки Андрею
+            // 7. Формирование ссылки mailto для Андрея с готовыми данными
             const mailBtn = document.getElementById('btn-mail-to-andrew');
-            const discountNote = users >= 3 ? "Применена корпоративная скидка 20% (от 3-х пользователей)." : "Стандартные условия.";
+            const discountNote = (isSubTariff && users >= 3) ? "Применена командная скидка 20% (от 3-х пользователей)." : "Стандартные условия.";
             
-            const emailSubject = encodeURIComponent(`Запрос расчета БГ-ХНС PRO: ${users} устр., ${plotsPerMonth} делянок/мес`);
+            const emailSubject = encodeURIComponent(`Запрос расчета БГ-ХНС PRO: Тариф [${tariffNameStr}], ${users} устр.`);
             const emailBody = encodeURIComponent(
                 `Здравствуйте, Андрей!\n\n` +
-                `Рассчитал окупаемость комплекса «БГ-ХНС PRO 3.2» на сайте:\n` +
+                `Сделал расчёт окупаемости на сайте по тарифу «${tariffNameStr}»:\n` +
                 `• Количество специалистов / устройств: ${users}\n` +
                 `• Отводов в месяц на бригаду: ${plotsPerMonth}\n` +
                 `• Средняя площадь одной делянки: ${avgArea} га\n` +
-                `• Экономия на покупке оптики Suunto: ${hardwareSaved.toLocaleString('ru-RU')} руб.\n` +
-                `• Экономия времени на камералке («Абрис+»): ${totalHoursSaved} ч/мес\n` +
-                `• Чистая экономия бюджета: ${totalMoneySaved.toLocaleString('ru-RU')} руб/мес\n` +
-                `• Комментарий по скидке: ${discountNote}\n\n` +
-                `Прошу связаться со мной для обсуждения условий подключения и тестового доступа на 7 дней.\n\n` +
+                `• Стоимость выбранного тарифа: ${baseTariffPrice.toLocaleString('ru-RU')} руб.\n` +
+                `• Экономия на «железе» Suunto: ${hardwareSaved.toLocaleString('ru-RU')} руб.\n` +
+                `• Экономия времени на камералке: ${totalHoursSaved} ч/мес\n` +
+                `• Итоговая чистая выгода: +${totalPeriodBenefit.toLocaleString('ru-RU')} руб.\n` +
+                `• Скидка: ${discountNote}\n\n` +
+                `Прошу связаться со мной для выставления счета / предоставления тестового доступа на 7 дней.\n\n` +
                 `Мои контактные данные: `
             );
 
