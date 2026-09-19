@@ -181,17 +181,18 @@
             blocker.innerHTML = `
                 <span style="font-size:46px; margin-bottom:12px;">📡</span>
                 <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:8px; font-size:20px;">Требуется подключение к сети</h2>
-                <div style="display:inline-block; background:rgba(230,126,34,0.2); border:1px solid #E67E22; color:#F59E0B; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:bold; margin-bottom:12px; text-transform:uppercase;">
-                    Тестовый доступ: 7 дней бесплатно
+                <div style="display:inline-block; background:rgba(230,126,34,0.15); border:1px solid #E67E22; color:#F59E0B; padding:3px 12px; border-radius:20px; font-size:11px; font-weight:bold; margin-bottom:12px; text-transform:uppercase;">
+                    Тестовый доступ: 7 дней бесплатно*
                 </div>
                 <p style="max-width:460px; font-size:12.5px; opacity:0.85; line-height:1.5; margin-bottom:18px;">
                     Бесплатные онлайн-сервисы работают исключительно при активном интернет-соединении.<br><br>
                     Для стабильной работы в глубоком лесу и тайге <b>полностью без доступа к интернету</b> используйте профессиональный автономный комплекс <b>БГ-ХНС PRO 3.2</b>.
                 </p>
-                <div style="background:rgba(255,255,255,0.04); padding:14px; border-radius:8px; border:1px solid rgba(143,188,143,0.2); text-align:left; font-size:12px; max-width:460px; width:100%; box-sizing:border-box;">
-                    <b style="color:#8FBC8F; display:block; margin-bottom:6px;">Контакты для получения пробного доступа или приобретения:</b>
-                    • Официальный дистрибьютор (ООО ТД «Сателлит»): <a href="mailto:a1983v@yandex.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none;">a1983v@yandex.ru</a><br>
-                    • Разработчик ПО (ИП Худяков Н.С.): <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; font-weight:bold; text-decoration:none;">folgoal@gmail.com</a>
+                <div style="background:rgba(255,255,255,0.04); padding:14px; border-radius:8px; border:1px solid rgba(143,188,143,0.2); text-align:left; font-size:12px; max-width:460px; width:100%; box-sizing:border-box; line-height:1.6;">
+                    <b style="color:#8FBC8F; display:block; margin-bottom:6px;">Контакты и подробности условий теста:</b>
+                    • Чат поддержки и условий в MAX: <a href="https://max.ru/join/Gyqmpm-xCVOcBlYKZkp6LhAzm5KgXoSYvbO8qUrWLqs" target="_blank" rel="noopener noreferrer" style="color:#38BDF8; font-weight:bold; text-decoration:none;">Перейти в чат MAX ↗</a><br>
+                    • Официальный отдел продаж: <a href="mailto:a1983v@yandex.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none;">✉️ a1983v@yandex.ru</a><br>
+                    • Разработчик ПО (ИП Худяков Н.С.): <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; font-weight:bold; text-decoration:none;">✉️ folgoal@gmail.com</a>
                 </div>
             `;
             document.body.appendChild(blocker);
@@ -231,19 +232,22 @@
         const currentPath = window.location.pathname.toLowerCase();
         if (currentPath.includes('busol-pro.html') && !globalAuth.isPro) {
             document.body.innerHTML = `
-                <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:#111815; color:#F9FBF9; z-index:999999; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; font-family:'Inter', sans-serif; padding:16px 16px 30px 16px; box-sizing:border-box; overflow-y:auto;">
+                <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:#111815; color:#F9FBF9; z-index:999999; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; font-family:'Inter', sans-serif; padding:18px 14px 34px 14px; box-sizing:border-box; overflow-y:auto;">
                     <div style="max-width:520px; width:100%; display:flex; flex-direction:column; align-items:center; margin:0 auto;">
-                        <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin:5px 0 6px 0; font-size:20px; text-align:center;">Цифровой комплекс «БГ-ХНС PRO 3.2»</h2>
-                        <div style="display:inline-block; background:rgba(230,126,34,0.2); border:1px solid #E67E22; color:#F59E0B; padding:3px 12px; border-radius:20px; font-size:11px; font-weight:bold; margin-bottom:10px; text-transform:uppercase;">
-                            Пробный период: 7 дней бесплатно
+                        <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin:4px 0 6px 0; font-size:20px; text-align:center;">Цифровой комплекс «БГ-ХНС PRO 3.2»</h2>
+                        
+                        <!-- БЕЙДЖ С УСЛОВИЯМИ -->
+                        <div style="display:inline-flex; align-items:center; background:rgba(230,126,34,0.15); border:1px solid #E67E22; color:#F59E0B; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:bold; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.3px;">
+                            Пробный период: 7 дней бесплатно*
                         </div>
                         
-                        <p style="font-size:12px; opacity:0.85; line-height:1.4; margin:0 0 12px 0; text-align:center;">
+                        <p style="font-size:12px; opacity:0.88; line-height:1.45; margin:0 0 10px 0; text-align:center;">
                             Для активации доступа передайте ID вашего устройства дистрибьютору или разработчику. Программа работает полностью автономно в тайге без интернета.
                         </p>
 
-                        <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(143,188,143,0.25); border-radius:10px; padding:12px 14px; width:100%; text-align:left; font-size:11px; margin-bottom:12px; box-sizing:border-box;">
-                            <span style="display:block; font-size:10px; opacity:0.6; text-transform:uppercase; font-weight:bold; margin-bottom:6px;">Единая база 6 инструментов в связке:</span>
+                        <!-- КАРТОЧКА ИНСТРУМЕНТОВ И ID -->
+                        <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(143,188,143,0.25); border-radius:10px; padding:12px 14px; width:100%; text-align:left; font-size:11px; margin-bottom:10px; box-sizing:border-box;">
+                            <span style="display:block; font-size:10px; opacity:0.65; text-transform:uppercase; font-weight:bold; margin-bottom:6px;">Единая база 6 инструментов в связке:</span>
                             <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px 8px; color:#E0E0E0; font-size:10.5px; margin-bottom:10px;">
                                 <div>🧭 Электронная буссоль PRO</div>
                                 <div>📏 Оптическая вилка</div>
@@ -252,20 +256,39 @@
                                 <div>📋 Полевой перечетный журнал</div>
                                 <div>📊 Ведомость МДО лесосек</div>
                             </div>
-                            <div style="border-top:1px dashed rgba(255,255,255,0.15); padding-top:8px; font-size:11.5px;">
-                                Ваш родной ID устройства: <b style="color:#8FBC8F; font-family:monospace; font-size:15px; letter-spacing:0.5px;">${globalAuth.currentId}</b>
+                            <div style="border-top:1px dashed rgba(255,255,255,0.18); padding-top:8px; font-size:11.5px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:4px;">
+                                <span>Ваш родной ID устройства:</span>
+                                <b style="color:#8FBC8F; font-family:monospace; font-size:15px; letter-spacing:0.5px;">${globalAuth.currentId}</b>
                             </div>
                         </div>
 
-                        <div style="background:rgba(255,255,255,0.03); padding:12px 14px; border-radius:10px; border:1px solid rgba(143,188,143,0.2); text-align:left; width:100%; box-sizing:border-box; font-size:11px;">
-                            <span style="display:block; font-size:10px; opacity:0.6; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; font-weight:bold;">Контакты для активации лицензии:</span>
-                            <div style="margin-bottom:6px;">
-                                <span style="font-weight:bold; color:#8FBC8F;">• ООО ТД «Сателлит» (Отдел продаж):</span><br>
-                                <a href="mailto:a1983v@yandex.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none; display:inline-block; margin-top:2px;">✉️ a1983v@yandex.ru</a>
+                        <!-- БЛОК УСЛОВИЙ И КОНТАКТОВ -->
+                        <div style="background:rgba(255,255,255,0.03); padding:12px 14px; border-radius:10px; border:1px solid rgba(143,188,143,0.2); text-align:left; width:100%; box-sizing:border-box; font-size:11px; line-height:1.5;">
+                            <div style="background:rgba(230,126,34,0.1); border-left:3px solid #E67E22; padding:6px 10px; border-radius:4px; margin-bottom:10px; font-size:11px; color:#FCD34D;">
+                                * 7 дней бесплатного теста предоставляются <b>при определенных условиях</b>. Подробности уточняйте в чате MAX или по электронной почте.
                             </div>
+
+                            <span style="display:block; font-size:10px; opacity:0.65; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; font-weight:bold;">Контакты для активации лицензии:</span>
+                            
+                            <div style="margin-bottom:8px;">
+                                <span style="font-weight:bold; color:#8FBC8F;">• Чат поддержки и условий теста в MAX:</span><br>
+                                <a href="https://max.ru/join/Gyqmpm-xCVOcBlYKZkp6LhAzm5KgXoSYvbO8qUrWLqs" target="_blank" rel="noopener noreferrer" style="color:#38BDF8; font-weight:bold; text-decoration:none; display:inline-block; margin-top:2px;">
+                                    💬 Написать в чат MAX ↗
+                                </a>
+                            </div>
+
+                            <div style="margin-bottom:8px;">
+                                <span style="font-weight:bold; color:#8FBC8F;">• ООО ТД «Сателлит» (Отдел продаж):</span><br>
+                                <a href="mailto:a1983v@yandex.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none; display:inline-block; margin-top:2px;">
+                                    ✉️ a1983v@yandex.ru
+                                </a>
+                            </div>
+
                             <div>
                                 <span style="font-weight:bold; color:#8FBC8F;">• ИП Худяков Н.С. (Отдел разработки):</span><br>
-                                <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; font-weight:bold; text-decoration:none; display:inline-block; margin-top:2px;">✉️ folgoal@gmail.com</a>
+                                <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; font-weight:bold; text-decoration:none; display:inline-block; margin-top:2px;">
+                                    ✉️ folgoal@gmail.com
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -275,6 +298,7 @@
         }
         return false;
     }
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
             enforceBusolProAccessControl();
@@ -630,27 +654,33 @@
         }
 
         const modalHTML = `
-            <div id="pro-promo-modal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.78); z-index:99999; display:flex; align-items:center; justify-content:center; padding:15px; box-sizing:border-box; font-family:'Inter',sans-serif;">
+            <div id="pro-promo-modal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.8); z-index:99999; display:flex; align-items:center; justify-content:center; padding:15px; box-sizing:border-box; font-family:'Inter',sans-serif;">
                 <div style="background:#111815; color:#F9FBF9; border:1px solid #8FBC8F; border-radius:12px; max-width:500px; width:100%; padding:20px; position:relative; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
                     <button onclick="document.getElementById('pro-promo-modal').style.display='none'" style="position:absolute; top:12px; right:12px; background:transparent; border:none; color:#FFF; font-size:22px; cursor:pointer;">&times;</button>
                     <div style="text-align:center; margin-bottom:12px;">
                         <span style="font-size:38px;">🌲</span>
                         <h3 style="font-family:'Merriweather',serif; color:#8FBC8F; margin:6px 0 4px 0;">Комплекс «БГ-ХНС PRO 3.2»</h3>
-                        <div style="display:inline-block; background:rgba(230,126,34,0.2); border:1px solid #E67E22; color:#F59E0B; padding:2px 8px; border-radius:14px; font-size:10.5px; font-weight:bold; text-transform:uppercase;">
-                            Пробный период: 7 дней бесплатно
+                        <div style="display:inline-block; background:rgba(230,126,34,0.15); border:1px solid #E67E22; color:#F59E0B; padding:2px 10px; border-radius:14px; font-size:10.5px; font-weight:bold; text-transform:uppercase;">
+                            Пробный период: 7 дней бесплатно*
                         </div>
                     </div>
                     <p id="pro-promo-desc-text" style="font-size:12.5px; line-height:1.5; opacity:0.9; margin-bottom:14px; text-align:justify;">
                         ${customMessage ? `<b>Обратите внимание:</b> ${customMessage}<br><br>${defaultMsg}` : defaultMsg}
                     </p>
-                    <div style="background:rgba(255,255,255,0.04); padding:12px 14px; border-radius:8px; border:1px solid rgba(143,188,143,0.25); font-size:12px; margin-bottom:14px;">
+                    <div style="background:rgba(255,255,255,0.04); padding:12px 14px; border-radius:8px; border:1px solid rgba(143,188,143,0.25); font-size:11.5px; margin-bottom:14px; line-height:1.6;">
                         <span style="display:block; font-size:10.5px; opacity:0.7; text-transform:uppercase; margin-bottom:6px; font-weight:bold;">ID Вашего устройства: <b style="color:#8FBC8F; font-family:monospace; font-size:13px;">${currentId}</b></span>
+                        <div style="color:#FCD34D; font-size:11px; margin-bottom:6px;">
+                            * 7 дней теста предоставляются <b>при определенных условиях</b>.
+                        </div>
                         <div style="margin-bottom:6px;">
-                            <span style="font-weight:bold; color:#8FBC8F;">• ООО ТД «Сателлит» (Официальный отдел продаж):</span><br>
+                            <span style="font-weight:bold; color:#8FBC8F;">• Чат MAX:</span> <a href="https://max.ru/join/Gyqmpm-xCVOcBlYKZkp6LhAzm5KgXoSYvbO8qUrWLqs" target="_blank" rel="noopener noreferrer" style="color:#38BDF8; font-weight:bold; text-decoration:none;">Перейти в чат MAX ↗</a>
+                        </div>
+                        <div style="margin-bottom:6px;">
+                            <span style="font-weight:bold; color:#8FBC8F;">• Отдел продаж (ООО ТД «Сателлит»):</span><br>
                             <a href="mailto:a1983v@yandex.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none;">✉️ a1983v@yandex.ru</a>
                         </div>
                         <div>
-                            <span style="font-weight:bold; color:#8FBC8F;">• ИП Худяков Н.С. (Техподдержка и разработка):</span><br>
+                            <span style="font-weight:bold; color:#8FBC8F;">• Разработка (ИП Худяков Н.С.):</span><br>
                             <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; font-weight:bold; text-decoration:none;">✉️ folgoal@gmail.com</a>
                         </div>
                     </div>
