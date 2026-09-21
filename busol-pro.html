@@ -323,7 +323,7 @@
             touch-action: manipulation;
         }
 
-        /* ПОЛНОЭКРАННЫЙ ПЛАНШЕТ КАРТЫ С ЧИСТОЙ КРУГЛОЙ МИНИ-БУССОЛЬЮ */
+        /* ПОЛНОЭКРАННЫЙ КАРТОГРАФИЧЕСКИЙ ПЛАНШЕТ С ЧИСТОЙ КРУГЛОЙ МИНИ-БУССОЛЬЮ */
         .fullscreen-map-modal {
             display: none;
             position: fixed;
@@ -1070,7 +1070,7 @@
     let calculatedGpsAzimuth = null;
     let uploadedGisPolygons = [];
 
-    let canvasZoomMultiplier = 1.8; 
+    let canvasZoomMultiplier = 1.0; 
     let isFollowUser = false;
     let panOffsetX = 0;
     let panOffsetY = 0;
@@ -1152,10 +1152,10 @@
 
     function recenterCanvasOnUser() {
         isFollowUser = false;
-        canvasZoomMultiplier = 1.8;
+        canvasZoomMultiplier = 1.0;
         panOffsetX = 0;
         panOffsetY = 0;
-        showToast("📐 Автоцентрирование делянки восстановлено");
+        showToast("📐 Чертёж отцентрирован");
         drawPolygon();
     }
 
@@ -1977,23 +1977,13 @@
         }
     }
 
+    // --- БЕЗОПАСНОЕ ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ БЕЗ ПОТЕРИ ДАННЫХ ДЕЛЯНКИ ---
     function switchSystemMode(mode) {
-        if (measurementsLog.length > 0) {
-            if (!confirm("Внимание! При смене режима текущий журнал полевой съемки будет очищен. Продолжить?")) {
-                return;
-            }
-        }
-        measurementsLog = [];
-        baseAzimuth = null;
-        gpsPoint1 = null;
         currentSystemMode = mode;
-        
         applyModeUI();
-        resetZeroDirection();
-        renderLogTable();
         saveToLocalStorage();
-        drawPolygon();
         updateFsMapUI();
+        showToast(`Режим переключен. Данные сохранены!`);
     }
 
     function applyModeUI() {
@@ -2587,6 +2577,7 @@
         });
     }
 
+    // --- ОТРЕНДЕРИВАНИЕ ПОЛИГОНА БЕЗ СКАЧКОВ И С ПРАВИЛЬНЫМ ЦЕНТРИРОВАНИЕМ ---
     function drawPolygon() {
         const canvases = [document.getElementById('polygon-canvas')];
         if (isFsMapOpen) {
@@ -2603,6 +2594,7 @@
             ctx.fillStyle = isDark ? '#22302B' : '#FFFFFF';
             ctx.fillRect(0, 0, width, height);
 
+            // Стороны света
             ctx.fillStyle = isDark ? 'rgba(255,255,255,0.4)' : '#333333'; 
             ctx.font = "bold 12px Inter, sans-serif";
             ctx.textAlign = "center";
@@ -2613,6 +2605,7 @@
             ctx.textAlign = "right";
             ctx.fillText("В", width - 10, height / 2 + 4);
 
+            // 1. Построение точек делянки
             let points = [{ x: 0, y: 0 }];
             let currentX = 0;
             let currentY = 0;
@@ -2624,41 +2617,22 @@
                 points.push({ x: currentX, y: currentY });
             });
 
-            let lastIndex = measurementsLog.length - 1;
-            let startLat = gpsPoint1 ? gpsPoint1.lat : (lastIndex >= 0 && measurementsLog[lastIndex].lat ? measurementsLog[lastIndex].lat : currentLat);
-            let startLng = gpsPoint1 ? gpsPoint1.lng : (lastIndex >= 0 && measurementsLog[lastIndex].lng ? measurementsLog[lastIndex].lng : currentLng);
+            // 2. Расчет центра и масштаба СТРОГО по точкам полигона (БЕЗ шумящего GPS пользователя!)
+            let minX = Math.min(...points.map(p => p.x));
+            let maxX = Math.max(...points.map(p => p.x));
+            let minY = Math.min(...points.map(p => p.y));
+            let maxY = Math.max(...points.map(p => p.y));
 
-            let lastPoint = points[points.length - 1];
+            let spanX = Math.max(maxX - minX, 10.0);
+            let spanY = Math.max(maxY - minY, 10.0);
+            let maxSpan = Math.max(spanX, spanY);
 
-            let relativeDx = calculateDistance(startLat, startLng, startLat, currentLng) * (currentLng >= startLng ? 1 : -1);
-            let relativeDy = calculateDistance(startLat, startLng, currentLat, startLng) * (currentLat >= startLat ? 1 : -1);
-
-            let userDx = lastPoint.x + relativeDx;
-            let userDy = lastPoint.y + relativeDy;
-
-            let allX = points.map(p => p.x);
-            let allY = points.map(p => p.y);
-            
-            if (gpsPoint1 || measurementsLog.length > 0) {
-                allX.push(userDx);
-                allY.push(userDy);
-            }
-
-            let minX = Math.min(...allX);
-            let maxX = Math.max(...allX);
-            let minY = Math.min(...allY);
-            let maxY = Math.max(...allY);
-
-            let baseScale = (width - 80) / Math.max(maxX - minX, maxY - minY, 2.0);
+            // Базовый масштаб с отступами по 50px с каждой стороны
+            let baseScale = (Math.min(width, height) - 100) / maxSpan;
             let scale = baseScale * canvasZoomMultiplier;
 
             let centerCenterX = (maxX + minX) / 2;
             let centerCenterY = (maxY + minY) / 2;
-
-            if (isFollowUser) {
-                centerCenterX = userDx;
-                centerCenterY = userDy;
-            }
 
             function toPixel(pt) {
                 return {
@@ -2667,13 +2641,17 @@
                 };
             }
 
+            // Фоновая сетка
             ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
             ctx.lineWidth = 1;
             for(let i = 0; i < width; i += 40) {
                 ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke();
+            }
+            for(let i = 0; i < height; i += 40) {
                 ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke();
             }
 
+            // 3. Отрисовка внешних слоев KML/KMZ (если есть)
             if (uploadedGisPolygons && uploadedGisPolygons.length > 0) {
                 ctx.setLineDash([5, 5]);
                 ctx.strokeStyle = "#FFA726";
@@ -2696,6 +2674,7 @@
                 ctx.setLineDash([]);
             }
 
+            // 4. Отрисовка линий хода делянки
             if (measurementsLog.length > 0) {
                 ctx.lineWidth = 2.5;
                 ctx.strokeStyle = isDark ? '#8FBC8F' : '#2D5A27';
@@ -2715,40 +2694,60 @@
                     ctx.font = "bold 10px Inter, sans-serif";
                     ctx.fillStyle = isDark ? '#FFFFFF' : '#111111';
                     ctx.textAlign = "center";
-                    ctx.fillText(`№ ${measurementsLog[i].id} (${measurementsLog[i].distance} м)`, midX, midY - 5);
+                    ctx.fillText(`№${measurementsLog[i].id} (${measurementsLog[i].distance}м)`, midX, midY - 5);
                 }
 
+                // Вершины столбов
                 points.forEach((p, idx) => {
                     let pix = toPixel(p);
                     ctx.beginPath();
-                    ctx.arc(pix.x, pix.y, idx === 0 ? 5 : 3.5, 0, 2 * Math.PI);
+                    ctx.arc(pix.x, pix.y, idx === 0 ? 5.5 : 4, 0, 2 * Math.PI);
                     ctx.fillStyle = idx === 0 ? '#DC2626' : '#16A34A'; 
                     ctx.fill();
+                    ctx.strokeStyle = '#FFFFFF';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
                 });
             }
 
+            // 5. Отрисовка маркера текущей позиции таксатора (зеленый треугольник направления)
             if (gpsPoint1 || measurementsLog.length > 0) {
+                let lastIndex = measurementsLog.length - 1;
+                let startLat = gpsPoint1 ? gpsPoint1.lat : (lastIndex >= 0 && measurementsLog[lastIndex].lat ? measurementsLog[lastIndex].lat : currentLat);
+                let startLng = gpsPoint1 ? gpsPoint1.lng : (lastIndex >= 0 && measurementsLog[lastIndex].lng ? measurementsLog[lastIndex].lng : currentLng);
+                let lastPt = points[points.length - 1];
+
+                // Проекция смещения в метрах
+                let dY_meters = (currentLat - startLat) * 111139;
+                let dX_meters = (currentLng - startLng) * (111139 * Math.cos(startLat * Math.PI / 180));
+
+                let userDx = lastPt.x + dX_meters;
+                let userDy = lastPt.y + dY_meters;
                 let userPixel = toPixel({ x: userDx, y: userDy });
 
-                ctx.save();
-                ctx.translate(userPixel.x, userPixel.y);
-                ctx.rotate((currentAzimuth * Math.PI) / 180);
+                // Рисуем курсор только если он попадает в пределы холста
+                if (userPixel.x >= 0 && userPixel.x <= width && userPixel.y >= 0 && userPixel.y <= height) {
+                    ctx.save();
+                    ctx.translate(userPixel.x, userPixel.y);
+                    ctx.rotate((currentAzimuth * Math.PI) / 180);
 
-                ctx.beginPath();
-                ctx.moveTo(0, -11);
-                ctx.lineTo(8, 9);
-                ctx.lineTo(0, 5);
-                ctx.lineTo(-8, 9);
-                ctx.closePath();
+                    ctx.beginPath();
+                    ctx.moveTo(0, -12);
+                    ctx.lineTo(8, 9);
+                    ctx.lineTo(0, 5);
+                    ctx.lineTo(-8, 9);
+                    ctx.closePath();
 
-                ctx.fillStyle = "#00FF66";
-                ctx.fill();
-                ctx.strokeStyle = "#000000";
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-                ctx.restore();
+                    ctx.fillStyle = "#00FF66";
+                    ctx.fill();
+                    ctx.strokeStyle = "#000000";
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                    ctx.restore();
+                }
             }
 
+            // 6. Расчет площади по формуле Гаусса
             let area = 0;
             let j = points.length - 1;
             for (let i = 0; i < points.length; i++) {
