@@ -2,1660 +2,1472 @@
 <html lang="ru" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#1a1a2e">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<title>Электронная буссоль БГ-ХНС PRO</title>
+<title>Электронная буссоль онлайн с визиром и уровнем | БГ-ХНС PRO 3.2</title>
 <style>
 /* ========== THEME VARIABLES ========== */
 :root[data-theme="dark"]{
-  --bg:#0f0f1a;--surface:#1a1a2e;--surface2:#16213e;--text:#e4e6eb;--text2:#9fa3b1;
-  --accent:#e94560;--accent2:#0f3460;--green:#00c853;--orange:#ff9800;--red:#f44336;
-  --border:#2a2a4a;--shadow:0 4px 20px rgba(0,0,0,.5);--radius:12px;
-  --hud-bg:rgba(0,0,0,.65);--hud-text:#0f0;--canvas-bg:#0d1117;
+  --bg:#0d0d1a;--bg2:#1a1a2e;--bg3:#16213e;--card:#1e1e38;--border:#2a2a4a;
+  --text:#e0e0f0;--text2:#8888aa;--accent:#4e8cff;--accent2:#00c896;
+  --danger:#ff4466;--warn:#ffaa00;--ok:#00c896;--shadow:0 4px 20px rgba(0,0,0,.4);
+  --modal-bg:rgba(0,0,0,.85);--camera-bg:#000;--hud-bg:rgba(0,0,0,.6);
+  --canvas-bg:#0a0a1a;--grid:#1a1a3a;
 }
 :root[data-theme="light"]{
-  --bg:#f0f2f5;--surface:#fff;--surface2:#eef1f6;--text:#1a1a2e;--text2:#666;
-  --accent:#e94560;--accent2:#1a73e8;--green:#00c853;--orange:#ff9800;--red:#f44336;
-  --border:#dadce0;--shadow:0 2px 12px rgba(0,0,0,.12);--radius:12px;
-  --hud-bg:rgba(255,255,255,.8);--hud-text:#1a1a2e;--canvas-bg:#f8f9fa;
+  --bg:#f0f2f8;--bg2:#e8eaf0;--bg3:#dde0ec;--card:#ffffff;--border:#ccd0e0;
+  --text:#1a1a2e;--text2:#666688;--accent:#2e6bd6;--accent2:#00a876;
+  --danger:#dd3355;--warn:#cc8800;--ok:#00a876;--shadow:0 4px 20px rgba(0,0,0,.12);
+  --modal-bg:rgba(255,255,255,.9);--camera-bg:#222;--hud-bg:rgba(255,255,255,.8);
+  --canvas-bg:#f5f7fa;--grid:#d0d4e0;
 }
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow-x:hidden}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;transition:background .3s,color .3s}
-button{font-family:inherit;cursor:pointer;border:none;outline:none}
-input,select,textarea{font-family:inherit;font-size:15px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow-x:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s;font-size:15px;line-height:1.4}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:var(--text);font-size:14px;padding:10px 16px;border-radius:8px;transition:all .2s}
+button:active{transform:scale(.96)}
+.btn{background:var(--accent);color:#fff;font-weight:600;padding:12px 20px;border-radius:10px}
+.btn:active{background:var(--accent);opacity:.85}
+.btn-sec{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
+.btn-ok{background:var(--ok);color:#fff;font-weight:600}
+.btn-danger{background:var(--danger);color:#fff;font-weight:600}
+.btn-warn{background:var(--warn);color:#000;font-weight:600}
+input,select{font-family:inherit;font-size:14px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg3);color:var(--text)}
+select{cursor:pointer}
+
 /* ========== HEADER ========== */
-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface);box-shadow:var(--shadow);position:sticky;top:0;z-index:100;padding-top:max(12px,env(safe-area-inset-top))}
-header .brand{display:flex;align-items:center;gap:10px}
-header .brand h1{font-size:18px;font-weight:700;white-space:nowrap}
-header .brand .ver{font-size:11px;color:var(--text2);background:var(--surface2);padding:2px 8px;border-radius:20px}
-header .actions{display:flex;gap:8px;align-items:center}
-header .icon-btn{width:40px;height:40px;border-radius:50%;background:var(--surface2);color:var(--text);font-size:18px;display:flex;align-items:center;justify-content:center}
-header .icon-btn:active{transform:scale(.92)}
-/* ========== TABS ========== */
-nav.tabs{display:flex;overflow-x:auto;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:64px;z-index:99;-ms-overflow-style:none;scrollbar-width:none}
-nav.tabs::-webkit-scrollbar{display:none}
-nav.tabs button{flex:1 0 auto;padding:12px 16px;background:none;color:var(--text2);font-size:13px;font-weight:600;white-space:nowrap;border-bottom:3px solid transparent;transition:.2s}
-nav.tabs button.active{color:var(--accent);border-bottom-color:var(--accent)}
-nav.tabs button:active{background:var(--surface2)}
-/* ========== PAGES ========== */
-.page{display:none;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom))}
-.page.active{display:block}
-.section-title{font-size:16px;font-weight:700;margin-bottom:12px;color:var(--text)}
-.card{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:16px;box-shadow:var(--shadow)}
-/* ========== MAGNETIC MODE ========== */
-#camera-video{width:100%;max-width:600px;border-radius:var(--radius);background:#000;aspect-ratio:3/4;object-fit:cover;display:block;margin:0 auto}
-#attitude-canvas{position:absolute;left:50%;top:0;transform:translateX(-50%);pointer-events:none}
-.visor-wrap{position:relative;max-width:600px;margin:0 auto}
-.visor-info{display:flex;justify-content:space-around;margin:12px 0;text-align:center}
-.visor-info .item{font-size:13px;color:var(--text2)}
-.visor-info .item .val{font-size:22px;font-weight:700;color:var(--text);display:block;margin-top:2px}
-.visor-info .item.green .val{color:var(--green)}
-.visor-info .item.orange .val{color:var(--orange)}
-.btn-fix{width:100%;padding:16px;border-radius:var(--radius);background:var(--accent);color:#fff;font-size:16px;font-weight:700;margin-top:8px;transition:.2s}
-.btn-fix:active{transform:scale(.97);opacity:.85}
-.btn-fix:disabled{background:var(--surface2);color:var(--text2)}
-.btn-fix.green{background:var(--green);color:#000}
-/* ========== LIMB MODE ========== */
-#limb-canvas{width:100%;max-width:420px;aspect-ratio:1/1;display:block;margin:0 auto;background:var(--canvas-bg);border-radius:50%}
-.limb-info{text-align:center;margin:12px 0}
-.limb-info .azimuth-big{font-size:42px;font-weight:800;color:var(--accent)}
-.limb-info .bearing{font-size:18px;color:var(--text2);margin-top:4px}
-.level-indicator{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0;font-size:13px;color:var(--text2)}
-.level-bar{width:200px;height:6px;background:var(--surface2);border-radius:3px;position:relative;overflow:hidden}
-.level-bar .fill{position:absolute;top:0;left:50%;height:100%;background:var(--green);border-radius:3px;transform:translateX(-50%);transition:.1s}
-/* ========== GPS MODE ========== */
-.gps-status{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:14px}
-.gps-dot{width:10px;height:10px;border-radius:50%;background:var(--text2);transition:.3s}
-.gps-dot.active{background:var(--green);box-shadow:0 0 8px var(--green)}
-.gps-points-list{list-style:none}
-.gps-points-list li{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
-.gps-points-list li .pt-name{font-weight:700;color:var(--accent)}
-.gps-points-list li .pt-coords{color:var(--text2);font-size:12px}
-#gps-mini-map{width:100%;max-width:400px;aspect-ratio:1/1;display:block;margin:12px auto;background:var(--canvas-bg);border-radius:var(--radius)}
-.btn-gps-mark{width:100%;padding:16px;border-radius:var(--radius);background:var(--accent2);color:#fff;font-size:16px;font-weight:700}
-.btn-gps-mark:active{transform:scale(.97)}
-.gps-summary{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
-.gps-summary .box{background:var(--surface2);border-radius:8px;padding:12px;text-align:center}
-.gps-summary .box .label{font-size:11px;color:var(--text2)}
-.gps-summary .box .value{font-size:20px;font-weight:700;color:var(--text)}
-/* ========== PLAN ========== */
-.plan-toolbar{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
-.plan-toolbar button{min-width:44px;height:44px;border-radius:8px;background:var(--surface2);color:var(--text);font-size:18px;font-weight:700}
-.plan-toolbar button:active{transform:scale(.92)}
-.plan-toolbar .import-btn{flex:1;font-size:13px;font-weight:600}
-#plan-canvas{width:100%;aspect-ratio:1/1;display:block;background:var(--canvas-bg);border-radius:var(--radius);border:1px solid var(--border)}
-.plan-area{margin-top:12px;text-align:center}
-.plan-area .ha{font-size:28px;font-weight:800;color:var(--accent)}
-.plan-area .sqm{font-size:14px;color:var(--text2)}
-.plan-layers{margin-top:8px;font-size:12px;color:var(--text2)}
-.plan-layers .layer-tag{display:inline-block;background:var(--surface2);padding:3px 10px;border-radius:12px;margin:2px}
-/* ========== JOURNAL ========== */
-.journal-toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-.journal-toolbar button{padding:10px 14px;border-radius:8px;background:var(--surface2);color:var(--text);font-size:13px;font-weight:600}
-.journal-toolbar button:active{transform:scale(.95)}
-.journal-table-wrap{overflow-x:auto}
-table.journal{width:100%;border-collapse:collapse;font-size:13px;min-width:500px}
-table.journal th{background:var(--surface2);padding:10px 8px;text-align:left;font-weight:600;color:var(--text2);white-space:nowrap}
-table.journal td{padding:8px;border-bottom:1px solid var(--border)}
-table.journal tr:active{background:var(--surface2)}
-table.journal input{width:64px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:4px 6px;color:var(--text);text-align:center}
-table.journal .del-btn{background:none;color:var(--red);font-size:16px;padding:4px 8px}
-.method-select{display:flex;gap:8px;margin-bottom:12px;align-items:center}
-.method-select select{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text)}
-.empty-state{text-align:center;padding:40px 16px;color:var(--text2)}
-.empty-state .icon{font-size:48px;opacity:.3}
-/* ========== SETTINGS ========== */
-.settings-group{margin-bottom:20px}
-.settings-group label{display:block;font-size:13px;color:var(--text2);margin-bottom:4px}
-.settings-group input,.settings-group select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text);margin-bottom:12px}
-.settings-group .row{display:flex;gap:12px}
-.settings-group .row > div{flex:1}
-.author-block{text-align:center;padding:16px;font-size:12px;color:var(--text2);border-top:1px solid var(--border);margin-top:20px}
-.author-block .name{font-weight:700;color:var(--text);font-size:14px}
+.header{position:sticky;top:0;z-index:100;background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow)}
+.header h1{font-size:18px;font-weight:700;letter-spacing:-.3px}
+.header .ver{font-size:11px;color:var(--text2);margin-top:2px}
+.header .sub{font-size:11px;color:var(--text2);margin-top:1px}
+.theme-toggle{background:var(--bg3);border:1px solid var(--border);padding:8px 12px;border-radius:8px;font-size:18px}
+
+/* ========== LAYOUT ========== */
+.container{max-width:1200px;margin:0 auto;padding:12px}
+.section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
+.section h2{font-size:16px;font-weight:700;margin-bottom:8px}
+.section h3{font-size:14px;font-weight:600;margin-bottom:6px;margin-top:10px;color:var(--accent)}
+.desc{font-size:12px;color:var(--text2);margin-bottom:10px}
+
+/* ========== MODE TABS ========== */
+.mode-tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.mode-tab{flex:1;min-width:0;padding:10px 8px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);text-align:center;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mode-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.mode-tab small{display:block;font-size:10px;font-weight:400;opacity:.8;margin-top:2px}
+
+/* ========== COMPASS / VISOR ========== */
+.compass-wrap{position:relative;width:100%;max-width:400px;margin:0 auto;aspect-ratio:1}
+#compassCanvas{width:100%;height:100%;display:block}
+.azimuth-display{text-align:center;font-size:28px;font-weight:700;letter-spacing:1px;margin:8px 0;color:var(--accent)}
+.coord-display{text-align:center;font-size:12px;color:var(--text2);margin:4px 0}
+.gps-info{text-align:center;font-size:12px;color:var(--text2);margin:4px 0}
+.horizon-info{display:flex;justify-content:center;gap:12px;font-size:12px;color:var(--text2);margin:4px 0;flex-wrap:wrap}
+.compass-warn{text-align:center;font-size:12px;color:var(--warn);margin:6px 0;padding:6px;border:1px solid var(--warn);border-radius:8px;background:rgba(255,170,0,.1);display:none}
+.action-row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+.action-row button{flex:1;min-width:80px;font-size:12px;padding:10px 8px}
+
+/* ========== CAMERA VISOR ========== */
+.camera-wrap{position:relative;width:100%;max-width:400px;margin:0 auto;border-radius:14px;overflow:hidden;background:var(--camera-bg);aspect-ratio:3/4}
+#visCamera{width:100%;height:100%;object-fit:cover}
+.camera-overlay{position:absolute;inset:0;pointer-events:none}
+.vline{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.5);left:50%;transform:translateX(-50%)}
+.hline{position:absolute;left:0;right:0;height:2px;background:rgba(255,255,255,.3);top:50%}
+.horizon-ring{position:absolute;top:50%;left:50%;width:100px;height:100px;border-radius:50%;border:3px solid rgba(255,255,255,.3);transform:translate(-50%,-50%) rotateX(0deg);transition:border-color .2s}
+.horizonRingOk{border-color:var(--ok)!important;box-shadow:0 0 20px var(--ok)}
+.cam-hud{position:absolute;top:8px;left:8px;right:8px;background:var(--hud-bg);color:#fff;font-size:10px;padding:6px 8px;border-radius:8px;pointer-events:none}
+.cam-hud b{color:var(--accent2)}
+
+/* ========== FULLSCREEN COMPASS ========== */
+.modal{position:fixed;inset:0;z-index:200;background:var(--modal-bg);display:none;align-items:center;justify-content:center;padding:10px}
+.modal.active{display:flex}
+.modal-content{background:var(--card);border-radius:14px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;padding:16px}
+.modal-close{position:absolute;top:10px;right:14px;font-size:24px;background:none}
+.fs-compass{width:100%;max-width:500px;aspect-ratio:1}
+
+/* ========== PHOTO MODAL ========== */
+.photo-modal{position:fixed;inset:0;z-index:300;background:#000;display:none;flex-direction:column}
+.photo-modal.active{display:flex}
+.photo-video-wrap{flex:1;position:relative;overflow:hidden}
+#photoCamera{width:100%;height:100%;object-fit:cover}
+.photo-hud{position:absolute;top:0;left:0;right:0;background:rgba(0,0,0,.7);color:#fff;font-size:11px;padding:8px 12px}
+.photo-hud .line{margin:2px 0}
+.photo-hud b{color:#00c896}
+.photo-actions{display:flex;gap:8px;padding:10px;justify-content:center;background:rgba(0,0,0,.8)}
+.photo-actions button{flex:1;max-width:160px}
+#photoPreview{display:none;width:100%;height:100%;object-fit:contain}
+#photoCanvas{display:none}
+
+/* ========== CANVAS MAP ========== */
+.map-wrap{position:relative;width:100%;border-radius:10px;overflow:hidden;background:var(--canvas-bg);border:1px solid var(--border)}
+#mapCanvas{width:100%;display:block;cursor:grab}
+.map-controls{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:4px}
+.map-controls button{width:36px;height:36px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);font-size:18px;display:flex;align-items:center;justify-content:center}
+.area-display{text-align:center;font-size:16px;font-weight:700;color:var(--accent2);margin:8px 0}
+
+/* ========== JOURNAL TABLE ========== */
+.journal-table{width:100%;border-collapse:collapse;font-size:12px}
+.journal-table th{text-align:left;padding:6px 8px;border-bottom:2px solid var(--border);color:var(--text2);font-size:11px;text-transform:uppercase}
+.journal-table td{padding:4px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+.journal-table tr:last-child td{border-bottom:none}
+.journal-table input{width:100%;padding:4px 6px;font-size:12px;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text)}
+.journal-table .del-btn{color:var(--danger);font-size:16px;padding:2px 6px}
+.journal-empty{text-align:center;color:var(--text2);padding:20px;font-size:13px}
+.method-badge{display:inline-block;background:var(--accent);color:#fff;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600}
+
+/* ========== SETTINGS ROWS ========== */
+.settings-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0}
+.settings-row label{font-size:12px;color:var(--text2);min-width:140px}
+.settings-row select,.settings-row input{flex:1;min-width:100px}
+
 /* ========== PROJECTS ========== */
-.project-item{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid var(--border)}
-.project-item .name{font-weight:600}
-.project-item .btns{display:flex;gap:8px}
-.project-item .btns button{padding:6px 12px;border-radius:6px;font-size:12px}
-.project-item .load{background:var(--accent2);color:#fff}
-.project-item .del{background:var(--surface2);color:var(--red)}
-/* ========== MODALS ========== */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;padding:16px;padding-top:max(16px,env(safe-area-inset-top))}
-.modal.open{display:flex}
-.modal-close{position:absolute;top:max(16px,env(safe-area-inset-top));right:16px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;font-size:20px;z-index:10}
-#inspector-video{width:100%;max-width:600px;border-radius:12px;max-height:70vh;object-fit:cover}
-.inspector-hud{position:absolute;bottom:max(20px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--hud-bg);color:var(--hud-text);padding:12px 16px;border-radius:10px;font-size:12px;font-family:monospace;max-width:90%;width:auto}
-.inspector-hud .line{white-space:nowrap;line-height:1.6}
-.inspector-actions{display:flex;gap:12px;margin-top:16px}
-.inspector-actions button{padding:14px 24px;border-radius:10px;font-size:15px;font-weight:700}
-.inspector-actions .capture{background:var(--accent);color:#fff}
-.inspector-actions .cancel{background:rgba(255,255,255,.15);color:#fff}
-#photo-preview-canvas{max-width:90vw;max-height:70vh;border-radius:12px}
-#photo-download{margin-top:12px;padding:14px 28px;border-radius:10px;background:var(--green);color:#000;font-size:15px;font-weight:700}
-/* ========== TOAST ========== */
-#toast{position:fixed;bottom:max(80px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;padding:12px 24px;border-radius:24px;font-size:14px;z-index:300;opacity:0;transition:.3s;pointer-events:none;max-width:90%;text-align:center}
-#toast.show{opacity:1;bottom:max(100px,env(safe-area-inset-bottom))}
-/* ========== UTILITY ========== */
-.flex-col{display:flex;flex-direction:column;gap:8px}
-.btn-row{display:flex;gap:8px}
-.btn-row>*{flex:1}
-.btn-primary{padding:14px;border-radius:var(--radius);background:var(--accent);color:#fff;font-weight:700;font-size:15px}
-.btn-secondary{padding:14px;border-radius:var(--radius);background:var(--surface2);color:var(--text);font-weight:600;font-size:15px}
-.btn-primary:active,.btn-secondary:active{transform:scale(.97)}
-hr{border:none;border-top:1px solid var(--border);margin:16px 0}
-small.hint{font-size:12px;color:var(--text2);display:block;margin-top:-8px;margin-bottom:12px}
-@media(max-width:380px){header .brand h1{font-size:15px}nav.tabs button{font-size:12px;padding:10px 12px}}
+.proj-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+.proj-row select{flex:1;min-width:150px}
+
+/* ========== CALIBRATION ========== */
+.calib-instructions{font-size:13px;color:var(--text2);line-height:1.5;margin:10px 0}
+.calib-status{text-align:center;font-size:13px;margin:8px 0;color:var(--accent)}
+
+/* ========== FOOTER ========== */
+.footer{background:var(--bg2);border-top:1px solid var(--border);padding:16px;margin-top:20px;text-align:center}
+.footer h3{font-size:14px;margin-bottom:6px}
+.footer p{font-size:12px;color:var(--text2);margin:3px 0}
+.footer .legal{font-size:11px;color:var(--text2);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.footer .contacts{font-size:12px;color:var(--text2);margin:6px 0}
+.footer .contacts a{color:var(--accent)}
+
+/* ========== RESPONSIVE ========== */
+@media(max-width:600px){
+  .header h1{font-size:15px}
+  .azimuth-display{font-size:22px}
+  .mode-tab{font-size:10px;padding:8px 4px}
+  .journal-table{font-size:11px}
+  .journal-table th{font-size:10px}
+  .section{padding:10px}
+}
+@media(max-width:400px){
+  .mode-tab small{display:none}
+}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg3);color:var(--text);padding:10px 20px;border-radius:10px;border:1px solid var(--border);z-index:500;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
 </style>
 </head>
 <body>
-<header>
-  <div class="brand">
-    <h1>БГ-ХНС PRO</h1>
-    <span class="ver">v3.2</span>
-  </div>
-  <div class="actions">
-    <button class="icon-btn" id="theme-toggle" title="Тема">&#9798;</button>
-    <button class="icon-btn" id="camera-inspector-btn" title="Фото">&#128247;</button>
-  </div>
-</header>
-<nav class="tabs" id="tabs">
-  <button data-tab="visor" class="active">Визир</button>
-  <button data-tab="limb">Лимб</button>
-  <button data-tab="gps">GPS-Ход</button>
-  <button data-tab="plan">Планшет</button>
-  <button data-tab="journal">Журнал</button>
-  <button data-tab="settings">Настройки</button>
-</nav>
 
-<!-- ===== PAGE: VISOR (MAGNETIC) ===== -->
-<section class="page active" id="page-visor">
-  <div class="visor-wrap" id="visor-wrap">
-    <video id="camera-video" autoplay playsinline muted></video>
-    <canvas id="attitude-canvas"></canvas>
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <h1>БГ-ХНС PRO 3.2</h1>
+    <div class="ver">Электронная буссоль • Геодезия выдела • Отвод лесосек</div>
   </div>
-  <div class="visor-info">
-    <div class="item" id="info-azimuth"><span class="val" id="val-azimuth">—</span>Азимут</div>
-    <div class="item" id="info-pitch"><span class="val" id="val-pitch">—</span>Наклон</div>
-    <div class="item" id="info-roll"><span class="val" id="val-roll">—</span>Крен</div>
-  </div>
-  <div class="level-indicator">
-    <span>Уровень:</span>
-    <div class="level-bar"><div class="fill" id="level-fill" style="width:0"></div></div>
-    <span id="level-text">—</span>
-  </div>
-  <button class="btn-fix" id="fix-azimuth-btn" disabled>Зафиксировать румб</button>
-  <small class="hint">Допуск по горизонту &plusmn;12&deg;. Зелёное кольцо = прибор в горизонте.</small>
-</section>
+  <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+</div>
 
-<!-- ===== PAGE: LIMB ===== -->
-<section class="page" id="page-limb">
-  <canvas id="limb-canvas"></canvas>
-  <div class="limb-info">
-    <div class="azimuth-big" id="limb-azimuth">0&deg;</div>
-    <div class="bearing" id="limb-bearing">С</div>
-  </div>
-  <div class="level-indicator">
-    <span>Горизонт:</span>
-    <div class="level-bar"><div class="fill" id="limb-level-fill" style="width:0"></div></div>
-    <span id="limb-level-text">—</span>
-  </div>
-  <button class="btn-fix" id="limb-fix-btn">Зафиксировать румб</button>
-</section>
+<div class="container">
 
-<!-- ===== PAGE: GPS ===== -->
-<section class="page" id="page-gps">
-  <div class="card">
-    <div class="gps-status">
-      <div class="gps-dot" id="gps-dot"></div>
-      <span id="gps-status-text">GPS не активен</span>
-    </div>
-    <button class="btn-gps-mark" id="gps-start-btn">Запустить GPS-наблюдение</button>
-    <hr>
-    <button class="btn-gps-mark" id="gps-mark-btn" disabled style="background:var(--accent)">Отметить точку (T<n id="gps-pt-num">1</n>)</button>
+<!-- PROJECTS SECTION -->
+<div class="section">
+  <h2>📁 Управление проектами и архивом делянок</h2>
+  <div class="desc">Сохранение независимых съемок, подложка KML/KMZ/GeoJSON выдела ФГИС ЛК и выгрузка отчетов.</div>
+  <div class="proj-row">
+    <button class="btn-sec" onclick="saveProject()">💾 Сохранить в архив</button>
+    <select id="projectSelect" onchange="loadProject()"></select>
+    <button class="btn-danger" onclick="deleteProject()">🗑️ Удалить</button>
   </div>
-  <div class="gps-summary">
-    <div class="box"><div class="label">Точек отмечено</div><div class="value" id="gps-count">0</div></div>
-    <div class="box"><div class="label">Общий ход, м</div><div class="value" id="gps-total-dist">0</div></div>
+  <div class="proj-row">
+    <label style="font-size:12px;color:var(--text2)">📂 Слой ФГИС:</label>
+    <input type="file" id="kmlFile" accept=".kml,.kmz,.geojson,.json" onchange="handleFileUpload(event)">
   </div>
-  <canvas id="gps-mini-map"></canvas>
-  <ul class="gps-points-list" id="gps-points-list"></ul>
-  <button class="btn-primary" id="gps-to-journal" style="margin-top:12px;display:none">Перенести в журнал</button>
-</section>
+  <div class="action-row" style="justify-content:flex-start">
+    <button class="btn-sec" onclick="exportCSV()">📊 Экспорт CSV (Excel)</button>
+    <button class="btn-sec" onclick="exportKML()">🗺️ Экспорт KML (ГИС)</button>
+  </div>
+</div>
 
-<!-- ===== PAGE: PLAN ===== -->
-<section class="page" id="page-plan">
-  <div class="plan-toolbar">
-    <button id="zoom-in" title="Приблизить">+</button>
-    <button id="zoom-out" title="Отдалить">&minus;</button>
-    <button id="center-plan" title="Центрировать">&#127919;</button>
-    <label class="import-btn" style="display:flex;align-items:center;justify-content:center;background:var(--surface2);border-radius:8px;cursor:pointer">
-      Импорт KML/KMZ/GeoJSON
-      <input type="file" id="import-file" accept=".kml,.kmz,.geojson,.json" style="display:none">
-    </label>
+<!-- VISOR SECTION -->
+<div class="section">
+  <h2>🧭 Визирная рамка буссоли</h2>
+  <div class="desc">Выберите режим съемки: Вертикальный визир, Лимб или Спутниковый GPS-курс по 2 точкам.</div>
+  
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="tabMag" onclick="setMode('magnetic')">Магнитный (Вертикально)<small>Камера-визир</small></button>
+    <button class="mode-tab" id="tabLimb" onclick="setMode('limb')">Буссоль (Лимб)<small>Горизонтально</small></button>
+    <button class="mode-tab" id="tabGPS" onclick="setMode('gps')">📡 GPS-Курс<small>По 2 точкам</small></button>
   </div>
-  <canvas id="plan-canvas"></canvas>
-  <div class="plan-area">
-    <div class="ha" id="plan-area-ha">0.00 га</div>
-    <div class="sqm" id="plan-area-sqm">0 м²</div>
-  </div>
-  <div class="plan-layers" id="plan-layers"></div>
-  <small class="hint">Площадь считается по формуле Гаусса. Центр и масштаб — по геодезическим точкам полигона.</small>
-</section>
 
-<!-- ===== PAGE: JOURNAL ===== -->
-<section class="page" id="page-journal">
-  <div class="method-select">
-    <label style="font-size:13px;color:var(--text2);align-self:center">Расчёт длины:</label>
-    <select id="distance-method">
-      <option value="manual">Ручной ввод</option>
-      <option value="pedometer">Шагомер</option>
-      <option value="gps">GPS-расчёт</option>
+  <div class="settings-row">
+    <label>🔎 Зум:</label>
+    <select id="zoomSelect" onchange="setZoom()">
+      <option value="1.0">1.0x</option>
+      <option value="1.5">1.5x</option>
+      <option value="2.0">2.0x</option>
+      <option value="3.0">3.0x</option>
+    </select>
+    <label>↻ Обход:</label>
+    <select id="directionSelect" onchange="setDirection()">
+      <option value="cw">По часовой ↻</option>
+      <option value="ccw">Против ↺</option>
     </select>
   </div>
-  <div id="pedometer-panel" style="display:none;margin-bottom:12px">
-    <div class="card" style="padding:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span>Шагов: <b id="step-count">0</b></span>
-        <span>Дистанция: <b id="step-dist">0</b> м</span>
-        <button id="step-reset" style="padding:6px 12px;border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px">Сброс</button>
+
+  <div class="settings-row">
+    <label>🎯 Магнитное склонение:</label>
+    <select id="declSign" onchange="setDeclination()">
+      <option value="E">Восточное (+)</option>
+      <option value="W">Западное (-)</option>
+    </select>
+    <input type="number" id="declDeg" value="0" min="0" max="90" style="width:60px" onchange="setDeclination()">
+    <input type="number" id="declMin" value="0" min="0" max="59" style="width:60px" onchange="setDeclination()">
+    <button class="btn-sec" onclick="resetDeclination()">🗑️ Сброс</button>
+  </div>
+
+  <!-- MAGNETIC / CAMERA MODE -->
+  <div id="magneticPanel">
+    <div class="azimuth-display" id="azDisplayMag">АЗИМУТ: 0° 00' 00"</div>
+    <div class="coord-display" id="coordDisplayMag">61°28'48" с.ш. 50°30'06" в.д. (61.480000, 50.501667)</div>
+    <div class="gps-info" id="gpsInfoMag">Высота: 150 м (Точность: ±3 м)</div>
+    <div class="horizon-info">
+      <span>УГОЛ X: <b id="pitchMag">0.0°</b></span>
+      <span>ГОРИЗОНТ Y: <b id="rollMag">0.0°</b></span>
+      <span>БАЗА (0°): <b id="baseMag">НЕТ</b></span>
+      <span>ПОВОРОТ: <b id="turnMag">0.0°</b></span>
+    </div>
+    <div class="compass-warn" id="compassWarn">⚠️ Аппаратное заклинивание компаса! Переключитесь на «Буссоль» или «📡 GPS-Курс».</div>
+    <div class="camera-wrap" id="cameraWrap">
+      <video id="visCamera" autoplay playsinline muted></video>
+      <div class="camera-overlay">
+        <div class="vline"></div>
+        <div class="hline"></div>
+        <div class="horizon-ring" id="horizonRing"></div>
       </div>
-      <small class="hint">Длина шага: <input type="number" id="step-length-input" value="0.7" step="0.05" style="width:60px;display:inline;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:2px 4px;color:var(--text)"> м</small>
+      <div class="cam-hud" id="camHud">
+        <b>Т1 ➔ Т2</b> | Азимут: 0° | <span id="camHudCoord">GPS: поиск...</span>
+      </div>
+    </div>
+    <div class="action-row">
+      <button class="btn" id="btnFixMag" onclick="fixMagnetic()">🔒 Зафиксировать румб</button>
+      <button class="btn-sec" onclick="resetBase()">Сбросить базу 0°</button>
     </div>
   </div>
-  <div class="journal-toolbar">
-    <button id="add-row">+ Добавить</button>
-    <button id="export-csv">Экспорт CSV</button>
-    <button id="export-kml">Экспорт KML</button>
-    <button id="save-project">Сохранить проект</button>
+
+  <!-- LIMB MODE -->
+  <div id="limbPanel" style="display:none">
+    <div class="azimuth-display" id="azDisplayLimb">АЗИМУТ: 0° 00' 00"</div>
+    <div class="coord-display" id="coordDisplayLimb">61°28'48" с.ш. 50°30'06" в.д.</div>
+    <div class="gps-info" id="gpsInfoLimb">GPS: поиск...</div>
+    <div class="compass-wrap">
+      <canvas id="limbCanvas"></canvas>
+    </div>
+    <div class="action-row">
+      <button class="btn" onclick="fixLimb()">🔒 Зафиксировать азимут</button>
+      <button class="btn-sec" onclick="openFullscreenCompass()">🔍 На весь экран</button>
+    </div>
   </div>
-  <div class="journal-table-wrap">
-    <table class="journal" id="journal-table">
-      <thead><tr>
-        <th>№</th><th>Азимут</th><th>Румб</th><th>Длина, м</th><th>Метод</th><th>Координаты</th><th></th>
-      </tr></thead>
-      <tbody id="journal-body"></tbody>
+
+  <!-- GPS MODE -->
+  <div id="gpsPanel" style="display:none">
+    <div class="azimuth-display" id="azDisplayGPS">GPS: ожидание T1</div>
+    <div class="coord-display" id="coordDisplayGPS">Зафиксируйте начальную точку</div>
+    <div class="gps-info" id="gpsInfoGPS">GPS: поиск...</div>
+    <div class="action-row">
+      <button class="btn" id="btnGPSStart" onclick="gpsStartPoint()">📍 Старт точки Т1</button>
+      <button class="btn-sec" id="btnGPSReset" onclick="gpsResetPoint()">🔄 Сброс точки</button>
+    </div>
+  </div>
+
+  <div class="action-row" style="margin-top:8px">
+    <button class="btn-sec" onclick="openPhotoModal()">📷 Фотофиксация с координатами</button>
+    <button class="btn-sec" onclick="openInstruction()">📖 Инструкция</button>
+    <button class="btn-sec" onclick="openCalibration()">🧲 Калибровка</button>
+  </div>
+</div>
+
+<!-- JOURNAL SECTION -->
+<div class="section">
+  <h2>📋 Журнал полевой съемки</h2>
+  <div class="settings-row">
+    <span class="method-badge" id="methodBadge">📏 Ручной ввод</span>
+    <button class="btn-sec" onclick="openMethodSelect()">Сменить метод</button>
+    <label style="font-size:12px;margin-left:auto">Шаг таксатора (м):</label>
+    <input type="number" id="stepLength" value="0.7" min="0.3" max="1.5" step="0.01" style="width:70px">
+  </div>
+  <div style="overflow-x:auto">
+    <table class="journal-table" id="journalTable">
+      <thead>
+        <tr><th>Линия</th><th>Азимут</th><th>Длина, м</th><th>Координаты</th><th>Удал.</th></tr>
+      </thead>
+      <tbody id="journalBody">
+        <tr><td colspan="5" class="journal-empty">Журнал пуст. Наведите визир и зафиксируйте точку.</td></tr>
+      </tbody>
     </table>
   </div>
-  <div class="empty-state" id="journal-empty">
-    <div class="icon">&#128209;</div>
-    <p>Журнал пуст. Зафиксируйте румб в визире, лимбе или отметьте точку в GPS-ходе.</p>
+  <div class="action-row">
+    <button class="btn-danger" onclick="clearJournal()">🗑️ Очистить журнал</button>
   </div>
-</section>
+</div>
 
-<!-- ===== PAGE: SETTINGS ===== -->
-<section class="page" id="page-settings">
-  <div class="settings-group card">
-    <div class="section-title">Данные лесоустройства</div>
-    <label>Лесничество</label>
-    <input type="text" id="set-forest" placeholder="напр. Сыктывкарское">
-    <div class="row">
-      <div><label>Квартал</label><input type="text" id="set-kvartal" placeholder="№"></div>
-      <div><label>Выдел</label><input type="text" id="set-vydel" placeholder="№"></div>
+<!-- MAP SECTION -->
+<div class="section">
+  <h2>📐 Чертёж и карта сторон света</h2>
+  <div class="map-wrap">
+    <canvas id="mapCanvas" width="600" height="400"></canvas>
+    <div class="map-controls">
+      <button onclick="mapZoom(1.3)">+</button>
+      <button onclick="mapZoom(0.77)">−</button>
+      <button onclick="mapCenter()">🎯</button>
+      <button onclick="toggleMapFullscreen()">⛶</button>
     </div>
   </div>
-  <div class="settings-group card">
-    <div class="section-title">Калибровка шагомера</div>
-    <label>Длина шага, м</label>
-    <input type="number" id="set-step-length" value="0.7" step="0.05">
-  </div>
-  <div class="settings-group card">
-    <div class="section-title">Оформление</div>
-    <label>Тема</label>
-    <select id="set-theme">
-      <option value="dark">Тёмная</option>
-      <option value="light">Светлая</option>
-    </select>
-  </div>
-  <div class="settings-group card">
-    <div class="section-title">Проекты (архив)</div>
-    <div id="project-list"></div>
-  </div>
-  <div class="author-block">
-    <div class="name">Электронная буссоль БГ-ХНС PRO</div>
-    <div>Версия 3.2</div>
-    <div>Автор: ИП Худяков Николай Сергеевич</div>
-    <div>ИНН: 111801576622</div>
-  </div>
-</section>
+  <div class="area-display" id="areaDisplay">Площадь: 0.0000 га</div>
+</div>
 
-<!-- ===== MODAL: INSPECTOR CAMERA ===== -->
-<div class="modal" id="modal-inspector">
-  <button class="modal-close" id="inspector-close">&times;</button>
-  <video id="inspector-video" autoplay playsinline muted></video>
-  <div class="inspector-hud" id="inspector-hud"></div>
-  <div class="inspector-actions">
-    <button class="capture" id="inspector-capture">Снимок</button>
-    <button class="cancel" id="inspector-cancel">Закрыть</button>
+<!-- INFO SECTION -->
+<div class="section">
+  <h2>ℹ️ Руководство таксатору</h2>
+  <div class="desc" style="font-size:13px;line-height:1.6">
+    <b>1. 👁️ Магнитный (Вертикально):</b> Держите смартфон вертикально. Допуск горизонта ±12° — зелёное кольцо ловится быстро.<br>
+    <b>2. 📷 Фотофиксация:</b> Кнопка «📷 Фотофиксация» — камера со створом, азимутом и координатами на кадре.<br>
+    <b>3. 🧭 Буссоль (Лимб):</b> Положите смартфон на ладонь горизонтально. Точка записывается с GPS автоматически.<br>
+    <b>4. 📡 GPS-Курс:</b> Цепной ход Т1➔Т2➔Т3. Т2 становится стартом для Т3.<br>
+    <b>5. 📏 GPS-расчёт расстояний:</b> Длина вычисляется автоматически по спутниковым координатам.<br>
+    <b>6. 📂 Подложка ФГИС ЛК:</b> Загружайте KML/KMZ/GeoJSON для навигации без интернета.
   </div>
 </div>
 
-<!-- ===== MODAL: PHOTO PREVIEW ===== -->
-<div class="modal" id="modal-preview">
-  <button class="modal-close" id="preview-close">&times;</button>
-  <canvas id="photo-preview-canvas"></canvas>
-  <button id="photo-download">Сохранить в галерею</button>
+</div><!-- /container -->
+
+<!-- FOOTER -->
+<div class="footer">
+  <h3>БГ-ХНС PRO 3.2</h3>
+  <p>Цифровой инструмент таксатора. База знаний, калькуляторы и статьи для специалистов леса.</p>
+  <div class="legal">
+    <p>Лицензионное ПО для таксации, отвода лесосек и полевых изысканий. Защищено авторским правом.</p>
+  </div>
+  <div class="contacts">
+    <p>ИП Худяков Николай Сергеевич</p>
+    <p>ИНН: 111801576622 • Бесплатный тестовый доступ: 7 дней</p>
+    <p>✉️ <a href="mailto:folgoal@gmail.com">folgoal@gmail.com</a></p>
+  </div>
+  <div class="legal">© 2026 Создано для профессионалов леса. Все права защищены.</div>
 </div>
 
-<!-- ===== TOAST ===== -->
-<div id="toast"></div>
+<!-- ========== MODALS ========== -->
+
+<!-- Fullscreen compass -->
+<div class="modal" id="fsCompassModal">
+  <div class="modal-content" style="text-align:center">
+    <button class="modal-close" onclick="closeModal('fsCompassModal')">✕</button>
+    <div class="azimuth-display" id="azDisplayFS">АЗИМУТ: 0° 00' 00"</div>
+    <div class="coord-display" id="coordDisplayFS"></div>
+    <canvas id="fsCanvas" class="fs-compass"></canvas>
+    <div class="gps-info" id="gpsInfoFS">GPS: поиск...</div>
+    <button class="btn" onclick="fixLimb()">🔒 Зафиксировать азимут</button>
+  </div>
+</div>
+
+<!-- Instruction -->
+<div class="modal" id="instrModal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('instrModal')">✕</button>
+    <h2>📖 Полевая инструкция</h2>
+    <div class="calib-instructions">
+      <p><b>1. Магнитный визир:</b> Наведите вертикальную нить на веху угла делянки. Дождитесь зелёного кольца авиагоризонта (допуск ±12°). Зафиксируйте румб.</p>
+      <p><b>2. Фотофиксация:</b> Нажмите «📷 Фотофиксация». Сделайте снимок — координаты, азимут и паспорт выдела вшиваются в кадр.</p>
+      <p><b>3. Буссоль (Лимб):</b> Положите телефон на ладонь горизонтально. При фиксации точка ставится по GPS.</p>
+      <p><b>4. GPS-Курс:</b> Нажмите «📍 Старт», пройдите 5–10 м по визиру, нажмите «🏁 Зафиксировать вектор». Точки связываются цепочкой.</p>
+      <p><b>5. GPS-расчёт расстояний:</b> При методе «GPS» длина считается автоматически.</p>
+      <p><b>6. Загрузка KML/KMZ/GeoJSON:</b> Загружайте файлы квартальных сеток из ФГИС ЛК без интернета.</p>
+    </div>
+    <button class="btn" onclick="closeModal('instrModal')">Понятно, к замеру</button>
+  </div>
+</div>
+
+<!-- Mode info modals -->
+<div class="modal" id="modeMagInfo">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('modeMagInfo')">✕</button>
+    <h2>Магнитный режим (Вертикальный визир)</h2>
+    <div class="calib-instructions">
+      <p>• Съёмка камерой: предназначена для прямой видимости объектов. Телефон вертикально перед глазами.</p>
+      <p>• Фиксация базиса: кнопка «Фиксация 0°» отслеживает развороты линий и перпендикуляров.</p>
+    </div>
+    <button class="btn" onclick="closeModal('modeMagInfo')">Понятно</button>
+  </div>
+</div>
+
+<div class="modal" id="modeLimbInfo">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('modeLimbInfo')">✕</button>
+    <h2>Горизонтальная дисковая буссоль (Лимб)</h2>
+    <div class="calib-instructions">
+      <p>• Работа по ладони: полное аппаратное дублирование буссоли БГ-1. Телефон лежит горизонтально.</p>
+      <p>• Авто-точка GPS: при фиксации азимута программа автоматически фиксирует спутниковую точку.</p>
+    </div>
+    <button class="btn" onclick="closeModal('modeLimbInfo')">Понятно</button>
+  </div>
+</div>
+
+<div class="modal" id="modeGPSInfo">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('modeGPSInfo')">✕</button>
+    <h2>📡 Режим GPS-Курса (По 2 точкам)</h2>
+    <div class="calib-instructions">
+      <p>• Цепной алгоритм: 1. На столбе нажмите «📍 Старт линии (Т1)». 2. Пройдите 5–10 м вдоль визира. 3. Нажмите «🏁 Зафиксировать вектор». Отрезок заносится в журнал, Т2 → старт для Т3.</p>
+      <p>• Без магнитных помех: магнитометр не используется. Металл и ЛЭП не влияют.</p>
+    </div>
+    <button class="btn" onclick="closeModal('modeGPSInfo')">Понятно</button>
+  </div>
+</div>
+
+<!-- Calibration -->
+<div class="modal" id="calibModal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('calibModal')">✕</button>
+    <h2>🧲 Помощник калибровки магнитометра</h2>
+    <div class="calib-status" id="calibStatus">Ожидание движений... Описывайте «восьмёрку»</div>
+    <canvas id="calibCanvas" width="300" height="300" style="width:100%;max-width:300px;margin:0 auto;display:block;border-radius:10px;background:var(--canvas-bg)"></canvas>
+    <div class="calib-instructions">
+      <p>• Нажмите «Начать калибровку». Вращайте смартфон в воздухе по объёмной «восьмёрке».</p>
+      <p>• Плавно меняйте наклоны телефона к горизонту для очистки магнитных шумов.</p>
+    </div>
+    <button class="btn" onclick="startCalibration()">Начать калибровку</button>
+    <button class="btn-sec" onclick="closeModal('calibModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Method select -->
+<div class="modal" id="methodModal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('methodModal')">✕</button>
+    <h2>📏 Метод вычисления длины линий</h2>
+    <div class="desc">Выберите способ заполнения расстояний между вехами делянки:</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn-sec" onclick="setMethod('manual')">📏 Ручной ввод<br><small>Вбиваете метраж каждой стороны</small></button>
+      <button class="btn-sec" onclick="setMethod('stepometer')">👣 Шагомер<br><small>Телефон считает шаги × длину шага</small></button>
+      <button class="btn-sec" onclick="setMethod('gps')">📡 GPS-расчёт<br><small>Длина по спутниковым координатам</small></button>
+    </div>
+    <button class="btn-sec" onclick="closeModal('methodModal')" style="margin-top:10px">Закрыть</button>
+  </div>
+</div>
+
+<!-- Point fixed notification -->
+<div class="modal" id="pointFixedModal">
+  <div class="modal-content" style="text-align:center">
+    <button class="modal-close" onclick="closeModal('pointFixedModal')">✕</button>
+    <h2>📍 Точка зафиксирована!</h2>
+    <div id="pointFixedInfo" style="font-size:13px;color:var(--text2);margin:10px 0"></div>
+    <div class="calib-instructions">Столб записан в память. Пройдите 5–10 м по линии визира.</div>
+    <button class="btn" onclick="closeModal('pointFixedModal')">Понятно, иду по линии</button>
+  </div>
+</div>
+
+<!-- Photo modal -->
+<div class="photo-modal" id="photoModal">
+  <div class="photo-video-wrap">
+    <video id="photoCamera" autoplay playsinline></video>
+    <canvas id="photoCanvas"></canvas>
+    <img id="photoPreview" alt="Превью">
+    <div class="photo-hud" id="photoHud">
+      <div class="line"><b>БГ-ХНС PRO 3.2</b></div>
+      <div class="line" id="phLine1">Лесничество: — | Квартал: — | Выдел: —</div>
+      <div class="line" id="phLine2">Линия: Т1 ➔ Т2 | Азимут: 0°</div>
+      <div class="line" id="phLine3">DMS: — | DD: —</div>
+      <div class="line" id="phLine4">Высота: — | Точность: —</div>
+    </div>
+  </div>
+  <div class="photo-actions" id="photoActions">
+    <button class="btn-sec" onclick="closePhotoModal()">✕ Закрыть</button>
+    <button class="btn" onclick="capturePhoto()">📷 Снимок</button>
+  </div>
+  <div class="photo-actions" id="photoPreviewActions" style="display:none">
+    <button class="btn-sec" onclick="retakePhoto()">🔄 Переснять</button>
+    <button class="btn-ok" onclick="savePhoto()">💾 Сохранить в галерею</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
 <script>
-"use strict";
+/* ============================================================
+   БГ-ХНС PRO 3.2 — Электронная буссоль
+   Автор: ИП Худяков Николай Сергеевич, ИНН 111801576622
+   ============================================================ */
 
-/* ===== CONSTANTS ===== */
-var APP_VERSION = "3.2";
-var APP_AUTHOR = "ИП Худяков Николай Сергеевич";
-var APP_INN = "111801576622";
-var STORAGE_KEY = "bg_hns_projects_archive";
-var SETTINGS_KEY = "bg_hns_settings";
-var HORIZON_TOLERANCE = 12;
+// ===== GLOBAL STATE (НЕ ОБНУЛЯЕТСЯ ПРИ СМЕНЕ РЕЖИМА) =====
+var measurementsLog = []; // журнал — ЕДИНЫЙ для всех режимов
+var currentMode = 'magnetic';
+var currentMethod = 'manual';
+var gpsPoints = []; // точки GPS-хода
+var gpsStartCoord = null;
+var gpsCurrentCoord = null;
+var gpsWatchId = null;
+var baseAzimuth = null; // базовый азимут (0° фиксация)
+var declination = 0; // магнитное склонение в градусах
+var direction = 'cw';
+var zoomFactor = 1.0;
+var mapScale = 1.0;
+var mapOffsetX = 0;
+var mapOffsetY = 0;
+var externalLayers = []; // загруженные KML/GeoJSON слои
+var stepCount = 0;
+var stepCounterActive = false;
+var lastAccel = {x:0,y:0,z:0};
+var stepThreshold = 12;
+var projectsArchive = {};
+var currentProjectName = 'Новый проект';
+var photoStream = null;
+var photoDataUrl = null;
+var calibrating = false;
+var calibPoints = [];
 
-/* ===== UTILITIES ===== */
-function $(id){return document.getElementById(id);}
-function clamp(v,min,max){return Math.min(max,Math.max(min,v));}
-function toRad(d){return d*Math.PI/180;}
-function toDeg(r){return r*180/Math.PI;}
-function norm360(a){a=a%360;if(a<0)a+=360;return a;}
-
-function toDMS(deg){
-  var d=Math.floor(Math.abs(deg));
-  var mf=(Math.abs(deg)-d)*60;
-  var m=Math.floor(mf);
-  var s=Math.round((mf-m)*60);
-  if(s>=60){s-=60;m+=1;}
-  if(m>=60){m-=60;d+=1;}
-  var hemi=deg>=0?"N":"S";
-  if(arguments[1]==="lon"){hemi=deg>=0?"E":"W";}
-  return d+"\u00b0"+m+"'"+s+'"'+hemi;
-}
-
-function azimuthToBearing(az){
-  az=norm360(az);
-  var quad,rum;
-  if(az<=90){quad="\u0421\u0412";rum=az.toFixed(1);}
-  else if(az<=180){quad="\u042E\u0412";rum=(180-az).toFixed(1);}
-  else if(az<=270){quad="\u042E\u0417";rum=(az-180).toFixed(1);}
-  else{quad="\u0421\u0417";rum=(360-az).toFixed(1);}
-  return rum+"\u00b0 "+quad;
-}
-
-function bearingShort(az){
-  az=norm360(az);
-  var dirs=["\u0421","\u0421\u0412","\u0412","\u042E\u0412","\u042E","\u042E\u0417","\u0417","\u0421\u0417"];
-  return dirs[Math.round(az/45)%8];
-}
-
-function haversine(lat1,lon1,lat2,lon2){
-  var R=6371000;
-  var dLat=toRad(lat2-lat1),dLon=toRad(lon2-lon1);
-  var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)*Math.sin(dLon/2);
-  return 2*R*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-}
-
-function calcBearing(lat1,lon1,lat2,lon2){
-  var dLon=toRad(lon2-lon1);
-  var y=Math.sin(dLon)*Math.cos(toRad(lat2));
-  var x=Math.cos(toRad(lat1))*Math.sin(toRad(lat2))-Math.sin(toRad(lat1))*Math.cos(toRad(lat2))*Math.cos(dLon);
-  return norm360(toDeg(Math.atan2(y,x)));
-}
-
-function gaussArea(pts){
-  var sum=0;
-  for(var i=0;i<pts.length;i++){
-    var j=(i+1)%pts.length;
-    sum+=pts[i].x*pts[j].y-pts[j].x*pts[i].y;
-  }
-  return Math.abs(sum)/2;
-}
-
-function fmtDate(){
-  var d=new Date();
-  var pad=function(n){return n<10?"0"+n:n;};
-  return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+" "+pad(d.getHours())+":"+pad(d.getMinutes());
-}
-
-function toast(msg){
-  var t=$("toast");
-  t.textContent=msg;
-  t.classList.add("show");
-  clearTimeout(t._timer);
-  t._timer=setTimeout(function(){t.classList.remove("show");},2500);
-}
-
-/* ===== KALMAN FILTER (1D) ===== */
-function KalmanFilter(Q,R,P0,X0){
-  this.Q=Q;this.R=R;this.P=P0;this.X=X0;this.K=0;
-  this.update=function(meas){
-    this.P=this.P+this.Q;
-    this.K=this.P/(this.P+this.R);
-    this.X=this.X+this.K*(meas-this.X);
-    this.P=(1-this.K)*this.P;
-    return this.X;
+// ===== KALMAN FILTER =====
+function Kalman1D(q, r, p, x){
+  this.q=q;this.r=r;this.p=p;this.x=x;
+  this.update=function(m){
+    this.p=this.p+this.q;
+    var k=this.p/(this.p+this.r);
+    this.x=this.x+k*(m-this.x);
+    this.p=(1-k)*this.p;
+    return this.x;
   };
 }
+var kfAzimuth=new Kalman1D(0.01,3,1,0);
+var kfPitch=new Kalman1D(0.05,2,1,0);
+var kfRoll=new Kalman1D(0.05,2,1,0);
 
-/* ===== RING BUFFER (vector mean for azimuth) ===== */
+// ===== RING BUFFER for azimuth averaging =====
 function RingBuffer(size){
-  this.size=size;this.buf=[];this.idx=0;this.full=false;
-  this.add=function(v){
-    this.buf[this.idx]=v;
-    this.idx=(this.idx+1)%this.size;
-    if(!this.full&&this.idx===0)this.full=true;
+  this.size=size;this.buf=[];
+  this.push=function(v){
+    this.buf.push(v);
+    if(this.buf.length>this.size)this.buf.shift();
+    return this;
   };
-  this.average=function(){
+  this.avgCircular=function(){
     if(this.buf.length===0)return 0;
-    var sx=0,sy=0,cnt=this.full?this.size:this.buf.length;
-    for(var i=0;i<cnt;i++){
-      var r=toRad(this.buf[i]);
+    var sx=0,sy=0;
+    for(var i=0;i<this.buf.length;i++){
+      var r=this.buf[i]*Math.PI/180;
       sx+=Math.cos(r);sy+=Math.sin(r);
     }
-    var a=toDeg(Math.atan2(sy/cnt,sx/cnt));
+    var a=Math.atan2(sy,sx)*180/Math.PI;
     if(a<0)a+=360;
     return a;
   };
-  this.clear=function(){this.buf=[];this.idx=0;this.full=false;};
 }
+var azBuffer=new RingBuffer(8);
 
-/* ===== GLOBAL STATE (measurementsLog is NEVER reset on mode switch) ===== */
-var STATE={
-  measurementsLog:[],
-  currentMode:"magnetic",
-  settings:{forest:"",kvartal:"",vydel:"",stepLength:0.7,distanceMethod:"manual",theme:"dark"},
-  gps:{points:[],current:null,watching:false,watchId:null},
-  compass:{azimuth:0,pitch:0,roll:0,level:false,
-    kfAz:new KalmanFilter(0.01,0.8,1,0),
-    kfPitch:new KalmanFilter(0.01,1,1,0),
-    kfRoll:new KalmanFilter(0.01,1,1,0),
-    rb:new RingBuffer(10)},
-  pedometer:{count:0,dist:0,active:false,lastMag:0,lastStepTime:0},
-  plan:{zoom:1,offsetX:0,offsetY:0,layers:[]},
-  cameraStream:null,
-  inspectorStream:null,
-  hasOrientation:false
-};
-
-/* ===== THEME ===== */
-function applyTheme(theme){
-  document.documentElement.setAttribute("data-theme",theme);
-  STATE.settings.theme=theme;
-  $("set-theme").value=theme;
+// ===== UTILITIES =====
+function toDMS(deg,isLat){
+  var hem=isLat?(deg>=0?'с.ш.':'ю.ш.'):(deg>=0?'в.д.':'з.д.');
+  deg=Math.abs(deg);
+  var d=Math.floor(deg);
+  var m=Math.floor((deg-d)*60);
+  var s=Math.round((deg-d-m/60)*3600);
+  if(s>=60){s-=60;m++;}
+  if(m>=60){m-=60;d++;}
+  return d+"°"+m+"'"+s+'" '+hem;
 }
+function toDD(lat,lon){return '('+lat.toFixed(6)+', '+lon.toFixed(6)+')';}
+function azToStr(az){
+  az=((az%360)+360)%360;
+  var d=Math.floor(az);
+  var m=Math.floor((az-d)*60);
+  var s=Math.round((az-d-m/60)*3600);
+  if(s>=60){s-=60;m++;}
+  if(m>=60){m-=60;d++;}
+  return d+"° "+m+"' "+s+'"';
+}
+function haversine(lat1,lon1,lat2,lon2){
+  var R=6371000;
+  var p1=lat1*Math.PI/180,p2=lat2*Math.PI/180;
+  var dp=(lat2-lat1)*Math.PI/180;
+  var dl=(lon2-lon1)*Math.PI/180;
+  var a=Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
+  return 2*R*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function bearing(lat1,lon1,lat2,lon2){
+  var p1=lat1*Math.PI/180,p2=lat2*Math.PI/180;
+  var dl=(lon2-lon1)*Math.PI/180;
+  var y=Math.sin(dl)*Math.cos(p2);
+  var x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);
+  var b=Math.atan2(y,x)*180/Math.PI;
+  return (b+360)%360;
+}
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show')},2500);
+}
+function closeModal(id){document.getElementById(id).classList.remove('active');}
+function openModal(id){document.getElementById(id).classList.add('active');}
+
+// ===== THEME =====
 function toggleTheme(){
-  var next=STATE.settings.theme==="dark"?"light":"dark";
-  applyTheme(next);
-  saveSettings();
+  var h=document.documentElement;
+  h.setAttribute('data-theme',h.getAttribute('data-theme')==='dark'?'light':'dark');
+  document.querySelector('.theme-toggle').textContent=h.getAttribute('data-theme')==='dark'?'🌙':'☀️';
+  drawLimb();drawMap();
+}
+if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches){
+  document.documentElement.setAttribute('data-theme','light');
 }
 
-/* ===== TABS ===== */
-function switchTab(name){
-  var tabs=document.querySelectorAll("#tabs button");
-  var pages=document.querySelectorAll(".page");
-  tabs.forEach(function(t){t.classList.toggle("active",t.dataset.tab===name);});
-  pages.forEach(function(p){p.classList.toggle("active",p.id==="page-"+name);});
-  if(name==="plan")drawPlan();
-  if(name==="journal")renderJournal();
-  if(name==="gps")drawGPSMap();
+// ===== MODE SWITCHING (БЕЗ ОБНУЛЕНИЯ ЖУРНАЛА) =====
+function setMode(mode){
+  currentMode=mode;
+  document.getElementById('tabMag').classList.toggle('active',mode==='magnetic');
+  document.getElementById('tabLimb').classList.toggle('active',mode==='limb');
+  document.getElementById('tabGPS').classList.toggle('active',mode==='gps');
+  document.getElementById('magneticPanel').style.display=mode==='magnetic'?'':'none';
+  document.getElementById('limbPanel').style.display=mode==='limb'?'':'none';
+  document.getElementById('gpsPanel').style.display=mode==='gps'?'':'none';
+  if(mode==='magnetic')startCamera();
+  else stopCamera();
+  if(mode==='gps')startGPSWatch();
+  else if(gpsWatchId!==null&&mode!=='gps'){/* keep GPS for coords */}
+  // ЖУРНАЛ НЕ ТРОГАЕМ!
+  showToast('Режим: '+(mode==='magnetic'?'Магнитный':mode==='limb'?'Лимб':'GPS-Курс'));
 }
 
-/* ===== SETTINGS SAVE/LOAD ===== */
-function saveSettings(){
-  STATE.settings.forest=$("set-forest").value;
-  STATE.settings.kvartal=$("set-kvartal").value;
-  STATE.settings.vydel=$("set-vydel").value;
-  STATE.settings.stepLength=parseFloat($("set-step-length").value)||0.7;
-  STATE.settings.distanceMethod=$("distance-method").value;
-  localStorage.setItem(SETTINGS_KEY,JSON.stringify(STATE.settings));
+// ===== DECLINATION =====
+function setDeclination(){
+  var sign=document.getElementById('declSign').value==='E'?1:-1;
+  var d=parseFloat(document.getElementById('declDeg').value)||0;
+  var m=parseFloat(document.getElementById('declMin').value)||0;
+  declination=sign*(d+m/60);
 }
-function loadSettings(){
-  var raw=localStorage.getItem(SETTINGS_KEY);
-  if(raw){
-    try{var s=JSON.parse(raw);
-      STATE.settings=Object.assign(STATE.settings,s);
-    }catch(e){}
-  }
-  $("set-forest").value=STATE.settings.forest||"";
-  $("set-kvartal").value=STATE.settings.kvartal||"";
-  $("set-vydel").value=STATE.settings.vydel||"";
-  $("set-step-length").value=STATE.settings.stepLength||0.7;
-  $("step-length-input").value=STATE.settings.stepLength||0.7;
-  $("distance-method").value=STATE.settings.distanceMethod||"manual";
-  applyTheme(STATE.settings.theme||"dark");
-  updatePedometerPanel();
+function resetDeclination(){
+  document.getElementById('declDeg').value=0;
+  document.getElementById('declMin').value=0;
+  document.getElementById('declSign').value='E';
+  declination=0;
 }
-function updateSettingsFromInputs(){
-  STATE.settings.forest=$("set-forest").value;
-  STATE.settings.kvartal=$("set-kvartal").value;
-  STATE.settings.vydel=$("set-vydel").value;
-  STATE.settings.stepLength=parseFloat($("set-step-length").value)||0.7;
+function setDirection(){direction=document.getElementById('directionSelect').value;drawMap();}
+function setZoom(){zoomFactor=parseFloat(document.getElementById('zoomSelect').value);drawLimb();}
+
+// ===== ORIENTATION (DeviceOrientation) =====
+var orientationActive=false;
+function handleOrientation(e){
+  var heading=e.webkitCompassHeading||(e.alpha?360-e.alpha:0);
+  var pitch=e.beta||0;
+  var roll=e.gamma||0;
+  // Kalman smoothing
+  heading=kfAzimuth.update(heading);
+  pitch=kfPitch.update(pitch);
+  roll=kfRoll.update(roll);
+  // Ring buffer for azimuth
+  azBuffer.push(heading);
+  var smoothAz=azBuffer.avgCircular();
+  var trueAz=smoothAz+declination;
+  if(trueAz<0>trueAz+=360;
+  if(trueAz>=360)trueAz-=360;
+  // Update displays
+  updateAzimuthDisplay(trueAz,pitch,roll);
+  // Check compass stuck (if heading hasn't changed for a while)
+  checkCompassStuck(smoothAz);
+  // Camera mode
+  if(currentMode==='magnetic')updateCameraHUD(trueAz,pitch,roll);
+  // Limb
+  drawLimb(smoothAz);
 }
 
-/* ===== ORIENTATION HANDLER ===== */
-function onOrientation(event){
-  STATE.hasOrientation=true;
-  var heading;
-  if(event.webkitCompassHeading!==undefined){
-    heading=event.webkitCompassHeading;
-  }else if(event.alpha!==null){
-    heading=360-event.alpha;
+var lastHeadingCheck=0,stuckCount=0;
+function checkCompassStuck(az){
+  if(Math.abs(az-lastHeadingCheck)<0.1)stuckCount++;
+  else stuckCount=0;
+  lastHeadingCheck=az;
+  document.getElementById('compassWarn').style.display=stuckCount>50?'block':'none';
+}
+
+function updateAzimuthDisplay(az,pitch,roll){
+  var azStr=azToStr(az);
+  var coord=lastGPS?toDMS(lastGPS.lat,true)+' '+toDMS(lastGPS.lon,false):'GPS: поиск...';
+  var dd=lastGPS?toDD(lastGPS.lat,lastGPS.lon):'';
+  var altStr=lastGPS?'Высота: '+Math.round(lastGPS.alt||0)+' м (Точность: ±'+Math.round(lastGPS.acc||0)+' м)':'GPS: поиск...';
+  document.getElementById('azDisplayMag').textContent='АЗИМУТ: '+azStr;
+  document.getElementById('azDisplayLimb').textContent='АЗИМУТ: '+azStr;
+  document.getElementById('azDisplayFS').textContent='АЗИМУТ: '+azStr;
+  document.getElementById('coordDisplayMag').textContent=coord+' '+dd;
+  document.getElementById('coordDisplayLimb').textContent=coord+' '+dd;
+  document.getElementById('coordDisplayFS').textContent=coord+' '+dd;
+  document.getElementById('gpsInfoMag').textContent=altStr;
+  document.getElementById('gpsInfoLimb').textContent=altStr;
+  document.getElementById('gpsInfoFS').textContent=altStr;
+  document.getElementById('pitchMag').textContent=pitch.toFixed(1)+'°';
+  document.getElementById('rollMag').textContent=roll.toFixed(1)+'°';
+  // Base azimuth
+  if(baseAzimuth!==null){
+    var turn=az-baseAzimuth;
+    if(turn<0)turn+=360;
+    document.getElementById('baseMag').textContent=azToStr(baseAzimuth).split(' ')[0];
+    document.getElementById('turnMag').textContent=turn.toFixed(1)+'°';
   }else{
-    heading=0;
+    document.getElementById('baseMag').textContent='НЕТ';
+    document.getElementById('turnMag').textContent='0.0°';
   }
-  var pitch=0,roll=0;
-  if(event.beta!==null)pitch=event.beta-90;
-  if(event.gamma!==null)roll=event.gamma;
-  pitch=clamp(pitch,-90,90);
-  roll=clamp(roll,-90,90);
-  STATE.compass.kfAz.update(heading);
-  STATE.compass.kfPitch.update(pitch);
-  STATE.compass.kfRoll.update(roll);
-  STATE.compass.rb.add(STATE.compass.kfAz.X);
-  var az=STATE.compass.rb.average();
-  STATE.compass.azimuth=az;
-  STATE.compass.pitch=STATE.compass.kfPitch.X;
-  STATE.compass.roll=STATE.compass.kfRoll.X;
-  STATE.compass.level=(Math.abs(STATE.compass.pitch)<HORIZON_TOLERANCE&&Math.abs(STATE.compass.roll)<HORIZON_TOLERANCE);
-  updateVisorDisplay();
-  drawAttitudeIndicator();
-  drawLimb();
-}
-
-function requestOrientationPermission(){
-  if(typeof DeviceOrientationEvent!=="undefined"&&typeof DeviceOrientationEvent.requestPermission==="function"){
-    DeviceOrientationEvent.requestPermission().then(function(state){
-      if(state==="granted"){
-        window.addEventListener("deviceorientation",onOrientation);
-      }else{
-        toast("Доступ к датчикам отклонён");
-      }
-    }).catch(function(){toast("Ошибка запроса датчиков");});
-  }else if(typeof DeviceOrientationEvent!=="undefined"){
-    window.addEventListener("deviceorientationabsolute",onOrientation);
-    window.addEventListener("deviceorientation",onOrientation);
-  }
-}
-
-/* ===== CAMERA (VISOR) ===== */
-function startVisorCamera(){
-  if(STATE.cameraStream)return;
-  navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false})
-  .then(function(stream){
-    STATE.cameraStream=stream;
-    var v=$("camera-video");
-    v.srcObject=stream;
-    v.play();
-    requestOrientationPermission();
-  })
-  .catch(function(e){
-    toast("Камера недоступна: "+e.message);
-    requestOrientationPermission();
-  });
-}
-function stopVisorCamera(){
-  if(STATE.cameraStream){
-    STATE.cameraStream.getTracks().forEach(function(t){t.stop();});
-    STATE.cameraStream=null;
-    $("camera-video").srcObject=null;
-  }
-}
-
-/* ===== ATTITUDE INDICATOR (CANVAS) ===== */
-function drawAttitudeIndicator(){
-  var video=$("camera-video");
-  var canvas=$("attitude-canvas");
-  var rect=video.getBoundingClientRect();
-  var wrap=$("visor-wrap").getBoundingClientRect();
-  if(rect.width===0)return;
-  canvas.width=rect.width;
-  canvas.height=rect.height;
-  canvas.style.width=rect.width+"px";
-  canvas.style.height=rect.height+"px";
-  canvas.style.top=(rect.top-wrap.top)+"px";
-  canvas.style.left="50%";
-  canvas.style.transform="translateX(-50%)";
-  var ctx=canvas.getContext("2d");
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  var cx=canvas.width/2;
-  var cy=canvas.height/2;
-  var radius=Math.min(canvas.width,canvas.height)*0.35;
-  var level=STATE.compass.level;
-  var color=level?"#00c853":"#ff9800";
-  // outer ring
-  ctx.lineWidth=4;
-  ctx.strokeStyle=color;
-  ctx.beginPath();
-  ctx.arc(cx,cy,radius,0,Math.PI*2);
-  ctx.stroke();
-  // inner ring glow
+  // Horizon ring
+  var level=Math.abs(pitch)<12&&Math.abs(roll)<12;
+  var ring=document.getElementById('horizonRing');
   if(level){
-    ctx.lineWidth=2;
-    ctx.strokeStyle="rgba(0,200,83,.3)";
-    ctx.beginPath();
-    ctx.arc(cx,cy,radius+8,0,Math.PI*2);
-    ctx.stroke();
-  }
-  // horizon line (rotates with roll, moves with pitch)
-  ctx.save();
-  ctx.translate(cx,cy);
-  ctx.rotate(toRad(STATE.compass.roll));
-  var pitchOffset=clamp(STATE.compass.pitch*3,-radius*0.6,radius*0.6);
-  // sky/ground split
-  ctx.beginPath();
-  ctx.rect(-radius,-radius,radius*2,radius*2);
-  ctx.clip();
-  ctx.fillStyle="rgba(0,0,0,0.0)";
-  ctx.fillRect(-radius,-radius,radius*2,radius*2);
-  // horizon line
-  ctx.lineWidth=2;
-  ctx.strokeStyle=color;
-  ctx.beginPath();
-  ctx.moveTo(-radius,pitchOffset);
-  ctx.lineTo(radius,pitchOffset);
-  ctx.stroke();
-  // center marks
-  ctx.beginPath();
-  ctx.moveTo(-15,pitchOffset);
-  ctx.lineTo(-5,pitchOffset);
-  ctx.moveTo(5,pitchOffset);
-  ctx.lineTo(15,pitchOffset);
-  ctx.stroke();
-  ctx.restore();
-  // center crosshair
-  ctx.lineWidth=2;
-  ctx.strokeStyle="#fff";
-  ctx.beginPath();
-  ctx.moveTo(cx-20,cy);
-  ctx.lineTo(cx-5,cy);
-  ctx.moveTo(cx+5,cy);
-  ctx.lineTo(cx+20,cy);
-  ctx.stroke();
-  // azimuth text
-  ctx.fillStyle="#fff";
-  ctx.font="bold 18px monospace";
-  ctx.textAlign="center";
-  ctx.fillText(Math.round(STATE.compass.azimuth)+"\u00b0",cx,40);
-  ctx.font="12px sans-serif";
-  ctx.fillText(bearingShort(STATE.compass.azimuth),cx,56);
-}
-
-function updateVisorDisplay(){
-  var az=Math.round(STATE.compass.azimuth);
-  var pitch=Math.round(STATE.compass.pitch);
-  var roll=Math.round(STATE.compass.roll);
-  $("val-azimuth").textContent=az+"\u00b0";
-  $("val-pitch").textContent=pitch+"\u00b0";
-  $("val-roll").textContent=roll+"\u00b0";
-  var level=STATE.compass.level;
-  $("info-pitch").className="item "+(level?"green":"orange");
-  $("info-roll").className="item "+(level?"green":"orange");
-  var btn=$("fix-azimuth-btn");
-  btn.disabled=!level;
-  btn.classList.toggle("green",level);
-  var pct=Math.max(0,100-Math.max(Math.abs(STATE.compass.pitch),Math.abs(STATE.compass.roll))/HORIZON_TOLERANCE*100);
-  $("level-fill").style.width=pct+"%";
-  $("level-fill").style.background=level?"var(--green)":"var(--orange)";
-  $("level-text").textContent=level?"В горизонте":"Не выровнен";
-}
-
-/* ===== FIX AZIMUTH (adds to measurementsLog — NEVER resets) ===== */
-function fixAzimuth(){
-  var az=Math.round(STATE.compass.azimuth*10)/10;
-  var m={
-    id:Date.now(),
-    azimuth:az,
-    bearing:azimuthToBearing(az),
-    length:0,
-    method:STATE.currentMode==="magnetic"?"\u041C\u0430\u0433\u043D\u0438\u0442\u043D\u044B\u0439":"\u041B\u0438\u043C\u0431",
-    coords:"",
-    lat:0,lon:0
-  };
-  STATE.measurementsLog.push(m);
-  renderJournal();
-  toast("Румб "+az+"\u00b0 ("+azimuthToBearing(az)+") зафиксирован");
-  if(navigator.vibrate)navigator.vibrate(30);
-}
-
-/* ===== LIMB (COMPASS CANVAS) ===== */
-function drawLimb(){
-  var canvas=$("limb-canvas");
-  var w=canvas.offsetWidth;
-  if(w===0)w=300;
-  canvas.width=w*window.devicePixelRatio;
-  canvas.height=w*window.devicePixelRatio;
-  var ctx=canvas.getContext("2d");
-  var dpr=window.devicePixelRatio;
-  var cx=canvas.width/2;
-  var cy=canvas.height/2;
-  var R=Math.min(cx,cy)-10;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  // background circle
-  var isDark=document.documentElement.getAttribute("data-theme")==="dark";
-  ctx.fillStyle=isDark?"#111722":"#f8f9fa";
-  ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.fill();
-  // outer ring
-  ctx.strokeStyle=isDark?"#3a3a5a":"#ccc";
-  ctx.lineWidth=2*dpr;
-  ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.stroke();
-  // rotate card
-  ctx.save();
-  ctx.translate(cx,cy);
-  ctx.rotate(toRad(-STATE.compass.azimuth));
-  // degree marks
-  for(var deg=0;deg<360;deg+=5){
-    ctx.save();
-    ctx.rotate(toRad(deg));
-    var isMajor=deg%30===0;
-    var len=isMajor?14*dpr:7*dpr;
-    ctx.strokeStyle=isMajor?(isDark?"#e4e6eb":"#333"):(isDark?"#666":"#999");
-    ctx.lineWidth=isMajor?2*dpr:1*dpr;
-    ctx.beginPath();
-    ctx.moveTo(0,-R);
-    ctx.lineTo(0,-R+len);
-    ctx.stroke();
-    ctx.restore();
-  }
-  // cardinal letters
-  var cardinals=[["\u0421",0,"#e94560"],["\u0412",90,isDark?"#fff":"#333"],["\u042E",180,isDark?"#fff":"#333"],["\u0417",270,isDark?"#fff":"#333"]];
-  ctx.font="bold "+(16*dpr)+"px sans-serif";
-  ctx.textAlign="center";
-  ctx.textBaseline="middle";
-  cardinals.forEach(function(c){
-    ctx.save();
-    ctx.rotate(toRad(c[1]));
-    ctx.translate(0,-R+28*dpr);
-    ctx.rotate(toRad(-c[1]+(-STATE.compass.azimuth)));
-    ctx.fillStyle=c[2];
-    ctx.fillText(c[0],0,0);
-    ctx.restore();
-  });
-  // degree labels at 30° intervals
-  ctx.font=(10*dpr)+"px monospace";
-  for(var d2=30;d2<360;d2+=30){
-    if(d2===90||d2===180||d2===270)continue;
-    ctx.save();
-    ctx.rotate(toRad(d2));
-    ctx.translate(0,-R+20*dpr);
-    ctx.rotate(toRad(-d2-STATE.compass.azimuth));
-    ctx.fillStyle=isDark?"#9fa3b1":"#666";
-    ctx.fillText(d2+"\u00b0",0,0);
-    ctx.restore();
-  }
-  ctx.restore();
-  // fixed pointer (top)
-  ctx.fillStyle="#e94560";
-  ctx.beginPath();
-  ctx.moveTo(cx,2*dpr);
-  ctx.lineTo(cx-8*dpr,18*dpr);
-  ctx.lineTo(cx+8*dpr,18*dpr);
-  ctx.closePath();
-  ctx.fill();
-  // crosshair
-  ctx.strokeStyle=isDark?"rgba(255,255,255,.3)":"rgba(0,0,0,.3)";
-  ctx.lineWidth=1*dpr;
-  ctx.beginPath();
-  ctx.moveTo(cx-R,cy);ctx.lineTo(cx+R,cy);
-  ctx.moveTo(cx,cy-R);ctx.lineTo(cx,cy+R);
-  ctx.stroke();
-  // center dot
-  ctx.fillStyle=isDark?"#e4e6eb":"#333";
-  ctx.beginPath();ctx.arc(cx,cy,4*dpr,0,Math.PI*2);ctx.fill();
-  // level bubble
-  var level=STATE.compass.level;
-  var bx=cx+STATE.compass.roll/90*R*0.5;
-  var by=cy+STATE.compass.pitch/90*R*0.5;
-  ctx.strokeStyle=level?"#00c853":"#ff9800";
-  ctx.lineWidth=2*dpr;
-  ctx.beginPath();ctx.arc(bx,by,8*dpr,0,Math.PI*2);ctx.stroke();
-  ctx.fillStyle=level?"#00c853":"#ff9800";
-  ctx.beginPath();ctx.arc(bx,by,3*dpr,0,Math.PI*2);ctx.fill();
-  // text
-  $("limb-azimuth").innerHTML=Math.round(STATE.compass.azimuth)+"\u00b0";
-  $("limb-bearing").textContent=azimuthToBearing(STATE.compass.azimuth);
-  var pct=Math.max(0,100-Math.max(Math.abs(STATE.compass.pitch),Math.abs(STATE.compass.roll))/HORIZON_TOLERANCE*100);
-  $("limb-level-fill").style.width=pct+"%";
-  $("limb-level-fill").style.background=level?"var(--green)":"var(--orange)";
-  $("limb-level-text").textContent=level?"В горизонте":"Не выровнен";
-  $("limb-fix-btn").classList.toggle("green",level);
-}
-
-/* ===== GPS MODE ===== */
-function startGPSWatch(){
-  if(STATE.gps.watching)return;
-  if(!navigator.geolocation){toast("GPS не поддерживается");return;}
-  $("gps-status-text").textContent="Поиск спутников...";
-  STATE.gps.watching=true;
-  $("gps-start-btn").textContent="Остановить GPS";
-  STATE.gps.watchId=navigator.geolocation.watchPosition(
-    function(pos){
-      STATE.gps.current={lat:pos.coords.latitude,lon:pos.coords.longitude,acc:pos.coords.accuracy,ts:Date.now()};
-      $("gps-dot").classList.add("active");
-      $("gps-status-text").textContent="GPS: "+pos.coords.latitude.toFixed(6)+", "+pos.coords.longitude.toFixed(6)+" (±"+Math.round(pos.coords.accuracy)+"м)";
-      $("gps-mark-btn").disabled=false;
-    },
-    function(err){
-      $("gps-status-text").textContent="GPS ошибка: "+err.message;
-      $("gps-dot").classList.remove("active");
-    },
-    {enableHighAccuracy:true,maximumAge:1000,timeout:15000}
-  );
-}
-function stopGPSWatch(){
-  if(STATE.gps.watchId!==null){navigator.geolocation.clearWatch(STATE.gps.watchId);STATE.gps.watchId=null;}
-  STATE.gps.watching=false;
-  $("gps-start-btn").textContent="Запустить GPS-наблюдение";
-  $("gps-dot").classList.remove("active");
-  $("gps-status-text").textContent="GPS остановлен";
-  $("gps-mark-btn").disabled=true;
-}
-function markGPSPoint(){
-  if(!STATE.gps.current){toast("Нет GPS-фиксации");return;}
-  var p=STATE.gps.current;
-  STATE.gps.points.push({lat:p.lat,lon:p.lon,ts:Date.now(),name:"T"+(STATE.gps.points.length+1)});
-  renderGPSPoints();
-  drawGPSMap();
-  if(navigator.vibrate)navigator.vibrate([20,30,20]);
-  toast("Точка T"+STATE.gps.points.length+" отмечена");
-  $("gps-pt-num").textContent=STATE.gps.points.length+1;
-}
-function renderGPSPoints(){
-  var ul=$("gps-points-list");
-  ul.innerHTML="";
-  var total=0;
-  STATE.gps.points.forEach(function(pt,i){
-    var li=document.createElement("li");
-    var coords=pt.lat.toFixed(6)+", "+pt.lon.toFixed(6);
-    var info="";
-    if(i>0){
-      var prev=STATE.gps.points[i-1];
-      var az=calcBearing(prev.lat,prev.lon,pt.lat,pt.lon);
-      var dist=haversine(prev.lat,prev.lon,pt.lat,pt.lon);
-      total+=dist;
-      info=" &rarr; az "+Math.round(az)+"\u00b0, "+Math.round(dist)+"м";
-    }
-    li.innerHTML='<div><span class="pt-name">'+pt.name+'</span> <span class="pt-coords">'+coords+'</span><br><span style="font-size:11px;color:var(--text2)">'+info+'</span></div>';
-    ul.appendChild(li);
-  });
-  $("gps-count").textContent=STATE.gps.points.length;
-  $("gps-total-dist").textContent=Math.round(total);
-  $("gps-to-journal").style.display=STATE.gps.points.length>=2?"block":"none";
-}
-function drawGPSMap(){
-  var canvas=$("gps-mini-map");
-  var w=canvas.offsetWidth||300;
-  canvas.width=w*window.devicePixelRatio;
-  canvas.height=w*window.devicePixelRatio;
-  var ctx=canvas.getContext("2d");
-  var dpr=window.devicePixelRatio;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  var pts=STATE.gps.points;
-  if(pts.length<1){
-    ctx.fillStyle="#888";ctx.font="14px sans-serif";ctx.textAlign="center";
-    ctx.fillText("Нет точек",canvas.width/2,canvas.height/2);
-    return;
-  }
-  var minLat=Infinity,maxLat=-Infinity,minLon=Infinity,maxLon=-Infinity;
-  pts.forEach(function(p){
-    minLat=Math.min(minLat,p.lat);maxLat=Math.max(maxLat,p.lat);
-    minLon=Math.min(minLon,p.lon);maxLon=Math.max(maxLon,p.lon);
-  });
-  if(STATE.gps.current){
-    minLat=Math.min(minLat,STATE.gps.current.lat);maxLat=Math.max(maxLat,STATE.gps.current.lat);
-    minLon=Math.min(minLon,STATE.gps.current.lon);maxLon=Math.max(maxLon,STATE.gps.current.lon);
-  }
-  var dLat=maxLat-minLat||0.001;
-  var dLon=maxLon-minLon||0.001;
-  var pad=20*dpr;
-  var scale=Math.min((canvas.width-2*pad)/dLon,(canvas.height-2*pad)/dLat);
-  function toXY(p){return{x:pad+(p.lon-minLon)*scale,y:canvas.height-pad-(p.lat-minLat)*scale};}
-  // draw lines
-  ctx.strokeStyle="#e94560";ctx.lineWidth=2*dpr;
-  ctx.beginPath();
-  pts.forEach(function(p,i){
-    var xy=toXY(p);
-    if(i===0)ctx.moveTo(xy.x,xy.y);else ctx.lineTo(xy.x,xy.y);
-  });
-  ctx.stroke();
-  // draw points
-  pts.forEach(function(p,i){
-    var xy=toXY(p);
-    ctx.fillStyle="#e94560";
-    ctx.beginPath();ctx.arc(xy.x,xy.y,6*dpr,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#fff";ctx.font="bold 10px sans-serif";ctx.textAlign="center";
-    ctx.fillText(p.name,xy.x,xy.y-10*dpr);
-  });
-  // current position
-  if(STATE.gps.current){
-    var cxy=toXY(STATE.gps.current);
-    ctx.strokeStyle="#00c853";ctx.lineWidth=2*dpr;
-    ctx.beginPath();ctx.arc(cxy.x,cxy.y,8*dpr,0,Math.PI*2);ctx.stroke();
-  }
-}
-function gpsToJournal(){
-  var pts=STATE.gps.points;
-  if(pts.length<2){toast("Нужно минимум 2 точки");return;}
-  for(var i=1;i<pts.length;i++){
-    var az=calcBearing(pts[i-1].lat,pts[i-1].lon,pts[i].lat,pts[i].lon);
-    var dist=haversine(pts[i-1].lat,pts[i-1].lon,pts[i].lat,pts[i].lon);
-    STATE.measurementsLog.push({
-      id:Date.now()+i,
-      azimuth:Math.round(az*10)/10,
-      bearing:azimuthToBearing(az),
-      length:Math.round(dist*10)/10,
-      method:"GPS",
-      coords:pts[i].lat.toFixed(6)+", "+pts[i].lon.toFixed(6),
-      lat:pts[i].lat,lon:pts[i].lon
-    });
-  }
-  renderJournal();
-  toast("Перенесено "+(pts.length-1)+" линий в журнал");
-  switchTab("journal");
-}
-
-/* ===== PEDOMETER ===== */
-function onDeviceMotion(e){
-  if(!STATE.pedometer.active)return;
-  var acc=e.accelerationIncludingGravity;
-  if(!acc||acc.x===null)return;
-  var mag=Math.sqrt(acc.x*acc.x+acc.y*acc.y+acc.z*acc.z);
-  var now=Date.now();
-  var threshold=1.2;
-  var minDelay=250;
-  if(mag>threshold&&now-STATE.pedometer.lastStepTime>minDelay&&mag>STATE.pedometer.lastMag){
-    STATE.pedometer.count++;
-    STATE.pedometer.lastStepTime=now;
-    STATE.pedometer.dist=STATE.pedometer.count*(STATE.settings.stepLength||0.7);
-    $("step-count").textContent=STATE.pedometer.count;
-    $("step-dist").textContent=STATE.pedometer.dist.toFixed(1);
-  }
-  STATE.pedometer.lastMag=mag;
-}
-function updatePedometerPanel(){
-  var method=$("distance-method").value;
-  STATE.settings.distanceMethod=method;
-  var panel=$("pedometer-panel");
-  if(method==="pedometer"){
-    panel.style.display="block";
-    STATE.pedometer.active=true;
+    ring.classList.add('horizonRingOk');
+    if(!ring.vibrated){navigator.vibrate&&navigator.vibrate(30);ring.vibrated=true;}
   }else{
-    panel.style.display="none";
-    STATE.pedometer.active=false;
+    ring.classList.remove('horizonRingOk');ring.vibrated=false;
+  }
+  document.getElementById('btnFixMag').disabled=!level;
+  document.getElementById('btnFixMag').style.opacity=level?'1':'0.5';
+  // Save current azimuth for fixation
+  window._currentAz=az;
+  window._currentPitch=pitch;
+  window._currentRoll=roll;
+}
+
+// ===== CAMERA =====
+var visStream=null;
+function startCamera(){
+  if(visStream)return;
+  navigator.mediaDevices&&navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(s){
+    visStream=s;
+    var v=document.getElementById('visCamera');
+    v.srcObject=s;
+    v.play();
+  }).catch(function(e){console.log('Camera error:',e)});
+}
+function stopCamera(){
+  if(visStream){
+    visStream.getTracks().forEach(function(t){t.stop()});
+    visStream=null;
   }
 }
-
-/* ===== JOURNAL ===== */
-function renderJournal(){
-  var tbody=$("journal-body");
-  tbody.innerHTML="";
-  var log=STATE.measurementsLog;
-  $("journal-empty").style.display=log.length===0?"block":"none";
-  log.forEach(function(m,i){
-    var tr=document.createElement("tr");
-    tr.innerHTML='<td>'+(i+1)+'</td>'+
-      '<td><input type="number" value="'+m.azimuth+'" step="0.1" data-idx="'+i+'" data-field="azimuth"></td>'+
-      '<td>'+(m.bearing||azimuthToBearing(m.azimuth))+'</td>'+
-      '<td><input type="number" value="'+m.length+'" step="0.1" data-idx="'+i+'" data-field="length"></td>'+
-      '<td>'+m.method+'</td>'+
-      '<td style="font-size:11px;color:var(--text2)">'+(m.coords||"—")+'</td>'+
-      '<td><button class="del-btn" data-idx="'+i+'">&times;</button></td>';
-    tbody.appendChild(tr);
-  });
-  // wire inputs
-  tbody.querySelectorAll("input").forEach(function(inp){
-    inp.addEventListener("change",function(){
-      var idx=parseInt(this.dataset.idx);
-      var field=this.dataset.field;
-      var val=parseFloat(this.value)||0;
-      STATE.measurementsLog[idx][field]=val;
-      if(field==="azimuth"){
-        STATE.measurementsLog[idx].bearing=azimuthToBearing(val);
-      }
-      renderJournal();
-      drawPlan();
-    });
-  });
-  tbody.querySelectorAll(".del-btn").forEach(function(btn){
-    btn.addEventListener("click",function(){
-      var idx=parseInt(this.dataset.idx);
-      STATE.measurementsLog.splice(idx,1);
-      renderJournal();
-      drawPlan();
-    });
-  });
-}
-function addManualRow(){
-  STATE.measurementsLog.push({id:Date.now(),azimuth:0,bearing:azimuthToBearing(0),length:0,method:"\u0420\u0443\u0447\u043D\u043E\u0439",coords:"",lat:0,lon:0});
-  renderJournal();
+function updateCameraHUD(az,pitch,roll){
+  document.getElementById('camHud').innerHTML='<b>Т1 ➔ Т2</b> | Азимут: '+azToStr(az).split(' ')[0]+'° | '+(lastGPS?toDD(lastGPS.lat,lastGPS.lon):'GPS: поиск...');
 }
 
-/* ===== EXPORT CSV ===== */
-function exportCSV(){
-  if(STATE.measurementsLog.length===0){toast("Журнал пуст");return;}
-  var lines=["\uFEFF\u2116;\u0410\u0437\u0438\u043C\u0443\u0442;\u0420\u0443\u043C\u0431;\u0414\u043B\u0438\u043D\u0430,\u043C;\u041C\u0435\u0442\u043E\u0434;\u041A\u043E\u043E\u0440\u0434\u0438\u043D\u0430\u0442\u044B"];
-  STATE.measurementsLog.forEach(function(m,i){
-    lines.push((i+1)+";"+m.azimuth+";"+(m.bearing||azimuthToBearing(m.azimuth))+";"+m.length+";"+m.method+";"+(m.coords||""));
-  });
-  var blob=new Blob([lines.join("\n")],{type:"text/csv;charset=utf-8"});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement("a");
-  a.href=url;a.download="bg_hns_journal_"+fmtDate().replace(/[: ]/g,"_")+".csv";
-  a.click();URL.revokeObjectURL(url);
-  toast("CSV экспортирован");
-}
-
-/* ===== EXPORT KML ===== */
-function exportKML(){
-  var log=STATE.measurementsLog;
-  if(log.length<2){toast("Нужно минимум 2 точки");return;}
-  var pts=[{x:0,y:0}];
-  for(var i=0;i<log.length;i++){
-    var az=toRad(log[i].azimuth);
-    var len=log[i].length||0;
-    var prev=pts[pts.length-1];
-    pts.push({x:prev.x+len*Math.sin(az),y:prev.y+len*Math.cos(az)});
+// ===== LIMB CANVAS =====
+function drawLimb(az){
+  az=az||0;
+  drawLimbOnCanvas(document.getElementById('limbCanvas'),az);
+  if(document.getElementById('fsCompassModal').classList.contains('active')){
+    drawLimbOnCanvas(document.getElementById('fsCanvas'),az);
   }
-  // Use first point's GPS coords if available, otherwise 0,0
-  var baseLat=log[0].lat||0,baseLon=log[0].lon||0;
-  var coords=pts.map(function(p){
-    var dLat=p.y/111320;
-    var dLon=p.x/(111320*Math.cos(toRad(baseLat)));
-    return (baseLon+dLon)+","+(baseLat+dLat)+",0";
-  }).join(" ");
-  var s=STATE.settings;
-  var kml='<?xml version="1.0" encoding="UTF-8"?>\n'+
-    '<kml xmlns="http://www.opengis.net/kml/2.2">\n'+
-    '<Document><name>\u0411\u0413-\u0425\u041D\u0421 PRO \u0414\u0435\u043B\u044F\u043D\u043A\u0430</name>\n'+
-    '<Placemark><name>'+(s.forest||"")+(" \u043A\u0432.")+(s.kvartal||"")+"\u0432."+ (s.vydel||"")+'</name>\n'+
-    '<Style><LineStyle><color>ff0000ff</color><width>2</width></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style>\n'+
-    '<Polygon><outerBoundaryIs><LinearRing><coordinates>'+coords+'</coordinates></LinearRing></outerBoundaryIs></Polygon>\n'+
-    '</Placemark></Document></kml>';
-  var blob=new Blob([kml],{type:"application/vnd.google-earth.kml+xml"});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement("a");
-  a.href=url;a.download="bg_hns_plan_"+fmtDate().replace(/[: ]/g,"_")+".kml";
-  a.click();URL.revokeObjectURL(url);
-  toast("KML экспортирован");
 }
-
-/* ===== PLAN (CANVAS) ===== */
-function drawPlan(){
-  var canvas=$("plan-canvas");
-  var w=canvas.offsetWidth||300;
-  canvas.width=w*window.devicePixelRatio;
-  canvas.height=w*window.devicePixelRatio;
-  var ctx=canvas.getContext("2d");
-  var dpr=window.devicePixelRatio;
-  var isDark=document.documentElement.getAttribute("data-theme")==="dark";
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle=isDark?"#0d1117":"#f8f9fa";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-  // grid
-  ctx.strokeStyle=isDark?"rgba(255,255,255,.05)":"rgba(0,0,0,.05)";
-  ctx.lineWidth=1;
-  for(var g=0;g<canvas.width;g+=20*dpr){
-    ctx.beginPath();ctx.moveTo(g,0);ctx.lineTo(g,canvas.height);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(0,g);ctx.lineTo(canvas.width,g);ctx.stroke();
+function drawLimbOnCanvas(canvas,az){
+  if(!canvas)return;
+  var ctx=canvas.getContext('2d');
+  var w=canvas.width=canvas.offsetWidth*2;
+  var h=canvas.height=canvas.offsetHeight*2;
+  var cx=w/2,cy=h/2,r=Math.min(w,h)/2-20;
+  ctx.clearRect(0,0,w,h);
+  // Outer ring
+  ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--border');
+  ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+  // Cardinal labels
+  var dirs=['С','В','Ю','З'];
+  for(var i=0;i<4;i++){
+    var a=i*90*Math.PI/180;
+    var tx=cx+(r-35)*Math.sin(a);
+    var ty=cy-(r-35)*Math.cos(a);
+    ctx.font='bold 24px sans-serif';
+    ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--accent');
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(dirs[i],tx,ty);
   }
-  // north arrow (top-left)
+  // Degree ticks
+  for(var deg=0;deg<360;deg+=2){
+    var a=deg*Math.PI/180;
+    var len=deg%10===0?15:deg%5===0?10:5;
+    ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--text2');
+    ctx.lineWidth=deg%30===0?2:1;
+    ctx.beginPath();
+    ctx.moveTo(cx+(r-len)*Math.sin(a),cy-(r-len)*Math.cos(a));
+    ctx.lineTo(cx+r*Math.sin(a),cy-r*Math.cos(a));
+    ctx.stroke();
+  }
+  // Degree labels
+  ctx.font='11px sans-serif';
+  ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--text2');
+  for(var deg2=0;deg2<360;deg2+=30){
+    var a2=deg2*Math.PI/180;
+    var lx=cx+(r-50)*Math.sin(a2);
+    var ly=cy-(r-50)*Math.cos(a2);
+    ctx.fillText(deg2+'°',lx,ly);
+  }
+  // Needle
+  var na=az*Math.PI/180;
   ctx.save();
-  ctx.translate(24*dpr,24*dpr);
-  ctx.fillStyle="#e94560";
-  ctx.beginPath();ctx.moveTo(0,-12*dpr);ctx.lineTo(-6*dpr,8*dpr);ctx.lineTo(6*dpr,8*dpr);ctx.closePath();ctx.fill();
-  ctx.fillStyle=isDark?"#e4e6eb":"#333";
-  ctx.font="bold 10px sans-serif";ctx.textAlign="center";
-  ctx.fillText("\u0421",0,-14*dpr);
+  ctx.translate(cx,cy);
+  ctx.rotate(na);
+  // Red north
+  ctx.fillStyle='#ff4466';
+  ctx.beginPath();
+  ctx.moveTo(0,-r+10);
+  ctx.lineTo(-8,0);
+  ctx.lineTo(8,0);
+  ctx.closePath();ctx.fill();
+  // White south
+  ctx.fillStyle='#e0e0f0';
+  ctx.beginPath();
+  ctx.moveTo(0,r-10);
+  ctx.lineTo(-8,0);
+  ctx.lineTo(8,0);
+  ctx.closePath();ctx.fill();
   ctx.restore();
-  // draw imported layers first
-  STATE.plan.layers.forEach(function(layer){
-    drawPlanLayer(ctx,layer,canvas.width,canvas.height,dpr,isDark);
+  // Center dot
+  ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--accent');
+  ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);ctx.fill();
+  // Bubble level
+  var bx=cx,by=cy+r+30;
+  ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--border');
+  ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(bx,by,20,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle='rgba(0,200,150,.3)';
+  ctx.beginPath();ctx.arc(bx,by,18,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--text');
+  ctx.beginPath();ctx.arc(bx,by,4,0,Math.PI*2);ctx.fill();
+}
+
+// ===== GPS =====
+var lastGPS=null;
+function startGPSWatch(){
+  if(gpsWatchId!==null)return;
+  if(!navigator.geolocation)return;
+  gpsWatchId=navigator.geolocation.watchPosition(function(pos){
+    lastGPS={lat:pos.coords.latitude,lon:pos.coords.longitude,alt:pos.coords.altitude,acc:pos.coords.accuracy};
+    gpsCurrentCoord=lastGPS;
+    updateGPSInfo();
+    if(currentMode==='gps')updateGPSMode();
+  },function(err){
+    console.log('GPS error:',err);
+  },{enableHighAccuracy:true,maximumAge:1000,timeout:15000});
+}
+function updateGPSInfo(){
+  if(!lastGPS)return;
+  // Update all GPS info displays
+  var coord=toDMS(lastGPS.lat,true)+' '+toDMS(lastGPS.lon,false);
+  var dd=toDD(lastGPS.lat,lastGPS.lon);
+  var alt='Высота: '+Math.round(lastGPS.alt||0)+' м (Точность: ±'+Math.round(lastGPS.acc||0)+' м)';
+  document.getElementById('gpsInfoMag').textContent=alt;
+  document.getElementById('gpsInfoLimb').textContent=alt;
+  document.getElementById('gpsInfoGPS').textContent=alt;
+  document.getElementById('coordDisplayGPS').textContent=coord+' '+dd;
+}
+function updateGPSMode(){
+  if(!gpsStartCoord||!gpsCurrentCoord)return;
+  var az=bearing(gpsStartCoord.lat,gpsStartCoord.lon,gpsCurrentCoord.lat,gpsCurrentCoord.lon);
+  var dist=haversine(gpsStartCoord.lat,gpsStartCoord.lon,gpsCurrentCoord.lat,gpsCurrentCoord.lon);
+  document.getElementById('azDisplayGPS').textContent='АЗИМУТ: '+azToStr(az);
+  document.getElementById('coordDisplayGPS').textContent=toDMS(gpsCurrentCoord.lat,true)+' '+toDMS(gpsCurrentCoord.lon,false)+' '+toDD(gpsCurrentCoord.lat,gpsCurrentCoord.lon);
+  document.getElementById('btnGPSStart').textContent='🏁 Зафиксировать вектор';
+  document.getElementById('btnGPSStart').onclick=gpsFixVector;
+}
+function gpsStartPoint(){
+  if(!lastGPS){showToast('GPS не готов. Ждём спутники...');return;}
+  gpsStartCoord={lat:lastGPS.lat,lon:lastGPS.lon,alt:lastGPS.alt,acc:lastGPS.acc};
+  document.getElementById('btnGPSStart').textContent='🏁 Зафиксировать вектор';
+  document.getElementById('btnGPSStart').onclick=gpsFixVector;
+  showToast('Т1 зафиксирована. Идите 5–10 м по визиру.');
+  showPointFixed();
+}
+function gpsFixVector(){
+  if(!gpsStartCoord||!gpsCurrentCoord)return;
+  var az=bearing(gpsStartCoord.lat,gpsStartCoord.lon,gpsCurrentCoord.lat,gpsCurrentCoord.lon);
+  var dist=haversine(gpsStartCoord.lat,gpsStartCoord.lon,gpsCurrentCoord.lat,gpsCurrentCoord.lon);
+  if(dist<2){showToast('Слишком близко! Пройдите ещё.');return;}
+  // Add to journal
+  var ptNum=measurementsLog.length+1;
+  measurementsLog.push({
+    line:'Т'+ptNum+'➔Т'+(ptNum+1),
+    azimuth:az,
+    distance:dist,
+    method:'gps',
+    coord:{lat:gpsStartCoord.lat,lon:gpsStartCoord.lon},
+    coordEnd:{lat:gpsCurrentCoord.lat,lon:gpsCurrentCoord.lon}
   });
-  // draw polygon from measurementsLog
-  var log=STATE.measurementsLog;
-  if(log.length<1){
-    ctx.fillStyle="#888";ctx.font="14px sans-serif";ctx.textAlign="center";
-    ctx.fillText("\u041D\u0435\u0442 \u0434\u0430\u043D\u043D\u044B\u0445 \u0434\u043B\u044F \u043E\u0442\u0440\u0438\u0441\u043E\u0432\u043A\u0438",canvas.width/2,canvas.height/2);
+  // Chain: T2 becomes start for T3
+  gpsStartCoord={lat:gpsCurrentCoord.lat,lon:gpsCurrentCoord.lon,alt:gpsCurrentCoord.alt,acc:gpsCurrentCoord.acc};
+  document.getElementById('btnGPSStart').textContent='🏁 Зафиксировать Т'+(measurementsLog.length+2);
+  document.getElementById('btnGPSStart').onclick=gpsFixVector;
+  renderJournal();drawMap();
+  showToast('Вектор Т'+ptNum+'➔Т'+(ptNum+1)+' зафиксирован! Дистанция: '+dist.toFixed(1)+' м');
+}
+function gpsResetPoint(){
+  gpsStartCoord=null;
+  document.getElementById('btnGPSStart').textContent='📍 Старт точки Т'+(measurementsLog.length+1);
+  document.getElementById('btnGPSStart').onclick=gpsStartPoint;
+  document.getElementById('azDisplayGPS').textContent='GPS: ожидание T'+(measurementsLog.length+1);
+  showToast('Точка сброшена');
+}
+function showPointFixed(){
+  var info=document.getElementById('pointFixedInfo');
+  if(lastGPS){
+    info.innerHTML='DMS: '+toDMS(lastGPS.lat,true)+' '+toDMS(lastGPS.lon,false)+'<br>DD: '+toDD(lastGPS.lat,lastGPS.lon)+'<br>Высота: '+Math.round(lastGPS.alt||0)+' м<br>Точность GPS: ±'+Math.round(lastGPS.acc||0)+' м';
+  }else{
+    info.innerHTML='DMS: --<br>DD: --<br>Высота: --<br>Точность GPS: --';
+  }
+  openModal('pointFixedModal');
+}
+
+// ===== FIXATION (Magnetic & Limb) =====
+function fixMagnetic(){
+  var az=window._currentAz||0;
+  var ptNum=measurementsLog.length+1;
+  measurementsLog.push({
+    line:'Т'+ptNum+'➔Т'+(ptNum+1),
+    azimuth:az,
+    distance:0,
+    method:currentMethod,
+    coord:lastGPS?{lat:lastGPS.lat,lon:lastGPS.lon}:null
+  });
+  renderJournal();drawMap();
+  showToast('Румб '+azToStr(az).split(' ')[0]+'° зафиксирован!');
+}
+function fixLimb(){
+  var az=window._currentAz||0;
+  var ptNum=measurementsLog.length+1;
+  measurementsLog.push({
+    line:'Т'+ptNum+'➔Т'+(ptNum+1),
+    azimuth:az,
+    distance:0,
+    method:currentMethod,
+    coord:lastGPS?{lat:lastGPS.lat,lon:lastGPS.lon}:null
+  });
+  renderJournal();drawMap();
+  showToast('Азимут '+azToStr(az).split(' ')[0]+'° зафиксирован!');
+}
+function resetBase(){
+  baseAzimuth=window._currentAz||null;
+  if(baseAzimuth!==null)showToast('База 0° установлена: '+azToStr(baseAzimuth).split(' ')[0]+'°');
+  else showToast('База сброшена');
+  baseAzimuth=baseAzimuth===null?window._currentAz:baseAzimuth;
+  // Toggle
+  if(window._baseSet){baseAzimuth=null;window._baseSet=false;showToast('База сброшена');}
+  else{baseAzimuth=window._currentAz;window._baseSet=true;showToast('База 0°: '+azToStr(baseAzimuth).split(' ')[0]+'°');}
+}
+
+// ===== JOURNAL =====
+function renderJournal(){
+  var tb=document.getElementById('journalBody');
+  if(measurementsLog.length===0){
+    tb.innerHTML='<tr><td colspan="5" class="journal-empty">Журнал пуст. Наведите визир и зафиксируйте точку.</td></tr>';
     return;
   }
-  var pts=[{x:0,y:0,label:"\u04221"}];
-  for(var i=0;i<log.length;i++){
-    var az=toRad(log[i].azimuth);
-    var len=log[i].length||0;
-    var prev=pts[pts.length-1];
-    pts.push({x:prev.x+len*Math.sin(az),y:prev.y+len*Math.cos(az),label:"\u0422"+(i+2)});
+  var html='';
+  for(var i=0;i<measurementsLog.length;i++){
+    var m=measurementsLog[i];
+    var coord=m.coord?toDMS(m.coord.lat,true)+' '+toDMS(m.coord.lon,false):'—';
+    html+='<tr>'+
+      '<td>'+m.line+'</td>'+
+      '<td><input type="number" value="'+m.azimuth.toFixed(1)+'" onchange="editAzimuth('+i+',this.value)" style="width:70px"></td>'+
+      '<td><input type="number" value="'+m.distance.toFixed(1)+'" onchange="editDistance('+i+',this.value)" style="width:70px"' +(m.method==='gps'?'disabled':'')+'></td>'+
+      '<td style="font-size:11px">'+coord+'</td>'+
+      '<td><button class="del-btn" onclick="delMeasure('+i+')">×</button></td>'+
+      '</tr>';
   }
-  // bounding box from geodetic points only
-  var minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
-  pts.forEach(function(p){
-    minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);
-    minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y);
-  });
-  var bw=maxX-minX||1,bh=maxY-minY||1;
-  var pad=30*dpr;
-  var scale=Math.min((canvas.width-2*pad)/(bw*STATE.plan.zoom),(canvas.height-2*pad)/(bh*STATE.plan.zoom));
-  var offX=pad+(canvas.width-2*pad-bw*scale)/2-minX*scale;
-  var offY=pad+(canvas.height-2*pad-bh*scale)/2-minY*scale;
-  function toScreen(p){return{x:offX+p.x*scale,y:canvas.height-(offY+p.y*scale)};}
-  // draw polygon
-  var scrPts=pts.map(toScreen);
-  ctx.strokeStyle="#e94560";ctx.lineWidth=2*dpr;
-  ctx.beginPath();
-  scrPts.forEach(function(p,i){if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});
-  ctx.closePath();
-  ctx.stroke();
-  // fill (semi-transparent)
-  ctx.fillStyle="rgba(233,69,96,0.08)";
-  ctx.fill();
-  // draw vertices
-  scrPts.forEach(function(p,i){
-    ctx.fillStyle="#e94560";
-    ctx.beginPath();ctx.arc(p.x,p.y,5*dpr,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle=isDark?"#fff":"#333";
-    ctx.font="bold 10px sans-serif";ctx.textAlign="center";
-    ctx.fillText(p.label,p.x,p.y-10*dpr);
-  });
-  // label sides
-  for(var j=0;j<log.length;j++){
-    var p1=scrPts[j],p2=scrPts[j+1];
-    if(!p2)break;
-    var mx=(p1.x+p2.x)/2,my=(p1.y+p2.y)/2;
-    ctx.fillStyle=isDark?"#9fa3b1":"#666";
-    ctx.font="10px monospace";ctx.textAlign="center";
-    ctx.fillText(log[j].azimuth+"\u00b0 / "+log[j].length+"\u043C",mx,my);
-  }
-  // area
-  var area=gaussArea(pts);
-  var ha=area/10000;
-  $("plan-area-ha").textContent=ha.toFixed(4)+" \u0433\u0430";
-  $("plan-area-sqm").textContent=Math.round(area)+" \u043C\u00B2";
+  tb.innerHTML=html;
+}
+function editAzimuth(i,val){measurementsLog[i].azimuth=parseFloat(val)||0;drawMap();}
+function editDistance(i,val){measurementsLog[i].distance=parseFloat(val)||0;drawMap();}
+function delMeasure(i){measurementsLog.splice(i,1);renderJournal();drawMap();}
+function clearJournal(){
+  if(!confirm('Очистить журнал?'))return;
+  measurementsLog=[];renderJournal();drawMap();showToast('Журнал очищён');
 }
 
-function drawPlanLayer(ctx,layer,cw,ch,dpr,isDark){
-  if(!layer||!layer.points||layer.points.length===0)return;
-  var minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
-  layer.points.forEach(function(p){
-    minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);
-    minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y);
+// ===== METHOD =====
+function setMethod(m){
+  currentMethod=m;
+  var labels={manual:'📏 Ручной ввод',stepometer:'👣 Шагомер',gps:'📡 GPS-расчёт'};
+  document.getElementById('methodBadge').textContent=labels[m];
+  closeModal('methodModal');
+  if(m==='stepometer')startStepometer();
+  showToast('Метод: '+labels[m]);
+}
+function openMethodSelect(){openModal('methodModal');}
+
+// ===== STEPOMETER =====
+var stepListenerActive=false;
+function startStepometer(){
+  if(stepListenerActive)return;
+  if(!window.DeviceMotionEvent)return;
+  window.addEventListener('devicemotion',stepDetect);
+  stepListenerActive=true;
+}
+function stepDetect(e){
+  if(currentMethod!=='stepometer')return;
+  var acc=e.accelerationIncludingGravity;
+  if(!acc)return;
+  var mag=Math.sqrt(acc.x*acc.x+acc.y*acc.y+acc.z*acc.z);
+  var delta=Math.abs(mag-lastAccel.mag);
+  lastAccel={x:acc.x,y:acc.y,z:acc.z,mag:mag};
+  if(delta>stepThreshold){
+    stepCount++;
+    // Update last measurement distance if in progress
+    if(measurementsLog.length>0){
+      var sl=parseFloat(document.getElementById('stepLength').value)||0.7;
+      measurementsLog[measurementsLog.length-1].distance=stepCount*sl;
+      renderJournal();drawMap();
+    }
+  }
+}
+
+// ===== MAP CANVAS =====
+function drawMap(){
+  var canvas=document.getElementById('mapCanvas');
+  var ctx=canvas.getContext('2d');
+  var w=canvas.width=canvas.offsetWidth*2;
+  var h=canvas.height=canvas.offsetHeight*2;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--canvas-bg');
+  ctx.fillRect(0,0,w,h);
+  // Grid
+  ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--grid');
+  ctx.lineWidth=1;
+  for(var x=0;x<w;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+  for(var y=0;y<h;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  // Cardinal directions
+  ctx.font='bold 16px sans-serif';
+  ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--text2');
+  ctx.textAlign='center';
+  ctx.fillText('С',w/2,20);
+  ctx.fillText('Ю',w/2,h-5);
+  ctx.textAlign='left';
+  ctx.fillText('З',5,h/2);
+  ctx.textAlign='right';
+  ctx.fillText('В',w-5,h/2);
+  ctx.textAlign='left';
+  // Draw external layers
+  drawExternalLayers(ctx,w,h);
+  // Draw polygon
+  if(measurementsLog.length<1){document.getElementById('areaDisplay').textContent='Площадь: 0.0000 га';return;}
+  // Calculate polygon points from azimuths and distances
+  var pts=[];
+  var cx0=w/2+mapOffsetX,cy0=h/2+mapOffsetY;
+  var px=cx0,py=cy0;
+  pts.push({x:px,y:py});
+  for(var i=0;i<measurementsLog.length;i++){
+    var m=measurementsLog[i];
+    var az=m.azimuth*Math.PI/180;
+    var d=m.distance*mapScale*0.5;
+    if(direction==='ccw')az=-az;
+    px+=d*Math.sin(az);
+    py-=d*Math.cos(az);
+    pts.push({x:px,y:py});
+  }
+  // Auto-center and scale
+  if(pts.length>=2){
+    var minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+    for(var j=0;j<pts.length;j++){
+      if(pts[j].x<minX)minX=pts[j].x;
+      if(pts[j].x>maxX)maxX=pts[j].x;
+      if(pts[j].y<minY)minY=pts[j].y;
+      if(pts[j].y>maxY)maxY=pts[j].y;
+    }
+    var polyW=maxX-minX,polyH=maxY-minY;
+    var padding=60;
+    var availW=w-padding*2,availH=h-padding*2;
+    if(polyW>0&&polyH>0){
+      var sx=availW/polyW,sy=availH/polyH;
+      var s=Math.min(sx,sy)*0.8;
+      var ocx=(minX+maxX)/2,ocy=(minY+maxY)/2;
+      for(var k=0;k<pts.length;k++){
+        pts[k].x=((pts[k].x-ocx)*s)+w/2;
+        pts[k].y=((pts[k].y-ocy)*s)+h/2;
+      }
+    }
+  }
+  // Draw polygon
+  if(pts.length>=2){
+    ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--accent');
+    ctx.lineWidth=3;
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x,pts[0].y);
+    for(var p=1;p<pts.length;p++)ctx.lineTo(pts[p].x,pts[p].y);
+    if(pts.length>=3)ctx.closePath();
+    ctx.stroke();
+    // Fill
+    if(pts.length>=3){
+      ctx.fillStyle='rgba(78,140,255,.15)';
+      ctx.fill();
+    }
+    // Points
+    for(var pi=0;pi<pts.length;pi++){
+      ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--accent2');
+      ctx.beginPath();
+      ctx.arc(pts[pi].x,pts[pi].y,5,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--text');
+      ctx.font='bold 12px sans-serif';
+      ctx.fillText('Т'+(pi+1),pts[pi].x+8,pts[pi].y-8);
+    }
+  }
+  // Calculate area (Gauss formula)
+  if(pts.length>=3){
+    var area=0;
+    for(var a=0;a<pts.length-1;a++){
+      area+=(pts[a].x*pts[a+1].y)-(pts[a+1].x*pts[a].y);
+    }
+    area=Math.abs(area)/2;
+    // Convert canvas units back to meters
+    // We used 0.5 factor, so actual distance in meters = canvas_dist / (0.5*scale)
+    // Area in canvas² = area, real area = area / (0.5*0.5) = area*4
+    var realArea=area*4;
+    var ha=realArea/10000;
+    document.getElementById('areaDisplay').textContent='Площадь: '+ha.toFixed(4)+' га ('+realArea.toFixed(0)+' м²)';
+  }else{
+    document.getElementById('areaDisplay').textContent='Площадь: 0.0000 га';
+  }
+}
+function mapZoom(f){mapScale*=f;drawMap();}
+function mapCenter(){mapOffsetX=0;mapOffsetY=0;mapScale=1;drawMap();}
+function toggleMapFullscreen(){
+  var mw=document.querySelector('.map-wrap');
+  if(mw.style.position==='fixed'){
+    mw.style='';document.getElementById('mapCanvas').style.height='';
+  }else{
+    mw.style.position='fixed';mw.style.inset='0';mw.style.zIndex='250';mw.style.borderRadius='0';
+    document.getElementById('mapCanvas').style.height='100vh';
+  }
+  drawMap();
+}
+
+// ===== EXTERNAL LAYERS (KML/KMZ/GeoJSON) =====
+function handleFileUpload(e){
+  var file=e.target.files[0];if(!file)return;
+  var ext=file.name.split('.').pop().toLowerCase();
+  if(ext==='kmz'){
+    file.arrayBuffer().then(function(buf){
+      if(typeof DecompressionStream!=='undefined'){
+        var ds=new DecompressionStream('gzip');
+        var stream=new Response(buf).body.pipeThrough(ds);
+        new Response(stream).text().then(function(txt){parseKML(txt);});
+      }else{
+        showToast('KMZ не поддерживается браузером');
+      }
+    });
+  }else if(ext==='kml'){
+    file.text().then(function(txt){parseKML(txt);});
+  }else{
+    file.text().then(function(txt){
+      try{
+        var json=JSON.parse(txt);
+        parseGeoJSON(json);
+      }catch(e){showToast('Ошибка формата');}
+    });
+  }
+}
+function parseKML(txt){
+  var parser=new DOMParser();
+  var doc=parser.parseFromString(txt,'text/xml');
+  var coordsNodes=doc.querySelectorAll('coordinates');
+  var layers=[];
+  coordsNodes.forEach(function(node){
+    var raw=node.textContent.trim().split(/\s+/);
+    var pts=[];
+    raw.forEach(function(c){
+      var p=c.split(',');
+      if(p.length>=2)pts.push({lon:parseFloat(p[0]),lat:parseFloat(p[1])});
+    });
+    if(pts.length>0)layers.push(pts);
   });
-  var bw=maxX-minX||1,bh=maxY-minY||1;
-  var pad=30*dpr;
-  var scale=Math.min((cw-2*pad)/(bw*STATE.plan.zoom),(ch-2*pad)/(bh*STATE.plan.zoom));
-  var offX=pad+(cw-2*pad-bw*scale)/2-minX*scale;
-  var offY=pad+(ch-2*pad-bh*scale)/2-minY*scale;
-  ctx.strokeStyle=layer.color||"#1a73e8";
-  ctx.lineWidth=1.5*dpr;
-  ctx.setLineDash([5*dpr,3*dpr]);
-  ctx.beginPath();
-  layer.points.forEach(function(p,i){
-    var sx=offX+p.x*scale,sy=ch-(offY+p.y*scale);
-    if(i===0)ctx.moveTo(sx,sy);else ctx.lineTo(sx,sy);
+  externalLayers=layers;
+  showToast('KML загружен: '+layers.length+' полигон(ов)');
+  drawMap();
+}
+function parseGeoJSON(json){
+  var layers=[];
+  if(json.type==='FeatureCollection'&&json.features){
+    json.features.forEach(function(f){
+      if(f.geometry&&(f.geometry.type==='Polygon'||f.geometry.type==='LineString')){
+        var coords=f.geometry.type==='Polygon'?f.geometry.coordinates[0]:f.geometry.coordinates;
+        var pts=coords.map(function(c){return{lon:c[0],lat:c[1]};});
+        layers.push(pts);
+      }
+    });
+  }
+  externalLayers=layers;
+  showToast('GeoJSON загружен: '+layers.length+' полигон(ов)');
+  drawMap();
+}
+function drawExternalLayers(ctx,w,h){
+  if(externalLayers.length===0)return;
+  ctx.strokeStyle='rgba(255,170,0,.6)';
+  ctx.lineWidth=2;
+  ctx.setLineDash([5,5]);
+  externalLayers.forEach(function(layer){
+    if(layer.length<2)return;
+    // Project lat/lon to canvas (simple linear)
+    var minLat=Infinity,maxLat=-Infinity,minLon=Infinity,maxLon=-Infinity;
+    layer.forEach(function(p){
+      if(p.lat<minLat)minLat=p.lat;if(p.lat>maxLat)maxLat=p.lat;
+      if(p.lon<minLon)minLon=p.lon;if(p.lon>maxLon)maxLon=p.lon;
+    });
+    var range=Math.max(maxLat-minLat,maxLon-minLon,0.0001);
+    var size=Math.min(w,h)*0.7;
+    var cx=w/2,cy=h/2;
+    ctx.beginPath();
+    layer.forEach(function(p,i){
+      var x=cx+((p.lon-(minLon+maxLon)/2)/range)*size;
+      var y=cy-((p.lat-(minLat+maxLat)/2)/range)*size;
+      if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+    });
+    ctx.closePath();
+    ctx.stroke();
   });
-  ctx.closePath();
-  ctx.stroke();
   ctx.setLineDash([]);
 }
 
-/* ===== IMPORT KML/KMZ/GeoJSON ===== */
-function handleImport(file){
-  var name=file.name.toLowerCase();
-  var reader=new FileReader();
-  reader.onload=function(e){
-    var text="",result;
-    if(name.endsWith(".kmz")){
-      var buf=e.target.result;
-      parseKMZ(buf).then(function(kmlText){
-        if(kmlText){parseKML(kmlText,name);}
-        else{toast("KML внутри KMZ не найден");}
-      }).catch(function(){toast("Ошибка чтения KMZ");});
-    }else if(name.endsWith(".kml")){
-      text=e.target.result;
-      parseKML(text,name);
-    }else{
-      text=e.target.result;
-      parseGeoJSON(text,name);
-    }
-  };
-  if(name.endsWith(".kmz"))reader.readAsArrayBuffer(file);
-  else reader.readAsText(file);
-}
-
-function parseKML(text,fname){
+// ===== PROJECTS (localStorage) =====
+var ARCHIVE_KEY='bg_hns_projects_archive';
+function loadProjectsList(){
   try{
-    var parser=new DOMParser();
-    var doc=parser.parseFromString(text,"text/xml");
-    var coordsNodes=doc.getElementsByTagName("coordinates");
-    if(coordsNodes.length===0){toast("KML: координаты не найдены");return;}
-    var points=[];
-    for(var n=0;n<coordsNodes.length;n++){
-      var raw=coordsNodes[n].textContent.trim();
-      var pairs=raw.split(/\s+/);
-      var layerPts=[];
-      pairs.forEach(function(pair){
-        var c=pair.split(",");
-        if(c.length>=2){
-          var lon=parseFloat(c[0]),lat=parseFloat(c[1]);
-          if(!isNaN(lon)&&!isNaN(lat)){
-            // convert to local meters relative to first point
-            layerPts.push({lon:lon,lat:lat,x:0,y:0});
-          }
-        }
-      });
-      if(layerPts.length>0){
-        var base=layerPts[0];
-        layerPts.forEach(function(p){
-          p.x=(p.lon-base.lon)*111320*Math.cos(toRad(base.lat));
-          p.y=(p.lat-base.lat)*111320;
-        });
-        points.push({points:layerPts,color:"#1a73e8",name:fname||"KML"});
-      }
-    }
-    if(points.length>0){
-      STATE.plan.layers=STATE.plan.layers.concat(points);
-      updatePlanLayers();
-      drawPlan();
-      toast("Импортировано слоёв: "+points.length);
-    }
-  }catch(ex){toast("Ошибка парсинга KML: "+ex.message);}
-}
-
-function parseGeoJSON(text,fname){
-  try{
-    var geo=JSON.parse(text);
-    var layers=[];
-    function processGeom(geom){
-      if(geom.type==="Polygon"){
-        var coords=geom.coordinates[0];
-        if(coords&&coords.length>0){
-          var base=coords[0];
-          var pts=coords.map(function(c){
-            return{
-              lon:c[0],lat:c[1],
-              x:(c[0]-base[0])*111320*Math.cos(toRad(base[1])),
-              y:(c[1]-base[1])*111320
-            };
-          });
-          layers.push({points:pts,color:"#1a73e8",name:fname||"GeoJSON"});
-        }
-      }else if(geom.type==="MultiPolygon"){
-        geom.coordinates.forEach(function(poly){
-          processGeom({type:"Polygon",coordinates:poly});
-        });
-      }else if(geom.type==="LineString"){
-        var lc=geom.coordinates;
-        if(lc&&lc.length>0){
-          var lbase=lc[0];
-          var lpts=lc.map(function(c){
-            return{
-              lon:c[0],lat:c[1],
-              x:(c[0]-lbase[0])*111320*Math.cos(toRad(lbase[1])),
-              y:(c[1]-lbase[1])*111320
-            };
-          });
-          layers.push({points:lpts,color:"#1a73e8",name:fname||"GeoJSON"});
-        }
-      }
-    }
-    if(geo.type==="FeatureCollection"){
-      geo.features.forEach(function(f){if(f.geometry)processGeom(f.geometry);});
-    }else if(geo.type==="Feature"&&geo.geometry){
-      processGeom(geo.geometry);
-    }else if(geo.coordinates){
-      processGeom(geo);
-    }
-    if(layers.length>0){
-      STATE.plan.layers=STATE.plan.layers.concat(layers);
-      updatePlanLayers();
-      drawPlan();
-      toast("Импортировано слоёв: "+layers.length);
-    }else{toast("GeoJSON: полигонов не найдено");}
-  }catch(ex){toast("Ошибка GeoJSON: "+ex.message);}
-}
-
-function parseKMZ(arrayBuffer){
-  return new Promise(function(resolve,reject){
-    var view=new DataView(arrayBuffer);
-    var decoder=new TextDecoder("utf-8");
-    var offset=0;
-    while(offset<arrayBuffer.byteLength-4){
-      if(view.getUint16(offset,true)===0x4b50&&view.getUint16(offset+2,true)===0x0403){
-        var compMethod=view.getUint16(offset+8,true);
-        var compSize=view.getUint32(offset+18,true);
-        var uncompSize=view.getUint32(offset+22,true);
-        var fnLen=view.getUint16(offset+26,true);
-        var efLen=view.getUint16(offset+28,true);
-        var fn=decoder.decode(new Uint8Array(arrayBuffer,offset+30,fnLen));
-        var dataOff=offset+30+fnLen+efLen;
-        if(fn.toLowerCase().endsWith(".kml")){
-          if(compMethod===8){
-            var compData=new Uint8Array(arrayBuffer,dataOff,compSize);
-            if(typeof DecompressionStream!=="undefined"){
-              var ds=new DecompressionStream("deflate-raw");
-              var blob=new Blob([compData]);
-              var stream=blob.stream().pipeThrough(ds);
-              new Response(stream).arrayBuffer().then(function(buf){
-                resolve(decoder.decode(buf));
-              }).catch(reject);
-              return;
-            }
-          }else if(compMethod===0){
-            resolve(decoder.decode(new Uint8Array(arrayBuffer,dataOff,uncompSize)));
-            return;
-          }
-        }
-        offset=dataOff+compSize;
-      }else{
-        offset++;
-      }
-    }
-    resolve(null);
-  });
-}
-
-function updatePlanLayers(){
-  var div=$("plan-layers");
-  div.innerHTML="";
-  if(STATE.plan.layers.length===0)return;
-  div.innerHTML="<b>Слои:</b> ";
-  STATE.plan.layers.forEach(function(l,i){
-    var tag=document.createElement("span");
-    tag.className="layer-tag";
-    tag.textContent=l.name||("Слой "+(i+1));
-    var rm=document.createElement("button");
-    rm.textContent="\u00d7";
-    rm.style.cssText="background:none;border:none;color:var(--red);margin-left:4px;font-size:14px";
-    rm.onclick=function(){STATE.plan.layers.splice(i,1);updatePlanLayers();drawPlan();};
-    tag.appendChild(rm);
-    div.appendChild(tag);
-  });
-}
-
-/* ===== INSPECTOR CAMERA ===== */
-function openInspector(){
-  var modal=$("modal-inspector");
-  modal.classList.add("open");
-  navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false})
-  .then(function(stream){
-    STATE.inspectorStream=stream;
-    var v=$("inspector-video");
-    v.srcObject=stream;
-    v.play();
-    updateInspectorHUD();
-  })
-  .catch(function(e){
-    toast("Камера недоступна: "+e.message);
-    closeInspector();
-  });
-}
-function closeInspector(){
-  $("modal-inspector").classList.remove("open");
-  if(STATE.inspectorStream){
-    STATE.inspectorStream.getTracks().forEach(function(t){t.stop();});
-    STATE.inspectorStream=null;
-    $("inspector-video").srcObject=null;
+    var raw=localStorage.getItem(ARCHIVE_KEY);
+    projectsArchive=raw?JSON.parse(raw):{};
+  }catch(e){projectsArchive={};}
+  var sel=document.getElementById('projectSelect');
+  sel.innerHTML='<option value="">— Новый проект —</option>';
+  for(var k in projectsArchive){
+    sel.innerHTML+='<option value="'+k+'">'+k+'</option>';
   }
 }
-function updateInspectorHUD(){
-  var hud=$("inspector-hud");
-  var s=STATE.settings;
-  var log=STATE.measurementsLog;
-  var lastAz=log.length>0?log[log.length-1].azimuth:0;
-  var pts=log.length;
-  var ptInfo="T"+pts+" \u2192 T"+(pts+1);
-  var gps=STATE.gps.current;
-  var dd=gps?gps.lat.toFixed(6)+", "+gps.lon.toFixed(6):"\u2014";
-  var dmsLat=gps?toDMS(gps.lat):"\u2014";
-  var dmsLon=gps?toDMS(gps.lon,"lon"):"\u2014";
-  hud.innerHTML=
-    '<div class="line">\u0411\u0413-\u0425\u041D\u0421 PRO v'+APP_VERSION+' | '+fmtDate()+'</div>'+
-    '<div class="line">\u041B\u0435\u0441\u043D\u0438\u0447\u0435\u0441\u0442\u0432\u043E: '+(s.forest||"\u2014")+'</div>'+
-    '<div class="line">\u041A\u0432. '+(s.kvartal||"\u2014")+' \u0432\u044B\u0434. '+(s.vydel||"\u2014")+'</div>'+
-    '<div class="line">\u0422\u043E\u0447\u043A\u0438: '+ptInfo+' | \u0410\u0437\u0438\u043C\u0443\u0442: '+lastAz+'\u00b0</div>'+
-    '<div class="line">DD: '+dd+'</div>'+
-    '<div class="line">DMS: '+dmsLat+' / '+dmsLon+'</div>'+
-    '<div class="line">\u0410\u0432\u0442\u043E\u0440: '+APP_AUTHOR+' \u0418\u041D\u041D:'+APP_INN+'</div>';
-  if($("modal-inspector").classList.contains("open")){
-    setTimeout(updateInspectorHUD,1000);
+function saveProject(){
+  var name=prompt('Название проекта:',currentProjectName);
+  if(!name)return;
+  projectsArchive[name]={
+    log:JSON.parse(JSON.stringify(measurementsLog)),
+    method:currentMethod,
+    direction:direction,
+    declination:declination,
+    layers:JSON.parse(JSON.stringify(externalLayers)),
+    saved:new Date().toISOString()
+  };
+  localStorage.setItem(ARCHIVE_KEY,JSON.stringify(projectsArchive));
+  currentProjectName=name;
+  loadProjectsList();
+  document.getElementById('projectSelect').value=name;
+  showToast('Проект «'+name+'» сохранён');
+}
+function loadProject(){
+  var name=document.getElementById('projectSelect').value;
+  if(!name||!projectsArchive[name])return;
+  var p=projectsArchive[name];
+  measurementsLog=JSON.parse(JSON.stringify(p.log||[]));
+  currentMethod=p.method||'manual';
+  direction=p.direction||'cw';
+  declination=p.declination||0;
+  externalLayers=JSON.parse(JSON.stringify(p.layers||[]));
+  currentProjectName=name;
+  renderJournal();drawMap();
+  showToast('Проект «'+name+'» загружен');
+}
+function deleteProject(){
+  var name=document.getElementById('projectSelect').value;
+  if(!name||!projectsArchive[name])return;
+  if(!confirm('Удалить проект «'+name+'»?'))return;
+  delete projectsArchive[name];
+  localStorage.setItem(ARCHIVE_KEY,JSON.stringify(projectsArchive));
+  loadProjectsList();
+  showToast('Проект удалён');
+}
+
+// ===== EXPORT =====
+function exportCSV(){
+  if(measurementsLog.length===0){showToast('Журнал пуст');return;}
+  var csv='Линия,Азимут,Длина(м),Широта,Долгота,Метод\n';
+  measurementsLog.forEach(function(m){
+    csv+='"'+m.line+'",'+m.azimuth.toFixed(2)+','+m.distance.toFixed(2)+','+
+      (m.coord?m.coord.lat.toFixed(6):'')+','+
+      (m.coord?m.coord.lon.toFixed(6):'')+', '+m.method+'\n';
+  });
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=currentProjectName+'_export.csv';
+  a.click();
+  showToast('CSV экспортирован');
+}
+function exportKML(){
+  if(measurementsLog.length===0){showToast('Журнал пуст');return;}
+  var coords='';
+  var lat0=lastGPS?lastGPS.lat:61.48;
+  var lon0=lastGPS?lastGPS.lon:50.5017;
+  var lat=lat0,lon=lon0;
+  var pts=lat0+','+lon0+',0 ';
+  for(var i=0;i<measurementsLog.length;i++){
+    var m=measurementsLog[i];
+    var az=m.azimuth*Math.PI/180;
+    var d=m.distance/111111;
+    lat+=d*Math.cos(az);
+    lon+=d*Math.sin(az)/Math.cos(lat0*Math.PI/180);
+    pts+=lat+','+lon+',0 ';
+  }
+  pts+=lat0+','+lon0+',0';
+  var kml='<?xml version="1.0" encoding="UTF-8"?>\n'+
+    '<kml xmlns="http://www.opengis.net/kml/2.2">\n'+
+    '<Document><name>'+currentProjectName+'</name>\n'+
+    '<Placemark><name>Контур делянки</name>\n'+
+    '<Polygon><outerBoundaryIs><LinearRing><coordinates>'+
+    pts+'</coordinates></LinearRing></outerBoundaryIs></Polygon>\n'+
+    '</Placemark></Document></kml>';
+  var blob=new Blob([kml],{type:'application/vnd.google-earth.kml+xml'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=currentProjectName+'_contour.kml';
+  a.click();
+  showToast('KML экспортирован');
+}
+
+// ===== PHOTO MODAL =====
+function openPhotoModal(){
+  document.getElementById('photoModal').classList.add('active');
+  document.getElementById('photoPreview').style.display='none';
+  document.getElementById('photoCanvas').style.display='none';
+  document.getElementById('photoCamera').style.display='';
+  document.getElementById('photoActions').style.display='flex';
+  document.getElementById('photoPreviewActions').style.display='none';
+  // Start camera
+  navigator.mediaDevices&&navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(s){
+    photoStream=s;
+    document.getElementById('photoCamera').srcObject=s;
+  }).catch(function(e){showToast('Камера недоступна');});
+  // Update HUD
+  updatePhotoHUD();
+}
+function closePhotoModal(){
+  document.getElementById('photoModal').classList.remove('active');
+  if(photoStream){photoStream.getTracks().forEach(function(t){t.stop()});photoStream=null;}
+}
+function updatePhotoHUD(){
+  var m=measurementsLog.length>0?measurementsLog[measurementsLog.length-1]:null;
+  var az=m?azToStr(m.azimuth):'0°';
+  var line=m?m.line:'Т1 ➔ Т2';
+  document.getElementById('phLine1').textContent='Лесничество: — | Квартал: — | Выдел: —';
+  document.getElementById('phLine2').textContent='Линия: '+line+' | Азимут: '+az;
+  if(lastGPS){
+    document.getElementById('phLine3').textContent='DMS: '+toDMS(lastGPS.lat,true)+' '+toDMS(lastGPS.lon,false)+' | DD: '+toDD(lastGPS.lat,lastGPS.lon);
+    document.getElementById('phLine4').textContent='Высота: '+Math.round(lastGPS.alt||0)+' м | Точность: ±'+Math.round(lastGPS.acc||0)+' м';
+  }else{
+    document.getElementById('phLine3').textContent='DMS: — | DD: —';
+    document.getElementById('phLine4').textContent='Высота: — | Точность: —';
   }
 }
 function capturePhoto(){
-  var v=$("inspector-video");
-  var canvas=document.createElement("canvas");
-  canvas.width=v.videoWidth||640;
-  canvas.height=v.videoHeight||480;
-  var ctx=canvas.getContext("2d");
-  // draw video frame
-  ctx.drawImage(v,0,0,canvas.width,canvas.height);
-  // draw HUD
-  var s=STATE.settings;
-  var log=STATE.measurementsLog;
-  var lastAz=log.length>0?log[log.length-1].azimuth:0;
-  var pts=log.length;
-  var gps=STATE.gps.current;
-  var dd=gps?gps.lat.toFixed(6)+", "+gps.lon.toFixed(6):"\u2014";
-  var dmsLat=gps?toDMS(gps.lat):"\u2014";
-  var dmsLon=gps?toDMS(gps.lon,"lon"):"\u2014";
-  var lines=[
-    "\u0411\u0413-\u0425\u041D\u0421 PRO v"+APP_VERSION+" | "+fmtDate(),
-    "\u041B\u0435\u0441\u043D\u0438\u0447\u0435\u0441\u0442\u0432\u043E: "+(s.forest||"\u2014"),
-    "\u041A\u0432. "+(s.kvartal||"\u2014")+" \u0432\u044B\u0434. "+(s.vydel||"\u2014"),
-    "\u0422\u043E\u0447\u043A\u0438: T"+pts+" \u2192 T"+(pts+1)+" | \u0410\u0437\u0438\u043C\u0443\u0442: "+lastAz+"\u00b0",
-    "DD: "+dd,
-    "DMS: "+dmsLat+" / "+dmsLon,
-    APP_AUTHOR+" \u0418\u041D\u041D:"+APP_INN
-  ];
-  var fontSize=Math.max(12,Math.round(canvas.width/50));
-  ctx.font=fontSize+"px monospace";
-  ctx.textAlign="left";
-  var padX=12,padY=8;
-  var maxW=0;
-  lines.forEach(function(l){var w=ctx.measureText(l).width;if(w>maxW)maxW=w;});
-  var boxH=lines.length*(fontSize+4)+padY*2;
-  var boxW=maxW+padX*2;
-  ctx.fillStyle="rgba(0,0,0,0.65)";
-  ctx.fillRect(canvas.width-boxW-10,10,boxW,boxH);
-  ctx.fillStyle="#0f0";
-  lines.forEach(function(l,i){
-    ctx.fillText(l,canvas.width-boxW-10+padX,10+padY+i*(fontSize+4)+fontSize);
-  });
-  // show preview
-  var pv=$("photo-preview-canvas");
-  pv.width=canvas.width;pv.height=canvas.height;
-  pv.getContext("2d").drawImage(canvas,0,0);
-  $("modal-preview").classList.add("open");
-  // store for download
-  STATE._lastPhotoCanvas=canvas;
-  if(navigator.vibrate)navigator.vibrate(50);
+  var video=document.getElementById('photoCamera');
+  var canvas=document.getElementById('photoCanvas');
+  canvas.width=video.videoWidth||1080;
+  canvas.height=video.videoHeight||1920;
+  var ctx=canvas.getContext('2d');
+  // Draw video frame
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  // Draw HUD overlay
+  ctx.fillStyle='rgba(0,0,0,.7)';
+  ctx.fillRect(0,0,canvas.width,120);
+  ctx.fillStyle='#00c896';
+  ctx.font='bold 20px sans-serif';
+  ctx.fillText('БГ-ХНС PRO 3.2',20,30);
+  ctx.fillStyle='#fff';
+  ctx.font='14px sans-serif';
+  var m=measurementsLog.length>0?measurementsLog[measurementsLog.length-1]:null;
+  var line=m?m.line:'Т1➔Т2';
+  var az=m?azToStr(m.azimuth):'0°';
+  ctx.fillText('Линия: '+line+' | Азимут: '+az,20,55);
+  if(lastGPS){
+    ctx.fillText('DMS: '+toDMS(lastGPS.lat,true)+' '+toDMS(lastGPS.lon,false),20,80);
+    ctx.fillText('DD: '+toDD(lastGPS.lat,lastGPS.lon)+' | Высота: '+Math.round(lastGPS.alt||0)+' м',20,100);
+  }
+  // Show preview
+  photoDataUrl=canvas.toDataURL('image/jpeg',0.85);
+  document.getElementById('photoPreview').src=photoDataUrl;
+  document.getElementById('photoPreview').style.display='';
+  document.getElementById('photoCamera').style.display='none';
+  document.getElementById('photoActions').style.display='none';
+  document.getElementById('photoPreviewActions').style.display='flex';
 }
-function downloadPhoto(){
-  if(!STATE._lastPhotoCanvas)return;
-  STATE._lastPhotoCanvas.toBlob(function(blob){
-    var url=URL.createObjectURL(blob);
-    var a=document.createElement("a");
-    a.href=url;
-    a.download="bg_hns_photo_"+fmtDate().replace(/[: ]/g,"_")+".jpg";
-    a.click();
-    URL.revokeObjectURL(url);
-    toast("Снимок сохранён");
-  },"image/jpeg",0.9);
-  $("modal-preview").classList.remove("open");
+function retakePhoto(){
+  document.getElementById('photoPreview').style.display='none';
+  document.getElementById('photoCamera').style.display='';
+  document.getElementById('photoActions').style.display='flex';
+  document.getElementById('photoPreviewActions').style.display='none';
+}
+function savePhoto(){
+  if(!photoDataUrl)return;
+  var a=document.createElement('a');
+  a.href=photoDataUrl;
+  a.download='BG_HNS_PRO_photo_'+Date.now()+'.jpg';
+  a.click();
+  showToast('Снимок сохранён в галерею');
+  closePhotoModal();
 }
 
-/* ===== PROJECTS (localStorage) ===== */
-function saveProject(){
-  updateSettingsFromInputs();
-  var name=prompt("\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u043F\u0440\u043E\u0435\u043A\u0442\u0430:","\u041F\u0440\u043E\u0435\u043A\u0442 "+fmtDate());
-  if(!name)return;
-  var projects=loadProjects();
-  var proj={
-    name:name,
-    date:fmtDate(),
-    settings:STATE.settings,
-    measurements:STATE.measurementsLog,
-    gpsPoints:STATE.gps.points
-  };
-  var existing=projects.findIndex(function(p){return p.name===name;});
-  if(existing>=0)projects[existing]=proj;else projects.push(proj);
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(projects));
-  toast("Проект сохранён");
-  renderProjectList();
-}
-function loadProjects(){
-  var raw=localStorage.getItem(STORAGE_KEY);
-  if(!raw)return[];
-  try{return JSON.parse(raw);}catch(e){return[];}
-}
-function loadProject(name){
-  var projects=loadProjects();
-  var p=projects.find(function(pr){return pr.name===name;});
-  if(!p){toast("Проект не найден");return;}
-  STATE.measurementsLog=p.measurements||[];
-  STATE.gps.points=p.gpsPoints||[];
-  if(p.settings){
-    STATE.settings=Object.assign(STATE.settings,p.settings);
-    loadSettings();
+// ===== CALIBRATION =====
+function startCalibration(){
+  calibrating=true;
+  calibPoints=[];
+  document.getElementById('calibStatus').textContent='Калибровка... Вращайте телефон';
+  var canvas=document.getElementById('calibCanvas');
+  var ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,300,300);
+  showToast('Калибровка запущена. Вращайте телефон «восьмёркой».');
+  // Listen to magnetometer
+  function cal(e){
+    if(!calibrating)return;
+    var mx=e.magneticField?e.magneticField.x:0;
+    var my=e.magneticField?e.magneticField.y:0;
+    var mz=e.magneticField?e.magneticField.z:0;
+    if(mx||my||mz){
+      var cx=150+mx*0.5,cy=150+my*0.5;
+      ctx.fillStyle='#4e8cff';
+      ctx.beginPath();ctx.arc(cx,cy,3,0,Math.PI*2);ctx.fill();
+      calibPoints.push({x:cx,y:cy});
+      if(calibPoints.length>200){
+        calibrating=false;
+        document.getElementById('calibStatus').textContent='Калибровка завершена!';
+        showToast('Калибровка завершена');
+      }
+    }
   }
-  renderJournal();
-  renderGPSPoints();
-  drawGPSMap();
-  drawPlan();
-  toast("Проект загружен: "+name);
-}
-function deleteProject(name){
-  var projects=loadProjects().filter(function(p){return p.name!==name;});
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(projects));
-  renderProjectList();
-  toast("Проект удалён");
-}
-function renderProjectList(){
-  var div=$("project-list");
-  var projects=loadProjects();
-  div.innerHTML="";
-  if(projects.length===0){
-    div.innerHTML='<p style="color:var(--text2);font-size:13px">\u041D\u0435\u0442 \u0441\u043E\u0445\u0440\u0430\u043D\u0451\u043D\u043D\u044B\u0445 \u043F\u0440\u043E\u0435\u043A\u0442\u043E\u0432</p>';
-    return;
-  }
-  projects.forEach(function(p){
-    var item=document.createElement("div");
-    item.className="project-item";
-    item.innerHTML='<div><div class="name">'+p.name+'</div><div style="font-size:11px;color:var(--text2)">'+p.date+' | '+(p.measurements?p.measurements.length:0)+' \u0437\u0430\u043C\u0435\u0440\u043E\u0432</div></div>';
-    var btns=document.createElement("div");
-    btns.className="btns";
-    var load=document.createElement("button");
-    load.className="load";load.textContent="\u0417\u0430\u0433\u0440.";
-    load.onclick=function(){loadProject(p.name);};
-    var del=document.createElement("button");
-    del.className="del";del.textContent="\u0423\u0434\u043B.";
-    del.onclick=function(){deleteProject(p.name);};
-    btns.appendChild(load);btns.appendChild(del);
-    item.appendChild(btns);
-    div.appendChild(item);
-  });
+  window.addEventListener('deviceorientation',cal);
+  setTimeout(function(){
+    if(calibrating){
+      calibrating=false;
+      document.getElementById('calibStatus').textContent='Калибровка завершена!';
+      showToast('Калибровка завершена');
+      window.removeEventListener('deviceorientation',cal);
+    }
+  },15000);
 }
 
-/* ===== INITIALIZATION ===== */
+// ===== FULLSCREEN COMPASS =====
+function openFullscreenCompass(){openModal('fsCompassModal');drawLimb(window._currentAz||0);}
+
+// ===== INSTRUCTION =====
+function openInstruction(){openModal('instrModal');}
+
+// ===== INIT =====
 function init(){
-  loadSettings();
-  // tabs
-  document.querySelectorAll("#tabs button").forEach(function(btn){
-    btn.addEventListener("click",function(){switchTab(btn.dataset.tab);});
-  });
-  // theme
-  $("theme-toggle").addEventListener("click",toggleTheme);
-  $("set-theme").addEventListener("change",function(){applyTheme(this.value);saveSettings();});
-  // settings inputs
-  ["set-forest","set-kvartal","set-vydel","set-step-length"].forEach(function(id){
-    $(id).addEventListener("change",saveSettings);
-  });
-  // distance method
-  $("distance-method").addEventListener("change",function(){
-    STATE.settings.distanceMethod=this.value;
-    updatePedometerPanel();
-    saveSettings();
-  });
-  $("step-length-input").addEventListener("change",function(){
-    STATE.settings.stepLength=parseFloat(this.value)||0.7;
-    $("set-step-length").value=STATE.settings.stepLength;
-    saveSettings();
-  });
-  $("step-reset").addEventListener("click",function(){
-    STATE.pedometer.count=0;STATE.pedometer.dist=0;
-    $("step-count").textContent=0;$("step-dist").textContent=0;
-  });
-  // visor
-  $("fix-azimuth-btn").addEventListener("click",fixAzimuth);
-  $("limb-fix-btn").addEventListener("click",function(){
-    if(!STATE.compass.level){toast("Прибор не в горизонте");return;}
-    fixAzimuth();
-  });
-  // gps
-  $("gps-start-btn").addEventListener("click",function(){
-    if(STATE.gps.watching)stopGPSWatch();else startGPSWatch();
-  });
-  $("gps-mark-btn").addEventListener("click",markGPSPoint);
-  $("gps-to-journal").addEventListener("click",gpsToJournal);
-  // plan
-  $("zoom-in").addEventListener("click",function(){STATE.plan.zoom=Math.min(10,STATE.plan.zoom*1.3);drawPlan();});
-  $("zoom-out").addEventListener("click",function(){STATE.plan.zoom=Math.max(0.1,STATE.plan.zoom/1.3);drawPlan();});
-  $("center-plan").addEventListener("click",function(){STATE.plan.zoom=1;drawPlan();});
-  $("import-file").addEventListener("change",function(e){
-    if(e.target.files[0])handleImport(e.target.files[0]);
-    e.target.value="";
-  });
-  // journal
-  $("add-row").addEventListener("click",addManualRow);
-  $("export-csv").addEventListener("click",exportCSV);
-  $("export-kml").addEventListener("click",exportKML);
-  $("save-project").addEventListener("click",saveProject);
-  // inspector camera
-  $("camera-inspector-btn").addEventListener("click",openInspector);
-  $("inspector-close").addEventListener("click",closeInspector);
-  $("inspector-cancel").addEventListener("click",closeInspector);
-  $("inspector-capture").addEventListener("click",capturePhoto);
-  $("preview-close").addEventListener("click",function(){$("modal-preview").classList.remove("open");});
-  $("photo-download").addEventListener("click",downloadPhoto);
-  // device motion (pedometer)
-  if(typeof DeviceMotionEvent!=="undefined"){
-    if(typeof DeviceMotionEvent.requestPermission==="function"){
-      // will request on first interaction
+  // Orientation
+  if(typeof DeviceOrientationEvent!=='undefined'){
+    if(typeof DeviceOrientationEvent.requestPermission==='function'){
+      // iOS 13+ needs permission
+      document.body.addEventListener('click',function(){
+        DeviceOrientationEvent.requestPermission().then(function(){
+          window.addEventListener('deviceorientation',handleOrientation);
+        }).catch(function(){});
+      },{once:true});
     }else{
-      window.addEventListener("devicemotion",onDeviceMotion);
+      window.addEventListener('deviceorientation',handleOrientation);
     }
   }
-  // request orientation on first touch
-  document.body.addEventListener("click",function requestSensors(){
-    if(!STATE.hasOrientation){
-      requestOrientationPermission();
-    }
-    if(typeof DeviceMotionEvent!=="undefined"&&typeof DeviceMotionEvent.requestPermission==="function"&&!STATE.pedometer._motionRequested){
-      STATE.pedometer._motionRequested=true;
-      DeviceMotionEvent.requestPermission().then(function(s){
-        if(s==="granted")window.addEventListener("devicemotion",onDeviceMotion);
-      }).catch(function(){});
-    }
-    document.body.removeEventListener("click",requestSensors);
-  },{once:true});
-  // start visor camera when on visor tab
-  startVisorCamera();
-  // initial renders
-  renderJournal();
-  renderProjectList();
-  updatePedometerPanel();
-  // handle window resize
-  window.addEventListener("resize",function(){
-    drawAttitudeIndicator();
-    drawLimb();
-    drawPlan();
-    drawGPSMap();
-  });
-  // re-draw plan when switching to plan tab is handled in switchTab
-  // visibility change: stop/start camera
-  document.addEventListener("visibilitychange",function(){
-    if(document.hidden){
-      stopVisorCamera();
-    }else if(document.querySelector("#page-visor").classList.contains("active")){
-      startVisorCamera();
-    }
-  });
+  // GPS
+  startGPSWatch();
+  // Load projects
+  loadProjectsList();
+  // Initial draws
+  drawLimb();drawMap();
+  // Start camera for magnetic mode
+  if(currentMode==='magnetic')startCamera();
+  // Handle resize
+  window.addEventListener('resize',function(){drawLimb();drawMap();});
 }
 init();
 </script>
