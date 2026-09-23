@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Модуль материально-денежной оценки лесосек МДО PRO (Лесовик ПРО)» (Версия 3.6).
+  Программное обеспечение: «Модуль материально-денежной оценки лесосек МДО PRO (Лесовик ПРО)» (Версия 3.7).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -55,7 +55,7 @@
     <noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 
     <title>Официальный расчет МДО лесосек: деловые, полуделовые, дрова и кубатура по ГОСТ | Лесовик ПРО</title>
-    <meta name="description" content="Инженерный калькулятор материально-денежной оценки лесосек. Перечет по категориям (деловые, полуделовые, дрова), расчет кубатуры по разрядам высот, официальный бланк МДО в PDF и экспорт в Excel.">
+    <meta name="description" content="Инженерный калькулятор материально-денежной оценки лесосек. Перечет по категориям (деловые, полуделовые, дрова), классификатор регионов и лесничеств, расчет кубатуры по разрядам высот, официальный бланк МДО в PDF и экспорт в Excel.">
     <meta name="keywords" content="материально денежная оценка лесосек, мдо деловые полуделовые дрова, бланк мдо pdf, расчет мдо онлайн рубли, базовая ставка по породам, перечет в штуках деревьев, разряды высот рослесхоз, лесовик про">
     <link rel="canonical" href="https://lesovik-pro.ru/mdo.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
@@ -63,7 +63,8 @@
     <!-- ПОДКЛЮЧЕНИЕ SHEETJS ДЛЯ ЭКСПОРТА В XLSX -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.mini.min.js"></script>
 
-    <!-- ПОДКЛЮЧЕНИЕ БАЗЫ ДАННЫХ КОМИ -->
+    <!-- ПОДКЛЮЧЕНИЕ РЕЕСТРА РЕГИОНОВ РФ И БАЗЫ ДАННЫХ КОМИ -->
+    <script src="regions-data.js" onerror="console.log('regions-data.js загружается локально или встроен')"></script>
     <script src="komi-data.js" onerror="console.log('komi-data.js загружается локально или встроен')"></script>
 
     <!-- 4. РЕКЛАМА РСЯ (ПОЛНЫЙ КОМПЛЕКТ ВЫЗОВОВ, ПЕРЕХВАТЫВАЕТСЯ LESOVIKCORE У PRO) -->
@@ -183,6 +184,17 @@
 
         h1.page-title { font-size: 22px; font-weight: 700; color: var(--primary-forest); margin-top: 0; margin-bottom: 8px; line-height: 1.3; }
         .page-subtitle { font-size: 12.5px; color: var(--text-muted); margin-bottom: 20px; }
+
+        .update-badge-banner {
+            background: rgba(179, 143, 67, 0.12);
+            border: 1px solid var(--accent-gold);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
         .archive-scroll-container { width: 100%; overflow-x: auto; white-space: nowrap; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
         .archive-inner-flex { display: inline-flex; gap: 8px; align-items: center; }
@@ -353,16 +365,34 @@
             Реквизиты объекта, должности и ФИО исполнителей под официальную подпись на бланке.
         </div>
 
+        <!-- ИНФОРМАЦИОННАЯ ПЛАШКА ОБ ОБНОВЛЕНИИ -->
+        <div class="update-badge-banner">
+            <span style="font-size: 18px;">⚙️</span>
+            <div style="font-size: 12px; color: var(--text-main); line-height: 1.4;">
+                <b>Идет плановое обновление модуля МДО PRO:</b> подключен классификатор лесничеств, выбор участковых лесничеств и распределение перечета по категориям годности (деловые, полуделовые, дрова).
+            </div>
+        </div>
+
         <div class="passport-grid">
             <div class="form-group">
-                <label>Лесничество (Справочник):</label>
+                <label>Субъект РФ / Регион:</label>
+                <select id="mdo-region" onchange="handleRegionSelectChange(this.value)">
+                    <!-- Заполняется динамически из regions-data.js -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Лесничество:</label>
                 <select id="mdo-lesnichestvo-select" onchange="handleForestryChange(this.value)">
-                    <option value="">-- Ручной ввод / Выберите --</option>
+                    <option value="">-- Выберите лесничество --</option>
                 </select>
             </div>
             <div class="form-group">
                 <label>Участковое лесничество:</label>
-                <input type="text" id="mdo-lesnichestvo" value="Важгортское уч. лесничество" onchange="syncPassportToCore()" onfocus="this.select()">
+                <select id="mdo-uch-lesnichestvo-select" onchange="handleUchChange(this.value)">
+                    <option value="">-- Выберите лесничество --</option>
+                </select>
+                <!-- Скрытый инпут для совместимости со старыми сохранениями и печатью -->
+                <input type="hidden" id="mdo-lesnichestvo" value="Важгортское уч. лесничество">
             </div>
             <div class="form-group">
                 <label>№ Квартала:</label>
@@ -422,21 +452,6 @@
         <p class="page-subtitle">Материально-денежная оценка выдела по ступеням толщины с разделением на <b>деловые, полуделовые и дрова</b>. Разряды высот, региональные прейскуранты и точный расчет кубатуры.</p>
 
         <div class="grid-inputs">
-            <div class="form-group">
-                <label>Лесорастительный район / Субъект РФ</label>
-                <select id="mdo-region" onchange="handleRegionSelectChange(this.value)">
-                    <option value="komi" selected>Республика Коми (Европейско-Уральский район)</option>
-                    <option value="kostroma">Костромская / Ярославская область (Южно-Таежный)</option>
-                    <option value="arkhangelsk">Архангельская область / Карелия (Северная Тайга)</option>
-                    <option value="vologda">Вологодская / Ленинградская область (Балтийско-Белозерский)</option>
-                    <option value="siberia">Сибирь / Красноярский край (Сибирский таежный район)</option>
-                    <option value="kirov">Кировская область (В разработке)</option>
-                    <option value="perm">Пермский край (В разработке)</option>
-                    <option value="sverdlovsk">Свердловская область (В разработке)</option>
-                    <option value="tatarstan">Республика Татарстан (В разработке)</option>
-                    <option value="bashkortostan">Республика Башкортостан (В разработке)</option>
-                </select>
-            </div>
             <div class="form-group">
                 <label>Общая площадь лесосеки (га)</label>
                 <input type="number" id="mdo-space" value="50.0" step="0.1" onchange="syncPassportToCore()" onfocus="this.select()">
@@ -597,35 +612,94 @@
     let lastMdoCalculatedData = null;
     let activeFlyoutTarget = { rawCode: null, d: null };
 
+    // ИНИЦИАЛИЗАЦИЯ ВЫПАДАЮЩЕГО СПИСКА РЕГИОНОВ РФ
+    function populateRegionDropdown() {
+        const sel = document.getElementById('mdo-region');
+        if (!sel) return;
+        sel.innerHTML = '';
+
+        const regionsList = window.LESOVIK_REGIONS || [
+            { code: "komi", name: "Республика Коми", active: true },
+            { code: "kostroma", name: "Костромская область", active: false },
+            { code: "arkhangelsk", name: "Архангельская область", active: false },
+            { code: "vologda", name: "Вологодская область", active: false },
+            { code: "siberia", name: "Красноярский край (Сибирь)", active: false }
+        ];
+
+        regionsList.forEach(reg => {
+            const opt = document.createElement('option');
+            opt.value = reg.code;
+            opt.innerText = reg.name + (reg.active ? ' (База активна)' : ' [В разработке]');
+            if (reg.code === 'komi') opt.selected = true;
+            sel.appendChild(opt);
+        });
+
+        initForestrySelector();
+    }
+
     function handleRegionSelectChange(val) {
-        if (val !== 'komi' && !regionalSortTables[val]) {
+        let isKnownActive = false;
+        if (window.LESOVIK_REGIONS) {
+            const r = window.LESOVIK_REGIONS.find(x => x.code === val);
+            if (r && r.active) isKnownActive = true;
+        } else if (val === 'komi') {
+            isKnownActive = true;
+        }
+
+        if (!isKnownActive) {
             alert(`⚠️ Внимание!\n\nНормативная база для региона «${val}» находится в стадии оцифровки.\nРасчет временно выполняется по стандартной таежной модели (f = 0.42).`);
         }
         initForestrySelector();
     }
 
+    // ИНИЦИАЛИЗАЦИЯ И СВЯЗКА ЛЕСНИЧЕСТВ И УЧАСТКОВЫХ ЛЕСНИЧЕСТВ
     function initForestrySelector() {
-        const select = document.getElementById('mdo-lesnichestvo-select');
-        select.innerHTML = '<option value="">-- Ручной ввод / Выберите --</option>';
+        const lesSelect = document.getElementById('mdo-lesnichestvo-select');
+        const uchSelect = document.getElementById('mdo-uch-lesnichestvo-select');
+        
+        lesSelect.innerHTML = '<option value="">-- Выберите лесничество --</option>';
+        uchSelect.innerHTML = '<option value="">-- Сначала выберите лесничество --</option>';
+
         if (window.KOMI_FORESTRY_DATA && Array.isArray(window.KOMI_FORESTRY_DATA)) {
             window.KOMI_FORESTRY_DATA.forEach(item => {
                 const opt = document.createElement('option');
                 opt.value = item[0];
                 opt.innerText = item[0] + " лесничество";
-                select.appendChild(opt);
+                lesSelect.appendChild(opt);
             });
         }
     }
 
     function handleForestryChange(val) {
-        if (!val) return;
+        const uchSelect = document.getElementById('mdo-uch-lesnichestvo-select');
+        uchSelect.innerHTML = '<option value="">-- Выберите участковое лесничество --</option>';
+
+        if (!val) {
+            document.getElementById('mdo-lesnichestvo').value = '';
+            return;
+        }
+
         if (window.KOMI_FORESTRY_DATA) {
             const row = window.KOMI_FORESTRY_DATA.find(x => x[0] === val);
-            if (row && row[1] && row[1].length > 0) {
-                document.getElementById('mdo-lesnichestvo').value = `${row[1][0]} уч. лесничество`;
+            if (row && row[1] && Array.isArray(row[1])) {
+                row[1].forEach(uchName => {
+                    const opt = document.createElement('option');
+                    opt.value = `${uchName} уч. лесничество`;
+                    opt.innerText = `${uchName} уч. лесничество`;
+                    uchSelect.appendChild(opt);
+                });
+                
+                // Выбираем первое участковое и синхронизируем паспорт
+                uchSelect.selectedIndex = 1;
+                document.getElementById('mdo-lesnichestvo').value = uchSelect.value;
                 syncPassportToCore();
             }
         }
+    }
+
+    function handleUchChange(val) {
+        document.getElementById('mdo-lesnichestvo').value = val;
+        syncPassportToCore();
     }
 
     function setTallyDelta(delta) {
@@ -1466,7 +1540,7 @@
     document.getElementById('themeBtn').addEventListener('click', toggleTheme);
 
     document.addEventListener('DOMContentLoaded', () => {
-        initForestrySelector();
+        populateRegionDropdown();
         
         const selector = document.getElementById('species-selector');
         selector.selectedIndex = 0;
