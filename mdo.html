@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Модуль материально-денежной оценки лесосек МДО PRO (Лесовик ПРО)» (Версия 3.7).
+  Программное обеспечение: «Модуль материально-денежной оценки лесосек МДО PRO (Лесовик ПРО)» (Версия 3.8).
   Правообладатель: Худяков Николай Сергеевич.
   Зарегистрировано для включения в Единый реестр российских программ для ЭВМ и БД (Минцифры России).
 -->
@@ -55,7 +55,7 @@
     <noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 
     <title>Официальный расчет МДО лесосек: деловые, полуделовые, дрова и кубатура по ГОСТ | Лесовик ПРО</title>
-    <meta name="description" content="Инженерный калькулятор материально-денежной оценки лесосек. Перечет по категориям (деловые, полуделовые, дрова), классификатор регионов и лесничеств, расчет кубатуры по разрядам высот, официальный бланк МДО в PDF и экспорт в Excel.">
+    <meta name="description" content="Инженерный калькулятор материально-денежной оценки лесосек. Перечет по категориям (деловые, полуделовые, дрова), поиск регионов по округам, расчет кубатуры по разрядам высот, официальный бланк МДО в PDF и экспорт в Excel.">
     <meta name="keywords" content="материально денежная оценка лесосек, мдо деловые полуделовые дрова, бланк мдо pdf, расчет мдо онлайн рубли, базовая ставка по породам, перечет в штуках деревьев, разряды высот рослесхоз, лесовик про">
     <link rel="canonical" href="https://lesovik-pro.ru/mdo.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
@@ -63,9 +63,8 @@
     <!-- ПОДКЛЮЧЕНИЕ SHEETJS ДЛЯ ЭКСПОРТА В XLSX -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.mini.min.js"></script>
 
-    <!-- ПОДКЛЮЧЕНИЕ РЕЕСТРА РЕГИОНОВ РФ И БАЗЫ ДАННЫХ КОМИ -->
-    <script src="regions-data.js" onerror="console.log('regions-data.js загружается локально или встроен')"></script>
-    <script src="komi-data.js" onerror="console.log('komi-data.js загружается локально или встроен')"></script>
+    <!-- ПОДКЛЮЧЕНИЕ РЕЕСТРА РЕГИОНОВ РФ -->
+    <script src="regions-data.js" onerror="console.log('regions-data.js загружается локально')"></script>
 
     <!-- 4. РЕКЛАМА РСЯ (ПОЛНЫЙ КОМПЛЕКТ ВЫЗОВОВ, ПЕРЕХВАТЫВАЕТСЯ LESOVIKCORE У PRO) -->
     <script>
@@ -206,6 +205,19 @@
         .form-group label { display: block; font-size: 11px; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; color: var(--text-main); letter-spacing: 0.5px; }
         .form-group input, .form-group select { width: 100%; padding: 9px 12px; border: 1px solid var(--border-light); border-radius: 6px; background: var(--input-bg); color: var(--text-main); font-family: inherit; font-size: 13px; outline: none; font-weight: 500; }
         .form-group input:focus, .form-group select:focus { border-color: var(--primary-forest); background-color: var(--bg-card); }
+
+        .region-search-input {
+            width: 100%;
+            padding: 7px 10px;
+            margin-bottom: 6px;
+            border: 1px dashed var(--primary-forest);
+            border-radius: 6px;
+            background: var(--bg-card);
+            color: var(--text-main);
+            font-size: 12px;
+            font-weight: 600;
+            outline: none;
+        }
 
         .mode-switch-container {
             display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
@@ -369,15 +381,16 @@
         <div class="update-badge-banner">
             <span style="font-size: 18px;">⚙️</span>
             <div style="font-size: 12px; color: var(--text-main); line-height: 1.4;">
-                <b>Идет плановое обновление модуля МДО PRO:</b> подключен классификатор лесничеств, выбор участковых лесничеств и распределение перечета по категориям годности (деловые, полуделовые, дрова).
+                <b>Идет плановое обновление модуля МДО PRO:</b> подключен выбор регионов по федеральным округам с быстрым поиском, классификатор участковых лесничеств и учет категорий годности (деловые, полуделовые, дрова).
             </div>
         </div>
 
         <div class="passport-grid">
-            <div class="form-group">
-                <label>Субъект РФ / Регион:</label>
+            <div class="form-group" style="grid-column: span 2;">
+                <label>Поиск и выбор субъекта РФ (по округам):</label>
+                <input type="text" id="mdo-region-search" class="region-search-input" placeholder="🔍 Введите название региона для быстрого поиска..." oninput="filterRegions(this.value)">
                 <select id="mdo-region" onchange="handleRegionSelectChange(this.value)">
-                    <!-- Заполняется динамически из regions-data.js -->
+                    <!-- Наполняется с группировкой по округам -->
                 </select>
             </div>
             <div class="form-group">
@@ -391,7 +404,6 @@
                 <select id="mdo-uch-lesnichestvo-select" onchange="handleUchChange(this.value)">
                     <option value="">-- Выберите лесничество --</option>
                 </select>
-                <!-- Скрытый инпут для совместимости со старыми сохранениями и печатью -->
                 <input type="hidden" id="mdo-lesnichestvo" value="Важгортское уч. лесничество">
             </div>
             <div class="form-group">
@@ -612,56 +624,116 @@
     let lastMdoCalculatedData = null;
     let activeFlyoutTarget = { rawCode: null, d: null };
 
-    // ИНИЦИАЛИЗАЦИЯ ВЫПАДАЮЩЕГО СПИСКА РЕГИОНОВ РФ
-    function populateRegionDropdown() {
+    // --- ДИНАМИЧЕСКИЙ ЗАГРУЗЧИК РЕГИОНОВ И ОКРУГОВ ---
+    function populateRegionDropdown(filterText = '') {
         const sel = document.getElementById('mdo-region');
         if (!sel) return;
+        const prevVal = sel.value;
         sel.innerHTML = '';
 
-        const regionsList = window.LESOVIK_REGIONS || [
-            { code: "komi", name: "Республика Коми", active: true },
-            { code: "kostroma", name: "Костромская область", active: false },
-            { code: "arkhangelsk", name: "Архангельская область", active: false },
-            { code: "vologda", name: "Вологодская область", active: false },
-            { code: "siberia", name: "Красноярский край (Сибирь)", active: false }
+        const districts = window.LESOVIK_FED_DISTRICTS || [
+            {
+                name: "Северо-Западный федеральный округ",
+                regions: [
+                    { code: "komi", name: "Республика Коми", file: "komi-data.js", active: true },
+                    { code: "arkhangelsk", name: "Архангельская область", file: "arkh-data.js", active: false }
+                ]
+            }
         ];
 
-        regionsList.forEach(reg => {
-            const opt = document.createElement('option');
-            opt.value = reg.code;
-            opt.innerText = reg.name + (reg.active ? ' (База активна)' : ' [В разработке]');
-            if (reg.code === 'komi') opt.selected = true;
-            sel.appendChild(opt);
+        const cleanFilter = filterText.trim().toLowerCase();
+        let totalMatches = 0;
+
+        districts.forEach(district => {
+            const filteredRegs = district.regions.filter(r => 
+                !cleanFilter || r.name.toLowerCase().includes(cleanFilter) || district.name.toLowerCase().includes(cleanFilter)
+            );
+
+            if (filteredRegs.length > 0) {
+                const grp = document.createElement('optgroup');
+                grp.label = district.name;
+                filteredRegs.forEach(reg => {
+                    const opt = document.createElement('option');
+                    opt.value = reg.code;
+                    opt.innerText = reg.name + (reg.active ? ' (База активна)' : ' [В разработке]');
+                    if (reg.code === (prevVal || 'komi')) opt.selected = true;
+                    grp.appendChild(opt);
+                    totalMatches++;
+                });
+                sel.appendChild(grp);
+            }
         });
 
-        initForestrySelector();
+        if (totalMatches === 0) {
+            const opt = document.createElement('option');
+            opt.value = "";
+            opt.innerText = "-- Ничего не найдено --";
+            sel.appendChild(opt);
+        } else if (!sel.value && sel.options.length > 0) {
+            sel.selectedIndex = 0;
+        }
+
+        handleRegionSelectChange(sel.value, false);
     }
 
-    function handleRegionSelectChange(val) {
-        let isKnownActive = false;
-        if (window.LESOVIK_REGIONS) {
-            const r = window.LESOVIK_REGIONS.find(x => x.code === val);
-            if (r && r.active) isKnownActive = true;
-        } else if (val === 'komi') {
-            isKnownActive = true;
+    function filterRegions(val) {
+        populateRegionDropdown(val);
+    }
+
+    // ДИНАМИЧЕСКИЙ ПЕРЕХВАТ ДАННЫХ И ПОДГРУЗКА СКРИПТА РЕГИОНА
+    function handleRegionSelectChange(regCode, showAlert = true) {
+        if (!regCode) return;
+        
+        const regInfo = (window.LESOVIK_REGIONS || []).find(r => r.code === regCode);
+        
+        if (regInfo && !regInfo.active && showAlert) {
+            alert(`⚠️ Внимание!\n\nНормативная база для региона «${regInfo.name}» находится в стадии оцифровки.\nРасчет временно выполняется по стандартной таежной модели (f = 0.42).`);
         }
 
-        if (!isKnownActive) {
-            alert(`⚠️ Внимание!\n\nНормативная база для региона «${val}» находится в стадии оцифровки.\nРасчет временно выполняется по стандартной таежной модели (f = 0.42).`);
+        if (regInfo && regInfo.file) {
+            loadDynamicRegionScript(regInfo.file, regCode);
+        } else {
+            initForestrySelector();
         }
-        initForestrySelector();
+    }
+
+    function loadDynamicRegionScript(fileUrl, regCode) {
+        if (document.querySelector(`script[data-region-file="${fileUrl}"]`)) {
+            initForestrySelector();
+            return;
+        }
+        const s = document.createElement('script');
+        s.src = fileUrl;
+        s.setAttribute('data-region-file', fileUrl);
+        s.onload = () => {
+            initForestrySelector();
+        };
+        s.onerror = () => {
+            initForestrySelector();
+        };
+        document.head.appendChild(s);
     }
 
     // ИНИЦИАЛИЗАЦИЯ И СВЯЗКА ЛЕСНИЧЕСТВ И УЧАСТКОВЫХ ЛЕСНИЧЕСТВ
     function initForestrySelector() {
+        const regCode = document.getElementById('mdo-region').value;
         const lesSelect = document.getElementById('mdo-lesnichestvo-select');
         const uchSelect = document.getElementById('mdo-uch-lesnichestvo-select');
         
         lesSelect.innerHTML = '<option value="">-- Выберите лесничество --</option>';
         uchSelect.innerHTML = '<option value="">-- Сначала выберите лесничество --</option>';
 
-        if (window.KOMI_FORESTRY_DATA && Array.isArray(window.KOMI_FORESTRY_DATA)) {
-            window.KOMI_FORESTRY_DATA.forEach(item => {
+        // Универсальный поиск массива лесничеств в window
+        let forestryList = null;
+        if (regCode === 'komi' && window.KOMI_FORESTRY_DATA) forestryList = window.KOMI_FORESTRY_DATA;
+        else if (regCode === 'kirov' && window.KIROV_FORESTRY_DATA) forestryList = window.KIROV_FORESTRY_DATA;
+        else {
+            const dynamicKey = `${regCode.toUpperCase()}_FORESTRY_DATA`;
+            if (window[dynamicKey]) forestryList = window[dynamicKey];
+        }
+
+        if (forestryList && Array.isArray(forestryList)) {
+            forestryList.forEach(item => {
                 const opt = document.createElement('option');
                 opt.value = item[0];
                 opt.innerText = item[0] + " лесничество";
@@ -671,6 +743,7 @@
     }
 
     function handleForestryChange(val) {
+        const regCode = document.getElementById('mdo-region').value;
         const uchSelect = document.getElementById('mdo-uch-lesnichestvo-select');
         uchSelect.innerHTML = '<option value="">-- Выберите участковое лесничество --</option>';
 
@@ -679,8 +752,16 @@
             return;
         }
 
-        if (window.KOMI_FORESTRY_DATA) {
-            const row = window.KOMI_FORESTRY_DATA.find(x => x[0] === val);
+        let forestryList = null;
+        if (regCode === 'komi' && window.KOMI_FORESTRY_DATA) forestryList = window.KOMI_FORESTRY_DATA;
+        else if (regCode === 'kirov' && window.KIROV_FORESTRY_DATA) forestryList = window.KIROV_FORESTRY_DATA;
+        else {
+            const dynamicKey = `${regCode.toUpperCase()}_FORESTRY_DATA`;
+            if (window[dynamicKey]) forestryList = window[dynamicKey];
+        }
+
+        if (forestryList) {
+            const row = forestryList.find(x => x[0] === val);
             if (row && row[1] && Array.isArray(row[1])) {
                 row[1].forEach(uchName => {
                     const opt = document.createElement('option');
@@ -689,7 +770,6 @@
                     uchSelect.appendChild(opt);
                 });
                 
-                // Выбираем первое участковое и синхронизируем паспорт
                 uchSelect.selectedIndex = 1;
                 document.getElementById('mdo-lesnichestvo').value = uchSelect.value;
                 syncPassportToCore();
@@ -980,21 +1060,33 @@
         renderMatrixGrid();
     }
 
-    // ВЫЧИСЛЕНИЕ ОБЪЕМА ОДНОГО СТВОЛА В КОРЕ (С ИНТЕГРАЦИЕЙ VOLUMES_KOMI)
+    // УНИВЕРСАЛЬНЫЙ РАСЧЕТ КУБАТУРЫ ОДНОГО СТВОЛА (ДИНАМИЧЕСКИЙ ПОДХВАТ БАЗЫ)
     function calculateStemVolume(rawCode, hSelector, dia) {
         const regCode = document.getElementById('mdo-region').value;
-        if (regCode === 'komi' && window.VOLUMES_KOMI && window.VOLUMES_KOMI[rawCode]) {
-            const hNumMap = { "Ia": 1, "I": 1, "II": 2, "III": 3, "IV": 4, "V": 5 };
-            const hRankNum = hNumMap[hSelector] || 3;
-            if (window.VOLUMES_KOMI[rawCode][hRankNum] && window.VOLUMES_KOMI[rawCode][hRankNum][dia]) {
-                return window.VOLUMES_KOMI[rawCode][hRankNum][dia];
+        const hNumMap = { "Ia": 1, "I": 1, "II": 2, "III": 3, "IV": 4, "V": 5 };
+        const hRankNum = hNumMap[hSelector] || 3;
+
+        // Поиск в глобальных таблицах VOLUMES_[REGION]
+        let regionalVolumeTable = null;
+        if (regCode === 'komi' && window.VOLUMES_KOMI) regionalVolumeTable = window.VOLUMES_KOMI;
+        else if (regCode === 'kirov' && window.VOLUMES_KIROV) regionalVolumeTable = window.VOLUMES_KIROV;
+        else {
+            const dynamicKey = `VOLUMES_${regCode.toUpperCase()}`;
+            if (window[dynamicKey]) regionalVolumeTable = window[dynamicKey];
+        }
+
+        if (regionalVolumeTable && regionalVolumeTable[rawCode] && regionalVolumeTable[rawCode][hRankNum]) {
+            if (regionalVolumeTable[rawCode][hRankNum][dia]) {
+                return regionalVolumeTable[rawCode][hRankNum][dia];
             }
         }
         
+        // Базовые таблицы Рослесхоза
         if (treeVolumeTable[hSelector] && treeVolumeTable[hSelector][dia]) {
             return treeVolumeTable[hSelector][dia];
         }
 
+        // Инженерная формула параболоида (f = 0.42)
         const defaultHeightMap = { "Ia": 28, "I": 26, "II": 24, "III": 21, "IV": 18, "V": 15 };
         const hVal = defaultHeightMap[hSelector] || 22;
         return ((Math.PI * Math.pow(dia, 2)) / 40000) * hVal * 0.42;
