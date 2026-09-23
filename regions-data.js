@@ -53,7 +53,7 @@ window.LESOVIK_FED_DISTRICTS = [
         name: "Сибирский федеральный округ",
         regions: [
             { code: "krasnoyarsk", name: "Красноярский край", file: "krasnoyarsk-data.js", active: true },
-            { code: "irkutsk", name: "Иркутская область", file: "irkutsk-data.js", active: false },
+            { code: "irkutsk", name: "Иркутская область", file: "irkutsk-data.js", active: true },
             { code: "tomsk", name: "Томская область", file: "tomsk-data.js", active: false },
             { code: "omsk", name: "Омская область", file: "omsk-data.js", active: false },
             { code: "novosibirsk", name: "Новосибирская область", file: "novosibirsk-data.js", active: false },
