@@ -19,7 +19,7 @@ window.LESOVIK_REGIONS = [
     { code: "spb", name: "г. Санкт-Петербург", dataFile: "spb-data.js", active: false },
 
     // 3. Приволжский федеральный округ
-    { code: "kirov", name: "Кировская область", dataFile: "kirov-data.js", active: false },
+    { code: "kirov", name: "Кировская область", dataFile: "kirov-data.js", active: true },,
     { code: "perm", name: "Пермский край", dataFile: "perm-data.js", active: false },
     { code: "bashkortostan", name: "Республика Башкортостан", dataFile: "bash-data.js", active: false },
     { code: "tatarstan", name: "Республика Татарстан", dataFile: "tatar-data.js", active: false },
