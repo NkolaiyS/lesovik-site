@@ -8,7 +8,7 @@ window.LESOVIK_FED_DISTRICTS = [
         regions: [
             { code: "komi", name: "Республика Коми", file: "komi-data.js", active: true },
             { code: "arkhangelsk", name: "Архангельская область", file: "arkh-data.js", active: true },
-            { code: "vologda", name: "Вологодская область", file: "vologda-data.js", active: false },
+            { code: "vologda", name: "Вологодская область", file: "vologda-data.js", active: true },
             { code: "karelia", name: "Республика Карелия", file: "karelia-data.js", active: true },
             { code: "leningrad", name: "Ленинградская область", file: "len-data.js", active: false },
             { code: "murmansk", name: "Мурманская область", file: "murmansk-data.js", active: false },
