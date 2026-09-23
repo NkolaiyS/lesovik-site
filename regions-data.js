@@ -7,7 +7,7 @@ window.LESOVIK_FED_DISTRICTS = [
         name: "Северо-Западный федеральный округ",
         regions: [
             { code: "komi", name: "Республика Коми", file: "komi-data.js", active: true },
-            { code: "arkhangelsk", name: "Архангельская область", file: "arkh-data.js", active: false },
+            { code: "arkhangelsk", name: "Архангельская область", file: "arkh-data.js", active: true },
             { code: "vologda", name: "Вологодская область", file: "vologda-data.js", active: false },
             { code: "karelia", name: "Республика Карелия", file: "karelia-data.js", active: false },
             { code: "leningrad", name: "Ленинградская область", file: "len-data.js", active: false },
