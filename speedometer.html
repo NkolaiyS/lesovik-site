@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <!-- Инструкция сброса кеша браузера -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+
+    <!-- --- ЯНДЕКС МЕТРИКА --- -->
+    <script type="text/javascript">
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109130409', 'ym');
+
+        ym(109130409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+    <title>Спутниковый спидометр и одометр | Лесовик TECH</title>
+    <meta name="description" content="Автономный спутниковый GPS/ГЛОНАСС спидометр и фоновый одометр для лодок, катеров и квадроциклов.">
+    <link rel="canonical" href="https://lesovik-pro.ru/speedometer.html">
+
+    <link rel="icon" type="image/jpeg" href="logo.jpeg">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+        :root {
+            --bg-paper: #F9FBF9;
+            --text-graphite: #333333;
+            --forest-green: #2D5A27;
+            --border-color: #E0E0E0;
+            --card-bg: #FFFFFF;
+            --glass-bg: rgba(249, 251, 249, 0.88);
+            --footer-bg: #2C3531;
+            --promo-orange: #E67E22;
+        }
+
+        [data-theme="dark"] {
+            --bg-paper: #1A2421;
+            --text-graphite: #F9FBF9;
+            --forest-green: #8FBC8F;
+            --border-color: #3A4F46;
+            --card-bg: #22302B;
+            --glass-bg: rgba(26, 36, 33, 0.88);
+            --footer-bg: #111815;
+            --promo-orange: #F39C12;
+        }
+
+        *, *:before, *:after { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+        html { scroll-behavior: smooth; width: 100%; max-width: 100%; overflow-x: hidden; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-paper);
+            color: var(--text-graphite);
+            line-height: 1.6;
+            display: flex; flex-direction: column;
+            min-height: 100vh; width: 100%; max-width: 100%;
+            overflow-x: hidden; position: relative;
+        }
+
+        /* ШАПКА */
+        .glass-header {
+            position: sticky; top: 0; z-index: 2000;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 24px; background: var(--glass-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            width: 100%;
+        }
+        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .header-logo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--promo-orange); }
+        .glass-header h1 { font-family: 'Merriweather', serif; color: var(--promo-orange); margin: 0; font-size: 18px; }
+        
+        .theme-toggle {
+            background: transparent; border: 1px solid var(--promo-orange); color: var(--promo-orange);
+            padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700;
+            text-transform: uppercase; height: 36px;
+        }
+        .theme-toggle:hover { background-color: var(--promo-orange); color: #FFF; }
+
+        main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 16px; width: 100%; }
+
+        /* ИНСТРУМЕНТ СПИДОМЕТРА */
+        .speedometer-container {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 420px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+        }
+
+        .speed-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+        .gps-status {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(230, 126, 34, 0.1);
+            color: var(--promo-orange);
+        }
+        .unit-switcher {
+            display: flex;
+            background: var(--bg-paper);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .unit-btn {
+            background: transparent;
+            border: none;
+            padding: 6px 12px;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--text-graphite);
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .unit-btn.active {
+            background: var(--promo-orange);
+            color: #FFF;
+        }
+
+        /* ЦИФЕРБЛАТ */
+        .dial-wrapper {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0 20px;
+        }
+        .speedometer-svg {
+            width: 100%;
+            height: 100%;
+        }
+        .speed-digital-box {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #speed-num {
+            font-size: 54px;
+            font-weight: 900;
+            line-height: 1;
+            color: var(--text-graphite);
+            letter-spacing: -2px;
+        }
+        .speed-unit-text {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            opacity: 0.6;
+            margin-top: 4px;
+        }
+
+        /* ОДОМЕТР И ПУТЬ */
+        .odometer-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .odometer-box {
+            background: var(--bg-paper);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+        }
+        .odometer-label {
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            opacity: 0.7;
+            margin-bottom: 4px;
+        }
+        .odometer-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--promo-orange);
+            font-family: monospace;
+        }
+
+        .btn-reset {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-graphite);
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 11.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        .btn-reset:hover {
+            border-color: var(--promo-orange);
+            color: var(--promo-orange);
+        }
+
+        .back-link-speed {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--promo-orange);
+            text-decoration: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="glass-header">
+        <a href="tech.html" class="logo-container">
+            <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
+            <h1>Лесовик TECH</h1>
+        </a>
+        <div class="header-right">
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тема</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="speedometer-container">
+            <div class="speed-top-bar">
+                <div id="gps-status-badge" class="gps-status">🛰️ Поиск спутников...</div>
+                <div class="unit-switcher">
+                    <button class="unit-btn active" onclick="setUnit('kmh')">км/ч</button>
+                    <button class="unit-btn" onclick="setUnit('mph')">миль</button>
+                </div>
+            </div>
+
+            <!-- Шкала и стрелка -->
+            <div class="dial-wrapper">
+                <svg viewBox="0 0 200 200" class="speedometer-svg">
+                    <!-- Фоновый круг шкалы (270 градусов) -->
+                    <circle cx="100" cy="100" r="82" fill="none" stroke="var(--border-color)" stroke-width="8" stroke-dasharray="383" stroke-dashoffset="96" stroke-linecap="round" transform="rotate(135 100 100)" />
+                    <!-- Активный трек скорости -->
+                    <circle id="speed-ring" cx="100" cy="100" r="82" fill="none" stroke="var(--promo-orange)" stroke-width="8" stroke-dasharray="383" stroke-dashoffset="383" stroke-linecap="round" transform="rotate(135 100 100)" style="transition: stroke-dashoffset 0.1s linear;" />
+                    
+                    <!-- Стрелка -->
+                    <g id="speed-needle" style="transform-origin: 100px 100px; transition: transform 0.1s linear; transform: rotate(-135deg);">
+                        <line x1="100" y1="100" x2="100" y2="30" stroke="#DC2626" stroke-width="3.5" stroke-linecap="round" />
+                        <circle cx="100" cy="100" r="6" fill="var(--promo-orange)" />
+                    </g>
+                </svg>
+
+                <div class="speed-digital-box">
+                    <span id="speed-num">0.0</span>
+                    <span id="speed-unit-lbl" class="speed-unit-text">км/ч</span>
+                </div>
+            </div>
+
+            <!-- Одометр (фоновый пробег) -->
+            <div class="odometer-grid">
+                <div class="odometer-box">
+                    <div class="odometer-label">Пройдено пути</div>
+                    <div id="trip-distance">0.00 км</div>
+                </div>
+                <div class="odometer-box">
+                    <div class="odometer-label">Точность GPS</div>
+                    <div id="gps-accuracy">—</div>
+                </div>
+            </div>
+
+            <button class="btn-reset" onclick="resetTrip()">Сбросить одометр</button>
+        </div>
+
+        <a href="tech.html" class="back-link-speed">← Вернуться к технике TECH</a>
+    </main>
+
+    <script>
+        let currentSpeed = 0; // м/с
+        let currentUnit = 'kmh'; // 'kmh' или 'mph'
+        const maxScale = 120; // Макс скорость на шкале
+
+        // Одометр из памяти браузера (работает фоном при уходе со страницы)
+        let totalDistanceMeters = parseFloat(localStorage.getItem('lesovik_trip_meters')) || 0;
+        let lastLat = parseFloat(localStorage.getItem('lesovik_last_lat')) || null;
+        let lastLon = parseFloat(localStorage.getItem('lesovik_last_lon')) || null;
+
+        function setUnit(unit) {
+            currentUnit = unit;
+            document.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('speed-unit-lbl').innerText = (unit === 'kmh') ? 'км/ч' : 'миль/ч';
+            updateDisplay();
+        }
+
+        function resetTrip() {
+            if (confirm('Сбросить текущий пробег одометра?')) {
+                totalDistanceMeters = 0;
+                lastLat = null;
+                lastLon = null;
+                localStorage.removeItem('lesovik_trip_meters');
+                localStorage.removeItem('lesovik_last_lat');
+                localStorage.removeItem('lesovik_last_lon');
+                updateDisplay();
+            }
+        }
+
+        // Расчет расстояния между точками по формуле гаверсинусов (в метрах)
+        function calcDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // радиус Земли в метрах
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // Запуск GPS трекинга с высокой точностью (работает даже в фоне, если вкладка активна или в PWA)
+        if ('geolocation' in navigator) {
+            navigator.geolocation.watchPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    const speedMps = position.coords.speed; // скорость в м/с
+                    const accuracy = position.coords.accuracy;
+
+                    document.getElementById('gps-status-badge').innerText = '🛰️ GPS активен';
+                    document.getElementById('gps-status-badge.style').color = '#22C55E';
+                    document.getElementById('gps-accuracy').innerText = `±${Math.round(accuracy)} м`;
+
+                    // Скорость (если устройство передает скорость)
+                    currentSpeed = (speedMps !== null && speedMps >= 0) ? speedMps : 0;
+
+                    // Одометр (считаем пройденный путь по координатам)
+                    if (lastLat !== null && lastLon !== null) {
+                        const dist = calcDistance(lastLat, lastLon, lat, lon);
+                        // Фильтруем случайные скачки GPS (если точность хуже 35 метров или прыжок больше 100 метров за секунду)
+                        if (accuracy < 35 && dist < 100 && dist > 1.5) {
+                            totalDistanceMeters += dist;
+                            localStorage.setItem('lesovik_trip_meters', totalDistanceMeters);
+                        }
+                    }
+                    lastLat = lat;
+                    lastLon = lon;
+                    localStorage.setItem('lesovik_last_lat', lat);
+                    localStorage.setItem('lesovik_last_lon', lon);
+
+                    updateDisplay();
+                },
+                (error) => {
+                    document.getElementById('gps-status-badge').innerText = '⚠️ Нет сигнала GPS';
+                },
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+            );
+        } else {
+            document.getElementById('gps-status-badge').innerText = '❌ GPS не поддерживается';
+        }
+
+        function updateDisplay() {
+            let kmh = currentSpeed * 3.6;
+            let displayVal = kmh;
+
+            if (currentUnit === 'mph') {
+                displayVal = kmh * 0.621371;
+            }
+
+            // Цифра по центру
+            document.getElementById('speed-num').innerText = displayVal.toFixed(1);
+
+            // Стрелка (от -135° до +135°)
+            let percentage = Math.min(kmh / maxScale, 1.0);
+            let angle = -135 + (percentage * 270);
+            document.getElementById('speed-needle').style.transform = `rotate(${angle}deg)`;
+
+            // Кольцо шкалы (длина дуги 270° = 383 пикселя)
+            let strokeOffset = 383 - (percentage * 383);
+            document.getElementById('speed-ring').style.strokeDashoffset = strokeOffset;
+
+            // Одометр
+            let distKm = totalDistanceMeters / 1000;
+            if (currentUnit === 'mph') {
+                document.getElementById('trip-distance').innerText = (distKm * 0.621371).toFixed(2) + ' миль';
+            } else {
+                document.getElementById('trip-distance').innerText = distKm.toFixed(2) + ' км';
+            }
+        }
+
+        function toggleTheme() {
+            const body = document.documentElement;
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+    </script>
+</body>
+</html>
