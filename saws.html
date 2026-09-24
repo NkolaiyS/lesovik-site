@@ -27,13 +27,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-    <title>Ремонт бензопилы в полевых условиях: что делать, если залило свечу или глохнет | Лесовик TECH</title>
-    <meta name="description" content="Практическое руководство по экстренному ремонту и обслуживанию бензопил в тайге. Как просушить свечу, заменить шнур стартера, выбрать масло для морозов и настроить карбюратор своими руками.">
-    <meta name="keywords" content="ремонт бензопилы в полевых условиях, залило свечу бензопилы что делать, почему глохнет бензопила под нагрузкой, масло для бензопилы зимой, лесовик tech">
+    <title>Ремонт бензопилы в полевых условиях: калькулятор смеси, свеча и карбюратор | Лесовик TECH</title>
+    <meta name="description" content="Практическое руководство по экстренному ремонту бензопил в тайге, калькулятор пропорций топливной смеси, просушка свечи и полевой сервис.">
+    <meta name="keywords" content="калькулятор топливной смеси бензопилы, ремонт бензопилы в поле, залило свечу, настроить карбюратор, лесовик tech">
     <link rel="canonical" href="https://lesovik-pro.ru/saws.html">
 
     <meta property="og:title" content="Ремонт бензопилы в полевых условиях — Руководство Лесовик TECH">
-    <meta property="og:description" content="Экспертный разбор: устранение типичных поломок бензопил вдали от цивилизации.">
+    <meta property="og:description" content="Экспертный разбор: устранение поломок пил в тайге и калькулятор топливной смеси.">
     <meta property="og:type" content="article">
     <meta property="og:url" content="https://lesovik-pro.ru/saws.html">
     <meta property="og:image" content="https://lesovik-pro.ru/logo.jpeg">
@@ -182,6 +182,54 @@
             padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 20px 0; font-size: 15px; font-weight: 500;
         }
 
+        .native-info-box {
+            background: var(--bg-paper);
+            border-left: 3px solid var(--promo-orange);
+            padding: 12px 14px;
+            margin: 20px 0;
+            border-radius: 0 6px 6px 0;
+            font-size: 13px;
+            line-height: 1.5;
+            opacity: 0.95;
+        }
+        .native-info-box a {
+            color: var(--promo-orange);
+            text-decoration: underline;
+            font-weight: 600;
+        }
+
+        /* КАЛЬКУЛЯТОР ТОПЛИВНОЙ СМЕСИ */
+        .calc-widget-box {
+            background: var(--bg-paper);
+            border: 2px solid var(--promo-orange);
+            border-radius: 12px;
+            padding: 22px;
+            margin: 30px 0;
+        }
+        .calc-widget-box h4 {
+            font-size: 18px;
+            font-family: 'Merriweather', serif;
+            color: var(--promo-orange);
+            margin-bottom: 10px;
+        }
+        .form-group { margin-bottom: 14px; width: 100%; }
+        .form-group label { display: block; font-size: 11.5px; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; color: var(--forest-green); }
+        .calc-input {
+            width: 100%; padding: 11px 14px; border: 1px solid var(--border-color); border-radius: 8px;
+            background-color: var(--card-bg); color: var(--text-graphite);
+            font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500;
+        }
+        .calc-btn {
+            background-color: var(--promo-orange); color: #FFF; border: none; padding: 13px;
+            width: 100%; border-radius: 8px; cursor: pointer; font-weight: 700; text-transform: uppercase;
+            font-size: 12px; letter-spacing: 0.5px; margin-top: 6px;
+        }
+        .calc-output {
+            margin-top: 16px; padding: 14px; background-color: var(--card-bg);
+            border: 1px dashed var(--promo-orange); border-radius: 8px; font-weight: 600;
+            text-align: center; display: none; color: var(--text-graphite); font-size: 13.5px; line-height: 1.6;
+        }
+
         /* БЛОК РСЯ В ТЕЛЕ СТАТЬИ */
         .article-ad-container {
             margin: 30px 0; padding: 14px; background: var(--bg-paper);
@@ -241,6 +289,27 @@
                     <li>Установите свечу на место и запустите пилу в режиме «продувки цилиндра» (с полностью выжатым газом без подсоса).</li>
                 </ul>
 
+                <!-- ИНТЕРАКТИВНЫЙ КАЛЬКУЛЯТОР ТОПЛИВНОЙ СМЕСИ -->
+                <div class="calc-widget-box">
+                    <h4>🛢️ Калькулятор пропорций топливной смеси (бензин / масло)</h4>
+                    <p style="font-size: 13px; opacity: 0.9; margin-bottom: 14px;">Рассчитайте точное количество двухтактного масла в миллилитрах на объем бензина:</p>
+                    
+                    <div class="form-group">
+                        <label>Объем бензина в канистре (литров):</label>
+                        <input type="number" id="mixGas" class="calc-input" placeholder="Например, 5" value="5">
+                    </div>
+                    <div class="form-group">
+                        <label>Пропорция смеси (регламент производителя):</label>
+                        <select id="mixRatio" class="calc-input">
+                            <option value="25">1 : 25 (для обкатки старых моторов)</option>
+                            <option value="40">1 : 40 (универсальная полусинтетика)</option>
+                            <option value="50" selected>1 : 50 (стандарт для современной синтетики)</option>
+                        </select>
+                    </div>
+                    <button class="calc-btn" onclick="calcFuelMix()">Рассчитать объем масла</button>
+                    <div id="mixResult" class="calc-output"></div>
+                </div>
+
                 <h3>2. Почему бензопила глохнет под нагрузкой или на холостых</h3>
                 <p>Если пила заводится, но глохнет при попытке дать газ или останавливается сразу после отпускания курка, причина обычно кроется в подаче воздуха или топлива.</p>
                 <p><strong>Основные причины и решения:</strong></p>
@@ -249,6 +318,10 @@
                     <li><strong>Засор топливного фильтра в баке:</strong> Если топливо идет с осадом, фильтр в баке перестает пропускать бензин. Достаньте его крючком из бака и продуйте.</li>
                     <li><strong>Настройка карбюратора:</strong> Из-за изменения температуры и влажности воздуха винты качества и количества (L и H) могут требовать минимальной коррекции отверткой.</li>
                 </ul>
+
+                <div class="native-info-box">
+                    💡 <i>Закупка расходников:</i> для приобретения качественных масел, цепей и запчастей удобно использовать <a href="https://t-cpa.ru/3WWgLP" target="_blank" rel="noopener noreferrer">карты с повышенным возвратом баллов на АЗС и в магазинах автозапчастей</a>.
+                </div>
 
                 <!-- ВСТАВКА БЛОКА РСЯ R-A-19250236-6 В СЕРЕДИНУ СТАТЬИ -->
                 <div class="article-ad-container">
@@ -298,6 +371,26 @@
             &copy; <script>document.write(new Date().getFullYear())</script> Лесовик TECH / Лесовик ПРО. Все права защищены.
         </div>
     </footer>
+
+    <!-- СКРИПТ КАЛЬКУЛЯТОРА ТОПЛИВНОЙ СМЕСИ -->
+    <script>
+        function calcFuelMix() {
+            const gasLiters = parseFloat(document.getElementById('mixGas').value) || 0;
+            const ratio = parseInt(document.getElementById('mixRatio').value) || 50;
+            const res = document.getElementById('mixResult');
+
+            if (gasLiters <= 0) {
+                alert("Введите объем бензина в канистре.");
+                return;
+            }
+
+            // Расчет мл масла: (литры бензина * 1000 мл) / пропорция
+            const oilMl = (gasLiters * 1000) / ratio;
+
+            res.style.display = 'block';
+            res.innerHTML = `На <b>${gasLiters} л</b> бензина (пропорция 1:${ratio}) необходимо добавить:<br><b style="font-size:16px; color:var(--promo-orange);">${oilMl.toFixed(0)} мл</b> двухтактного масла.`;
+        }
+    </script>
 
     <script>
         function toggleTheme() {
