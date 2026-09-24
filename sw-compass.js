@@ -3,7 +3,7 @@
   Версия: v5.6 Ultra-Fast Offline & Cache-First Strategy
 */
 
-const CACHE_NAME = 'lesovik-compass-v5-6';
+const CACHE_NAME = 'lesovik-compass-v5-7';
 const ASSETS_TO_CACHE = [
   '/',
   '/compass.html',
