@@ -8,12 +8,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-    <title>Тактический спидометр и навигатор | Лесовик TECH</title>
-    <meta name="description" content="Автономный спутниковый спидометр, одометр, полноэкранная карта, компас и SOS для тайги.">
+    <title>Тактический спидометр и бортовой компьютер | Лесовик TECH</title>
+    <meta name="description" content="Автономный спутниковый спидометр с фильтром Калмана, бортовым компьютером моточасов и топлива, компасом с пузырьковым уровнем и офлайн-картой.">
     <link rel="canonical" href="https://lesovik-pro.ru/speedometer.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
 
-    <!-- Загрузка Яндекс Карт с защитой от отсутствия связи -->
+    <!-- РЕКЛАМНАЯ СЕТЬ ЯНДЕКСА (РСЯ) -->
+    <script>window.yaContextCb=window.yaContextCb||[]</script>
+    <script src="https://yandex.ru/ads/system/context.js" async></script>
+
+    <script>
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-1", "type": "floorAd", "platform": "touch" });
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-4", "type": "floorAd", "platform": "desktop" });
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-2", "type": "fullscreen", "platform": "touch" });
+        });
+    </script>
+
+    <!-- АСИНХРОННАЯ ЗАГРУЗКА ЯНДЕКС КАРТ -->
     <script>
         window.isYmapsLoaded = false;
         function loadYmaps() {
@@ -28,617 +44,856 @@
 
     <style>
         :root {
-            --bg-dark: #070B09;
-            --card-dark: #0F1713;
-            --border-dark: #1E2D24;
-            --text-light: #E0F2E9;
-            --neon-color: #22C55E;
+            --bg-base: #080C0A;
+            --panel-bg: #101713;
+            --panel-border: #1D2B22;
+            --text-main: #E2EFE7;
+            --neon-color: #22C55E; /* Зеленый по умолчанию */
             --neon-glow: rgba(34, 197, 94, 0.45);
-            --accent-orange: #F39C12;
+            --danger-red: #EF4444;
+            --accent-gold: #F59E0B;
         }
 
         *, *:before, *:after { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
-        html, body { 
-            background-color: var(--bg-dark); color: var(--text-light); 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            width: 100%; min-height: 100vh; overflow-x: hidden; 
+        html, body {
+            background-color: var(--bg-base); color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            width: 100%; min-height: 100vh; overflow-x: hidden;
         }
 
         header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 16px; background: rgba(15, 23, 19, 0.95);
-            border-bottom: 1px solid var(--border-dark); position: sticky; top: 0; z-index: 1000;
-            backdrop-filter: blur(10px);
+            padding: 10px 16px; background: rgba(16, 23, 19, 0.95);
+            border-bottom: 1px solid var(--panel-border); position: sticky; top: 0; z-index: 1000;
+            backdrop-filter: blur(12px);
         }
-        .logo-box { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text-light); }
-        .logo-box img { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--neon-color); }
-        .logo-box h1 { font-size: 15px; font-weight: 800; color: var(--neon-color); text-shadow: 0 0 10px var(--neon-glow); }
+        .header-brand { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text-main); }
+        .header-brand img { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--neon-color); }
+        .header-brand h1 { font-size: 15px; font-weight: 900; color: var(--neon-color); letter-spacing: 0.5px; text-transform: uppercase; text-shadow: 0 0 10px var(--neon-glow); }
 
-        /* НАВИГАЦИОННЫЕ ВКЛАДКИ */
-        .nav-tabs {
-            display: flex; gap: 6px; padding: 10px 12px; background: var(--card-dark);
-            border-bottom: 1px solid var(--border-dark); justify-content: space-between;
-        }
-        .tab-btn {
-            background: transparent; border: 1px solid var(--border-dark); color: var(--text-light);
-            padding: 8px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; text-transform: uppercase;
-            cursor: pointer; transition: all 0.2s; white-space: nowrap; flex: 1; text-align: center;
-        }
-        .tab-btn.active {
-            background: var(--neon-color); color: #070B09; border-color: var(--neon-color);
-            box-shadow: 0 0 12px var(--neon-glow);
+        .btn-toggle-glow {
+            background: #0B110E; border: 1.5px solid var(--neon-color); color: var(--neon-color);
+            padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer;
+            text-transform: uppercase; display: flex; align-items: center; gap: 6px; box-shadow: 0 0 10px var(--neon-glow);
+            transition: all 0.2s;
         }
 
-        .view-section { display: none; padding: 16px; max-width: 480px; margin: 0 auto; width: 100%; }
-        .view-section.active { display: flex; flex-direction: column; align-items: center; }
-
-        /* ВЫБОР ПОДСВЕТКИ */
-        .glow-picker {
-            display: flex; gap: 10px; margin-bottom: 16px; align-items: center; background: var(--card-dark);
-            padding: 8px 16px; border-radius: 30px; border: 1px solid var(--border-dark);
+        .nav-bar-deck {
+            display: flex; background: var(--panel-bg); border-bottom: 1px solid var(--panel-border);
+            padding: 8px 10px; gap: 6px; overflow-x: auto;
         }
-        .glow-dot {
-            width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid transparent;
-            transition: transform 0.2s;
+        .nav-tab-btn {
+            flex: 1; padding: 9px 8px; background: transparent; border: 1px solid var(--panel-border);
+            color: var(--text-main); border-radius: 8px; font-size: 11px; font-weight: 800; text-transform: uppercase;
+            cursor: pointer; white-space: nowrap; text-align: center; transition: all 0.2s;
         }
-        .glow-dot.active-dot { border-color: #FFF; transform: scale(1.2); box-shadow: 0 0 10px #FFF; }
-
-        /* СПИДОМЕТР */
-        .speedometer-card {
-            background: var(--card-dark); border: 2px solid var(--border-dark); border-radius: 24px;
-            padding: 20px; width: 100%; display: flex; flex-direction: column; align-items: center;
-            box-shadow: 0 12px 35px rgba(0,0,0,0.6), inset 0 0 25px rgba(0,0,0,0.8);
+        .nav-tab-btn.active {
+            background: var(--neon-color); color: #080C0A; border-color: var(--neon-color);
+            box-shadow: 0 0 14px var(--neon-glow);
         }
-        .speed-top { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 8px; }
-        .gps-badge { font-size: 11px; font-weight: 700; color: var(--neon-color); text-shadow: 0 0 6px var(--neon-glow); }
 
-        .unit-switcher {
-            display: flex; background: #070B09; border: 1px solid var(--border-dark); border-radius: 6px; overflow: hidden;
+        .view-section { display: none; padding: 14px; max-width: 500px; margin: 0 auto; width: 100%; flex-direction: column; align-items: center; }
+        .view-section.active { display: flex; }
+
+        /* СПИДОМЕТР МОНОЛИТ */
+        .gauge-card {
+            background: var(--panel-bg); border: 2px solid var(--panel-border); border-radius: 26px;
+            padding: 18px 16px; width: 100%; display: flex; flex-direction: column; align-items: center;
+            box-shadow: 0 14px 40px rgba(0,0,0,0.8), inset 0 0 25px rgba(0,0,0,0.9);
+            position: relative;
         }
-        .unit-btn {
-            background: transparent; border: none; padding: 5px 10px; font-size: 11px; font-weight: 800;
-            color: var(--text-light); cursor: pointer; text-transform: uppercase;
+        .gauge-header-row {
+            display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 6px;
         }
-        .unit-btn.active { background: var(--neon-color); color: #070B09; }
-
-        .dial-container { position: relative; width: 280px; height: 280px; display: flex; align-items: center; justify-content: center; }
-        .dial-svg { width: 100%; height: 100%; filter: drop-shadow(0 0 8px var(--neon-glow)); }
-        .dial-number { font-family: 'Courier New', monospace; font-size: 10px; font-weight: 900; fill: var(--text-light); opacity: 0.7; }
-
-        .speed-center { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #speed-value {
-            font-family: 'Courier New', Consolas, monospace; font-size: 68px; font-weight: 900; line-height: 0.9;
-            color: var(--text-light); text-shadow: 0 0 16px var(--neon-glow); letter-spacing: -2px;
+        .status-badge {
+            font-size: 11px; font-weight: 800; color: var(--neon-color); font-family: monospace;
+            text-shadow: 0 0 8px var(--neon-glow);
         }
-        .speed-unit { font-size: 12px; font-weight: 800; text-transform: uppercase; opacity: 0.6; margin-top: 6px; letter-spacing: 1px; }
-
-        .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 18px; }
-        .metric-box { background: #070B09; border: 1px solid var(--border-dark); border-radius: 12px; padding: 12px; text-align: center; }
-        .metric-lbl { font-size: 10px; text-transform: uppercase; opacity: 0.6; margin-bottom: 4px; font-weight: 800; }
-        .metric-val { font-family: 'Courier New', monospace; font-size: 19px; font-weight: 800; color: var(--neon-color); text-shadow: 0 0 6px var(--neon-glow); }
-
-        .btn-action {
-            background: var(--card-dark); border: 1px solid var(--border-dark); color: var(--text-light);
-            padding: 12px; border-radius: 10px; font-weight: 700; font-size: 12px; text-transform: uppercase;
-            cursor: pointer; width: 100%; margin-top: 10px; transition: all 0.2s;
+        .unit-switch-group {
+            display: flex; background: #070B09; border: 1px solid var(--panel-border); border-radius: 6px; overflow: hidden;
         }
-        .btn-action:hover { border-color: var(--neon-color); color: var(--neon-color); box-shadow: 0 0 10px var(--neon-glow); }
+        .btn-unit-opt {
+            background: transparent; border: none; padding: 5px 10px; font-size: 11px; font-weight: 900;
+            color: var(--text-main); cursor: pointer; text-transform: uppercase;
+        }
+        .btn-unit-opt.active { background: var(--neon-color); color: #080C0A; }
 
-        /* КАРТА И ПОЛНОЭКРАННЫЙ РЕЖИМ */
-        #map-wrapper { width: 100%; position: relative; transition: all 0.3s ease; }
-        #map-container {
-            width: 100%; height: 380px; border-radius: 16px; border: 2px solid var(--border-dark);
-            margin-bottom: 12px; background: #111; display: flex; align-items: center; justify-content: center;
-            color: var(--neon-color); font-size: 13px; text-align: center;
+        /* SVG ЦИФЕРБЛАТ */
+        .gauge-circle-box { position: relative; width: 300px; height: 300px; display: flex; align-items: center; justify-content: center; margin: 4px 0; }
+        .gauge-svg-element { width: 100%; height: 100%; filter: drop-shadow(0 0 10px var(--neon-glow)); }
+
+        .gauge-digital-core {
+            position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            pointer-events: none;
+        }
+        #speed-main-num {
+            font-family: 'Courier New', Consolas, monospace; font-size: 72px; font-weight: 900; line-height: 0.85;
+            color: var(--text-main); text-shadow: 0 0 18px var(--neon-glow); letter-spacing: -3px;
+        }
+        .speed-unit-caption {
+            font-size: 13px; font-weight: 900; text-transform: uppercase; opacity: 0.6; margin-top: 6px; letter-spacing: 1.5px;
+        }
+
+        /* ТАКТИЧЕСКИЕ ДАННЫЕ (МАКС / СРЕДНЯЯ / ОДОМЕТР) */
+        .tactical-grid-3 {
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 100%; margin-top: 14px;
+        }
+        .tac-cell {
+            background: #080D0B; border: 1px solid var(--panel-border); border-radius: 10px; padding: 8px 4px; text-align: center;
+        }
+        .tac-label { font-size: 9.5px; text-transform: uppercase; opacity: 0.65; font-weight: 800; margin-bottom: 2px; }
+        .tac-value { font-family: monospace; font-size: 16px; font-weight: 900; color: var(--neon-color); text-shadow: 0 0 6px var(--neon-glow); }
+
+        /* БОРТОВОЙ КОМПЬЮТЕР РАСХОДА И МОТОЧАСОВ */
+        .trip-computer-deck {
+            background: #090E0C; border: 1.5px solid var(--panel-border); border-radius: 16px;
+            padding: 14px; width: 100%; margin-top: 14px; display: flex; flex-direction: column; gap: 10px;
+        }
+        .trip-comp-title {
+            font-size: 12px; font-weight: 900; text-transform: uppercase; color: var(--accent-gold);
+            display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--panel-border); padding-bottom: 6px;
+        }
+        .trip-input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .comp-input-box { display: flex; flex-direction: column; gap: 4px; }
+        .comp-input-box label { font-size: 10px; font-weight: 800; text-transform: uppercase; opacity: 0.7; }
+        .comp-input-field {
+            width: 100%; background: #121A15; border: 1px solid var(--panel-border); border-radius: 6px;
+            padding: 8px; color: var(--text-main); font-family: monospace; font-size: 13px; font-weight: 700;
+        }
+
+        .btn-trip-control {
+            background: var(--neon-color); color: #080C0A; border: none; padding: 12px;
+            border-radius: 10px; font-weight: 900; font-size: 12px; text-transform: uppercase;
+            cursor: pointer; width: 100%; letter-spacing: 0.5px; box-shadow: 0 0 12px var(--neon-glow);
+        }
+        .btn-trip-control.active-stop {
+            background: var(--danger-red); color: #FFF; box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+        }
+
+        .trip-telemetry-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #0F1612; padding: 10px; border-radius: 10px; border: 1px solid var(--panel-border);
+        }
+        .trip-telem-item { font-size: 11px; }
+        .trip-telem-item b { display: block; font-family: monospace; font-size: 15px; color: var(--text-main); }
+
+        /* КАРТА С РАЗНЕСЕННЫМИ КНОПКАМИ И РОЗОЙ СТОРОН */
+        #map-stage-wrapper { width: 100%; position: relative; }
+        #map-canvas-container {
+            width: 100%; height: 420px; border-radius: 18px; border: 2px solid var(--panel-border);
+            background: #111; overflow: hidden; position: relative;
         }
         
-        /* Полноэкранный класс для карты */
-        body.fullscreen-map header, body.fullscreen-map .nav-tabs, body.fullscreen-map .map-offline-hint {
-            display: none !important;
+        /* Роза сторон света поверх карты */
+        .map-rose-overlay {
+            position: absolute; top: 14px; left: 14px; width: 50px; height: 50px; border-radius: 50%;
+            background: rgba(16, 23, 19, 0.85); border: 1.5px solid var(--neon-color);
+            display: flex; align-items: center; justify-content: center; z-index: 500; pointer-events: none;
+            box-shadow: 0 0 10px var(--neon-glow); font-family: monospace; font-weight: 900; font-size: 11px;
         }
-        body.fullscreen-map .view-section {
-            max-width: 100% !important; padding: 0 !important; margin: 0 !important;
+        .map-rose-n { position: absolute; top: 2px; color: var(--danger-red); }
+        .map-rose-s { position: absolute; bottom: 2px; opacity: 0.6; }
+        .map-rose-e { position: absolute; right: 4px; opacity: 0.6; }
+        .map-rose-w { position: absolute; left: 4px; opacity: 0.6; }
+
+        /* Разнесенные кнопки зума на карте */
+        .map-zoom-dock {
+            position: absolute; top: 50%; right: 14px; transform: translateY(-50%);
+            display: flex; flex-direction: column; gap: 35px; z-index: 500;
         }
-        body.fullscreen-map #map-container {
-            height: calc(100vh - 75px) !important; border-radius: 0 !important; border: none !important; margin-bottom: 0 !important;
+        .btn-zoom-tactical {
+            width: 48px; height: 48px; background: rgba(16, 23, 19, 0.9); border: 2px solid var(--neon-color);
+            color: #FFF; border-radius: 50%; font-size: 24px; font-weight: 900; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+            transition: transform 0.1s;
         }
-        body.fullscreen-map .map-controls-row {
-            position: fixed; bottom: 10px; left: 10px; right: 10px; z-index: 2000;
-            background: rgba(15, 23, 19, 0.9); padding: 8px; border-radius: 14px; border: 1px solid var(--border-dark);
+        .btn-zoom-tactical:active { transform: scale(0.92); }
+
+        body.fullscreen-mode header, body.fullscreen-mode .nav-bar-deck { display: none !important; }
+        body.fullscreen-mode .view-section { max-width: 100% !important; padding: 0 !important; }
+        body.fullscreen-mode #map-canvas-container { height: 100vh !important; border-radius: 0 !important; border: none !important; }
+        body.fullscreen-mode .map-floating-bottom-bar {
+            position: fixed; bottom: 12px; left: 12px; right: 12px; z-index: 2000;
+            background: rgba(16, 23, 19, 0.95); padding: 8px; border-radius: 14px; border: 1px solid var(--panel-border);
         }
 
-        .map-offline-hint {
-            background: rgba(243, 156, 18, 0.12); border: 1px solid var(--accent-orange); color: var(--accent-orange);
-            font-size: 12px; padding: 12px; border-radius: 10px; margin-bottom: 12px; line-height: 1.4; text-align: left;
-        }
-
-        /* КОМПАС */
-        .compass-dial {
-            width: 270px; height: 270px; border-radius: 50%; border: 3px solid var(--neon-color);
+        /* КОМПАС С ШКАЛОЙ И ПУЗЫРЬКОВЫМ УРОВНЕМ */
+        .compass-dial-rim {
+            width: 310px; height: 310px; border-radius: 50%; border: 4px solid var(--panel-border);
             position: relative; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 25px var(--neon-glow), inset 0 0 25px var(--neon-glow);
-            margin: 16px 0; background: radial-gradient(circle, #0F1713 0%, #070B09 100%);
+            box-shadow: 0 0 30px rgba(0,0,0,0.9), inset 0 0 30px rgba(0,0,0,0.9);
+            margin: 12px 0; background: radial-gradient(circle, #101713 0%, #060907 100%);
+            overflow: hidden;
         }
-        .compass-arrow {
-            position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-            transition: transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
-        }
-        .azimuth-display { font-family: 'Courier New', monospace; font-size: 34px; font-weight: 800; color: var(--neon-color); text-shadow: 0 0 10px var(--neon-glow); margin-top: 6px; }
+        #compass-disc-svg { width: 100%; height: 100%; transform-origin: 50% 50%; transition: transform 0.08s linear; }
+        
+        .compass-cross-v { position: absolute; top: 0; left: 50%; width: 2px; height: 100%; background: rgba(239, 68, 68, 0.8); transform: translateX(-50%); pointer-events: none; z-index: 6; }
+        .compass-cross-h { position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: rgba(143, 188, 143, 0.4); transform: translateY(-50%); pointer-events: none; z-index: 6; }
 
-        /* SOS */
-        .sos-container { display: flex; flex-direction: column; gap: 14px; width: 100%; }
-        .btn-sos {
+        .bubble-level-ring {
+            position: absolute; top: 50%; left: 50%; width: 44px; height: 44px;
+            transform: translate(-50%, -50%); border: 1.5px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%; background: rgba(8, 12, 10, 0.65); backdrop-filter: blur(4px);
+            z-index: 8; pointer-events: none; display: flex; align-items: center; justify-content: center;
+        }
+        .bubble-center-dot { position: absolute; width: 14px; height: 14px; border: 1px dashed rgba(255, 255, 255, 0.45); border-radius: 50%; }
+        .spirit-bubble {
+            width: 12px; height: 12px; background: var(--neon-color); border-radius: 50%;
+            box-shadow: 0 0 10px var(--neon-color); position: absolute; transform: translate(0px, 0px); transition: transform 0.08s ease-out;
+        }
+        .spirit-bubble.perfect-level { background: #00FF66; box-shadow: 0 0 14px #00FF66; }
+
+        /* SOS КНОПКИ */
+        .btn-sos-main {
             background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%); color: #FFF; border: none;
             padding: 16px; border-radius: 14px; font-size: 15px; font-weight: 900; text-transform: uppercase;
             cursor: pointer; box-shadow: 0 0 20px rgba(220, 38, 38, 0.6); text-align: center; text-decoration: none;
-            display: block; letter-spacing: 1px;
+            display: block; letter-spacing: 1px; width: 100%; margin-bottom: 12px;
         }
-        .feature-box { background: var(--card-dark); border: 1px solid var(--border-dark); border-radius: 14px; padding: 14px; width: 100%; }
-        .feature-box h3 { font-size: 13.5px; color: var(--neon-color); margin-bottom: 6px; }
-        .feature-box p { font-size: 12px; opacity: 0.8; margin-bottom: 10px; line-height: 1.4; }
+
+        /* РЕКЛАМНЫЙ КОНТЕЙНЕР РСЯ */
+        .ad-rsya-card {
+            background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 14px;
+            padding: 10px; margin: 16px 0; width: 100%; text-align: center; overflow: hidden;
+        }
     </style>
 </head>
 <body>
 
-    <header id="main-header">
-        <a href="tech.html" class="logo-box">
+    <header>
+        <a href="tech.html" class="header-brand">
             <img src="logo.jpeg" alt="Лесовик">
-            <h1>Лесовик TECH • Тактика</h1>
+            <h1>Лесовик TECH</h1>
         </a>
-        <button class="tab-btn" onclick="location.href='tech.html'" style="flex:none; padding: 6px 12px;">Выход</button>
+        <button class="btn-toggle-glow" onclick="cycleNeonColor()">
+            <span>💡</span><span id="glow-theme-name">Изумруд</span>
+        </button>
     </header>
 
-    <div class="nav-tabs" id="main-nav-tabs">
-        <button class="tab-btn active" onclick="switchView('speed', event)">Спидометр</button>
-        <button class="tab-btn" onclick="switchView('map', event)">Карта / Кэш</button>
-        <button class="tab-btn" onclick="switchView('compass', event)">Компас</button>
-        <button class="tab-btn" onclick="switchView('sos', event)" style="color: #EF4444;">SOS</button>
+    <div class="nav-bar-deck">
+        <button class="nav-tab-btn active" onclick="setMainView('speed', event)">Спидометр</button>
+        <button class="nav-tab-btn" onclick="setMainView('computer', event)">Борт. Компьютер</button>
+        <button class="nav-tab-btn" onclick="setMainView('map', event)">Карта</button>
+        <button class="nav-tab-btn" onclick="setMainView('compass', event)">Компас</button>
+        <button class="nav-tab-btn" onclick="setMainView('sos', event)" style="color:var(--danger-red);">SOS</button>
     </div>
 
-    <!-- 1. СПИДОМЕТР -->
+    <!-- 1. СПИДОМЕТР С ЧАСТОЙ ШКАЛОЙ И КАЛМАНОМ -->
     <section id="view-speed" class="view-section active">
-        <div class="glow-picker">
-            <div class="glow-dot active-dot" style="background: #22C55E;" onclick="setNeon('#22C55E', 'rgba(34,197,94,0.45)', this)" title="Зеленый"></div>
-            <div class="glow-dot" style="background: #38BDF8;" onclick="setNeon('#38BDF8', 'rgba(56,189,248,0.45)', this)" title="Голубой"></div>
-            <div class="glow-dot" style="background: #06B6D4;" onclick="setNeon('#06B6D4', 'rgba(6,182,212,0.45)', this)" title="Бирюзовый"></div>
-            <div class="glow-dot" style="background: #EF4444;" onclick="setNeon('#EF4444', 'rgba(239,68,68,0.45)', this)" title="Красный"></div>
-            <div class="glow-dot" style="background: #F39C12;" onclick="setNeon('#F39C12', 'rgba(243,156,18,0.45)', this)" title="Оранжевый"></div>
-            <div class="glow-dot" style="background: #FFFFFF;" onclick="setNeon('#FFFFFF', 'rgba(255,255,255,0.45)', this)" title="Белый"></div>
-        </div>
-
-        <div class="speedometer-card">
-            <div class="speed-top">
-                <span id="gps-status" class="gps-badge">🛰️ Поиск спутников...</span>
-                <div class="unit-switcher">
-                    <button class="unit-btn active" onclick="setSpeedUnit('kmh', event)">км/ч</button>
-                    <button class="unit-btn" onclick="setSpeedUnit('mph', event)">миль</button>
+        <div class="gauge-card">
+            <div class="gauge-header-row">
+                <span id="gps-indicator" class="status-badge">🛰️ ГЛОНАСС: Поиск...</span>
+                <div class="unit-switch-group">
+                    <button class="btn-unit-opt active" onclick="setSpeedUnit('kmh', event)">км/ч</button>
+                    <button class="btn-unit-opt" onclick="setSpeedUnit('mph', event)">миль</button>
                 </div>
             </div>
 
-            <!-- Циферблат -->
-            <div class="dial-container">
-                <svg viewBox="0 0 260 260" class="dial-svg">
-                    <circle cx="130" cy="130" r="105" fill="none" stroke="var(--border-dark)" stroke-width="6" stroke-dasharray="495" stroke-dashoffset="124" stroke-linecap="round" transform="rotate(135 130 130)" />
-                    <circle id="speed-ring" cx="130" cy="130" r="105" fill="none" stroke="var(--neon-color)" stroke-width="8" stroke-dasharray="495" stroke-dashoffset="495" stroke-linecap="round" transform="rotate(135 130 130)" style="transition: stroke-dashoffset 0.1s linear;" />
+            <!-- Циферблат со шкалой -->
+            <div class="gauge-circle-box">
+                <svg viewBox="0 0 300 300" class="gauge-svg-element">
+                    <!-- Базовая дуга 270 градусов -->
+                    <circle cx="150" cy="150" r="120" fill="none" stroke="var(--panel-border)" stroke-width="6" stroke-dasharray="565" stroke-dashoffset="141" stroke-linecap="round" transform="rotate(135 150 150)" />
+                    <!-- Активная неоновая стрелка-дуга -->
+                    <circle id="speed-radial-bar" cx="150" cy="150" r="120" fill="none" stroke="var(--neon-color)" stroke-width="8" stroke-dasharray="565" stroke-dashoffset="565" stroke-linecap="round" transform="rotate(135 150 150)" style="transition: stroke-dashoffset 0.08s linear;" />
                     
-                    <text x="48" y="206" class="dial-number">0</text>
-                    <text x="24" y="145" class="dial-number">20</text>
-                    <text x="44" y="82" class="dial-number">40</text>
-                    <text x="122" y="52" class="dial-number">60</text>
-                    <text x="200" y="82" class="dial-number">80</text>
-                    <text x="220" y="145" class="dial-number">100</text>
-                    <text x="194" y="206" class="dial-number">120</text>
+                    <!-- Оцифровка (0, 20, 40, 60, 80, 100, 120) -->
+                    <text x="56" y="236" fill="var(--text-main)" font-size="12" font-family="monospace" font-weight="900">0</text>
+                    <text x="28" y="165" fill="var(--text-main)" font-size="12" font-family="monospace" font-weight="900">20</text>
+                    <text x="52" y="94" fill="var(--text-main)" font-size="12" font-family="monospace" font-weight="900">40</text>
+                    <text x="142" y="58" fill="var(--text-main)" font-size="12" font-family="monospace" font-weight="900">60</text>
+                    <text x="232" y="94" fill="var(--text-main)" font-size="12" font-family="monospace" font-weight="900">80</text>
+                    <text x="256" y="165" fill="var(--text-main)" font-size="12" font-family="monospace" font-weight="900">100</text>
+                    <text x="226" y="236" fill="var(--text-main)" font-size="12" font-family="monospace" font-weight="900">120</text>
 
-                    <g transform="rotate(135 130 130)" stroke="var(--text-light)" stroke-width="2" opacity="0.3">
-                        <line x1="130" y1="25" x2="130" y2="34" />
-                        <line x1="130" y1="25" x2="130" y2="34" transform="rotate(45 130 130)" />
-                        <line x1="130" y1="25" x2="130" y2="34" transform="rotate(90 130 130)" />
-                        <line x1="130" y1="25" x2="130" y2="34" transform="rotate(135 130 130)" />
-                        <line x1="130" y1="25" x2="130" y2="34" transform="rotate(180 130 130)" />
-                        <line x1="130" y1="25" x2="130" y2="34" transform="rotate(225 130 130)" />
-                        <line x1="130" y1="25" x2="130" y2="34" transform="rotate(270 130 130)" />
-                    </g>
+                    <!-- Мелкие и крупные риски шкалы каждые 2 и 10 км/ч -->
+                    <g id="svg-speed-ticks-group" stroke="var(--text-main)"></g>
 
-                    <g id="speed-needle" style="transform-origin: 130px 130px; transition: transform 0.1s linear; transform: rotate(-135deg);">
-                        <line x1="130" y1="130" x2="130" y2="36" stroke="#EF4444" stroke-width="3.5" stroke-linecap="round" />
-                        <circle cx="130" cy="130" r="7" fill="var(--neon-color)" />
+                    <!-- Стрелка спидометра -->
+                    <g id="speed-arrow-pointer" style="transform-origin: 150px 150px; transition: transform 0.08s linear; transform: rotate(-135deg);">
+                        <line x1="150" y1="150" x2="150" y2="42" stroke="var(--danger-red)" stroke-width="4" stroke-linecap="round" />
+                        <circle cx="150" cy="150" r="8" fill="var(--neon-color)" />
                     </g>
                 </svg>
 
-                <div class="speed-center">
-                    <span id="speed-value">0.0</span>
-                    <span id="speed-unit-lbl" class="speed-unit">км/ч</span>
+                <div class="gauge-digital-core">
+                    <span id="speed-main-num">0.0</span>
+                    <span id="speed-unit-text" class="speed-unit-caption">км/ч</span>
                 </div>
             </div>
 
-            <div class="metrics-grid">
-                <div class="metric-box">
-                    <div class="metric-lbl">Одометр (пробег)</div>
-                    <div id="odometer-val" class="metric-val">0.00 км</div>
+            <!-- Тройная телеметрия скорости -->
+            <div class="tactical-grid-3">
+                <div class="tac-cell">
+                    <div class="tac-label">Максимальная</div>
+                    <div id="tac-max-spd" class="tac-value">0.0</div>
                 </div>
-                <div class="metric-box">
-                    <div class="metric-lbl">Макс. скорость</div>
-                    <div id="max-speed-val" class="metric-val">0.0 км/ч</div>
+                <div class="tac-cell">
+                    <div class="tac-label">Средняя</div>
+                    <div id="tac-avg-spd" class="tac-value">0.0</div>
+                </div>
+                <div class="tac-cell">
+                    <div class="tac-label">Одометр</div>
+                    <div id="tac-odometer" class="tac-value">0.00 км</div>
                 </div>
             </div>
+        </div>
 
-            <button class="btn-action" onclick="resetTrip()">Сбросить одометр рейса</button>
+        <!-- БЛОК РСЯ В ЛЕНТЕ СПИДОМЕТРА -->
+        <div class="ad-rsya-card">
+            <div id="yandex_rtb_R-A-19250236-6"></div>
+            <script>
+                window.yaContextCb.push(() => {
+                    Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-6", "renderTo": "yandex_rtb_R-A-19250236-6" });
+                });
+            </script>
         </div>
     </section>
 
-    <!-- 2. КАРТА (С РЕЖИМОМ НА ВЕСЬ ЭКРАН И СБРОСОМ ТОЧЕК) -->
+    <!-- 2. БОРТОВОЙ КОМПЬЮТЕР (ТОПЛИВО И МОТОЧАСЫ) -->
+    <section id="view-computer" class="view-section">
+        <div class="trip-computer-deck">
+            <div class="trip-comp-title">
+                <span>⛽ Тактический бортовой компьютер</span>
+                <span id="trip-live-indicator" style="color:var(--danger-red);">● СТОП</span>
+            </div>
+
+            <div class="trip-input-row">
+                <div class="comp-input-box">
+                    <label>Топливо в баке (литров):</label>
+                    <input type="number" id="inp-fuel-tank" class="comp-input-field" value="50" placeholder="Литры">
+                </div>
+                <div class="comp-input-box">
+                    <label>Расход л/час (или на 100 км):</label>
+                    <input type="number" id="inp-fuel-rate" class="comp-input-field" value="12" placeholder="Расход">
+                </div>
+            </div>
+
+            <button id="btn-toggle-trip" class="btn-trip-control" onclick="toggleTripEngine()">
+                ▶ ЗАПУСК РЕЙСА (СЧЕТ ТОПЛИВА И ВРЕМЕНИ)
+            </button>
+
+            <div class="trip-telemetry-grid">
+                <div class="trip-telem-item">
+                    Моточасы рейса:
+                    <b id="trip-timer-display">00:00:00</b>
+                </div>
+                <div class="trip-telem-item">
+                    Сожжено топлива:
+                    <b id="trip-fuel-spent">0.0 л</b>
+                </div>
+                <div class="trip-telem-item">
+                    Остаток в баке:
+                    <b id="trip-fuel-remain">50.0 л</b>
+                </div>
+                <div class="trip-telem-item">
+                    Остаток хода по времени:
+                    <b id="trip-hours-left">~4.1 ч</b>
+                </div>
+            </div>
+
+            <button onclick="resetTripOdometerTotal()" style="background:transparent; border:1px solid var(--panel-border); color:var(--text-main); padding:8px; border-radius:8px; font-size:11px; font-weight:800; cursor:pointer; text-transform:uppercase;">
+                🔄 Сбросить счетчики поездки
+            </button>
+        </div>
+    </section>
+
+    <!-- 3. КАРТА (РАЗНЕСЕННЫЕ КНОПКИ, РОЗА СТОРОН И ВЕСЬ ЭКРАН) -->
     <section id="view-map" class="view-section">
-        <div class="map-offline-hint">
-            🌲 <b>Кэширование перед тайгой:</b> Откройте нужный район реки или урочища, увеличьте масштаб и подвигайте карту — тайлы сохранятся в памяти телефона и будут работать без сети!
-        </div>
-        
-        <div id="map-wrapper">
-            <div id="map-container">⏳ Загрузка карты...</div>
-        </div>
+        <div id="map-stage-wrapper">
+            <div id="map-canvas-container">
+                <!-- Роза сторон света -->
+                <div class="map-rose-overlay">
+                    <span class="map-rose-n">С</span>
+                    <span class="map-rose-e">В</span>
+                    <span class="map-rose-s">Ю</span>
+                    <span class="map-rose-w">З</span>
+                    🧭
+                </div>
 
-        <div class="map-controls-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%;">
-            <button class="btn-action" style="margin-top:0;" onclick="toggleMapFullscreen()" id="btn-fullscreen-map">⛶ На весь экран</button>
-            <button class="btn-action" style="margin-top:0;" onclick="centerMap()">📍 Центрировать</button>
-            <button class="btn-action" style="margin-top:0;" onclick="addMarker()">📌 Засечка точки</button>
-            <button class="btn-action" style="margin-top:0; border-color: rgba(239, 68, 68, 0.4); color: #EF4444;" onclick="clearMarkers()">🗑️ Очистить точки</button>
+                <!-- Разнесенные кнопки + и - -->
+                <div class="map-zoom-dock">
+                    <button class="btn-zoom-tactical" onclick="zoomMapStep(+1)" title="Приблизить">+</button>
+                    <button class="btn-zoom-tactical" onclick="zoomMapStep(-1)" title="Отдалить">−</button>
+                </div>
+            </div>
+
+            <div class="map-floating-bottom-bar" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-top: 10px;">
+                <button class="nav-tab-btn" onclick="toggleMapFullscreen()" id="btn-map-fs">⛶ Во весь экран</button>
+                <button class="nav-tab-btn" onclick="centerMapUser()">🎯 Где я?</button>
+                <button class="nav-tab-btn" onclick="dropMapMarker()">📌 Засечка точки</button>
+                <button class="nav-tab-btn" style="color:var(--danger-red);" onclick="clearAllMarkers()">🗑️ Очистить точки</button>
+            </div>
         </div>
     </section>
 
-    <!-- 3. КОМПАС (С АВТОЗАПУСКОМ И КАЛИБРОВКОЙ) -->
+    <!-- 4. КОМПАС (ШКАЛА 360° + ПУЗЫРЬКОВЫЙ УРОВЕНЬ ГОРИЗОНТА) -->
     <section id="view-compass" class="view-section">
-        <div class="compass-dial">
-            <div class="compass-arrow" id="compass-arrow-elem">
-                <svg width="60" height="180" viewBox="0 0 60 180">
-                    <polygon points="30,0 48,90 30,76" fill="#EF4444" />
-                    <polygon points="30,180 48,90 30,104" fill="#38BDF8" />
-                </svg>
+        <div class="compass-dial-rim">
+            <div class="compass-cross-v"></div>
+            <div class="compass-cross-h"></div>
+
+            <!-- Пузырьковый уровень горизонта в центре -->
+            <div class="bubble-level-ring" title="Уровень горизонта">
+                <div class="bubble-center-dot"></div>
+                <div class="spirit-bubble" id="spirit-level-bubble"></div>
             </div>
-            <div style="position: absolute; font-size: 15px; font-weight: 900; color: #EF4444; top: 12px;">С</div>
-            <div style="position: absolute; font-size: 15px; font-weight: 900; opacity: 0.6; bottom: 12px;">Ю</div>
-            <div style="position: absolute; font-size: 15px; font-weight: 900; opacity: 0.6; right: 14px;">В</div>
-            <div style="position: absolute; font-size: 15px; font-weight: 900; opacity: 0.6; left: 14px;">З</div>
+
+            <!-- Поворотный SVG диск с оцифрованной шкалой -->
+            <svg id="compass-disc-svg" viewBox="0 0 400 400">
+                <g id="compass-svg-ticks-layer"></g>
+                <text x="200" y="44" fill="#DC2626" font-size="24" font-weight="900" text-anchor="middle" dominant-baseline="central">С</text>
+                <text x="356" y="200" fill="#FFFFFF" font-size="22" font-weight="900" text-anchor="middle" dominant-baseline="central">В</text>
+                <text x="200" y="356" fill="#FFFFFF" font-size="22" font-weight="900" text-anchor="middle" dominant-baseline="central">Ю</text>
+                <text x="44" y="200" fill="#FFFFFF" font-size="22" font-weight="900" text-anchor="middle" dominant-baseline="central">З</text>
+                <polygon points="200,58 186,200 214,200" fill="#DC2626"/>
+                <polygon points="200,342 186,200 214,200" fill="#FFFFFF" opacity="0.8"/>
+            </svg>
         </div>
-        <div class="azimuth-display" id="azimuth-text">0° С</div>
-        
-        <button class="btn-action" onclick="requestCompassPermission()" id="compass-perm-btn" style="max-width: 260px;">
-            🧭 Запустить / Калибровать компас
+
+        <div style="font-family:monospace; font-size:36px; font-weight:900; color:var(--neon-color); text-shadow:0 0 10px var(--neon-glow);" id="compass-azimuth-label">
+            0° С
+        </div>
+
+        <button onclick="requestCompassAccess()" style="background:#121A15; border:1px solid var(--panel-border); color:var(--text-main); padding:10px 16px; border-radius:10px; font-weight:800; font-size:11px; cursor:pointer; margin-top:8px; text-transform:uppercase;">
+            🧭 Откалибровать датчики компаса
         </button>
-        <div style="font-size: 11px; opacity: 0.7; margin-top: 8px; text-align: center;">Если компас не вращается, нажмите кнопку и сделайте смартфоном «восьмерку» в воздухе.</div>
     </section>
 
-    <!-- 4. SOS, ОТПУГИВАТЕЛЬ И МАЯК -->
+    <!-- 5. SOS И СПАСЕНИЕ -->
     <section id="view-sos" class="view-section">
-        <div class="sos-container">
-            <a href="tel:112" class="btn-sos">🚨 Вызов спасателей (112)</a>
-            
-            <a id="sms-sos-btn" href="sms:112" class="btn-sos" style="background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); font-size: 13px; padding: 14px;">
-                📨 SMS спасателям с координатами
-            </a>
+        <a href="tel:112" class="btn-sos-main">🚨 ЭКСТРЕННЫЙ ВЫЗОВ 112</a>
+        <a id="sos-sms-link" href="sms:112" class="btn-sos-main" style="background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);">
+            📨 SMS С КООРДИНАТАМИ СПАСАТЕЛЯМ
+        </a>
 
-            <div class="feature-box">
-                <h3>🔊 Звуковой отпугиватель хищников</h3>
-                <p>Генерация плавающих ультра-резких техногенных частот для отпугивания медведей и волков через динамик.</p>
-                <button class="btn-action" style="margin-top:0;" onclick="toggleRepeller()" id="repeller-btn">▶ Включить звуковой репеллер</button>
-            </div>
-
-            <div class="feature-box">
-                <h3>💡 Фонарик / Маяк бедствия SOS</h3>
-                <p>Запуск вспышки камеры или экрана в международном режиме сигнала SOS (... --- ...).</p>
-                <button class="btn-action" style="margin-top:0;" onclick="toggleTorchSos()" id="torch-btn">🔦 Включить световой маяк SOS</button>
-            </div>
+        <div style="background:var(--panel-bg); border:1px solid var(--panel-border); border-radius:14px; padding:14px; width:100%; margin-top:10px;">
+            <h3 style="font-size:13px; color:var(--neon-color); margin-bottom:6px;">🔊 Голосовой отпугиватель зверей</h3>
+            <p style="font-size:12px; opacity:0.8; margin-bottom:10px;">Синтез резких частот 800–2600 Гц для отпугивания хищников в тайге.</p>
+            <button onclick="toggleAudioRepeller()" id="btn-repeller-state" style="background:#121A15; border:1px solid var(--panel-border); color:var(--text-main); padding:10px; width:100%; border-radius:8px; font-weight:800; font-size:11px; cursor:pointer;">
+                ▶ ВКЛЮЧИТЬ СИРЕНУ-ОТПУГИВАТЕЛЬ
+            </button>
         </div>
     </section>
 
+    <!-- СКРИПТЫ ЛОГИКИ ТАКТИЧЕСКОГО БОРТОВОГО КОМПЛЕКСА -->
     <script>
-        // Подсветка
-        function setNeon(color, glow, el) {
-            document.documentElement.style.setProperty('--neon-color', color);
-            document.documentElement.style.setProperty('--neon-glow', glow);
-            document.querySelectorAll('.glow-dot').forEach(d => d.classList.remove('active-dot'));
-            el.classList.add('active-dot');
+        // 1. ФИЛЬТР КАЛМАНА ДЛЯ СКОРОСТИ
+        class KalmanSpeedFilter {
+            constructor(q = 0.02, r = 0.6) {
+                this.q = q; this.r = r; this.x = null; this.p = 1.0;
+            }
+            filter(val) {
+                if (this.x === null) { this.x = val; return val; }
+                this.p = this.p + this.q;
+                let k = this.p / (this.p + this.r);
+                this.x = this.x + k * (val - this.x);
+                this.p = (1 - k) * this.p;
+                return Math.max(0, this.x);
+            }
+        }
+        const speedKalman = new KalmanSpeedFilter(0.02, 0.6);
+
+        // 2. ЦВЕТОВЫЕ СХЕМЫ ПОДСВЕТКИ (СТРОГИЙ МУЖСКОЙ СТИЛЬ)
+        const glowThemes = [
+            { name: "Изумруд", color: "#22C55E", glow: "rgba(34, 197, 94, 0.45)" },
+            { name: "Бирюза", color: "#06B6D4", glow: "rgba(6, 182, 212, 0.45)" },
+            { name: "Красный", color: "#EF4444", glow: "rgba(239, 68, 68, 0.45)" },
+            { name: "Оранжевый", color: "#F39C12", glow: "rgba(243, 156, 18, 0.45)" },
+            { name: "Белый", color: "#FFFFFF", glow: "rgba(255, 255, 255, 0.45)" }
+        ];
+        let currentThemeIdx = 0;
+
+        function cycleNeonColor() {
+            currentThemeIdx = (currentThemeIdx + 1) % glowThemes.length;
+            const th = glowThemes[currentThemeIdx];
+            document.documentElement.style.setProperty('--neon-color', th.color);
+            document.documentElement.style.setProperty('--neon-glow', th.glow);
+            document.getElementById('glow-theme-name').innerText = th.name;
         }
 
-        // Переключение экранов
-        function switchView(id, e) {
-            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('view-' + id).classList.add('active');
+        // 3. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
+        function setMainView(viewId, e) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
             e.target.classList.add('active');
-            if (id === 'map' && myMap) { myMap.container.fitToViewport(); }
+            if (viewId === 'map' && yMap) yMap.container.fitToViewport();
         }
 
-        // Спидометр и одометр
-        let curSpeedKmh = 0, maxSpeedKmh = 0, curUnit = 'kmh';
-        let tripMeters = parseFloat(localStorage.getItem('leso_trip_m')) || 0;
-        let lastLat = null, lastLon = null;
+        // 4. ГЕНЕРАЦИЯ ДЕТАЛИЗИРОВАННОЙ ШКАЛЫ СПИДОМЕТРА (КАЖДЫЕ 2 КМ/Ч)
+        function generateSpeedTicks() {
+            const group = document.getElementById('svg-speed-ticks-group');
+            group.innerHTML = '';
+            const cx = 150, cy = 150, r = 120;
 
-        function setSpeedUnit(unit, e) {
-            curUnit = unit;
-            document.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-            document.getElementById('speed-unit-lbl').innerText = (unit === 'kmh') ? 'км/ч' : 'миль/ч';
-            updateSpeedUI(curSpeedKmh);
-        }
+            for (let k = 0; k <= 120; k += 2) {
+                const pct = k / 120;
+                const angle = 135 + (pct * 270);
+                const rad = (angle - 90) * (Math.PI / 180);
 
-        function resetTrip() {
-            if (confirm('Сбросить суточный одометр рейса?')) {
-                tripMeters = 0; maxSpeedKmh = 0;
-                localStorage.removeItem('leso_trip_m');
-                document.getElementById('odometer-val').innerText = '0.00 км';
-                document.getElementById('max-speed-val').innerText = '0.0 км/ч';
+                let len = 4;
+                let strokeW = 1;
+                let opacity = 0.25;
+
+                if (k % 10 === 0) {
+                    len = 10; strokeW = 2; opacity = 0.6;
+                }
+                if (k % 20 === 0) {
+                    len = 16; strokeW = 3; opacity = 0.9;
+                }
+
+                const x1 = cx + (r - len) * Math.cos(rad);
+                const y1 = cy + (r - len) * Math.sin(rad);
+                const x2 = cx + r * Math.cos(rad);
+                const y2 = cy + r * Math.sin(rad);
+
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", x1.toFixed(1)); line.setAttribute("y1", y1.toFixed(1));
+                line.setAttribute("x2", x2.toFixed(1)); line.setAttribute("y2", y2.toFixed(1));
+                line.setAttribute("stroke-width", strokeW);
+                line.setAttribute("opacity", opacity);
+                group.appendChild(line);
             }
         }
 
-        function calcDistM(lat1, lon1, lat2, lon2) {
-            const R = 6371e3;
-            const dL = (lat2 - lat1) * Math.PI / 180, dL2 = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dL/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dL2/2)**2;
-            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        // 5. ТЕЛЕМЕТРИЯ СПИДОМЕТРА, ОДОМЕТРА И СКОРОСТИ
+        let currentRawKmh = 0, filteredKmh = 0;
+        let maxKmhRecord = 0, speedUnitMode = 'kmh';
+        let totalOdometerMeters = parseFloat(localStorage.getItem('leso_odo_m')) || 0;
+        let speedSamplesCount = 0, speedSumKmh = 0;
+        let lastGpsLat = null, lastGpsLon = null;
+
+        function setSpeedUnit(unit, e) {
+            speedUnitMode = unit;
+            document.querySelectorAll('.btn-unit-opt').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            document.getElementById('speed-unit-text').innerText = (unit === 'kmh') ? 'км/ч' : 'миль/ч';
+            renderSpeedUI(filteredKmh);
         }
 
-        // Автономный GPS
-        if ('geolocation' in navigator) {
-            navigator.geolocation.watchPosition(
-                pos => {
-                    const lat = pos.coords.latitude;
-                    const lon = pos.coords.longitude;
-                    const spd = pos.coords.speed;
-                    const acc = pos.coords.accuracy;
+        function renderSpeedUI(kmh) {
+            let displayVal = kmh;
+            if (speedUnitMode === 'mph') displayVal *= 0.621371;
 
-                    document.getElementById('gps-status').innerText = `🛰️ ГЛОНАСС/GPS (±${Math.round(acc)}м)`;
-
-                    curSpeedKmh = (spd !== null && spd >= 0) ? spd * 3.6 : 0;
-                    if (curSpeedKmh > maxSpeedKmh) {
-                        maxSpeedKmh = curSpeedKmh;
-                        document.getElementById('max-speed-val').innerText = (curUnit === 'kmh' ? maxSpeedKmh : maxSpeedKmh * 0.621371).toFixed(1) + (curUnit === 'kmh' ? ' км/ч' : ' миль');
-                    }
-
-                    if (lastLat !== null && lastLon !== null) {
-                        const dist = calcDistM(lastLat, lastLon, lat, lon);
-                        if (acc < 35 && dist > 1.8 && dist < 120) {
-                            tripMeters += dist;
-                            localStorage.setItem('leso_trip_m', tripMeters);
-                        }
-                    }
-                    lastLat = lat; lastLon = lon;
-                    updateSpeedUI(curSpeedKmh);
-
-                    const bodyText = encodeURIComponent(`SOS! Нужна помощь в тайге. Координаты: https://maps.google.com/?q=${lat},${lon}`);
-                    document.getElementById('sms-sos-btn').href = `sms:112?body=${bodyText}`;
-
-                    if (userMark && myMap) {
-                        userMark.geometry.setCoordinates([lat, lon]);
-                    }
-                },
-                err => { document.getElementById('gps-status').innerText = '⚠️ Поиск спутников...'; },
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
-            );
-        }
-
-        function updateSpeedUI(kmh) {
-            let val = kmh;
-            if (curUnit === 'mph') val *= 0.621371;
-            document.getElementById('speed-value').innerText = val.toFixed(1);
+            document.getElementById('speed-main-num').innerText = displayVal.toFixed(1);
 
             let pct = Math.min(kmh / 120, 1.0);
             let angle = -135 + (pct * 270);
-            document.getElementById('speed-needle').style.transform = `rotate(${angle}deg)`;
+            document.getElementById('speed-arrow-pointer').style.transform = `rotate(${angle}deg)`;
 
-            let offset = 495 - (pct * 495);
-            document.getElementById('speed-ring').style.strokeDashoffset = offset;
+            let offset = 565 - (pct * 565);
+            document.getElementById('speed-radial-bar').style.strokeDashoffset = offset;
 
-            let dist = tripMeters / 1000;
-            if (curUnit === 'mph') dist *= 0.621371;
-            document.getElementById('odometer-val').innerText = dist.toFixed(2) + (curUnit === 'kmh' ? ' км' : ' миль');
+            let maxVal = maxKmhRecord;
+            let avgVal = speedSamplesCount > 0 ? (speedSumKmh / speedSamplesCount) : 0;
+            if (speedUnitMode === 'mph') { maxVal *= 0.621371; avgVal *= 0.621371; }
+
+            document.getElementById('tac-max-spd').innerText = maxVal.toFixed(1);
+            document.getElementById('tac-avg-spd').innerText = avgVal.toFixed(1);
+
+            let odoKm = totalOdometerMeters / 1000;
+            if (speedUnitMode === 'mph') odoKm *= 0.621371;
+            document.getElementById('tac-odometer').innerText = odoKm.toFixed(2) + (speedUnitMode === 'kmh' ? ' км' : ' миль');
         }
 
-        // ЯНДЕКС КАРТА, ТОЧКИ И ПОЛНОЭКРАННЫЙ РЕЖИМ
-        let myMap = null, userMark = null, savedMarkersCollection = null;
-        let isMapFullscreen = false;
+        function resetTripOdometerTotal() {
+            if (confirm("Сбросить максимальную скорость, среднюю и одометр?")) {
+                totalOdometerMeters = 0; maxKmhRecord = 0; speedSamplesCount = 0; speedSumKmh = 0;
+                localStorage.removeItem('leso_odo_m');
+                renderSpeedUI(0);
+            }
+        }
+
+        // GPS ГЛОНАСС ТРЕКИНГ
+        if ('geolocation' in navigator) {
+            navigator.geolocation.watchPosition(pos => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                const spd = pos.coords.speed;
+                const acc = pos.coords.accuracy;
+
+                document.getElementById('gps-indicator').innerText = `🛰️ ГЛОНАСС (±${Math.round(acc)}м)`;
+
+                let spdVal = (spd !== null && spd >= 0) ? spd * 3.6 : 0;
+                filteredKmh = speedKalman.filter(spdVal);
+
+                if (filteredKmh > maxKmhRecord) maxKmhRecord = filteredKmh;
+                if (filteredKmh > 2.0) {
+                    speedSamplesCount++; speedSumKmh += filteredKmh;
+                }
+
+                if (lastGpsLat !== null && lastGpsLon !== null) {
+                    const R = 6371e3;
+                    const dL = (lat - lastGpsLat) * Math.PI / 180;
+                    const dL2 = (lon - lastGpsLon) * Math.PI / 180;
+                    const a = Math.sin(dL/2)**2 + Math.cos(lastGpsLat*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dL2/2)**2;
+                    const d = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+                    if (acc < 35 && d > 1.8 && d < 120) {
+                        totalOdometerMeters += d;
+                        localStorage.setItem('leso_odo_m', totalOdometerMeters);
+                    }
+                }
+                lastGpsLat = lat; lastGpsLon = lon;
+                renderSpeedUI(filteredKmh);
+
+                // Обновление SMS SOS
+                const smsTxt = encodeURIComponent(`SOS! Нужна помощь в лесу/на воде. Координаты ГЛОНАСС: https://maps.google.com/?q=${lat},${lon}`);
+                document.getElementById('sos-sms-link').href = `sms:112?body=${smsTxt}`;
+
+                if (yUserPlacemark && yMap) yUserPlacemark.geometry.setCoordinates([lat, lon]);
+            }, err => {
+                document.getElementById('gps-indicator').innerText = '⚠️ Поиск спутников...';
+            }, { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 });
+        }
+
+        // 6. БОРТОВОЙ КОМПЬЮТЕР МОТОЧАСОВ И ТОПЛИВА
+        let isTripActive = false;
+        let tripStartTime = null;
+        let tripTimerInterval = null;
+        let fuelStartLiters = 50;
+        let fuelRatePerHour = 12;
+
+        function toggleTripEngine() {
+            isTripActive = !isTripActive;
+            const btn = document.getElementById('btn-toggle-trip');
+            const ind = document.getElementById('trip-live-indicator');
+
+            if (isTripActive) {
+                fuelStartLiters = parseFloat(document.getElementById('inp-fuel-tank').value) || 50;
+                fuelRatePerHour = parseFloat(document.getElementById('inp-fuel-rate').value) || 12;
+                tripStartTime = Date.now();
+                btn.innerText = '⏹ ОСТАНОВИТЬ РЕЙС';
+                btn.classList.add('active-stop');
+                ind.innerText = '● В ПУТИ (АКТИВЕН)';
+                ind.style.color = 'var(--neon-color)';
+
+                tripTimerInterval = setInterval(updateTripTelemetry, 1000);
+            } else {
+                clearInterval(tripTimerInterval);
+                btn.innerText = '▶ ЗАПУСК РЕЙСА (СЧЕТ ТОПЛИВА И ВРЕМЕНИ)';
+                btn.classList.remove('active-stop');
+                ind.innerText = '● СТОП';
+                ind.style.color = 'var(--danger-red)';
+            }
+        }
+
+        function updateTripTelemetry() {
+            if (!isTripActive || !tripStartTime) return;
+            const elapsedSec = Math.floor((Date.now() - tripStartTime) / 1000);
+            const hrs = Math.floor(elapsedSec / 3600);
+            const mins = Math.floor((elapsedSec % 3600) / 60);
+            const secs = elapsedSec % 60;
+
+            const timeStr = `${hrs.toString().padStart(2,'0')}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+            document.getElementById('trip-timer-display').innerText = timeStr;
+
+            const hoursFloat = elapsedSec / 3600;
+            const spentFuel = hoursFloat * fuelRatePerHour;
+            const remainFuel = Math.max(0, fuelStartLiters - spentFuel);
+            const hoursLeft = fuelRatePerHour > 0 ? (remainFuel / fuelRatePerHour) : 0;
+
+            document.getElementById('trip-fuel-spent').innerText = `${spentFuel.toFixed(1)} л`;
+            document.getElementById('trip-fuel-remain').innerText = `${remainFuel.toFixed(1)} л`;
+            document.getElementById('trip-hours-left').innerText = `~${hoursLeft.toFixed(1)} ч`;
+        }
+
+        // 7. ЯНДЕКС КАРТА С РАЗНЕСЕННЫМИ КНОПКАМИ И МАРКЕРАМИ
+        let yMap = null, yUserPlacemark = null, yMarksGroup = null;
+        let isMapFs = false;
 
         function initMapSafe() {
             if (typeof ymaps === 'undefined') return;
             ymaps.ready(() => {
-                document.getElementById('map-container').innerHTML = '';
-                myMap = new ymaps.Map("map-container", {
-                    center: [61.6688, 50.8364],
-                    zoom: 14,
-                    controls: ['zoomControl']
+                yMap = new ymaps.Map("map-canvas-container", {
+                    center: [61.6688, 50.8364], // Сыктывкар
+                    zoom: 15,
+                    controls: [] // Отключаем стандартные элементы
                 });
-                
-                userMark = new ymaps.Placemark([61.6688, 50.8364], { hintContent: 'Вы здесь' }, { preset: 'islands#redDotIcon' });
-                myMap.geoObjects.add(userMark);
-
-                savedMarkersCollection = new ymaps.GeoObjectCollection();
-                myMap.geoObjects.add(savedMarkersCollection);
-
-                // Загружаем сохраненные засечки из памяти
-                loadSavedMarkers();
-
-                if (lastLat && lastLon) {
-                    userMark.geometry.setCoordinates([lastLat, lastLon]);
-                    myMap.setCenter([lastLat, lastLon]);
-                }
+                yUserPlacemark = new ymaps.Placemark([61.6688, 50.8364], { hintContent: 'Вы здесь' }, { preset: 'islands#redCircleDotIcon' });
+                yMap.geoObjects.add(yUserPlacemark);
+                yMarksGroup = new ymaps.GeoObjectCollection();
+                yMap.geoObjects.add(yMarksGroup);
+                loadStoredMapMarkers();
             });
+        }
+
+        function zoomMapStep(delta) {
+            if (!yMap) return;
+            yMap.setZoom(yMap.getZoom() + delta, { duration: 200 });
         }
 
         function toggleMapFullscreen() {
-            isMapFullscreen = !isMapFullscreen;
-            const btn = document.getElementById('btn-fullscreen-map');
-            if (isMapFullscreen) {
-                document.body.classList.add('fullscreen-map');
-                btn.innerText = '✕ Свернуть карту';
+            isMapFs = !isMapFs;
+            const btn = document.getElementById('btn-map-fs');
+            if (isMapFs) {
+                document.body.classList.add('fullscreen-mode');
+                btn.innerText = '✕ Свернуть';
             } else {
-                document.body.classList.remove('fullscreen-map');
-                btn.innerText = '⛶ На весь экран';
+                document.body.classList.remove('fullscreen-mode');
+                btn.innerText = '⛶ Во весь экран';
             }
-            if (myMap) {
-                setTimeout(() => { myMap.container.fitToViewport(); }, 200);
-            }
+            if (yMap) setTimeout(() => yMap.container.fitToViewport(), 250);
         }
 
-        function centerMap() {
-            if (lastLat && lastLon && myMap) {
-                myMap.setCenter([lastLat, lastLon], 16, { duration: 300 });
+        function centerMapUser() {
+            if (lastGpsLat && lastGpsLon && yMap) {
+                yMap.setCenter([lastGpsLat, lastGpsLon], 16, { duration: 300 });
             } else {
-                alert("Ожидание сигнала GPS...");
+                alert("Ожидание сигнала со спутников...");
             }
         }
 
-        function addMarker() {
-            if (lastLat && lastLon && myMap) {
-                const timeStr = new Date().toLocaleTimeString();
-                const p = new ymaps.Placemark([lastLat, lastLon], { balloonContent: 'Засечка ' + timeStr }, { preset: 'islands#orangeDotIcon' });
-                savedMarkersCollection.add(p);
-
-                // Сохраняем в память
-                let stored = JSON.parse(localStorage.getItem('leso_markers') || '[]');
-                stored.push({ lat: lastLat, lon: lastLon, time: timeStr });
-                localStorage.setItem('leso_markers', JSON.stringify(stored));
-
-                alert('Точка засечена!');
+        function dropMapMarker() {
+            if (lastGpsLat && lastGpsLon && yMap) {
+                const t = new Date().toLocaleTimeString();
+                const p = new ymaps.Placemark([lastGpsLat, lastGpsLon], { balloonContent: 'Засечка ' + t }, { preset: 'islands#orangeDotIcon' });
+                yMarksGroup.add(p);
+                let saved = JSON.parse(localStorage.getItem('leso_markers_v2') || '[]');
+                saved.push({ lat: lastGpsLat, lon: lastGpsLon, time: t });
+                localStorage.setItem('leso_markers_v2', JSON.stringify(saved));
+                alert("Точка зафиксирована на карте!");
             }
         }
 
-        function loadSavedMarkers() {
-            let stored = JSON.parse(localStorage.getItem('leso_markers') || '[]');
-            stored.forEach(m => {
+        function loadStoredMapMarkers() {
+            let saved = JSON.parse(localStorage.getItem('leso_markers_v2') || '[]');
+            saved.forEach(m => {
                 const p = new ymaps.Placemark([m.lat, m.lon], { balloonContent: 'Засечка ' + m.time }, { preset: 'islands#orangeDotIcon' });
-                savedMarkersCollection.add(p);
+                yMarksGroup.add(p);
             });
         }
 
-        function clearMarkers() {
-            if (confirm('Удалить все сохраненные засечки с карты?')) {
-                if (savedMarkersCollection) savedMarkersCollection.removeAll();
-                localStorage.removeItem('leso_markers');
-                alert('Все точки очищены.');
+        function clearAllMarkers() {
+            if (confirm("Удалить все поставленные точки?")) {
+                if (yMarksGroup) yMarksGroup.removeAll();
+                localStorage.removeItem('leso_markers_v2');
+                alert("Точки удалены.");
             }
         }
 
-        // КОМПАС: ОБРАБОТЧИК С ПРАВАМИ И КАЛИБРОВКОЙ
-        function setupCompassListener() {
-            const handleOrientation = (e) => {
-                let compassHeading = null;
+        // 8. КОМПАС И ПУЗЫРЬКОВЫЙ УРОВЕНЬ ГОРИЗОНТА
+        function buildCompassTicksSVG() {
+            const layer = document.getElementById('compass-svg-ticks-layer');
+            layer.innerHTML = '';
+            const cx = 200, cy = 200, radius = 190;
 
-                // Для iOS
-                if (e.webkitCompassHeading !== undefined) {
-                    compassHeading = e.webkitCompassHeading;
-                } 
-                // Для Android (абсолютное или обычное направление)
-                else if (e.alpha !== null) {
-                    compassHeading = e.absolute ? (360 - e.alpha) : (360 - e.alpha);
+            for (let deg = 0; deg < 360; deg += 5) {
+                const rad = (deg - 90) * (Math.PI / 180);
+                let len = 8, strokeW = 1.5, strokeColor = "rgba(255, 255, 255, 0.4)";
+
+                if (deg % 90 === 0) {
+                    len = 18; strokeW = 3.5; strokeColor = (deg === 0) ? "#DC2626" : "var(--neon-color)";
+                } else if (deg % 30 === 0) {
+                    len = 14; strokeW = 2.5; strokeColor = "rgba(255, 255, 255, 0.85)";
                 }
 
-                if (compassHeading !== null) {
-                    compassHeading = (compassHeading + 360) % 360;
-                    document.getElementById('compass-arrow-elem').style.transform = `rotate(${compassHeading}deg)`;
+                const x1 = cx + (radius - len) * Math.cos(rad);
+                const y1 = cy + (radius - len) * Math.sin(rad);
+                const x2 = cx + radius * Math.cos(rad);
+                const y2 = cy + radius * Math.sin(rad);
 
-                    const dirs = ['С', 'СВ', 'В', 'ЮВ', 'Ю', 'ЮЗ', 'З', 'СЗ'];
-                    let idx = Math.round(compassHeading / 45);
-                    document.getElementById('azimuth-text').innerText = `${Math.round(compassHeading)}° ${dirs[idx % 8]}`;
+                const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                l.setAttribute("x1", x1.toFixed(1)); l.setAttribute("y1", y1.toFixed(1));
+                l.setAttribute("x2", x2.toFixed(1)); l.setAttribute("y2", y2.toFixed(1));
+                l.setAttribute("stroke", strokeColor); l.setAttribute("stroke-width", strokeW);
+                layer.appendChild(l);
+
+                if (deg % 30 === 0 && deg % 90 !== 0) {
+                    const textRad = (deg - 90) * (Math.PI / 180);
+                    const tx = cx + 158 * Math.cos(textRad);
+                    const ty = cy + 158 * Math.sin(textRad);
+                    const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    txt.setAttribute("x", tx.toFixed(1)); txt.setAttribute("y", ty.toFixed(1));
+                    txt.setAttribute("fill", "rgba(255, 255, 255, 0.7)");
+                    txt.setAttribute("font-size", "11"); txt.setAttribute("font-weight", "800");
+                    txt.setAttribute("font-family", "monospace");
+                    txt.setAttribute("text-anchor", "middle"); txt.setAttribute("dominant-baseline", "central");
+                    txt.textContent = deg;
+                    layer.appendChild(txt);
                 }
-            };
-
-            if ('ondeviceorientationabsolute' in window) {
-                window.addEventListener('deviceorientationabsolute', handleOrientation, true);
-            } else if ('DeviceOrientationEvent' in window) {
-                window.addEventListener('deviceorientation', handleOrientation, true);
             }
         }
 
-        function requestCompassPermission() {
+        function handleOrientationSensors(e) {
+            let heading = null;
+            if (e.webkitCompassHeading !== undefined) heading = e.webkitCompassHeading;
+            else if (e.alpha !== null) heading = 360 - e.alpha;
+
+            if (heading !== null) {
+                heading = (heading + 360) % 360;
+                document.getElementById('compass-disc-svg').style.transform = `rotate(${-heading}deg)`;
+                const dirs = ['С', 'СВ', 'В', 'ЮВ', 'Ю', 'ЮЗ', 'З', 'СЗ'];
+                let idx = Math.round(heading / 45);
+                document.getElementById('compass-azimuth-label').innerText = `${Math.round(heading)}° ${dirs[idx % 8]}`;
+            }
+
+            // Пузырьковый уровень горизонта
+            if (e.gamma !== null && e.beta !== null) {
+                const bubble = document.getElementById('spirit-level-bubble');
+                const maxTilt = 18; const maxPx = 14;
+                let cGamma = Math.max(-maxTilt, Math.min(maxTilt, e.gamma));
+                let cBeta = Math.max(-maxTilt, Math.min(maxTilt, e.beta));
+                let dx = (cGamma / maxTilt) * maxPx;
+                let dy = (cBeta / maxTilt) * maxPx;
+                bubble.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`;
+                if (Math.abs(e.gamma) < 2.5 && Math.abs(e.beta) < 2.5) bubble.classList.add('perfect-level');
+                else bubble.classList.remove('perfect-level');
+            }
+        }
+
+        function requestCompassAccess() {
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                // Запрос разрешений для iPhone
-                DeviceOrientationEvent.requestPermission()
-                    .then(response => {
-                        if (response === 'granted') {
-                            setupCompassListener();
-                            document.getElementById('compass-perm-btn').innerText = '✅ Компас откалиброван';
-                        } else {
-                            alert('Доступ к компасу отклонен в настройках Safari.');
-                        }
-                    })
-                    .catch(console.error);
+                DeviceOrientationEvent.requestPermission().then(res => {
+                    if (res === 'granted') {
+                        window.addEventListener('deviceorientation', handleOrientationSensors, true);
+                        alert("Датчики откалиброваны! Покрутите телефон «восьмеркой» в воздухе.");
+                    }
+                });
             } else {
-                // Для Android
-                setupCompassListener();
-                document.getElementById('compass-perm-btn').innerText = '✅ Компас откалиброван';
+                window.addEventListener('deviceorientation', handleOrientationSensors, true);
+                alert("Датчики откалиброваны! Покрутите телефон «восьмеркой» в воздухе.");
             }
         }
 
-        // Автозапуск компаса при загрузке
-        window.addEventListener('DOMContentLoaded', () => {
-            if (typeof DeviceOrientationEvent === 'undefined' || typeof DeviceOrientationEvent.requestPermission !== 'function') {
-                setupCompassListener();
-            }
-        });
-
-        // ЗВУКОВОЙ РЕПЕЛЛЕР
-        let aCtx = null, repInterval = null;
-        function toggleRepeller() {
-            const btn = document.getElementById('repeller-btn');
-            if (repInterval) {
-                clearInterval(repInterval); repInterval = null;
+        // 9. АВТОНОМНЫЙ ЗВУКОВОЙ РЕПЕЛЛЕР
+        let aCtx = null, repellerLoop = null;
+        function toggleAudioRepeller() {
+            const btn = document.getElementById('btn-repeller-state');
+            if (repellerLoop) {
+                clearInterval(repellerLoop); repellerLoop = null;
                 if (aCtx) aCtx.close(); aCtx = null;
-                btn.innerText = '▶ Включить звуковой репеллер';
-                btn.style.borderColor = 'var(--border-dark)';
+                btn.innerText = '▶ ВКЛЮЧИТЬ СИРЕНУ-ОТПУГИВАТЕЛЬ';
+                btn.style.background = '#121A15';
                 return;
             }
             aCtx = new (window.AudioContext || window.webkitAudioContext)();
-            btn.innerText = '⏹ Выключить отпугиватель';
-            btn.style.borderColor = '#EF4444';
+            btn.innerText = '⏹ ОСТАНОВИТЬ СИРЕНУ';
+            btn.style.background = 'var(--danger-red)';
 
-            repInterval = setInterval(() => {
+            repellerLoop = setInterval(() => {
                 if (!aCtx) return;
                 let osc = aCtx.createOscillator();
                 let g = aCtx.createGain();
                 osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(900, aCtx.currentTime);
+                osc.frequency.setValueAtTime(800, aCtx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(2600, aCtx.currentTime + 0.35);
-                g.gain.setValueAtTime(0.4, aCtx.currentTime);
+                g.gain.setValueAtTime(0.5, aCtx.currentTime);
                 g.gain.exponentialRampToValueAtTime(0.01, aCtx.currentTime + 0.35);
                 osc.connect(g); g.connect(aCtx.destination);
-                osc.start(); osc.stop(aCtx.currentTime + 0.35);
+                osc.start(); osc.stop(aCtx.currentTime + 0.36);
             }, 550);
         }
 
-        // МАЯК SOS (ВСПЫШКА / ЭКРАН)
-        let flashTrack = null, sosLoop = null;
-        async function toggleTorchSos() {
-            const btn = document.getElementById('torch-btn');
-            if (sosLoop) {
-                clearInterval(sosLoop); sosLoop = null;
-                if (flashTrack) { flashTrack.stop(); flashTrack = null; }
-                document.body.style.backgroundColor = 'var(--bg-dark)';
-                btn.innerText = '🔦 Включить световой маяк SOS';
-                return;
+        // ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ
+        window.addEventListener('DOMContentLoaded', () => {
+            generateSpeedTicks();
+            buildCompassTicksSVG();
+            renderSpeedUI(0);
+            if (typeof DeviceOrientationEvent === 'undefined' || typeof DeviceOrientationEvent.requestPermission !== 'function') {
+                window.addEventListener('deviceorientation', handleOrientationSensors, true);
             }
-
-            btn.innerText = '⏹ Выключить маяк SOS';
-
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                flashTrack = stream.getVideoTracks()[0];
-                const capabilities = flashTrack.getCapabilities();
-                if (capabilities.torch) {
-                    let on = false;
-                    sosLoop = setInterval(async () => {
-                        on = !on;
-                        await flashTrack.applyConstraints({ advanced: [{ torch: on }] });
-                    }, 400);
-                    return;
-                }
-            } catch (err) {
-                console.log("Вспышка недоступна, переключаем на экран");
-            }
-
-            let st = false;
-            sosLoop = setInterval(() => {
-                st = !st;
-                document.body.style.backgroundColor = st ? '#FFFFFF' : '#070B09';
-            }, 300);
-        }
+        });
     </script>
 </body>
 </html>
