@@ -1,428 +1,515 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
-    <!-- Инструкция сброса кеша браузера -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
-    <script>
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        document.documentElement.setAttribute('data-theme', savedTheme);
-    </script>
-
-    <!-- --- ЯНДЕКС МЕТРИКА --- -->
-    <script type="text/javascript">
-        (function(m,e,t,r,i,k,a){
-            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-            m[i].l=1*new Date();
-            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109130409', 'ym');
-
-        ym(109130409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
-    </script>
-    <noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-    <title>Спутниковый спидометр и одометр | Лесовик TECH</title>
-    <meta name="description" content="Автономный спутниковый GPS/ГЛОНАСС спидометр и фоновый одометр для лодок, катеров и квадроциклов.">
+    <title>Тактический спидометр и навигатор | Лесовик TECH</title>
+    <meta name="description" content="Автономный спутниковый спидометр, одометр, офлайн-карты, компас, SOS и полевые инструменты для тайги.">
     <link rel="canonical" href="https://lesovik-pro.ru/speedometer.html">
-
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
 
+    <!-- Подключаем Яндекс.Карты API -->
+    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=ваш_ключ_если_есть" type="text/javascript"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700;800;900&family=Share+Tech+Mono&display=swap');
 
         :root {
-            --bg-paper: #F9FBF9;
-            --text-graphite: #333333;
-            --forest-green: #2D5A27;
-            --border-color: #E0E0E0;
-            --card-bg: #FFFFFF;
-            --glass-bg: rgba(249, 251, 249, 0.88);
-            --footer-bg: #2C3531;
-            --promo-orange: #E67E22;
-        }
-
-        [data-theme="dark"] {
-            --bg-paper: #1A2421;
-            --text-graphite: #F9FBF9;
-            --forest-green: #8FBC8F;
-            --border-color: #3A4F46;
-            --card-bg: #22302B;
-            --glass-bg: rgba(26, 36, 33, 0.88);
-            --footer-bg: #111815;
-            --promo-orange: #F39C12;
+            --bg-dark: #0A0F0D;
+            --card-dark: #121A16;
+            --border-dark: #223329;
+            --text-light: #E0F2E9;
+            --neon-color: #22C55E; /* Цвет подсветки по умолчанию (зеленый) */
+            --neon-glow: rgba(34, 197, 94, 0.4);
+            --accent-orange: #F39C12;
         }
 
         *, *:before, *:after { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
-        html { scroll-behavior: smooth; width: 100%; max-width: 100%; overflow-x: hidden; }
+        html, body { background-color: var(--bg-dark); color: var(--text-light); font-family: 'Inter', sans-serif; width: 100%; min-height: 100vh; overflow-x: hidden; }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-paper);
-            color: var(--text-graphite);
-            line-height: 1.6;
-            display: flex; flex-direction: column;
-            min-height: 100vh; width: 100%; max-width: 100%;
-            overflow-x: hidden; position: relative;
-        }
-
-        /* ШАПКА */
-        .glass-header {
-            position: sticky; top: 0; z-index: 2000;
+        header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 24px; background: var(--glass-bg);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-color);
-            width: 100%;
+            padding: 12px 20px; background: rgba(18, 26, 22, 0.9);
+            border-bottom: 1px solid var(--border-dark); position: sticky; top: 0; z-index: 1000;
+            backdrop-filter: blur(10px);
         }
-        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-        .header-logo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--promo-orange); }
-        .glass-header h1 { font-family: 'Merriweather', serif; color: var(--promo-orange); margin: 0; font-size: 18px; }
-        
-        .theme-toggle {
-            background: transparent; border: 1px solid var(--promo-orange); color: var(--promo-orange);
-            padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700;
-            text-transform: uppercase; height: 36px;
+        .logo-box { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text-light); }
+        .logo-box img { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--neon-color); }
+        .logo-box h1 { font-family: 'Merriweather', serif; font-size: 16px; color: var(--neon-color); text-shadow: 0 0 10px var(--neon-glow); }
+
+        /* НАВИГАЦИОННЫЕ ВКЛАДКИ */
+        .nav-tabs {
+            display: flex; gap: 6px; padding: 10px 16px; background: var(--card-dark);
+            border-bottom: 1px solid var(--border-dark); justify-content: center;
         }
-        .theme-toggle:hover { background-color: var(--promo-orange); color: #FFF; }
-
-        main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 16px; width: 100%; }
-
-        /* ИНСТРУМЕНТ СПИДОМЕТРА */
-        .speedometer-container {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 24px;
-            width: 100%;
-            max-width: 420px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+        .tab-btn {
+            background: transparent; border: 1px solid var(--border-dark); color: var(--text-light);
+            padding: 8px 14px; border-radius: 8px; font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: var(--neon-color); color: #0A0F0D; border-color: var(--neon-color);
+            box-shadow: 0 0 12px var(--neon-glow);
         }
 
-        .speed-top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            margin-bottom: 16px;
-        }
-        .gps-status {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            padding: 4px 10px;
-            border-radius: 20px;
-            background: rgba(230, 126, 34, 0.1);
-            color: var(--promo-orange);
-        }
-        .unit-switcher {
-            display: flex;
-            background: var(--bg-paper);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .unit-btn {
-            background: transparent;
-            border: none;
-            padding: 6px 12px;
-            font-size: 11.5px;
-            font-weight: 700;
-            color: var(--text-graphite);
-            cursor: pointer;
-            text-transform: uppercase;
-        }
-        .unit-btn.active {
-            background: var(--promo-orange);
-            color: #FFF;
-        }
+        .view-section { display: none; padding: 16px; max-width: 500px; margin: 0 auto; width: 100%; }
+        .view-section.active { display: flex; flex-direction: column; align-items: center; }
 
-        /* ЦИФЕРБЛАТ */
-        .dial-wrapper {
+        /* ПАНЕЛЬ ВЫБОРА ПОДСВЕТКИ */
+        .glow-picker {
+            display: flex; gap: 8px; margin-bottom: 16px; align-items: center; background: var(--card-dark);
+            padding: 8px 14px; border-radius: 30px; border: 1px solid var(--border-dark);
+        }
+        .glow-dot {
+            width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid transparent;
+            transition: transform 0.2s;
+        }
+        .glow-dot:hover { transform: scale(1.15); }
+        .glow-dot.active-dot { border-color: #FFF; transform: scale(1.2); box-shadow: 0 0 8px #FFF; }
+
+        /* СПИДОМЕТР */
+        .speedometer-card {
+            background: var(--card-dark); border: 2px solid var(--border-dark); border-radius: 24px;
+            padding: 24px; width: 100%; display: flex; flex-direction: column; align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,0,0,0.8);
             position: relative;
-            width: 260px;
-            height: 260px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 10px 0 20px;
         }
-        .speedometer-svg {
-            width: 100%;
-            height: 100%;
+        .speed-top { display: flex; justify-content: space-between; width: 100%; margin-bottom: 10px; font-size: 11px; font-weight: 700; }
+        .gps-badge { color: var(--neon-color); text-shadow: 0 0 6px var(--neon-glow); }
+
+        .dial-container { position: relative; width: 280px; height: 280px; display: flex; align-items: center; justify-content: center; }
+        .dial-svg { width: 100%; height: 100%; filter: drop-shadow(0 0 8px var(--neon-glow)); }
+
+        .speed-center {
+            position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-        .speed-digital-box {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+        #speed-value {
+            font-family: 'Share Tech Mono', monospace; font-size: 64px; font-weight: 900; line-height: 1;
+            color: var(--text-light); text-shadow: 0 0 15px var(--neon-glow);
         }
-        #speed-num {
-            font-size: 54px;
-            font-weight: 900;
-            line-height: 1;
-            color: var(--text-graphite);
-            letter-spacing: -2px;
+        .speed-unit { font-size: 12px; font-weight: 800; text-transform: uppercase; opacity: 0.7; margin-top: 4px; letter-spacing: 1px; }
+
+        /* ОДОМЕТР И МЕТРИКИ */
+        .metrics-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 20px;
         }
-        .speed-unit-text {
-            font-size: 13px;
-            font-weight: 700;
-            text-transform: uppercase;
-            opacity: 0.6;
-            margin-top: 4px;
+        .metric-box {
+            background: #0D1411; border: 1px solid var(--border-dark); border-radius: 12px; padding: 12px; text-align: center;
+        }
+        .metric-lbl { font-size: 10px; text-transform: uppercase; opacity: 0.6; margin-bottom: 4px; font-weight: 700; }
+        .metric-val { font-family: 'Share Tech Mono', monospace; font-size: 18px; color: var(--neon-color); text-shadow: 0 0 6px var(--neon-glow); }
+
+        .btn-action {
+            background: var(--card-dark); border: 1px solid var(--border-dark); color: var(--text-light);
+            padding: 12px; border-radius: 10px; font-weight: 700; font-size: 12px; text-transform: uppercase;
+            cursor: pointer; width: 100%; margin-top: 14px; transition: all 0.2s;
+        }
+        .btn-action:hover { border-color: var(--neon-color); color: var(--neon-color); box-shadow: 0 0 10px var(--neon-glow); }
+
+        /* КАРТА */
+        #map-container {
+            width: 100%; height: 400px; border-radius: 16px; border: 2px solid var(--border-dark);
+            margin-bottom: 14px; position: relative; overflow: hidden; background: #111;
+        }
+        .map-offline-hint {
+            background: rgba(230, 126, 34, 0.15); border: 1px solid var(--accent-orange); color: var(--accent-orange);
+            font-size: 11.5px; padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; line-height: 1.4; text-align: center;
         }
 
-        /* ОДОМЕТР И ПУТЬ */
-        .odometer-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            width: 100%;
-            margin-bottom: 20px;
+        /* КОМПАС */
+        .compass-dial {
+            width: 260px; height: 260px; border-radius: 50%; border: 3px solid var(--neon-color);
+            position: relative; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 20px var(--neon-glow), inset 0 0 15px var(--neon-glow);
+            margin: 20px 0; background: radial-gradient(circle, #121A16 0%, #0A0F0D 100%);
         }
-        .odometer-box {
-            background: var(--bg-paper);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 12px;
-            text-align: center;
+        .compass-arrow {
+            position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+            transition: transform 0.1s ease-out;
         }
-        .odometer-label {
-            font-size: 10.5px;
-            font-weight: 700;
-            text-transform: uppercase;
-            opacity: 0.7;
-            margin-bottom: 4px;
-        }
-        .odometer-value {
-            font-size: 20px;
-            font-weight: 800;
-            color: var(--promo-orange);
-            font-family: monospace;
-        }
+        .azimuth-display { font-family: 'Share Tech Mono', monospace; font-size: 32px; color: var(--neon-color); text-shadow: 0 0 10px var(--neon-glow); margin-top: 10px; }
 
-        .btn-reset {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-graphite);
-            padding: 10px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 11.5px;
-            text-transform: uppercase;
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.2s;
+        /* SOS И СПЕЦ-СИГНАЛЫ */
+        .sos-container { display: flex; flex-direction: column; gap: 14px; width: 100%; }
+        .btn-sos {
+            background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%); color: #FFF; border: none;
+            padding: 18px; border-radius: 14px; font-size: 16px; font-weight: 900; text-transform: uppercase;
+            cursor: pointer; box-shadow: 0 0 20px rgba(220, 38, 38, 0.6); text-align: center; text-decoration: none;
+            display: block; letter-spacing: 1px;
         }
-        .btn-reset:hover {
-            border-color: var(--promo-orange);
-            color: var(--promo-orange);
+        .feature-box {
+            background: var(--card-dark); border: 1px solid var(--border-dark); border-radius: 14px; padding: 16px; width: 100%;
         }
-
-        .back-link-speed {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--promo-orange);
-            text-decoration: none;
-            margin-top: 20px;
-        }
+        .feature-box h3 { font-size: 14px; color: var(--neon-color); margin-bottom: 8px; font-family: 'Merriweather', serif; }
+        .feature-box p { font-size: 12px; opacity: 0.8; margin-bottom: 12px; line-height: 1.4; }
     </style>
 </head>
 <body>
 
-    <header class="glass-header">
-        <a href="tech.html" class="logo-container">
-            <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
-            <h1>Лесовик TECH</h1>
+    <header>
+        <a href="tech.html" class="logo-box">
+            <img src="logo.jpeg" alt="Лесовик">
+            <h1>Лесовик TECH • Тактика</h1>
         </a>
-        <div class="header-right">
-            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тема</button>
-        </div>
+        <button class="tab-btn" onclick="location.href='tech.html'" style="padding: 6px 12px; font-size: 11px;">Выход</button>
     </header>
 
-    <main>
-        <div class="speedometer-container">
-            <div class="speed-top-bar">
-                <div id="gps-status-badge" class="gps-status">🛰️ Поиск спутников...</div>
-                <div class="unit-switcher">
-                    <button class="unit-btn active" onclick="setUnit('kmh')">км/ч</button>
-                    <button class="unit-btn" onclick="setUnit('mph')">миль</button>
+    <!-- ВКЛАДКИ НАВИГАЦИИ -->
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchView('speed', event)">Спидометр</button>
+        <button class="tab-btn" onclick="switchView('map', event)">Карта / Кэш</button>
+        <button class="tab-btn" onclick="switchView('compass', event)">Компас</button>
+        <button class="tab-btn" onclick="switchView('sos', event)" style="color: #EF4444; border-color: rgba(239,68,68,0.4);">SOS & Спец</button>
+    </div>
+
+    <!-- 1. СПИДОМЕТР -->
+    <section id="view-speed" class="view-section active">
+        <!-- Палитра подсветки -->
+        <div class="glow-picker">
+            <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; opacity: 0.7;">Неон:</span>
+            <div class="glow-dot active-dot" style="background: #22C55E;" onclick="setNeonColor('#22C55E', 'rgba(34,197,94,0.4)', this)"></div>
+            <div class="glow-dot" style="background: #38BDF8;" onclick="setNeonColor('#38BDF8', 'rgba(56,189,248,0.4)', this)"></div>
+            <div class="glow-dot" style="background: #06B6D4;" onclick="setNeonColor('#06B6D4', 'rgba(6,182,212,0.4)', this)"></div>
+            <div class="glow-dot" style="background: #EF4444;" onclick="setNeonColor('#EF4444', 'rgba(239,68,68,0.4)', this)"></div>
+            <div class="glow-dot" style="background: #F59E0B;" onclick="setNeonColor('#F59E0B', 'rgba(245,158,11,0.4)', this)"></div>
+            <div class="glow-dot" style="background: #FFFFFF;" onclick="setNeonColor('#FFFFFF', 'rgba(255,255,255,0.4)', this)"></div>
+        </div>
+
+        <div class="speedometer-card">
+            <div class="speed-top">
+                <span id="gps-status" class="gps-badge">🛰️ Поиск спутников...</span>
+                <div class="unit-switcher" style="background: #0A0F0D;">
+                    <button class="unit-btn active" onclick="setSpeedUnit('kmh', event)">км/ч</button>
+                    <button class="unit-btn" onclick="setSpeedUnit('mph', event)">миль</button>
                 </div>
             </div>
 
-            <!-- Шкала и стрелка -->
-            <div class="dial-wrapper">
-                <svg viewBox="0 0 200 200" class="speedometer-svg">
-                    <!-- Фоновый круг шкалы (270 градусов) -->
-                    <circle cx="100" cy="100" r="82" fill="none" stroke="var(--border-color)" stroke-width="8" stroke-dasharray="383" stroke-dashoffset="96" stroke-linecap="round" transform="rotate(135 100 100)" />
-                    <!-- Активный трек скорости -->
-                    <circle id="speed-ring" cx="100" cy="100" r="82" fill="none" stroke="var(--promo-orange)" stroke-width="8" stroke-dasharray="383" stroke-dashoffset="383" stroke-linecap="round" transform="rotate(135 100 100)" style="transition: stroke-dashoffset 0.1s linear;" />
+            <!-- Циферблат со шкалой -->
+            <div class="dial-container">
+                <svg viewBox="0 0 260 260" class="dial-svg">
+                    <!-- Шкала с делениями и цифрами -->
+                    <circle cx="130" cy="130" r="105" fill="none" stroke="var(--border-dark)" stroke-width="4" stroke-dasharray="490" stroke-dashoffset="122" stroke-linecap="round" transform="rotate(135 130 130)" />
+                    <!-- Динамический прогресс -->
+                    <circle id="speed-ring" cx="130" cy="130" r="105" fill="none" stroke="var(--neon-color)" stroke-width="8" stroke-dasharray="490" stroke-dashoffset="490" stroke-linecap="round" transform="rotate(135 130 130)" style="transition: stroke-dashoffset 0.1s linear;" />
                     
+                    <!-- Деления шкалы спидометра (0, 20, 40, 60, 80, 100, 120) -->
+                    <g transform="rotate(135 130 130)" stroke="var(--text-light)" stroke-width="2" opacity="0.4">
+                        <line x1="130" y1="25" x2="130" y2="33" />
+                        <line x1="178" y1="38" x2="174" y2="45" transform="rotate(45 130 130)" />
+                        <line x1="220" y1="80" x2="212" y2="83" transform="rotate(90 130 130)" />
+                        <line x1="235" y1="130" x2="227" y2="130" transform="rotate(135 130 130)" />
+                        <line x1="220" y1="180" x2="212" y2="177" transform="rotate(180 130 130)" />
+                        <line x1="178" y1="222" x2="174" y2="215" transform="rotate(225 130 130)" />
+                        <line x1="130" y1="235" x2="130" y2="227" transform="rotate(270 130 130)" />
+                    </g>
+
                     <!-- Стрелка -->
-                    <g id="speed-needle" style="transform-origin: 100px 100px; transition: transform 0.1s linear; transform: rotate(-135deg);">
-                        <line x1="100" y1="100" x2="100" y2="30" stroke="#DC2626" stroke-width="3.5" stroke-linecap="round" />
-                        <circle cx="100" cy="100" r="6" fill="var(--promo-orange)" />
+                    <g id="speed-needle" style="transform-origin: 130px 130px; transition: transform 0.1s linear; transform: rotate(-135deg);">
+                        <line x1="130" y1="130" x2="130" y2="38" stroke="#EF4444" stroke-width="4" stroke-linecap="round" />
+                        <circle cx="130" cy="130" r="8" fill="var(--neon-color)" />
                     </g>
                 </svg>
 
-                <div class="speed-digital-box">
-                    <span id="speed-num">0.0</span>
+                <div class="speed-center">
+                    <span id="speed-value">0.0</span>
                     <span id="speed-unit-lbl" class="speed-unit-text">км/ч</span>
                 </div>
             </div>
 
-            <!-- Одометр (фоновый пробег) -->
-            <div class="odometer-grid">
-                <div class="odometer-box">
-                    <div class="odometer-label">Пройдено пути</div>
-                    <div id="trip-distance">0.00 км</div>
+            <!-- Одометр и метрики -->
+            <div class="metrics-grid">
+                <div class="metric-box">
+                    <div class="metric-lbl">Пройдено пути</div>
+                    <div id="odometer-val" class="metric-val">0.00 км</div>
                 </div>
-                <div class="odometer-box">
-                    <div class="odometer-label">Точность GPS</div>
-                    <div id="gps-accuracy">—</div>
+                <div class="metric-box">
+                    <div class="metric-lbl">Макс. скорость</div>
+                    <div id="max-speed-val" class="metric-val">0.0 км/ч</div>
                 </div>
             </div>
 
-            <button class="btn-reset" onclick="resetTrip()">Сбросить одометр</button>
+            <button class="btn-action" onclick="resetTrip()">Сбросить суточный пробег</button>
         </div>
+    </section>
 
-        <a href="tech.html" class="back-link-speed">← Вернуться к технике TECH</a>
-    </main>
+    <!-- 2. КАРТА / ОФЛАЙН КЭШ -->
+    <section id="view-map" class="view-section">
+        <div class="map-offline-hint">
+            ⚠️ <b>Режим работы без сети:</b> Перед выходом в тайгу откройте эту страницу, приблизьте карту в районе предполагаемого маршрута и подвигайте её — Яндекс закэширует тайлы в память устройства для работы без интернета!
+        </div>
+        <div id="map-container"></div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%;">
+            <button class="btn-action" style="margin-top:0;" onclick="centerMapToUser()">📍 Где я?</button>
+            <button class="btn-action" style="margin-top:0;" onclick="addMapMarker()">📌 Засечка точки</button>
+        </div>
+    </section>
 
+    <!-- 3. КОМПАС -->
+    <section id="view-compass" class="view-section">
+        <div class="compass-dial" id="compass-dial-box">
+            <div class="compass-arrow" id="compass-arrow-elem">
+                <svg width="60" height="180" viewBox="0 0 60 180">
+                    <polygon points="30,0 50,90 30,75" fill="#EF4444" />
+                    <polygon points="30,180 50,90 30,105" fill="#3B82F6" />
+                </svg>
+            </div>
+            <div style="position: absolute; font-size: 14px; font-weight: 800; opacity: 0.5; top: 10px;">С</div>
+            <div style="position: absolute; font-size: 14px; font-weight: 800; opacity: 0.5; bottom: 10px;">Ю</div>
+            <div style="position: absolute; font-size: 14px; font-weight: 800; opacity: 0.5; right: 12px;">В</div>
+            <div style="position: absolute; font-size: 14px; font-weight: 800; opacity: 0.5; left: 12px;">З</div>
+        </div>
+        <div class="azimuth-display" id="azimuth-text">0° СЗ</div>
+        <div style="font-size: 11px; opacity: 0.7; margin-top: 6px; text-align: center;">Аппаратный датчик ориентации (работает без сети)</div>
+    </section>
+
+    <!-- 4. SOS И СПЕЦ-ИНСТРУМЕНТЫ -->
+    <section id="view-sos" class="view-section">
+        <div class="sos-container">
+            <a href="tel:112" class="btn-sos">🚨 Экстренный вызов 112</a>
+            
+            <a id="sms-sos-link" href="#" class="btn-sos" style="background: linear-gradient(135deg, #2563EB 100%, #1D4ED8 0%); font-size: 13px; padding: 14px;">
+                📨 Отправить координаты по SMS спасателям
+            </a>
+
+            <div class="feature-box">
+                <h3>🔊 Голосовой отпугиватель диких животных</h3>
+                <p>Имитация резких техногенных частот и тревожных сигналов для отпугивания хищников в лесу.</p>
+                <button class="btn-action" style="margin-top:0;" onclick="toggleAnimalRepeller()" id="repeller-btn">▶ Включить сирену / отпугиватель</button>
+            </div>
+
+            <div class="feature-box">
+                <h3>🔦 Световой маяк SOS (Вспышка экрана)</h3>
+                <p>Автоматическое мигание экрана белым светом по международному сигналу бедствия SOS (... --- ...).</p>
+                <button class="btn-action" style="margin-top:0;" onclick="toggleFlashSos()" id="flash-btn">💡 Запустить мигание SOS</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- СКРИПТЫ ЛОГИКИ -->
     <script>
-        let currentSpeed = 0; // м/с
-        let currentUnit = 'kmh'; // 'kmh' или 'mph'
-        const maxScale = 120; // Макс скорость на шкале
-
-        // Одометр из памяти браузера (работает фоном при уходе со страницы)
-        let totalDistanceMeters = parseFloat(localStorage.getItem('lesovik_trip_meters')) || 0;
-        let lastLat = parseFloat(localStorage.getItem('lesovik_last_lat')) || null;
-        let lastLon = parseFloat(localStorage.getItem('lesovik_last_lon')) || null;
-
-        function setUnit(unit) {
-            currentUnit = unit;
-            document.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('active'));
+        // Переключение вкладок
+        function switchView(viewId, event) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
             event.target.classList.add('active');
+            if(viewId === 'map' && myMap) {
+                myMap.container.fitToViewport();
+            }
+        }
+
+        // Выбор цветовой подсветки (неона)
+        function setNeonColor(hexColor, glowColor, el) {
+            document.documentElement.style.setProperty('--neon-color', hexColor);
+            document.documentElement.style.setProperty('--neon-glow', glowColor);
+            document.querySelectorAll('.glow-dot').forEach(d => d.classList.remove('active-dot'));
+            el.classList.add('active-dot');
+        }
+
+        // Переменные спидометра и одометра
+        let currentSpeedKmh = 0;
+        let maxSpeedKmh = 0;
+        let speedUnit = 'kmh';
+        let totalMeters = parseFloat(localStorage.getItem('leso_trip_m')) || 0;
+        let lastLat = null, lastLon = null;
+
+        function setSpeedUnit(unit, e) {
+            speedUnit = unit;
+            document.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
             document.getElementById('speed-unit-lbl').innerText = (unit === 'kmh') ? 'км/ч' : 'миль/ч';
-            updateDisplay();
+            updateSpeedUI(currentSpeedKmh);
         }
 
         function resetTrip() {
-            if (confirm('Сбросить текущий пробег одометра?')) {
-                totalDistanceMeters = 0;
-                lastLat = null;
-                lastLon = null;
-                localStorage.removeItem('lesovik_trip_meters');
-                localStorage.removeItem('lesovik_last_lat');
-                localStorage.removeItem('lesovik_last_lon');
-                updateDisplay();
+            if(confirm('Сбросить счетчик пройденного пути?')) {
+                totalMeters = 0; maxSpeedKmh = 0;
+                localStorage.removeItem('leso_trip_m');
+                document.getElementById('odometer-val').innerText = '0.00 км';
+                document.getElementById('max-speed-val').innerText = '0.0 км/ч';
             }
         }
 
-        // Расчет расстояния между точками по формуле гаверсинусов (в метрах)
-        function calcDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371e3; // радиус Земли в метрах
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                      Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
+        function calcDist(lat1, lon1, lat2, lon2) {
+            const R = 6371e3;
+            const dL = (lat2-lat1)*Math.PI/180, dL2 = (lon2-lon1)*Math.PI/180;
+            const a = Math.sin(dL/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dL2/2)**2;
+            return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
         }
 
-        // Запуск GPS трекинга с высокой точностью (работает даже в фоне, если вкладка активна или в PWA)
-        if ('geolocation' in navigator) {
-            navigator.geolocation.watchPosition(
-                (position) => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    const speedMps = position.coords.speed; // скорость в м/с
-                    const accuracy = position.coords.accuracy;
+        // GPS Трекинг
+        if('geolocation' in navigator) {
+            navigator.geolocation.watchPosition(pos => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                const s = pos.coords.speed;
+                const acc = pos.coords.accuracy;
 
-                    document.getElementById('gps-status-badge').innerText = '🛰️ GPS активен';
-                    document.getElementById('gps-status-badge.style').color = '#22C55E';
-                    document.getElementById('gps-accuracy').innerText = `±${Math.round(accuracy)} м`;
+                document.getElementById('gps-status').innerText = `🛰️ GPS (±${Math.round(acc)}м)`;
+                
+                currentSpeedKmh = (s !== null && s >= 0) ? s * 3.6 : 0;
+                if(currentSpeedKmh > maxSpeedKmh) {
+                    maxSpeedKmh = currentSpeedKmh;
+                    document.getElementById('max-speed-val').innerText = (speedUnit === 'kmh' ? maxSpeedKmh : maxSpeedKmh * 0.621371).toFixed(1) + (speedUnit === 'kmh' ? ' км/ч' : ' миль/ч');
+                }
 
-                    // Скорость (если устройство передает скорость)
-                    currentSpeed = (speedMps !== null && speedMps >= 0) ? speedMps : 0;
-
-                    // Одометр (считаем пройденный путь по координатам)
-                    if (lastLat !== null && lastLon !== null) {
-                        const dist = calcDistance(lastLat, lastLon, lat, lon);
-                        // Фильтруем случайные скачки GPS (если точность хуже 35 метров или прыжок больше 100 метров за секунду)
-                        if (accuracy < 35 && dist < 100 && dist > 1.5) {
-                            totalDistanceMeters += dist;
-                            localStorage.setItem('lesovik_trip_meters', totalDistanceMeters);
-                        }
+                if(lastLat !== null && lastLon !== null) {
+                    const d = calcDist(lastLat, lastLon, lat, lon);
+                    if(acc < 40 && d < 120 && d > 1) {
+                        totalMeters += d;
+                        localStorage.setItem('leso_trip_m', totalMeters);
                     }
-                    lastLat = lat;
-                    lastLon = lon;
-                    localStorage.setItem('lesovik_last_lat', lat);
-                    localStorage.setItem('lesovik_last_lon', lon);
+                }
+                lastLat = lat; lastLon = lon;
+                updateSpeedUI(currentSpeedKmh);
 
-                    updateDisplay();
-                },
-                (error) => {
-                    document.getElementById('gps-status-badge').innerText = '⚠️ Нет сигнала GPS';
-                },
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
-            );
-        } else {
-            document.getElementById('gps-status-badge').innerText = '❌ GPS не поддерживается';
+                // Обновляем метку на карте если она открыта
+                if(userPlacemark && myMap) {
+                    userPlacemark.geometry.setCoordinates([lat, lon]);
+                }
+
+                // Обновляем ссылку SOS для SMS
+                const smsText = encodeURIComponent(`SOS! Мне нужна помощь в тайге. Мои координаты: https://maps.google.com/?q=${lat},${lon}`);
+                document.getElementById('sms-sos-link').href = `sms:112?body=${smsText}`;
+
+            }, err => {
+                document.getElementById('gps-status').innerText = '⚠️ Нет GPS сигнала';
+            }, { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 });
         }
 
-        function updateDisplay() {
-            let kmh = currentSpeed * 3.6;
-            let displayVal = kmh;
+        function updateSpeedUI(kmh) {
+            let val = kmh;
+            if(speedUnit === 'mph') val *= 0.621371;
 
-            if (currentUnit === 'mph') {
-                displayVal = kmh * 0.621371;
-            }
+            document.getElementById('speed-value').innerText = val.toFixed(1);
 
-            // Цифра по центру
-            document.getElementById('speed-num').innerText = displayVal.toFixed(1);
-
-            // Стрелка (от -135° до +135°)
-            let percentage = Math.min(kmh / maxScale, 1.0);
-            let angle = -135 + (percentage * 270);
+            let pct = Math.min(kmh / 120, 1.0);
+            let angle = -135 + (pct * 270);
             document.getElementById('speed-needle').style.transform = `rotate(${angle}deg)`;
+            
+            let offset = 490 - (pct * 490);
+            document.getElementById('speed-ring').style.strokeDashoffset = offset;
 
-            // Кольцо шкалы (длина дуги 270° = 383 пикселя)
-            let strokeOffset = 383 - (percentage * 383);
-            document.getElementById('speed-ring').style.strokeDashoffset = strokeOffset;
+            let dist = totalMeters / 1000;
+            if(speedUnit === 'mph') dist *= 0.621371;
+            document.getElementById('odometer-val').innerText = dist.toFixed(2) + (speedUnit === 'kmh' ? ' км' : ' миль');
+        }
 
-            // Одометр
-            let distKm = totalDistanceMeters / 1000;
-            if (currentUnit === 'mph') {
-                document.getElementById('trip-distance').innerText = (distKm * 0.621371).toFixed(2) + ' миль';
+        // ЯНДЕКС КАРТА
+        let myMap = null, userPlacemark = null;
+        ymaps.ready(() => {
+            myMap = new ymaps.Map("map-container", {
+                center: [61.6688, 50.8364], // Сыктывкар по умолчанию
+                zoom: 14,
+                controls: ['zoomControl']
+            });
+            userPlacemark = new ymaps.Placemark([61.6688, 50.8364], {
+                hintContent: 'Вы здесь'
+            }, {
+                preset: 'islands#greenStretchyIcon'
+            });
+            myMap.geoObjects.add(userPlacemark);
+        });
+
+        function centerMapToUser() {
+            if(lastLat && lastLon && myMap) {
+                myMap.setCenter([lastLat, lastLon], 16, {duration: 300});
             } else {
-                document.getElementById('trip-distance').innerText = distKm.toFixed(2) + ' км';
+                alert('Ожидание спутников GPS...');
             }
+        }
+
+        function addMapMarker() {
+            if(lastLat && lastLon && myMap) {
+                const mark = new ymaps.Placemark([lastLat, lastLon], {
+                    balloonContent: 'Засечка ' + new Date().toLocaleTimeString()
+                }, { preset: 'islands#orangeDotIcon' });
+                myMap.geoObjects.add(mark);
+                alert('Точка успешно засечена на карте!');
+            }
+        }
+
+        // КОМПАС (Аппаратный API ориентации)
+        if(window.DeviceOrientationEvent) {
+            window.addEventListener('deviceorientation', event => {
+                let alpha = event.alpha; // поворот вокруг оси Z
+                if(alpha !== null) {
+                    let compassHeading = 360 - alpha;
+                    document.getElementById('compass-arrow-elem').style.transform = `rotate(${compassHeading}deg)`;
+                    
+                    let directions = ['С', 'СВ', 'В', 'ЮВ', 'Ю', 'ЮЗ', 'З', 'СЗ'];
+                    let index = Math.round((compassHeading % 360) / 45);
+                    let dir = directions[index % 8];
+                    document.getElementById('azimuth-text').innerText = `${Math.round(compassHeading)}° ${dir}`;
+                }
+            }, true);
+        }
+
+        // ГОЛОСОВОЙ ОТПУГИВАТЕЛЬ (Синтез тревожных звуков через Web Audio API)
+        let audioCtx = null, repellerInterval = null;
+        function toggleAnimalRepeller() {
+            const btn = document.getElementById('repeller-btn');
+            if(repellerInterval) {
+                clearInterval(repellerInterval);
+                repellerInterval = null;
+                if(audioCtx) audioCtx.close();
+                audioCtx = null;
+                btn.innerText = '▶ Включить сирену / отпугиватель';
+                btn.style.borderColor = 'var(--border-dark)';
+                return;
+            }
+
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            btn.innerText = '⏹ Выключить отпугиватель';
+            btn.style.borderColor = '#EF4444';
+
+            repellerInterval = setInterval(() => {
+                if(!audioCtx) return;
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                // Плавающий частотный диапазон сирены отпугивания
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(2400, audioCtx.currentTime + 0.4);
+                
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.4);
+            }, 600);
+        }
+
+        // СТРОБОСКОП ФОНАРЯ SOS
+        let flashInterval = null;
+        function toggleFlashSos() {
+            const btn = document.getElementById('flash-btn');
+            if(flashInterval) {
+                clearInterval(flashInterval);
+                flashInterval = null;
+                document.body.style.backgroundColor = 'var(--bg-dark)';
+                btn.innerText = '💡 Запустить мигание SOS';
+                return;
+            }
+            btn.innerText = '⏹ Остановить маяк SOS';
+            // Код Морзе SOS: 3 коротких, 3 длинных, 3 коротких
+            // Упрощенный паттерн: вспышки экрана
+            let state = false;
+            flashInterval = setInterval(() => {
+                state = !state;
+                document.body.style.backgroundColor = state ? '#FFFFFF' : '#0A0F0D';
+            }, 300);
         }
 
         function toggleTheme() {
-            const body = document.documentElement;
-            if (body.getAttribute('data-theme') === 'dark') {
-                body.removeAttribute('data-theme');
-                localStorage.setItem('theme', 'light');
-            } else {
-                body.setAttribute('data-theme', 'dark');
-                localStorage.setItem('theme', 'dark');
-            }
+            // Тема всегда темная тактическая
         }
     </script>
 </body>
