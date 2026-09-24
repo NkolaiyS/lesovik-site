@@ -26,12 +26,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-    <title>Тактический спидометр и приборная панель | Лесовик TECH</title>
-    <meta name="description" content="Автономная бортовая консоль для лодок, катеров и вездеходов: спидометр с фильтром Калмана, одометр, стрелочный указатель топлива, компас и спутниковая офлайн-карта.">
+    <title>Тактический спидометр и бортовой навигатор | Лесовик TECH</title>
+    <meta name="description" content="Автономная бортовая консоль: спутниковый спидометр с фильтром Калмана, расчет топлива, кэшируемая погода, компас с уровнем и офлайн-карта.">
     <link rel="canonical" href="https://lesovik-pro.ru/speedometer.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
 
-    <!-- РСЯ -->
+    <!-- РСЯ СИСТЕМНЫЕ БЛОКИ -->
     <script>window.yaContextCb=window.yaContextCb||[]</script>
     <script src="https://yandex.ru/ads/system/context.js" async></script>
     <script>
@@ -78,7 +78,7 @@
             --promo-orange: #E67E22;
             --danger-red: #DC2626;
 
-            /* ЛОКАЛЬНАЯ ПОДСВЕТКА ТОЛЬКО ДЛЯ ПРИБОРОВ */
+            /* Локальная подсветка только для приборов */
             --gauge-neon: #2D5A27;
             --gauge-glow: rgba(45, 90, 39, 0.35);
         }
@@ -158,7 +158,7 @@
         }
         .btn-nav-strip:hover { border-color: var(--promo-orange); color: var(--promo-orange); }
 
-        /* ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ РАЗДЕЛОВ */
+        /* НАВИГАЦИОННЫЕ ВКЛАДКИ ДЛЯ СМАРТФОНОВ */
         .section-tabs-bar {
             display: flex; overflow-x: auto; white-space: nowrap; scrollbar-width: none;
             padding: 8px 12px; background: var(--card-bg); border-bottom: 1px solid var(--border-color);
@@ -175,37 +175,56 @@
             background: var(--promo-orange); color: #FFF; border-color: var(--promo-orange);
         }
 
-        /* ОСНОВНОЙ КОКПИТ: АДАПТИВНОСТЬ ПОД СМАРТФОН / ПЛАНШЕТ / ДЕСКТОП */
+        /* ОСНОВНОЙ BENTO-КОКПИТ */
         main { flex: 1; width: 100%; }
         .cockpit-container {
             max-width: 1560px; margin: 16px auto 30px; padding: 0 14px; width: 100%;
         }
 
-        /* СМАРТФОН: Секции по отдельности */
-        @media (max-width: 991px) {
-            .view-section { display: none; width: 100%; flex-direction: column; align-items: center; }
-            .view-section.active { display: flex; }
+        .cockpit-bento-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            width: 100%;
         }
 
-        /* ПЛАНШЕТ И ДЕСКТОП: ВСЕ ПРИБОРЫ НА ОДНОМ ЭКРАНЕ (КОКПИТ РУБКИ) */
-        @media (min-width: 992px) {
-            .section-tabs-bar { display: none; } /* На планшете и ПК все видно сразу */
-            .cockpit-grid {
-                display: grid;
-                grid-template-columns: 360px 1fr 400px;
-                gap: 16px;
-                align-items: start;
-                width: 100%;
-            }
-            .view-section { display: flex !important; width: 100%; }
-            #sec-sos { grid-column: span 3; }
-        }
-
-        /* КАРТОЧКИ ПРИБОРОВ */
         .bento-card {
             background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px;
-            padding: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); width: 100%; display: flex; flex-direction: column; align-items: center;
+            padding: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); width: 100%; display: flex; flex-direction: column;
+            justify-content: space-between;
         }
+
+        /* Верхний ряд: 3 равных колонки */
+        .card-computer { grid-column: span 1; }
+        .card-speed { grid-column: span 1; align-items: center; }
+        .card-weather { grid-column: span 1; }
+
+        /* Нижний ряд: 2 широких равных блока под верхними */
+        .card-compass-bento { grid-column: span 1; align-items: center; }
+        .card-map-bento { grid-column: span 2; }
+
+        .card-sos-full { grid-column: 1 / -1; }
+
+        @media (max-width: 1100px) and (min-width: 901px) {
+            .cockpit-bento-grid { grid-template-columns: 1fr 1fr; }
+            .card-computer { grid-column: span 1; }
+            .card-speed { grid-column: span 1; }
+            .card-weather { grid-column: span 2; }
+            .card-compass-bento { grid-column: span 1; }
+            .card-map-bento { grid-column: span 1; }
+        }
+
+        @media (max-width: 900px) {
+            .section-tabs-bar { display: flex; }
+            .cockpit-bento-grid { display: flex; flex-direction: column; }
+            .view-section { display: none; width: 100%; }
+            .view-section.active { display: flex; }
+        }
+        @media (min-width: 901px) {
+            .section-tabs-bar { display: none; }
+            .view-section { display: flex !important; }
+        }
+
         .card-header-row { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 8px; }
         .gps-badge { font-size: 11px; font-weight: 800; color: var(--gauge-neon); font-family: monospace; }
         
@@ -213,35 +232,35 @@
         .unit-btn { background: transparent; border: none; padding: 4px 8px; font-size: 11px; font-weight: 800; color: var(--text-graphite); cursor: pointer; text-transform: uppercase; }
         .unit-btn.active { background: var(--gauge-neon); color: #FFF; }
 
-        /* ЦИФЕРБЛАТ СПИДОМЕТРА (МЕНЯЕТ ЦВЕТ ТОЛЬКО ПРИБОР) */
-        .dial-box { position: relative; width: 290px; height: 290px; display: flex; align-items: center; justify-content: center; margin: 4px 0; }
+        /* ЦИФЕРБЛАТ СПИДОМЕТРА */
+        .dial-box { position: relative; width: 280px; height: 280px; display: flex; align-items: center; justify-content: center; margin: 4px auto; }
         .dial-svg { width: 100%; height: 100%; filter: drop-shadow(0 0 8px var(--gauge-glow)); }
         
         .dial-center-text { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
-        #speed-num-val { font-family: 'Courier New', monospace; font-size: 68px; font-weight: 900; line-height: 0.85; color: var(--text-graphite); letter-spacing: -3px; }
+        #speed-num-val { font-family: 'Courier New', monospace; font-size: 64px; font-weight: 900; line-height: 0.85; color: var(--text-graphite); letter-spacing: -3px; }
         .speed-unit-lbl { font-size: 12px; font-weight: 800; text-transform: uppercase; opacity: 0.7; margin-top: 4px; }
 
-        .metrics-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; margin-top: 14px; }
-        .metric-cell { background: var(--card-sub); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 4px; text-align: center; }
+        .metrics-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: 100%; margin-top: 10px; }
+        .metric-cell { background: var(--card-sub); border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 4px; text-align: center; }
         .metric-lbl { font-size: 9.5px; text-transform: uppercase; opacity: 0.75; font-weight: 800; margin-bottom: 2px; }
         .metric-val { font-family: monospace; font-size: 16px; font-weight: 900; color: var(--gauge-neon); transition: color 0.3s; }
 
         .btn-action-primary {
             background-color: var(--promo-orange); color: #FFF; border: none; padding: 12px;
             border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 11.5px; text-transform: uppercase;
-            width: 100%; text-align: center; margin-top: 12px; transition: all 0.2s;
+            width: 100%; text-align: center; margin-top: 10px; transition: all 0.2s;
         }
         .btn-action-primary:hover { opacity: 0.9; }
 
-        /* БОРТОВОЙ КОМПЬЮТЕР + СТРЕЛОЧНЫЙ ДАТЧИК ТОПЛИВА */
-        .comp-header { font-family: 'Merriweather', serif; color: var(--promo-orange); font-size: 15px; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; width: 100%; }
+        /* БОРТОВОЙ КОМПЬЮТЕР И ДАТЧИК ТОПЛИВА */
+        .comp-header { font-family: 'Merriweather', serif; color: var(--promo-orange); font-size: 15px; margin-bottom: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; width: 100%; }
         
         .fuel-gauge-container {
-            position: relative; width: 180px; height: 110px; display: flex; justify-content: center; align-items: flex-end; margin-bottom: 10px;
+            position: relative; width: 220px; height: 120px; display: flex; justify-content: center; align-items: flex-end; margin: 4px auto 8px;
         }
         .fuel-svg { width: 100%; height: 100%; filter: drop-shadow(0 0 6px var(--gauge-glow)); }
         .fuel-center-display {
-            position: absolute; bottom: 8px; display: flex; flex-direction: column; align-items: center; font-family: monospace;
+            position: absolute; bottom: 4px; display: flex; flex-direction: column; align-items: center; font-family: monospace;
         }
 
         .comp-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-bottom: 8px; }
@@ -249,18 +268,32 @@
         .comp-input-group label { font-size: 10px; font-weight: 800; text-transform: uppercase; opacity: 0.8; }
         .comp-input-group input { width: 100%; background: var(--card-sub); border: 1px solid var(--border-color); border-radius: 6px; padding: 7px; color: var(--text-graphite); font-family: monospace; font-size: 13px; font-weight: 700; }
 
-        /* СЕТКА БОРТОВОГО КОМПА НА 4 ПОЛНОЦЕННЫЕ ЯЧЕЙКИ (БЕЗ ПУСТОТ) */
         .comp-telemetry-grid {
             display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: var(--card-sub);
-            padding: 10px; border-radius: 10px; border: 1px solid var(--border-color); width: 100%; margin-top: 10px;
+            padding: 10px; border-radius: 10px; border: 1px solid var(--border-color); width: 100%; margin-top: 8px;
         }
         .comp-tele-item { font-size: 11px; }
-        .comp-tele-item b { display: block; font-family: monospace; font-size: 16px; color: var(--gauge-neon); margin-top: 2px; }
+        .comp-tele-item b { display: block; font-family: monospace; font-size: 15px; color: var(--gauge-neon); margin-top: 2px; }
 
-        /* КАРТА СО СПУТНИКОМ И ЛИНЕЙКОЙ РАССТОЯНИЙ */
-        #map-stage-wrapper { width: 100%; position: relative; }
+        /* БЛОК ПОГОДЫ */
+        .weather-range-selector {
+            display: flex; background: var(--card-sub); border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; margin-bottom: 10px; width: 100%;
+        }
+        .weather-range-btn {
+            flex: 1; background: transparent; border: none; padding: 6px; font-size: 11px; font-weight: 800; color: var(--text-graphite); cursor: pointer; text-transform: uppercase; text-align: center;
+        }
+        .weather-range-btn.active { background: var(--promo-orange); color: #FFF; }
+        .weather-forecast-list {
+            display: flex; flex-direction: column; gap: 6px; width: 100%; max-height: 220px; overflow-y: auto;
+        }
+        .forecast-row-card {
+            display: flex; justify-content: space-between; align-items: center; background: var(--card-sub); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 12px; font-size: 12px;
+        }
+
+        /* КАРТА */
+        #map-stage-wrapper { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
         #yandex-map-view {
-            width: 100%; height: 420px; border-radius: 16px; border: 2px solid var(--border-color);
+            width: 100%; height: 340px; border-radius: 14px; border: 1px solid var(--border-color);
             background: #111; position: relative; overflow: hidden;
         }
 
@@ -298,8 +331,9 @@
         }
 
         .map-controls-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-top: 8px;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; width: 100%; margin-top: 8px;
         }
+        @media (max-width: 600px) { .map-controls-grid { grid-template-columns: 1fr 1fr; } }
 
         /* ПОЛНЫЙ ЭКРАН КАРТЫ С КНОПКАМИ СЛЕВА */
         body.fullscreen-mode .glass-header-deck, body.fullscreen-mode .section-tabs-bar { display: none !important; }
@@ -311,12 +345,12 @@
             box-shadow: 0 6px 20px rgba(0,0,0,0.45); max-width: 320px; width: calc(100vw - 28px);
         }
 
-        /* КОМПАС PRO С УРОВНЕМ ГОРИЗОНТА */
+        /* КОМПАС PRO */
         .compass-rim-box {
-            width: 290px; height: 290px; border-radius: 50%; border: 4px solid var(--border-color);
+            width: 270px; height: 270px; border-radius: 50%; border: 4px solid var(--border-color);
             position: relative; display: flex; align-items: center; justify-content: center;
             box-shadow: 0 6px 20px rgba(0,0,0,0.15), inset 0 0 20px rgba(0,0,0,0.1);
-            margin: 8px 0; background: radial-gradient(circle, var(--card-bg) 0%, var(--card-sub) 100%);
+            margin: 4px 0; background: radial-gradient(circle, var(--card-bg) 0%, var(--card-sub) 100%);
             overflow: hidden;
         }
         #compass-svg-disc { width: 100%; height: 100%; transform-origin: 50% 50%; transition: transform 0.08s linear; }
@@ -337,17 +371,17 @@
         }
         .spirit-bubble-ball.level-ok { background: #00FF66; box-shadow: 0 0 12px #00FF66; }
 
-        .azimuth-text-big { font-family: monospace; font-size: 34px; font-weight: 900; color: var(--forest-green); margin-top: 4px; }
+        .azimuth-text-big { font-family: monospace; font-size: 32px; font-weight: 900; color: var(--forest-green); margin-top: 2px; }
 
         /* SOS КНОПКИ */
         .btn-sos-main {
             background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%); color: #FFF; border: none;
-            padding: 16px; border-radius: 12px; font-size: 15px; font-weight: 900; text-transform: uppercase;
+            padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 900; text-transform: uppercase;
             cursor: pointer; box-shadow: 0 4px 16px rgba(220, 38, 38, 0.4); text-align: center; text-decoration: none;
-            display: block; letter-spacing: 1px; width: 100%; margin-bottom: 12px;
+            display: block; letter-spacing: 1px; width: 100%; margin-bottom: 8px;
         }
 
-        /* УЗКИЙ ПОДВАЛ */
+        /* УЗКИЙ ЧИСТЫЙ ПОДВАЛ */
         footer {
             background-color: var(--footer-bg); color: #E0E0E0; padding: 12px 16px;
             font-size: 11px; width: 100%; text-align: center; margin-top: auto;
@@ -358,7 +392,7 @@
 </head>
 <body>
 
-    <!-- ДВУХЭТАЖНАЯ ШАПКА В СТИЛЕ COMPASS.HTML -->
+    <!-- ДВУХЭТАЖНАЯ ШАПКА -->
     <header class="glass-header-deck">
         <div class="header-tier-top">
             <a href="tech.html" class="logo-box" title="Вернуться в раздел Лесовик TECH">
@@ -382,218 +416,238 @@
         </div>
     </header>
 
-    <!-- ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ РАЗДЕЛОВ ДЛЯ СМАРТФОНОВ -->
+    <!-- ВКЛАДКИ ДЛЯ МОБИЛЬНЫХ -->
     <div class="section-tabs-bar">
         <button class="tab-btn active" onclick="switchMobileSection('speed', event)">Спидометр</button>
         <button class="tab-btn" onclick="switchMobileSection('computer', event)">Бортовой компьютер</button>
-        <button class="tab-btn" onclick="switchMobileSection('map', event)">Спутниковая карта</button>
+        <button class="tab-btn" onclick="switchMobileSection('weather', event)">Прогноз погоды</button>
         <button class="tab-btn" onclick="switchMobileSection('compass', event)">Лесной компас</button>
-        <button class="tab-btn" onclick="switchMobileSection('sos', event)" style="color: var(--danger-red);">Сигнал бедствия SOS</button>
+        <button class="tab-btn" onclick="switchMobileSection('map', event)">Спутниковая карта</button>
+        <button class="tab-btn" onclick="switchMobileSection('sos', event)" style="color: var(--danger-red);">SOS</button>
     </div>
 
     <main class="cockpit-container">
-        <div class="cockpit-grid">
+        <div class="cockpit-bento-grid">
 
-            <!-- 1. БОРТОВОЙ КОМПЬЮТЕР С АНАЛОГОВОЙ СТРЕЛКОЙ БАКА (СЛЕВА НА ПК) -->
-            <section id="sec-computer" class="view-section">
-                <div class="bento-card">
-                    <div class="comp-header">⛽ Бортовой компьютер и Бак</div>
-                    
-                    <!-- СТРЕЛОЧНЫЙ ДАТЧИК ОСТАТКА ТОПЛИВА СО ШКАЛОЙ -->
-                    <div class="fuel-gauge-container">
-                        <svg viewBox="0 0 200 120" class="fuel-svg">
-                            <!-- Дуга шкалы бака (180 градусов) -->
-                            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="var(--border-color)" stroke-width="8" stroke-linecap="round"/>
-                            <!-- Красная зона резерва -->
-                            <path d="M 20 100 A 80 80 0 0 1 50 50" fill="none" stroke="var(--danger-red)" stroke-width="8" stroke-linecap="round"/>
-                            <!-- Активный уровень бака -->
-                            <path id="fuel-arc-progress" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="var(--gauge-neon)" stroke-width="8" stroke-dasharray="251" stroke-dashoffset="0" stroke-linecap="round" style="transition: stroke-dashoffset 0.2s linear;"/>
-                            
-                            <!-- Метки E, 1/2, F -->
-                            <text x="18" y="116" fill="var(--danger-red)" font-size="11" font-weight="900" font-family="monospace">E</text>
-                            <text x="94" y="24" fill="var(--text-graphite)" font-size="11" font-weight="900" font-family="monospace">1/2</text>
-                            <text x="175" y="116" fill="var(--gauge-neon)" font-size="11" font-weight="900" font-family="monospace">F</text>
-
-                            <!-- Стрелка уровня топлива -->
-                            <g id="fuel-needle-group" style="transform-origin: 100px 100px; transition: transform 0.2s ease-out; transform: rotate(0deg);">
-                                <line x1="100" y1="100" x2="30" y2="100" stroke="var(--danger-red)" stroke-width="3.5" stroke-linecap="round"/>
-                                <circle cx="100" cy="100" r="6" fill="var(--gauge-neon)"/>
-                            </g>
-                        </svg>
-                        <div class="fuel-center-display">
-                            <span id="fuel-digital-liters" style="font-size: 18px; font-weight: 900; color: var(--gauge-neon);">50.0 л</span>
-                            <span style="font-size: 9px; opacity: 0.7; text-transform: uppercase;">Остаток бака</span>
-                        </div>
-                    </div>
-
-                    <div class="comp-form-grid">
-                        <div class="comp-input-group">
-                            <label>Емкость бака (л):</label>
-                            <input type="number" id="comp-tank-liters" value="50" oninput="recalcFuelGauge()">
-                        </div>
-                        <div class="comp-input-group">
-                            <label>Расход л/час:</label>
-                            <input type="number" id="comp-rate-value" value="12">
-                        </div>
-                    </div>
-
-                    <button id="btn-comp-toggle" class="btn-action-primary" onclick="toggleTripEngine()" style="padding:11px; margin-top:4px;">
-                        ▶ ЗАПУСК РЕЙСА
-                    </button>
-
-                    <!-- Заполненная сетка на 4 ячейки без пустых мест -->
-                    <div class="comp-telemetry-grid">
-                        <div class="comp-tele-item">
-                            Моточасы в пути:
-                            <b id="comp-timer-lbl">00:00:00</b>
-                        </div>
-                        <div class="comp-tele-item">
-                            Сожжено топлива:
-                            <b id="comp-spent-lbl">0.0 л</b>
-                        </div>
-                        <div class="comp-tele-item">
-                            Запас хода по времени:
-                            <b id="comp-hours-left-lbl">~4.1 ч</b>
-                        </div>
-                        <div class="comp-tele-item">
-                            Средний путевой расход:
-                            <b id="comp-burn-rate-lbl">12.0 л/ч</b>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 2. СПИДОМЕТР С ФИЛЬТРОМ КАЛМАНА (ПО ЦЕНТРУ НА ПК) -->
-            <section id="sec-speed" class="view-section active">
-                <div class="bento-card">
-                    <div class="card-header-row">
-                        <span id="gps-status-label" class="gps-badge">🛰️ ГЛОНАСС: Поиск...</span>
-                        <div class="unit-switcher">
-                            <button class="unit-btn active" onclick="setSpeedUnits('kmh', event)">км/ч</button>
-                            <button class="unit-btn" onclick="setSpeedUnits('mph', event)">миль</button>
-                        </div>
-                    </div>
-
-                    <div class="dial-box">
-                        <svg viewBox="0 0 300 300" class="dial-svg">
-                            <circle cx="150" cy="150" r="120" fill="none" stroke="var(--border-color)" stroke-width="6" stroke-dasharray="565" stroke-dashoffset="141" stroke-linecap="round" transform="rotate(135 150 150)" />
-                            <circle id="speed-arc-progress" cx="150" cy="150" r="120" fill="none" stroke="var(--gauge-neon)" stroke-width="8" stroke-dasharray="565" stroke-dashoffset="565" stroke-linecap="round" transform="rotate(135 150 150)" style="transition: stroke-dashoffset 0.08s linear;" />
-                            
-                            <!-- Оцифровка -->
-                            <text x="56" y="236" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.85">0</text>
-                            <text x="28" y="165" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.85">20</text>
-                            <text x="52" y="94" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.85">40</text>
-                            <text x="142" y="58" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.85">60</text>
-                            <text x="232" y="94" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.85">80</text>
-                            <text x="256" y="165" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.85">100</text>
-                            <text x="226" y="236" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.85">120</text>
-
-                            <!-- Мелкие риски (каждые 2 км/ч) -->
-                            <g id="svg-speed-ticks" stroke="var(--text-graphite)"></g>
-
-                            <!-- Стрелка -->
-                            <g id="speed-needle-group" style="transform-origin: 150px 150px; transition: transform 0.08s linear; transform: rotate(-135deg);">
-                                <line x1="150" y1="150" x2="150" y2="42" stroke="var(--danger-red)" stroke-width="4" stroke-linecap="round" />
-                                <circle cx="150" cy="150" r="8" fill="var(--gauge-neon)" />
-                            </g>
-                        </svg>
-
-                        <div class="dial-center-text">
-                            <span id="speed-num-val">0.0</span>
-                            <span id="speed-unit-lbl" class="speed-unit-lbl">км/ч</span>
-                        </div>
-                    </div>
-
-                    <div class="metrics-grid-3">
-                        <div class="metric-cell">
-                            <div class="metric-lbl">Максимальная</div>
-                            <div id="tac-max-val" class="metric-val">0.0</div>
-                        </div>
-                        <div class="metric-cell">
-                            <div class="metric-lbl">Средняя</div>
-                            <div id="tac-avg-val" class="metric-val">0.0</div>
-                        </div>
-                        <div class="metric-cell">
-                            <div class="metric-lbl">Одометр</div>
-                            <div id="tac-odo-val" class="metric-val">0.00</div>
-                        </div>
-                    </div>
-
-                    <button class="btn-action-primary" onclick="resetTripOdometerTotal()">Сбросить одометр рейса</button>
-                </div>
-            </section>
-
-            <!-- 3. СПУТНИКОВАЯ КАРТА И КОМПАС (СПРАВА НА ПК) -->
-            <div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+            <!-- 1. ВЕРХНИЙ РЯД СЛЕВА: БОРТОВОЙ КОМПЬЮТЕР И БАК -->
+            <section id="sec-computer" class="bento-card card-computer view-section">
+                <div class="comp-header">⛽ Бортовой компьютер и Бак</div>
                 
-                <!-- КАРТА С ПЕРЕКЛЮЧЕНИЕМ СПУТНИКА И ЛИНЕЙКОЙ РАССТОЯНИЙ -->
-                <section id="sec-map" class="view-section">
-                    <div id="map-stage-wrapper">
-                        <div id="yandex-map-view">
-                            <div class="map-rose-compass">
-                                <span class="m-rose-n">С</span>
-                                <span class="m-rose-e">В</span>
-                                <span class="m-rose-s">Ю</span>
-                                <span class="m-rose-w">З</span>
-                                🧭
-                            </div>
+                <!-- АНАЛОГОВЫЙ ПРИБОР ТОПЛИВА (E - СЛЕВА, F - СПРАВА) -->
+                <div class="fuel-gauge-container">
+                    <svg viewBox="0 0 200 120" class="fuel-svg">
+                        <!-- Шкала полуокружности -->
+                        <path d="M 25 100 A 75 75 0 0 1 175 100" fill="none" stroke="var(--border-color)" stroke-width="8" stroke-linecap="round"/>
+                        <!-- Красная зона резерва (слева от E) -->
+                        <path d="M 25 100 A 75 75 0 0 1 55 58" fill="none" stroke="var(--danger-red)" stroke-width="8" stroke-linecap="round"/>
+                        <!-- Заполнение уровня топлива -->
+                        <path id="fuel-arc-progress" d="M 25 100 A 75 75 0 0 1 175 100" fill="none" stroke="var(--gauge-neon)" stroke-width="8" stroke-dasharray="235" stroke-dashoffset="0" stroke-linecap="round" style="transition: stroke-dashoffset 0.3s linear;"/>
+                        
+                        <!-- Метки шкалы E, 1/2, F -->
+                        <text x="24" y="116" fill="var(--danger-red)" font-size="11" font-weight="900" font-family="monospace">E</text>
+                        <text x="93" y="18" fill="var(--text-graphite)" font-size="11" font-weight="900" font-family="monospace">1/2</text>
+                        <text x="170" y="116" fill="var(--gauge-neon)" font-size="11" font-weight="900" font-family="monospace">F</text>
 
-                            <!-- КНОПКА ВКЛЮЧЕНИЯ СПУТНИКА -->
-                            <button class="map-layer-switch-btn" onclick="toggleMapLayerType()" id="btn-map-type-toggle">
-                                🛰️ Спутник
-                            </button>
-
-                            <div class="map-zoom-buttons-dock">
-                                <button class="btn-map-zoom" onclick="zoomMapStep(+1)">+</button>
-                                <button class="btn-map-zoom" onclick="zoomMapStep(-1)">−</button>
-                            </div>
-                        </div>
-
-                        <!-- Линейка измеренного расстояния между засечками -->
-                        <div class="map-distance-badge" id="map-distance-label">
-                            📏 Дистанция между точками: <b>0.00 км</b>
-                        </div>
-
-                        <div class="map-controls-grid">
-                            <button class="tab-btn" onclick="toggleMapFullscreen()" id="btn-map-fs">⛶ На весь экран</button>
-                            <button class="tab-btn" onclick="centerMapUser()">🎯 Где я?</button>
-                            <button class="tab-btn" onclick="dropMapMarker()">📌 Засечка</button>
-                            <button class="tab-btn" style="color:var(--danger-red);" onclick="clearAllMarkers()">🗑️ Очистить</button>
-                        </div>
+                        <!-- Стрелка топлива (0 градусов = F, -180 градусов = E) -->
+                        <g id="fuel-needle-group" style="transform-origin: 100px 100px; transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); transform: rotate(0deg);">
+                            <line x1="100" y1="100" x2="165" y2="100" stroke="var(--danger-red)" stroke-width="3.5" stroke-linecap="round"/>
+                            <circle cx="100" cy="100" r="6" fill="var(--gauge-neon)"/>
+                        </g>
+                    </svg>
+                    <div class="fuel-center-display">
+                        <span id="fuel-digital-liters" style="font-size: 18px; font-weight: 900; color: var(--gauge-neon);">50.0 л</span>
+                        <span style="font-size: 9px; opacity: 0.7; text-transform: uppercase;">Остаток бака</span>
                     </div>
-                </section>
+                </div>
 
-                <!-- КОМПАС С УРОВНЕМ ГОРИЗОНТА -->
-                <section id="sec-compass" class="view-section">
-                    <div class="bento-card">
-                        <div class="compass-rim-box">
-                            <div class="comp-cross-v"></div>
-                            <div class="comp-cross-h"></div>
-                            <div class="bubble-level-holder">
-                                <div class="bubble-target-dot"></div>
-                                <div class="spirit-bubble-ball" id="spirit-level-ball"></div>
-                            </div>
-                            <svg id="compass-svg-disc" viewBox="0 0 400 400">
-                                <g id="compass-svg-ticks-layer"></g>
-                                <text x="200" y="44" fill="#DC2626" font-size="24" font-weight="900" text-anchor="middle" dominant-baseline="central">С</text>
-                                <text x="356" y="200" fill="var(--text-graphite)" font-size="22" font-weight="900" text-anchor="middle" dominant-baseline="central" opacity="0.8">В</text>
-                                <text x="200" y="356" fill="var(--text-graphite)" font-size="22" font-weight="900" text-anchor="middle" dominant-baseline="central" opacity="0.8">Ю</text>
-                                <text x="44" y="200" fill="var(--text-graphite)" font-size="22" font-weight="900" text-anchor="middle" dominant-baseline="central" opacity="0.8">З</text>
-                                <polygon points="200,58 186,200 214,200" fill="#DC2626"/>
-                                <polygon points="200,342 186,200 214,200" fill="var(--text-graphite)" opacity="0.85"/>
-                            </svg>
+                <div class="comp-form-grid">
+                    <div class="comp-input-group">
+                        <label>Емкость бака (л):</label>
+                        <input type="number" id="comp-tank-liters" value="50" oninput="recalcFuelGauge()">
+                    </div>
+                    <div class="comp-input-group">
+                        <label>Расход л/час:</label>
+                        <input type="number" id="comp-rate-value" value="12">
+                    </div>
+                </div>
+
+                <button id="btn-comp-toggle" class="btn-action-primary" onclick="toggleTripEngine()" style="padding:10px;">
+                    ▶ ЗАПУСК РЕЙСА
+                </button>
+
+                <div class="comp-telemetry-grid">
+                    <div class="comp-tele-item">
+                        Моточасы в пути:
+                        <b id="comp-timer-lbl">00:00:00</b>
+                    </div>
+                    <div class="comp-tele-item">
+                        Сожжено топлива:
+                        <b id="comp-spent-lbl">0.0 л</b>
+                    </div>
+                    <div class="comp-tele-item">
+                        Запас хода (время):
+                        <b id="comp-hours-left-lbl">~4.1 ч</b>
+                    </div>
+                    <div class="comp-tele-item">
+                        Текущий расход:
+                        <b id="comp-burn-rate-lbl">12.0 л/ч</b>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. ВЕРХНИЙ РЯД ЦЕНТР: СПИДОМЕТР С КАЛМАНОМ -->
+            <section id="sec-speed" class="bento-card card-speed view-section active">
+                <div class="card-header-row">
+                    <span id="gps-status-label" class="gps-badge">🛰️ ГЛОНАСС: Поиск...</span>
+                    <div class="unit-switcher">
+                        <button class="unit-btn active" onclick="setSpeedUnits('kmh', event)">км/ч</button>
+                        <button class="unit-btn" onclick="setSpeedUnits('mph', event)">миль</button>
+                    </div>
+                </div>
+
+                <div class="dial-box">
+                    <svg viewBox="0 0 300 300" class="dial-svg">
+                        <circle cx="150" cy="150" r="120" fill="none" stroke="var(--border-color)" stroke-width="6" stroke-dasharray="565" stroke-dashoffset="141" stroke-linecap="round" transform="rotate(135 150 150)" />
+                        <circle id="speed-arc-progress" cx="150" cy="150" r="120" fill="none" stroke="var(--gauge-neon)" stroke-width="8" stroke-dasharray="565" stroke-dashoffset="565" stroke-linecap="round" transform="rotate(135 150 150)" style="transition: stroke-dashoffset 0.08s linear;" />
+                        
+                        <!-- Оцифровка -->
+                        <text x="56" y="236" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.85">0</text>
+                        <text x="28" y="165" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.85">20</text>
+                        <text x="52" y="94" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.85">40</text>
+                        <text x="142" y="58" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.85">60</text>
+                        <text x="232" y="94" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.85">80</text>
+                        <text x="256" y="165" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.85">100</text>
+                        <text x="226" y="236" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.85">120</text>
+
+                        <!-- Мелкие риски каждые 2 км/ч -->
+                        <g id="svg-speed-ticks" stroke="var(--text-graphite)"></g>
+
+                        <!-- Стрелка спидометра -->
+                        <g id="speed-needle-group" style="transform-origin: 150px 150px; transition: transform 0.08s linear; transform: rotate(-135deg);">
+                            <line x1="150" y1="150" x2="150" y2="42" stroke="var(--danger-red)" stroke-width="4" stroke-linecap="round" />
+                            <circle cx="150" cy="150" r="8" fill="var(--gauge-neon)" />
+                        </g>
+                    </svg>
+
+                    <div class="dial-center-text">
+                        <span id="speed-num-val">0.0</span>
+                        <span id="speed-unit-lbl" class="speed-unit-lbl">км/ч</span>
+                    </div>
+                </div>
+
+                <div class="metrics-grid-3">
+                    <div class="metric-cell">
+                        <div class="metric-lbl">Максимальная</div>
+                        <div id="tac-max-val" class="metric-val">0.0</div>
+                    </div>
+                    <div class="metric-cell">
+                        <div class="metric-lbl">Средняя</div>
+                        <div id="tac-avg-val" class="metric-val">0.0</div>
+                    </div>
+                    <div class="metric-cell">
+                        <div class="metric-lbl">Одометр</div>
+                        <div id="tac-odo-val" class="metric-val">0.00</div>
+                    </div>
+                </div>
+
+                <button class="btn-action-primary" onclick="resetTripOdometerTotal()">Сбросить одометр рейса</button>
+            </section>
+
+            <!-- 3. ВЕРХНИЙ РЯД СПРАВА: ПОГОДА НА 1, 3, 7 ДНЕЙ -->
+            <section id="sec-weather" class="bento-card card-weather view-section">
+                <div class="comp-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span id="weather-city-label">🌤️ Метеопост ГЛОНАСС</span>
+                    <span style="font-size:10px; font-weight:800; color:var(--forest-green);">Офлайн-кэш</span>
+                </div>
+
+                <!-- ПЕРЕКЛЮЧАТЕЛЬ 1 ДЕНЬ / 3 ДНЯ / 7 ДНЕЙ -->
+                <div class="weather-range-selector">
+                    <button class="weather-range-btn active" onclick="setWeatherForecastRange(1, this)">1 День</button>
+                    <button class="weather-range-btn" onclick="setWeatherForecastRange(3, this)">3 Дня</button>
+                    <button class="weather-range-btn" onclick="setWeatherForecastRange(7, this)">7 Дней</button>
+                </div>
+
+                <div class="weather-forecast-list" id="weather-cards-box">
+                    <div class="forecast-row-card">
+                        <span><b>Сегодня</b><br><small id="w-today-cond">Загрузка...</small></span>
+                        <span style="font-size:16px; font-weight:900; color:var(--promo-orange);" id="w-today-temp">--°C</span>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:6px; margin-top:8px;">
+                    <input type="text" id="weather-search-inp" placeholder="Город или район реки..." style="flex:1; background:var(--card-sub); border:1px solid var(--border-color); border-radius:6px; padding:6px 10px; font-size:12px; color:var(--text-graphite);">
+                    <button onclick="searchWeatherCustomCity()" style="background:var(--forest-green); color:#FFF; border:none; border-radius:6px; padding:0 12px; font-size:11px; font-weight:800; cursor:pointer;">Искать</button>
+                </div>
+            </section>
+
+            <!-- 4. НИЖНИЙ РЯД СЛЕВА: ЛЕСНОЙ КОМПАС PRO С УРОВНЕМ -->
+            <section id="sec-compass" class="bento-card card-compass-bento view-section">
+                <div class="comp-header">🧭 Лесной компас PRO</div>
+                
+                <div class="compass-rim-box">
+                    <div class="comp-cross-v"></div>
+                    <div class="comp-cross-h"></div>
+                    <div class="bubble-level-holder">
+                        <div class="bubble-target-dot"></div>
+                        <div class="spirit-bubble-ball" id="spirit-level-ball"></div>
+                    </div>
+                    <svg id="compass-svg-disc" viewBox="0 0 400 400">
+                        <g id="compass-svg-ticks-layer"></g>
+                        <text x="200" y="44" fill="#DC2626" font-size="24" font-weight="900" text-anchor="middle" dominant-baseline="central">С</text>
+                        <text x="356" y="200" fill="var(--text-graphite)" font-size="22" font-weight="900" text-anchor="middle" dominant-baseline="central" opacity="0.8">В</text>
+                        <text x="200" y="356" fill="var(--text-graphite)" font-size="22" font-weight="900" text-anchor="middle" dominant-baseline="central" opacity="0.8">Ю</text>
+                        <text x="44" y="200" fill="var(--text-graphite)" font-size="22" font-weight="900" text-anchor="middle" dominant-baseline="central" opacity="0.8">З</text>
+                        <polygon points="200,58 186,200 214,200" fill="#DC2626"/>
+                        <polygon points="200,342 186,200 214,200" fill="var(--text-graphite)" opacity="0.85"/>
+                    </svg>
+                </div>
+
+                <div class="azimuth-text-big" id="compass-azimuth-txt">0° С</div>
+                <button class="btn-action-primary" onclick="requestCompassAccess()" style="padding:10px;">
+                    🧭 Калибровать датчики
+                </button>
+            </section>
+
+            <!-- 5. НИЖНИЙ РЯД СПРАВА: КАРТА И ЛИНЕЙКА РАССТОЯНИЙ -->
+            <section id="sec-map" class="bento-card card-map-bento view-section">
+                <div id="map-stage-wrapper">
+                    <div id="yandex-map-view">
+                        <div class="map-rose-compass">
+                            <span class="m-rose-n">С</span>
+                            <span class="m-rose-e">В</span>
+                            <span class="m-rose-s">Ю</span>
+                            <span class="m-rose-w">З</span>
+                            🧭
                         </div>
-                        <div class="azimuth-text-big" id="compass-azimuth-txt">0° С</div>
-                        <button class="btn-action-primary" onclick="requestCompassAccess()" style="padding:10px; margin-top:6px;">
-                            🧭 Калибровать компас
+
+                        <!-- ПЕРЕКЛЮЧЕНИЕ СПУТНИК / СХЕМА -->
+                        <button class="map-layer-switch-btn" onclick="toggleMapLayerType()" id="btn-map-type-toggle">
+                            🛰️ Спутник
                         </button>
+
+                        <!-- РАЗНЕСЕННЫЕ КНОПКИ ЗУМА -->
+                        <div class="map-zoom-buttons-dock">
+                            <button class="btn-map-zoom" onclick="zoomMapStep(+1)">+</button>
+                            <button class="btn-map-zoom" onclick="zoomMapStep(-1)">−</button>
+                        </div>
                     </div>
-                </section>
 
-            </div>
+                    <!-- ЛИНЕЙКА ИЗМЕРЕНИЯ РАССТОЯНИЙ МЕЖДУ ТОЧКАМИ -->
+                    <div class="map-distance-badge" id="map-distance-label">
+                        📏 Дистанция между точками: <b>0.00 км</b>
+                    </div>
 
-            <!-- 4. SOS БЛОК -->
-            <section id="sec-sos" class="view-section" style="width:100%;">
+                    <div class="map-controls-grid">
+                        <button class="tab-btn" onclick="toggleMapFullscreen()" id="btn-map-fs">⛶ Экран</button>
+                        <button class="tab-btn" onclick="centerMapUser()">🎯 Где я?</button>
+                        <button class="tab-btn" onclick="dropMapMarker()">📌 Засечка</button>
+                        <button class="tab-btn" style="color:var(--danger-red);" onclick="clearAllMarkers()">🗑️ Очистить</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6. SOS В САМОМ НИЗУ -->
+            <section id="sec-sos" class="card-sos-full view-section">
                 <a href="tel:112" class="btn-sos-main">🚨 ЭКСТРЕННЫЙ ВЫЗОВ 112</a>
                 <a id="sos-sms-btn" href="sms:112" class="btn-sos-main" style="background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);">
                     📨 SMS С КООРДИНАТАМИ СПАСАТЕЛЯМ
@@ -610,7 +664,9 @@
 
     <!-- СКРИПТЫ ТАКТИЧЕСКОГО БОРТОВОГО КОМПЛЕКСА -->
     <script>
-        // Фильтр Калмана для скорости
+        const WEATHER_KEY = '247c067b320c444c869130443262805';
+
+        // 1. Фильтр Калмана для скорости
         class KalmanSpeedFilter {
             constructor(q = 0.02, r = 0.6) {
                 this.q = q; this.r = r; this.x = null; this.p = 1.0;
@@ -626,7 +682,7 @@
         }
         const speedKalman = new KalmanSpeedFilter(0.02, 0.6);
 
-        // Цветовые схемы подсветки ТОЛЬКО ДЛЯ ПРИБОРОВ
+        // 2. Локальная подсветка только для приборов
         const gaugeNeons = [
             { name: "Изумруд", color: "#22C55E", glow: "rgba(34, 197, 94, 0.45)" },
             { name: "Бирюза", color: "#06B6D4", glow: "rgba(6, 182, 212, 0.45)" },
@@ -741,7 +797,7 @@
             }
         }
 
-        // БОРТОВОЙ КОМПЬЮТЕР И АНАЛОГОВАЯ СТРЕЛКА БАКА
+        // БОРТОВОЙ КОМПЬЮТЕР И ПРАВИЛЬНЫЙ ДАТЧИК ТОПЛИВА (E - СЛЕВА, F - СПРАВА)
         let isTripRunning = false, tripStartMs = null, tripTimerRef = null;
         let startFuelLiters = 50, ratePerHour = 12, currentFuelRemain = 50;
 
@@ -765,18 +821,20 @@
 
         function recalcFuelGauge() {
             startFuelLiters = parseFloat(document.getElementById('comp-tank-liters').value) || 50;
+            currentFuelRemain = startFuelLiters;
             updateFuelGaugeUI(currentFuelRemain, startFuelLiters);
         }
 
         function updateFuelGaugeUI(remain, capacity) {
             let pct = Math.max(0, Math.min(1.0, remain / (capacity || 50)));
-            // Стрелка бака от -180deg (пусто) до 0deg (полный)
-            let angle = -180 + (pct * 180);
-            document.getElementById('fuel-needle-group').style.transform = `rotate(${angle}deg)`;
+            
+            // Физика прибора: 100% (F) = 0°, 0% (E) = -180°
+            let needleAngle = -180 + (pct * 180);
+            document.getElementById('fuel-needle-group').style.transform = `rotate(${needleAngle}deg)`;
 
-            // Дуга уровня
-            let offset = 251 - (pct * 251);
-            document.getElementById('fuel-arc-progress').style.strokeDashoffset = offset;
+            // Заполнение дуги шкалы
+            let strokeOffset = 235 - (pct * 235);
+            document.getElementById('fuel-arc-progress').style.strokeDashoffset = strokeOffset;
             document.getElementById('fuel-digital-liters').innerText = `${remain.toFixed(1)} л`;
         }
 
@@ -798,10 +856,67 @@
             document.getElementById('comp-hours-left-lbl').innerText = `~${hrsLeft.toFixed(1)} ч`;
             document.getElementById('comp-burn-rate-lbl').innerText = `${ratePerHour.toFixed(1)} л/ч`;
 
+            // Стрелка плавно падает по мере расхода топлива
             updateFuelGaugeUI(currentFuelRemain, startFuelLiters);
         }
 
-        // GPS ГЛОНАСС ТРЕКИНГ
+        // ПОГОДА С ВЫБОРОМ 1, 3, 7 ДНЕЙ И КЭШЕМ
+        let cachedForecastData = null;
+        let currentRangeDays = 1;
+
+        async function fetchWeatherEngine(query) {
+            const localCache = localStorage.getItem('lesovik_weather_cache');
+            if (localCache) {
+                try {
+                    cachedForecastData = JSON.parse(localCache);
+                    renderWeatherList();
+                } catch(e) {}
+            }
+            if (!navigator.onLine) return;
+            try {
+                const res = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=${WEATHER_KEY}&q=${query}&days=7&lang=ru`);
+                if (!res.ok) throw new Error();
+                cachedForecastData = await res.json();
+                localStorage.setItem('lesovik_weather_cache', JSON.stringify(cachedForecastData));
+                renderWeatherList();
+            } catch(e) {}
+        }
+
+        function setWeatherForecastRange(days, btn) {
+            currentRangeDays = days;
+            document.querySelectorAll('.weather-range-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderWeatherList();
+        }
+
+        function renderWeatherList() {
+            if (!cachedForecastData || !cachedForecastData.forecast) return;
+            const locName = cachedForecastData.location.name;
+            document.getElementById('weather-city-label').innerText = `🌤️ ${locName}`;
+
+            const box = document.getElementById('weather-cards-box');
+            box.innerHTML = '';
+
+            const days = cachedForecastData.forecast.forecastday.slice(0, currentRangeDays);
+            days.forEach((d, idx) => {
+                const dateObj = new Date(d.date);
+                const dayName = idx === 0 ? "Сегодня" : dateObj.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' });
+                const row = document.createElement('div');
+                row.className = 'forecast-row-card';
+                row.innerHTML = `
+                    <span><b>${dayName}</b><br><small style="opacity:0.8;">${d.day.condition.text}</small></span>
+                    <span style="font-size:15px; font-weight:900; color:var(--promo-orange);">${d.day.maxtemp_c > 0 ? '+' : ''}${Math.round(d.day.maxtemp_c)}°C</span>
+                `;
+                box.appendChild(row);
+            });
+        }
+
+        function searchWeatherCustomCity() {
+            const q = document.getElementById('weather-search-inp').value.trim();
+            if (q) fetchWeatherEngine(encodeURIComponent(q));
+        }
+
+        // GPS ГЛОНАСС
         let trackCoordsArray = [];
         if ('geolocation' in navigator) {
             navigator.geolocation.watchPosition(pos => {
@@ -824,7 +939,7 @@
                         totalOdometerMeters += d;
                         localStorage.setItem('leso_odo_m', totalOdometerMeters);
                         
-                        // Добавляем координаты в пунктирный след
+                        // Пунктирный след
                         trackCoordsArray.push([lat, lon]);
                         if (yTrackLine) yTrackLine.geometry.setCoordinates(trackCoordsArray);
                     }
@@ -832,7 +947,7 @@
                 lastLat = lat; lastLon = lon;
                 renderSpeedometerUI(filteredSpeedKmh);
 
-                const smsText = encodeURIComponent(`SOS! Нужна помощь. Координаты: https://maps.google.com/?q=${lat},${lon}`);
+                const smsText = encodeURIComponent(`SOS! Нужна помощь в тайге. Координаты ГЛОНАСС: https://maps.google.com/?q=${lat},${lon}`);
                 document.getElementById('sos-sms-btn').href = `sms:112?body=${smsText}`;
 
                 if (yUserPlacemark && yMap) yUserPlacemark.geometry.setCoordinates([lat, lon]);
@@ -900,7 +1015,7 @@
                 btn.innerText = '✕ Свернуть';
             } else {
                 document.body.classList.remove('fullscreen-mode');
-                btn.innerText = '⛶ На весь экран';
+                btn.innerText = '⛶ Экран';
             }
             if (yMap) setTimeout(() => yMap.container.fitToViewport(), 250);
         }
@@ -916,7 +1031,7 @@
                 const pm = new ymaps.Placemark([lastLat, lastLon], { balloonContent: 'Засечка ' + t }, { preset: 'islands#orangeDotIcon' });
                 yMarkersCol.add(pm);
 
-                // Тактический расчет расстояния между последними точками
+                // Расчет расстояния по цепочке точек
                 savedPointsForRuler.push([lastLat, lastLon]);
                 updateMeasuredDistanceBetweenPoints();
                 alert("Точка установлена!");
@@ -943,7 +1058,7 @@
             }
         }
 
-        // КОМПАС PRO
+        // КОМПАС PRO С ШКАЛОЙ И УРОВНЕМ
         function buildCompassTicksSVG() {
             const layer = document.getElementById('compass-svg-ticks-layer');
             if (!layer) return;
@@ -1097,9 +1212,20 @@
             generateSpeedTicksSVG();
             buildCompassTicksSVG();
             renderSpeedometerUI(0);
-            updateFuelGaugeUI(50, 50);
+            recalcFuelGauge();
+
             if (typeof DeviceOrientationEvent === 'undefined' || typeof DeviceOrientationEvent.requestPermission !== 'function') {
                 window.addEventListener('deviceorientation', handleOrientationSensors, true);
+            }
+
+            // Инициализация погоды
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (p) => fetchWeatherEngine(`${p.coords.latitude},${p.coords.longitude}`),
+                    () => fetchWeatherEngine('Syktyvkar')
+                );
+            } else {
+                fetchWeatherEngine('Syktyvkar');
             }
         });
     </script>
