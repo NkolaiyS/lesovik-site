@@ -1,483 +1,514 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="dark">
+<html lang="ru">
 <head>
+    <!-- Инструкция сброса кеша браузера -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+
+    <!-- --- ЯНДЕКС МЕТРИКА --- -->
+    <script type="text/javascript">
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109130409', 'ym');
+
+        ym(109130409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-    <title>Тактический спидометр и бортовой компьютер | Лесовик TECH</title>
-    <meta name="description" content="Автономный спутниковый спидометр с фильтром Калмана, бортовым компьютером моточасов и топлива, компасом с пузырьковым уровнем и офлайн-картой.">
+    <title>Тактический спидометр и бортовой компьютер: одометр, компас и офлайн-карта | Лесовик TECH</title>
+    <meta name="description" content="Автономный спутниковый GPS/ГЛОНАСС спидометр с фильтром Калмана, тактический бортовой компьютер учета топлива и моточасов, компас с пузырьковым уровнем и офлайн-карта для тайги и рек.">
+    <meta name="keywords" content="спидометр для лодки офлайн, одометр gps тайга, тактический бортовой компьютер вездеход, компас с уровнем горизонта, лесовик tech">
     <link rel="canonical" href="https://lesovik-pro.ru/speedometer.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
 
-    <!-- РЕКЛАМНАЯ СЕТЬ ЯНДЕКСА (РСЯ) -->
+    <!-- РЕКЛАМНАЯ СЕТЬ ЯНДЕКСА (РСЯ) - ТОЛЬКО СИСТЕМНЫЕ БЛОКИ -->
     <script>window.yaContextCb=window.yaContextCb||[]</script>
     <script src="https://yandex.ru/ads/system/context.js" async></script>
-
     <script>
         window.yaContextCb.push(() => {
-            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-1", "type": "floorAd", "platform": "touch" });
+            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-1", "type": "floorAd", "platform": "touch" })
         });
         window.yaContextCb.push(() => {
-            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-4", "type": "floorAd", "platform": "desktop" });
+            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-4", "type": "floorAd", "platform": "desktop" })
         });
         window.yaContextCb.push(() => {
-            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-2", "type": "fullscreen", "platform": "touch" });
+            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-7", "type": "overlay", "platform": "touch" })
+        });
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-3", "type": "fullscreen", "platform": "desktop" })
         });
     </script>
 
-    <!-- АСИНХРОННАЯ ЗАГРУЗКА ЯНДЕКС КАРТ -->
+    <!-- ЯНДЕКС КАРТЫ API -->
     <script>
         window.isYmapsLoaded = false;
         function loadYmaps() {
             const script = document.createElement('script');
             script.src = "https://api-maps.yandex.ru/2.1/?lang=ru_RU";
             script.onload = () => { window.isYmapsLoaded = true; initMapSafe(); };
-            script.onerror = () => { console.log("Офлайн-режим: сеть недоступна"); };
+            script.onerror = () => { console.log("Офлайн-режим карты"); };
             document.head.appendChild(script);
         }
         if (navigator.onLine) { loadYmaps(); }
     </script>
 
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap');
+
         :root {
-            --bg-base: #080C0A;
-            --panel-bg: #101713;
-            --panel-border: #1D2B22;
-            --text-main: #E2EFE7;
-            --neon-color: #22C55E; /* Зеленый по умолчанию */
-            --neon-glow: rgba(34, 197, 94, 0.45);
-            --danger-red: #EF4444;
-            --accent-gold: #F59E0B;
+            --bg-paper: #F9FBF9;
+            --text-graphite: #333333;
+            --forest-green: #2D5A27;
+            --forest-light: #8FBC8F;
+            --border-color: #E0E0E0;
+            --card-bg: #FFFFFF;
+            --glass-bg: rgba(249, 251, 249, 0.88);
+            --footer-bg: #2C3531;
+            --promo-orange: #E67E22;
+            --neon-color: #2D5A27;
+            --neon-glow: rgba(45, 90, 39, 0.25);
+            --danger-red: #DC2626;
+        }
+
+        [data-theme="dark"] {
+            --bg-paper: #1A2421;
+            --text-graphite: #F9FBF9;
+            --forest-green: #8FBC8F;
+            --forest-light: #2D5A27;
+            --border-color: #3A4F46;
+            --card-bg: #22302B;
+            --glass-bg: rgba(26, 36, 33, 0.88);
+            --footer-bg: #111815;
+            --promo-orange: #F39C12;
+            --neon-color: #8FBC8F;
+            --neon-glow: rgba(143, 188, 143, 0.35);
         }
 
         *, *:before, *:after { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
-        html, body {
-            background-color: var(--bg-base); color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            width: 100%; min-height: 100vh; overflow-x: hidden;
+        html { scroll-behavior: smooth; width: 100%; max-width: 100%; overflow-x: hidden; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-paper);
+            color: var(--text-graphite);
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            display: flex; flex-direction: column;
+            min-height: 100vh; width: 100%; max-width: 100%;
+            overflow-x: hidden; position: relative;
+            padding-bottom: 50px;
         }
 
-        header {
+        /* ШАПКА TECH */
+        .glass-header {
+            position: sticky; top: 0; z-index: 2000;
             display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 16px; background: rgba(16, 23, 19, 0.95);
-            border-bottom: 1px solid var(--panel-border); position: sticky; top: 0; z-index: 1000;
-            backdrop-filter: blur(12px);
-        }
-        .header-brand { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text-main); }
-        .header-brand img { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--neon-color); }
-        .header-brand h1 { font-size: 15px; font-weight: 900; color: var(--neon-color); letter-spacing: 0.5px; text-transform: uppercase; text-shadow: 0 0 10px var(--neon-glow); }
-
-        .btn-toggle-glow {
-            background: #0B110E; border: 1.5px solid var(--neon-color); color: var(--neon-color);
-            padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer;
-            text-transform: uppercase; display: flex; align-items: center; gap: 6px; box-shadow: 0 0 10px var(--neon-glow);
-            transition: all 0.2s;
+            padding: 12px 24px; background: var(--glass-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            width: 100%; max-width: 100%;
         }
 
-        .nav-bar-deck {
-            display: flex; background: var(--panel-bg); border-bottom: 1px solid var(--panel-border);
-            padding: 8px 10px; gap: 6px; overflow-x: auto;
+        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; min-width: 0; }
+        .header-logo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--promo-orange); flex-shrink: 0; }
+        .glass-header h1 { font-family: 'Merriweather', serif; color: var(--promo-orange); margin: 0; font-size: 18px; white-space: nowrap; }
+
+        .header-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+        .theme-toggle, .btn-glow-switch {
+            background: transparent; border: 1px solid var(--promo-orange); color: var(--promo-orange);
+            padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 11.5px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: all 0.2s; height: 36px; text-transform: uppercase;
+        }
+        .theme-toggle:hover, .btn-glow-switch:hover { background-color: var(--promo-orange); color: #FFF; }
+
+        /* ВКЛАДКИ МЕНЮ */
+        .nav-tabs-deck {
+            display: flex; background: var(--card-bg); border-bottom: 1px solid var(--border-color);
+            padding: 8px 14px; gap: 8px; overflow-x: auto; position: sticky; top: 61px; z-index: 1999;
         }
         .nav-tab-btn {
-            flex: 1; padding: 9px 8px; background: transparent; border: 1px solid var(--panel-border);
-            color: var(--text-main); border-radius: 8px; font-size: 11px; font-weight: 800; text-transform: uppercase;
+            flex: 1; padding: 8px 12px; background: transparent; border: 1px solid var(--border-color);
+            color: var(--text-graphite); border-radius: 8px; font-size: 11px; font-weight: 800; text-transform: uppercase;
             cursor: pointer; white-space: nowrap; text-align: center; transition: all 0.2s;
         }
         .nav-tab-btn.active {
-            background: var(--neon-color); color: #080C0A; border-color: var(--neon-color);
-            box-shadow: 0 0 14px var(--neon-glow);
+            background: var(--promo-orange); color: #FFF; border-color: var(--promo-orange);
         }
 
-        .view-section { display: none; padding: 14px; max-width: 500px; margin: 0 auto; width: 100%; flex-direction: column; align-items: center; }
+        main { flex: 1; width: 100%; max-width: 100%; }
+        .container { max-width: 600px; margin: 20px auto 40px; padding: 0 14px; width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+        .view-section { display: none; width: 100%; flex-direction: column; align-items: center; }
         .view-section.active { display: flex; }
 
-        /* СПИДОМЕТР МОНОЛИТ */
-        .gauge-card {
-            background: var(--panel-bg); border: 2px solid var(--panel-border); border-radius: 26px;
-            padding: 18px 16px; width: 100%; display: flex; flex-direction: column; align-items: center;
-            box-shadow: 0 14px 40px rgba(0,0,0,0.8), inset 0 0 25px rgba(0,0,0,0.9);
-            position: relative;
+        /* СПИДОМЕТР КАРТОЧКА */
+        .speedometer-card {
+            background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px;
+            padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); width: 100%; display: flex; flex-direction: column; align-items: center;
         }
-        .gauge-header-row {
-            display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 6px;
-        }
-        .status-badge {
-            font-size: 11px; font-weight: 800; color: var(--neon-color); font-family: monospace;
-            text-shadow: 0 0 8px var(--neon-glow);
-        }
-        .unit-switch-group {
-            display: flex; background: #070B09; border: 1px solid var(--panel-border); border-radius: 6px; overflow: hidden;
-        }
-        .btn-unit-opt {
-            background: transparent; border: none; padding: 5px 10px; font-size: 11px; font-weight: 900;
-            color: var(--text-main); cursor: pointer; text-transform: uppercase;
-        }
-        .btn-unit-opt.active { background: var(--neon-color); color: #080C0A; }
-
-        /* SVG ЦИФЕРБЛАТ */
-        .gauge-circle-box { position: relative; width: 300px; height: 300px; display: flex; align-items: center; justify-content: center; margin: 4px 0; }
-        .gauge-svg-element { width: 100%; height: 100%; filter: drop-shadow(0 0 10px var(--neon-glow)); }
-
-        .gauge-digital-core {
-            position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            pointer-events: none;
-        }
-        #speed-main-num {
-            font-family: 'Courier New', Consolas, monospace; font-size: 72px; font-weight: 900; line-height: 0.85;
-            color: var(--text-main); text-shadow: 0 0 18px var(--neon-glow); letter-spacing: -3px;
-        }
-        .speed-unit-caption {
-            font-size: 13px; font-weight: 900; text-transform: uppercase; opacity: 0.6; margin-top: 6px; letter-spacing: 1.5px;
-        }
-
-        /* ТАКТИЧЕСКИЕ ДАННЫЕ (МАКС / СРЕДНЯЯ / ОДОМЕТР) */
-        .tactical-grid-3 {
-            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 100%; margin-top: 14px;
-        }
-        .tac-cell {
-            background: #080D0B; border: 1px solid var(--panel-border); border-radius: 10px; padding: 8px 4px; text-align: center;
-        }
-        .tac-label { font-size: 9.5px; text-transform: uppercase; opacity: 0.65; font-weight: 800; margin-bottom: 2px; }
-        .tac-value { font-family: monospace; font-size: 16px; font-weight: 900; color: var(--neon-color); text-shadow: 0 0 6px var(--neon-glow); }
-
-        /* БОРТОВОЙ КОМПЬЮТЕР РАСХОДА И МОТОЧАСОВ */
-        .trip-computer-deck {
-            background: #090E0C; border: 1.5px solid var(--panel-border); border-radius: 16px;
-            padding: 14px; width: 100%; margin-top: 14px; display: flex; flex-direction: column; gap: 10px;
-        }
-        .trip-comp-title {
-            font-size: 12px; font-weight: 900; text-transform: uppercase; color: var(--accent-gold);
-            display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--panel-border); padding-bottom: 6px;
-        }
-        .trip-input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .comp-input-box { display: flex; flex-direction: column; gap: 4px; }
-        .comp-input-box label { font-size: 10px; font-weight: 800; text-transform: uppercase; opacity: 0.7; }
-        .comp-input-field {
-            width: 100%; background: #121A15; border: 1px solid var(--panel-border); border-radius: 6px;
-            padding: 8px; color: var(--text-main); font-family: monospace; font-size: 13px; font-weight: 700;
-        }
-
-        .btn-trip-control {
-            background: var(--neon-color); color: #080C0A; border: none; padding: 12px;
-            border-radius: 10px; font-weight: 900; font-size: 12px; text-transform: uppercase;
-            cursor: pointer; width: 100%; letter-spacing: 0.5px; box-shadow: 0 0 12px var(--neon-glow);
-        }
-        .btn-trip-control.active-stop {
-            background: var(--danger-red); color: #FFF; box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
-        }
-
-        .trip-telemetry-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #0F1612; padding: 10px; border-radius: 10px; border: 1px solid var(--panel-border);
-        }
-        .trip-telem-item { font-size: 11px; }
-        .trip-telem-item b { display: block; font-family: monospace; font-size: 15px; color: var(--text-main); }
-
-        /* КАРТА С РАЗНЕСЕННЫМИ КНОПКАМИ И РОЗОЙ СТОРОН */
-        #map-stage-wrapper { width: 100%; position: relative; }
-        #map-canvas-container {
-            width: 100%; height: 420px; border-radius: 18px; border: 2px solid var(--panel-border);
-            background: #111; overflow: hidden; position: relative;
-        }
+        .speed-top-row { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; }
+        .gps-status-badge { font-size: 11px; font-weight: 800; color: var(--forest-green); font-family: monospace; }
         
-        /* Роза сторон света поверх карты */
-        .map-rose-overlay {
-            position: absolute; top: 14px; left: 14px; width: 50px; height: 50px; border-radius: 50%;
-            background: rgba(16, 23, 19, 0.85); border: 1.5px solid var(--neon-color);
+        .unit-switcher { display: flex; background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; }
+        .unit-btn { background: transparent; border: none; padding: 5px 10px; font-size: 11px; font-weight: 800; color: var(--text-graphite); cursor: pointer; text-transform: uppercase; }
+        .unit-btn.active { background: var(--promo-orange); color: #FFF; }
+
+        /* ЦИФЕРБЛАТ СО ШКАЛОЙ КАЛМАНА */
+        .dial-box { position: relative; width: 280px; height: 280px; display: flex; align-items: center; justify-content: center; margin: 10px 0; }
+        .dial-svg { width: 100%; height: 100%; filter: drop-shadow(0 0 6px var(--neon-glow)); }
+        
+        .dial-core { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+        #speed-num-val { font-family: 'Courier New', monospace; font-size: 64px; font-weight: 900; line-height: 0.9; color: var(--text-graphite); letter-spacing: -2px; }
+        .speed-unit-lbl { font-size: 12px; font-weight: 800; text-transform: uppercase; opacity: 0.7; margin-top: 4px; }
+
+        .tactical-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 100%; margin-top: 16px; }
+        .tac-box { background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 6px; text-align: center; }
+        .tac-lbl { font-size: 9.5px; text-transform: uppercase; opacity: 0.7; font-weight: 800; margin-bottom: 2px; }
+        .tac-val { font-family: monospace; font-size: 16px; font-weight: 900; color: var(--promo-orange); }
+
+        .btn-action {
+            background-color: var(--promo-orange); color: #FFF; border: none; padding: 12px;
+            border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 11.5px; text-transform: uppercase;
+            width: 100%; text-align: center; margin-top: 12px; transition: opacity 0.2s;
+        }
+        .btn-action:hover { opacity: 0.9; }
+
+        /* БОРТОВОЙ КОМПЬЮТЕР */
+        .comp-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; width: 100%; }
+        .comp-title { font-family: 'Merriweather', serif; color: var(--promo-orange); font-size: 16px; margin-bottom: 14px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .comp-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+        .comp-input-group { display: flex; flex-direction: column; gap: 4px; }
+        .comp-input-group label { font-size: 10.5px; font-weight: 800; text-transform: uppercase; opacity: 0.8; }
+        .comp-input-group input { width: 100%; background: var(--bg-paper); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px; color: var(--text-graphite); font-family: monospace; font-size: 13px; font-weight: 700; }
+        
+        .trip-tele-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: var(--bg-paper); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); margin-top: 14px; }
+        .trip-tele-item { font-size: 11.5px; }
+        .trip-tele-item b { display: block; font-family: monospace; font-size: 16px; color: var(--promo-orange); margin-top: 2px; }
+
+        /* КАРТА С РАЗНЕСЕННЫМИ ЗУМ-КНОПКАМИ И РОЗОЙ СТОРОН */
+        #map-box-wrapper { width: 100%; position: relative; }
+        #yandex-map-view {
+            width: 100%; height: 420px; border-radius: 16px; border: 2px solid var(--border-color);
+            background: #111; position: relative; overflow: hidden;
+        }
+
+        .map-rose-compass {
+            position: absolute; top: 12px; left: 12px; width: 44px; height: 44px; border-radius: 50%;
+            background: var(--card-bg); border: 1.5px solid var(--promo-orange);
             display: flex; align-items: center; justify-content: center; z-index: 500; pointer-events: none;
-            box-shadow: 0 0 10px var(--neon-glow); font-family: monospace; font-weight: 900; font-size: 11px;
+            font-size: 10px; font-weight: 900; font-family: monospace; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
-        .map-rose-n { position: absolute; top: 2px; color: var(--danger-red); }
-        .map-rose-s { position: absolute; bottom: 2px; opacity: 0.6; }
-        .map-rose-e { position: absolute; right: 4px; opacity: 0.6; }
-        .map-rose-w { position: absolute; left: 4px; opacity: 0.6; }
+        .m-rose-n { position: absolute; top: 1px; color: var(--danger-red); }
+        .m-rose-s { position: absolute; bottom: 1px; opacity: 0.6; }
+        .m-rose-e { position: absolute; right: 3px; opacity: 0.6; }
+        .m-rose-w { position: absolute; left: 3px; opacity: 0.6; }
 
-        /* Разнесенные кнопки зума на карте */
-        .map-zoom-dock {
+        /* Разнесенные кнопки зума */
+        .map-zoom-buttons-dock {
             position: absolute; top: 50%; right: 14px; transform: translateY(-50%);
-            display: flex; flex-direction: column; gap: 35px; z-index: 500;
+            display: flex; flex-direction: column; gap: 40px; z-index: 500;
         }
-        .btn-zoom-tactical {
-            width: 48px; height: 48px; background: rgba(16, 23, 19, 0.9); border: 2px solid var(--neon-color);
-            color: #FFF; border-radius: 50%; font-size: 24px; font-weight: 900; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0,0,0,0.6);
-            transition: transform 0.1s;
+        .btn-map-zoom {
+            width: 44px; height: 44px; background: var(--card-bg); border: 2px solid var(--promo-orange);
+            color: var(--promo-orange); border-radius: 50%; font-size: 24px; font-weight: 900; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
-        .btn-zoom-tactical:active { transform: scale(0.92); }
+        .btn-map-zoom:active { transform: scale(0.92); }
 
-        body.fullscreen-mode header, body.fullscreen-mode .nav-bar-deck { display: none !important; }
-        body.fullscreen-mode .view-section { max-width: 100% !important; padding: 0 !important; }
-        body.fullscreen-mode #map-canvas-container { height: 100vh !important; border-radius: 0 !important; border: none !important; }
-        body.fullscreen-mode .map-floating-bottom-bar {
-            position: fixed; bottom: 12px; left: 12px; right: 12px; z-index: 2000;
-            background: rgba(16, 23, 19, 0.95); padding: 8px; border-radius: 14px; border: 1px solid var(--panel-border);
+        body.fullscreen-mode header, body.fullscreen-mode .nav-tabs-deck, body.fullscreen-mode .back-to-tech { display: none !important; }
+        body.fullscreen-mode .container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+        body.fullscreen-mode #yandex-map-view { height: 100vh !important; border-radius: 0 !important; border: none !important; }
+        body.fullscreen-mode .map-fs-controls-dock {
+            position: fixed; bottom: 14px; left: 14px; right: 14px; z-index: 2000;
+            background: var(--card-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--border-color);
         }
 
-        /* КОМПАС С ШКАЛОЙ И ПУЗЫРЬКОВЫМ УРОВНЕМ */
-        .compass-dial-rim {
-            width: 310px; height: 310px; border-radius: 50%; border: 4px solid var(--panel-border);
+        /* КОМПАС С УРОВНЕМ ГОРИЗОНТА */
+        .compass-rim-box {
+            width: 290px; height: 290px; border-radius: 50%; border: 4px solid var(--border-color);
             position: relative; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 30px rgba(0,0,0,0.9), inset 0 0 30px rgba(0,0,0,0.9);
-            margin: 12px 0; background: radial-gradient(circle, #101713 0%, #060907 100%);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15), inset 0 0 20px rgba(0,0,0,0.1);
+            margin: 16px 0; background: radial-gradient(circle, var(--card-bg) 0%, var(--bg-paper) 100%);
             overflow: hidden;
         }
-        #compass-disc-svg { width: 100%; height: 100%; transform-origin: 50% 50%; transition: transform 0.08s linear; }
+        #compass-svg-disc { width: 100%; height: 100%; transform-origin: 50% 50%; transition: transform 0.08s linear; }
         
-        .compass-cross-v { position: absolute; top: 0; left: 50%; width: 2px; height: 100%; background: rgba(239, 68, 68, 0.8); transform: translateX(-50%); pointer-events: none; z-index: 6; }
-        .compass-cross-h { position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: rgba(143, 188, 143, 0.4); transform: translateY(-50%); pointer-events: none; z-index: 6; }
+        .comp-cross-v { position: absolute; top: 0; left: 50%; width: 2px; height: 100%; background: rgba(220, 38, 38, 0.7); transform: translateX(-50%); pointer-events: none; z-index: 6; }
+        .comp-cross-h { position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: rgba(143, 188, 143, 0.4); transform: translateY(-50%); pointer-events: none; z-index: 6; }
 
-        .bubble-level-ring {
-            position: absolute; top: 50%; left: 50%; width: 44px; height: 44px;
-            transform: translate(-50%, -50%); border: 1.5px solid rgba(255, 255, 255, 0.4);
-            border-radius: 50%; background: rgba(8, 12, 10, 0.65); backdrop-filter: blur(4px);
+        .bubble-level-holder {
+            position: absolute; top: 50%; left: 50%; width: 42px; height: 42px;
+            transform: translate(-50%, -50%); border: 1.5px solid rgba(143, 188, 143, 0.7);
+            border-radius: 50%; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);
             z-index: 8; pointer-events: none; display: flex; align-items: center; justify-content: center;
         }
-        .bubble-center-dot { position: absolute; width: 14px; height: 14px; border: 1px dashed rgba(255, 255, 255, 0.45); border-radius: 50%; }
-        .spirit-bubble {
-            width: 12px; height: 12px; background: var(--neon-color); border-radius: 50%;
-            box-shadow: 0 0 10px var(--neon-color); position: absolute; transform: translate(0px, 0px); transition: transform 0.08s ease-out;
+        .bubble-target-dot { position: absolute; width: 14px; height: 14px; border: 1px dashed rgba(255, 255, 255, 0.5); border-radius: 50%; }
+        .spirit-bubble-ball {
+            width: 10px; height: 10px; background: #22C55E; border-radius: 50%; box-shadow: 0 0 8px #22C55E;
+            position: absolute; transform: translate(0px, 0px); transition: transform 0.08s ease-out;
         }
-        .spirit-bubble.perfect-level { background: #00FF66; box-shadow: 0 0 14px #00FF66; }
+        .spirit-bubble-ball.level-ok { background: #00FF66; box-shadow: 0 0 12px #00FF66; }
 
         /* SOS КНОПКИ */
-        .btn-sos-main {
+        .btn-sos-large {
             background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%); color: #FFF; border: none;
-            padding: 16px; border-radius: 14px; font-size: 15px; font-weight: 900; text-transform: uppercase;
-            cursor: pointer; box-shadow: 0 0 20px rgba(220, 38, 38, 0.6); text-align: center; text-decoration: none;
+            padding: 16px; border-radius: 12px; font-size: 15px; font-weight: 900; text-transform: uppercase;
+            cursor: pointer; box-shadow: 0 4px 16px rgba(220, 38, 38, 0.4); text-align: center; text-decoration: none;
             display: block; letter-spacing: 1px; width: 100%; margin-bottom: 12px;
         }
 
-        /* РЕКЛАМНЫЙ КОНТЕЙНЕР РСЯ */
-        .ad-rsya-card {
-            background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 14px;
-            padding: 10px; margin: 16px 0; width: 100%; text-align: center; overflow: hidden;
-        }
+        footer { background-color: var(--footer-bg); color: #E0E0E0; padding: 24px 16px 20px; margin-top: auto; font-size: 13px; width: 100%; }
+        .footer-content { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 20px; }
+        @media (min-width: 768px) { .footer-content { grid-template-columns: repeat(3, 1fr); } }
+        .footer-column h4 { font-family: 'Merriweather', serif; color: #E0E0E0; font-size: 15px; margin-bottom: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 6px; }
+        .footer-column a { color: var(--promo-orange); text-decoration: none; display: block; margin-bottom: 8px; }
+        .footer-bottom { text-align: center; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.05); font-size: 11px; opacity: 0.6; }
     </style>
 </head>
 <body>
 
-    <header>
-        <a href="tech.html" class="header-brand">
-            <img src="logo.jpeg" alt="Лесовик">
+    <header class="glass-header">
+        <a href="https://lesovik-pro.ru/tech.html" class="logo-container">
+            <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
             <h1>Лесовик TECH</h1>
         </a>
-        <button class="btn-toggle-glow" onclick="cycleNeonColor()">
-            <span>💡</span><span id="glow-theme-name">Изумруд</span>
-        </button>
+
+        <div class="header-right">
+            <button class="btn-glow-switch" onclick="cycleThemeColor()">
+                <span>💡</span><span id="glow-theme-name">Изумруд</span>
+            </button>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тема</button>
+        </div>
     </header>
 
-    <div class="nav-bar-deck">
-        <button class="nav-tab-btn active" onclick="setMainView('speed', event)">Спидометр</button>
-        <button class="nav-tab-btn" onclick="setMainView('computer', event)">Борт. Компьютер</button>
-        <button class="nav-tab-btn" onclick="setMainView('map', event)">Карта</button>
-        <button class="nav-tab-btn" onclick="setMainView('compass', event)">Компас</button>
-        <button class="nav-tab-btn" onclick="setMainView('sos', event)" style="color:var(--danger-red);">SOS</button>
+    <!-- НАВИГАЦИЯ РАЗДЕЛА -->
+    <div class="mobile-quick-nav">
+        <a href="https://lesovik-pro.ru/" style="color: var(--forest-green); font-weight: 800;">🌲 На главный сайт</a>
+        <a href="tech.html">⚙️ Раздел Техника</a>
+        <a href="#footer-contacts" onclick="document.getElementById('footer-contacts').scrollIntoView({behavior: 'smooth'}); return false;" style="color: var(--promo-orange); font-weight: 800; margin-left: auto;">▼ Контакты</a>
     </div>
 
-    <!-- 1. СПИДОМЕТР С ЧАСТОЙ ШКАЛОЙ И КАЛМАНОМ -->
-    <section id="view-speed" class="view-section active">
-        <div class="gauge-card">
-            <div class="gauge-header-row">
-                <span id="gps-indicator" class="status-badge">🛰️ ГЛОНАСС: Поиск...</span>
-                <div class="unit-switch-group">
-                    <button class="btn-unit-opt active" onclick="setSpeedUnit('kmh', event)">км/ч</button>
-                    <button class="btn-unit-opt" onclick="setSpeedUnit('mph', event)">миль</button>
+    <!-- ВКЛАДКИ ПРИБОРНОЙ ПАНЕЛИ -->
+    <div class="nav-tabs-deck">
+        <button class="nav-tab-btn active" onclick="switchSection('speed', event)">Спидометр</button>
+        <button class="nav-tab-btn" onclick="switchSection('computer', event)">Борт. Комп</button>
+        <button class="nav-tab-btn" onclick="switchSection('map', event)">Карта</button>
+        <button class="nav-tab-btn" onclick="switchSection('compass', event)">Компас</button>
+        <button class="nav-tab-btn" onclick="switchSection('sos', event)" style="color: var(--danger-red);">SOS</button>
+    </div>
+
+    <main class="container">
+
+        <!-- 1. СПИДОМЕТР С ШКАЛОЙ И КАЛМАНОМ -->
+        <section id="sec-speed" class="view-section active">
+            <div class="speedometer-card">
+                <div class="speed-top-row">
+                    <span id="gps-status-label" class="gps-status-badge">🛰️ ГЛОНАСС: Поиск спутников...</span>
+                    <div class="unit-switcher">
+                        <button class="unit-btn active" onclick="setSpeedUnits('kmh', event)">км/ч</button>
+                        <button class="unit-btn" onclick="setSpeedUnits('mph', event)">миль</button>
+                    </div>
+                </div>
+
+                <div class="dial-box">
+                    <svg viewBox="0 0 300 300" class="dial-svg">
+                        <circle cx="150" cy="150" r="120" fill="none" stroke="var(--border-color)" stroke-width="6" stroke-dasharray="565" stroke-dashoffset="141" stroke-linecap="round" transform="rotate(135 150 150)" />
+                        <circle id="speed-arc-progress" cx="150" cy="150" r="120" fill="none" stroke="var(--promo-orange)" stroke-width="8" stroke-dasharray="565" stroke-dashoffset="565" stroke-linecap="round" transform="rotate(135 150 150)" style="transition: stroke-dashoffset 0.08s linear;" />
+                        
+                        <!-- Оцифровка -->
+                        <text x="56" y="236" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.8">0</text>
+                        <text x="28" y="165" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.8">20</text>
+                        <text x="52" y="94" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.8">40</text>
+                        <text x="142" y="58" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.8">60</text>
+                        <text x="232" y="94" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.8">80</text>
+                        <text x="256" y="165" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.8">100</text>
+                        <text x="226" y="236" fill="var(--text-graphite)" font-size="12" font-family="monospace" font-weight="900" opacity="0.8">120</text>
+
+                        <!-- Мелкие риски шкалы -->
+                        <g id="svg-speed-ticks" stroke="var(--text-graphite)"></g>
+
+                        <!-- Стрелка -->
+                        <g id="speed-needle-group" style="transform-origin: 150px 150px; transition: transform 0.08s linear; transform: rotate(-135deg);">
+                            <line x1="150" y1="150" x2="150" y2="42" stroke="var(--danger-red)" stroke-width="4" stroke-linecap="round" />
+                            <circle cx="150" cy="150" r="8" fill="var(--promo-orange)" />
+                        </g>
+                    </svg>
+
+                    <div class="dial-core">
+                        <span id="speed-num-val">0.0</span>
+                        <span id="speed-unit-lbl" class="speed-unit-caption">км/ч</span>
+                    </div>
+                </div>
+
+                <div class="tactical-grid-3">
+                    <div class="tac-box">
+                        <div class="tac-lbl">Максимальная</div>
+                        <div id="tac-max-val" class="tac-val">0.0</div>
+                    </div>
+                    <div class="tac-box">
+                        <div class="tac-lbl">Средняя</div>
+                        <div id="tac-avg-val" class="tac-val">0.0</div>
+                    </div>
+                    <div class="tac-box">
+                        <div class="tac-lbl">Одометр</div>
+                        <div id="tac-odo-val" class="tac-val">0.00</div>
+                    </div>
                 </div>
             </div>
+        </section>
 
-            <!-- Циферблат со шкалой -->
-            <div class="gauge-circle-box">
-                <svg viewBox="0 0 300 300" class="gauge-svg-element">
-                    <!-- Базовая дуга 270 градусов -->
-                    <circle cx="150" cy="150" r="120" fill="none" stroke="var(--panel-border)" stroke-width="6" stroke-dasharray="565" stroke-dashoffset="141" stroke-linecap="round" transform="rotate(135 150 150)" />
-                    <!-- Активная неоновая стрелка-дуга -->
-                    <circle id="speed-radial-bar" cx="150" cy="150" r="120" fill="none" stroke="var(--neon-color)" stroke-width="8" stroke-dasharray="565" stroke-dashoffset="565" stroke-linecap="round" transform="rotate(135 150 150)" style="transition: stroke-dashoffset 0.08s linear;" />
-                    
-                    <!-- Оцифровка (0, 20, 40, 60, 80, 100, 120) -->
-                    <text x="56" y="236" fill="var(--text-main)" font-size="12" font-family="monospace" font-weight="900">0</text>
-                    <text x="28" y="165" fill="var(--text-main)" font-size="12" font-family="monospace" font-weight="900">20</text>
-                    <text x="52" y="94" fill="var(--text-main)" font-size="12" font-family="monospace" font-weight="900">40</text>
-                    <text x="142" y="58" fill="var(--text-main)" font-size="12" font-family="monospace" font-weight="900">60</text>
-                    <text x="232" y="94" fill="var(--text-main)" font-size="12" font-family="monospace" font-weight="900">80</text>
-                    <text x="256" y="165" fill="var(--text-main)" font-size="12" font-family="monospace" font-weight="900">100</text>
-                    <text x="226" y="236" fill="var(--text-main)" font-size="12" font-family="monospace" font-weight="900">120</text>
+        <!-- 2. БОРТОВОЙ КОМПЬЮТЕР (ТОПЛИВО И МОТОЧАСЫ) -->
+        <section id="sec-computer" class="view-section">
+            <div class="comp-card">
+                <div class="comp-title">⛽ Тактический бортовой компьютер рейса</div>
+                <div class="comp-form-grid">
+                    <div class="comp-input-group">
+                        <label>Топливо в баке (л):</label>
+                        <input type="number" id="comp-tank-liters" value="50">
+                    </div>
+                    <div class="comp-input-group">
+                        <label>Расход (л/ч или л/100км):</label>
+                        <input type="number" id="comp-rate-value" value="12">
+                    </div>
+                </div>
 
-                    <!-- Мелкие и крупные риски шкалы каждые 2 и 10 км/ч -->
-                    <g id="svg-speed-ticks-group" stroke="var(--text-main)"></g>
+                <button id="btn-comp-toggle" class="btn-action" onclick="toggleTripEngine()" style="font-size:12px; font-weight:900; padding:14px;">
+                    ▶ ЗАПУСК РЕЙСА (СЧЕТ ТОПЛИВА И ВРЕМЕНИ)
+                </button>
 
-                    <!-- Стрелка спидометра -->
-                    <g id="speed-arrow-pointer" style="transform-origin: 150px 150px; transition: transform 0.08s linear; transform: rotate(-135deg);">
-                        <line x1="150" y1="150" x2="150" y2="42" stroke="var(--danger-red)" stroke-width="4" stroke-linecap="round" />
-                        <circle cx="150" cy="150" r="8" fill="var(--neon-color)" />
-                    </g>
+                <div class="trip-tele-grid">
+                    <div class="trip-tele-item">
+                        Моточасы в пути:
+                        <b id="comp-timer-lbl">00:00:00</b>
+                    </div>
+                    <div class="trip-tele-item">
+                        Сожжено топлива:
+                        <b id="comp-spent-lbl">0.0 л</b>
+                    </div>
+                    <div class="trip-tele-item">
+                        Остаток в баке:
+                        <b id="comp-remain-lbl">50.0 л</b>
+                    </div>
+                    <div class="trip-tele-item">
+                        Запас хода по времени:
+                        <b id="comp-hours-left-lbl">~4.1 ч</b>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. КАРТА С РАЗНЕСЕННЫМИ ЗУМ-КНОПКАМИ И РОЗОЙ СТОРОН -->
+        <section id="sec-map" class="view-section">
+            <div id="map-box-wrapper">
+                <div id="yandex-map-view">
+                    <div class="map-rose-compass">
+                        <span class="m-rose-n">С</span>
+                        <span class="m-rose-e">В</span>
+                        <span class="m-rose-s">Ю</span>
+                        <span class="m-rose-w">З</span>
+                        🧭
+                    </div>
+                    <div class="map-zoom-buttons-dock">
+                        <button class="btn-map-zoom" onclick="zoomMapStep(+1)">+</button>
+                        <button class="btn-map-zoom" onclick="zoomMapStep(-1)">−</button>
+                    </div>
+                </div>
+
+                <div class="map-fs-controls-dock" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-top: 10px;">
+                    <button class="nav-tab-btn" onclick="toggleMapFullscreen()" id="btn-map-fs">⛶ На весь экран</button>
+                    <button class="nav-tab-btn" onclick="centerMapUser()">🎯 Где я?</button>
+                    <button class="nav-tab-btn" onclick="dropMapMarker()">📌 Засечка точки</button>
+                    <button class="nav-tab-btn" style="color:var(--danger-red);" onclick="clearAllMarkers()">🗑️ Очистить точки</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. КОМПАС С ШКАЛОЙ И УРОВНЕМ ГОРИЗОНТА -->
+        <section id="sec-compass" class="view-section">
+            <div class="compass-rim-box">
+                <div class="comp-cross-v"></div>
+                <div class="comp-cross-h"></div>
+                <div class="bubble-level-holder">
+                    <div class="bubble-target-dot"></div>
+                    <div class="spirit-bubble-ball" id="spirit-level-ball"></div>
+                </div>
+                <svg id="compass-svg-disc" viewBox="0 0 400 400">
+                    <g id="compass-svg-ticks-layer"></g>
+                    <text x="200" y="44" fill="#DC2626" font-size="24" font-weight="900" text-anchor="middle" dominant-baseline="central">С</text>
+                    <text x="356" y="200" fill="var(--text-graphite)" font-size="22" font-weight="900" text-anchor="middle" dominant-baseline="central" opacity="0.8">В</text>
+                    <text x="200" y="356" fill="var(--text-graphite)" font-size="22" font-weight="900" text-anchor="middle" dominant-baseline="central" opacity="0.8">Ю</text>
+                    <text x="44" y="200" fill="var(--text-graphite)" font-size="22" font-weight="900" text-anchor="middle" dominant-baseline="central" opacity="0.8">З</text>
+                    <polygon points="200,58 186,200 214,200" fill="#DC2626"/>
+                    <polygon points="200,342 186,200 214,200" fill="var(--text-graphite)" opacity="0.8"/>
                 </svg>
-
-                <div class="gauge-digital-core">
-                    <span id="speed-main-num">0.0</span>
-                    <span id="speed-unit-text" class="speed-unit-caption">км/ч</span>
-                </div>
             </div>
 
-            <!-- Тройная телеметрия скорости -->
-            <div class="tactical-grid-3">
-                <div class="tac-cell">
-                    <div class="tac-label">Максимальная</div>
-                    <div id="tac-max-spd" class="tac-value">0.0</div>
-                </div>
-                <div class="tac-cell">
-                    <div class="tac-label">Средняя</div>
-                    <div id="tac-avg-spd" class="tac-value">0.0</div>
-                </div>
-                <div class="tac-cell">
-                    <div class="tac-label">Одометр</div>
-                    <div id="tac-odometer" class="tac-value">0.00 км</div>
-                </div>
+            <div style="font-family:monospace; font-size:36px; font-weight:900; color:var(--promo-orange);" id="compass-azimuth-txt">
+                0° С
             </div>
-        </div>
-
-        <!-- БЛОК РСЯ В ЛЕНТЕ СПИДОМЕТРА -->
-        <div class="ad-rsya-card">
-            <div id="yandex_rtb_R-A-19250236-6"></div>
-            <script>
-                window.yaContextCb.push(() => {
-                    Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-6", "renderTo": "yandex_rtb_R-A-19250236-6" });
-                });
-            </script>
-        </div>
-    </section>
-
-    <!-- 2. БОРТОВОЙ КОМПЬЮТЕР (ТОПЛИВО И МОТОЧАСЫ) -->
-    <section id="view-computer" class="view-section">
-        <div class="trip-computer-deck">
-            <div class="trip-comp-title">
-                <span>⛽ Тактический бортовой компьютер</span>
-                <span id="trip-live-indicator" style="color:var(--danger-red);">● СТОП</span>
-            </div>
-
-            <div class="trip-input-row">
-                <div class="comp-input-box">
-                    <label>Топливо в баке (литров):</label>
-                    <input type="number" id="inp-fuel-tank" class="comp-input-field" value="50" placeholder="Литры">
-                </div>
-                <div class="comp-input-box">
-                    <label>Расход л/час (или на 100 км):</label>
-                    <input type="number" id="inp-fuel-rate" class="comp-input-field" value="12" placeholder="Расход">
-                </div>
-            </div>
-
-            <button id="btn-toggle-trip" class="btn-trip-control" onclick="toggleTripEngine()">
-                ▶ ЗАПУСК РЕЙСА (СЧЕТ ТОПЛИВА И ВРЕМЕНИ)
+            <button class="btn-action" onclick="requestCompassAccess()" style="max-width:280px; margin-top:10px;">
+                🧭 Калибровать датчики компаса
             </button>
+        </section>
 
-            <div class="trip-telemetry-grid">
-                <div class="trip-telem-item">
-                    Моточасы рейса:
-                    <b id="trip-timer-display">00:00:00</b>
-                </div>
-                <div class="trip-telem-item">
-                    Сожжено топлива:
-                    <b id="trip-fuel-spent">0.0 л</b>
-                </div>
-                <div class="trip-telem-item">
-                    Остаток в баке:
-                    <b id="trip-fuel-remain">50.0 л</b>
-                </div>
-                <div class="trip-telem-item">
-                    Остаток хода по времени:
-                    <b id="trip-hours-left">~4.1 ч</b>
+        <!-- 5. SOS -->
+        <section id="sec-sos" class="view-section">
+            <a href="tel:112" class="btn-sos-large">🚨 ЭКСТРЕННЫЙ ВЫЗОВ 112</a>
+            <a id="sos-sms-btn" href="sms:112" class="btn-sos-large" style="background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);">
+                📨 SMS С КООРДИНАТАМИ СПАСАТЕЛЯМ
+            </a>
+        </section>
+
+    </main>
+
+    <!-- ПОДВАЛ TECH -->
+    <footer id="footer-contacts">
+        <div class="footer-content">
+            <div class="footer-column">
+                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 16px; color: var(--promo-orange);">Лесовик TECH</div>
+                <div style="font-size: 12px; margin-top: 5px; opacity: 0.8;">Специализированное ответвление экосистемы «Лесовик ПРО».</div>
+            </div>
+
+            <div class="footer-column">
+                <div style="background: rgba(37, 99, 235, 0.08); border: 1px solid #2563EB; border-radius: 10px; padding: 14px; text-align: center;">
+                    <div style="font-weight: 700; font-family: 'Merriweather', serif; font-size: 14px; color: var(--promo-orange); margin-bottom: 4px;">📢 Реклама и сотрудничество</div>
+                    <div style="font-size: 11.5px; opacity: 0.9; margin-bottom: 10px;">Обращаться в мессенджер MAX:</div>
+                    <a href="https://max.ru/u/f9LHodD0cOI875yHvoHZmqqPccPjZfOTmNpX59MRdveolrlrQNy_ASRu-t8" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: #2563EB; color: #FFF; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 11px; text-decoration: none; text-transform: uppercase;">
+                        <span>💬 Написать в MAX</span>
+                    </a>
                 </div>
             </div>
 
-            <button onclick="resetTripOdometerTotal()" style="background:transparent; border:1px solid var(--panel-border); color:var(--text-main); padding:8px; border-radius:8px; font-size:11px; font-weight:800; cursor:pointer; text-transform:uppercase;">
-                🔄 Сбросить счетчики поездки
-            </button>
-        </div>
-    </section>
-
-    <!-- 3. КАРТА (РАЗНЕСЕННЫЕ КНОПКИ, РОЗА СТОРОН И ВЕСЬ ЭКРАН) -->
-    <section id="view-map" class="view-section">
-        <div id="map-stage-wrapper">
-            <div id="map-canvas-container">
-                <!-- Роза сторон света -->
-                <div class="map-rose-overlay">
-                    <span class="map-rose-n">С</span>
-                    <span class="map-rose-e">В</span>
-                    <span class="map-rose-s">Ю</span>
-                    <span class="map-rose-w">З</span>
-                    🧭
-                </div>
-
-                <!-- Разнесенные кнопки + и - -->
-                <div class="map-zoom-dock">
-                    <button class="btn-zoom-tactical" onclick="zoomMapStep(+1)" title="Приблизить">+</button>
-                    <button class="btn-zoom-tactical" onclick="zoomMapStep(-1)" title="Отдалить">−</button>
+            <div class="footer-column">
+                <h4>Контакты</h4>
+                <a href="mailto:folgoal@gmail.com">✉️ folgoal@gmail.com</a>
+                <div style="font-size: 12px; margin-top: 12px; opacity: 0.6;">
+                    ИП Худяков Николай Сергеевич<br>ИНН: 111801576622<br>Сыктывкар, Республика Коми
                 </div>
             </div>
-
-            <div class="map-floating-bottom-bar" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-top: 10px;">
-                <button class="nav-tab-btn" onclick="toggleMapFullscreen()" id="btn-map-fs">⛶ Во весь экран</button>
-                <button class="nav-tab-btn" onclick="centerMapUser()">🎯 Где я?</button>
-                <button class="nav-tab-btn" onclick="dropMapMarker()">📌 Засечка точки</button>
-                <button class="nav-tab-btn" style="color:var(--danger-red);" onclick="clearAllMarkers()">🗑️ Очистить точки</button>
-            </div>
         </div>
-    </section>
-
-    <!-- 4. КОМПАС (ШКАЛА 360° + ПУЗЫРЬКОВЫЙ УРОВЕНЬ ГОРИЗОНТА) -->
-    <section id="view-compass" class="view-section">
-        <div class="compass-dial-rim">
-            <div class="compass-cross-v"></div>
-            <div class="compass-cross-h"></div>
-
-            <!-- Пузырьковый уровень горизонта в центре -->
-            <div class="bubble-level-ring" title="Уровень горизонта">
-                <div class="bubble-center-dot"></div>
-                <div class="spirit-bubble" id="spirit-level-bubble"></div>
-            </div>
-
-            <!-- Поворотный SVG диск с оцифрованной шкалой -->
-            <svg id="compass-disc-svg" viewBox="0 0 400 400">
-                <g id="compass-svg-ticks-layer"></g>
-                <text x="200" y="44" fill="#DC2626" font-size="24" font-weight="900" text-anchor="middle" dominant-baseline="central">С</text>
-                <text x="356" y="200" fill="#FFFFFF" font-size="22" font-weight="900" text-anchor="middle" dominant-baseline="central">В</text>
-                <text x="200" y="356" fill="#FFFFFF" font-size="22" font-weight="900" text-anchor="middle" dominant-baseline="central">Ю</text>
-                <text x="44" y="200" fill="#FFFFFF" font-size="22" font-weight="900" text-anchor="middle" dominant-baseline="central">З</text>
-                <polygon points="200,58 186,200 214,200" fill="#DC2626"/>
-                <polygon points="200,342 186,200 214,200" fill="#FFFFFF" opacity="0.8"/>
-            </svg>
+        <div class="footer-bottom">
+            &copy; <script>document.write(new Date().getFullYear())</script> Лесовик TECH / Лесовик ПРО. Все права защищены.
         </div>
+    </footer>
 
-        <div style="font-family:monospace; font-size:36px; font-weight:900; color:var(--neon-color); text-shadow:0 0 10px var(--neon-glow);" id="compass-azimuth-label">
-            0° С
-        </div>
-
-        <button onclick="requestCompassAccess()" style="background:#121A15; border:1px solid var(--panel-border); color:var(--text-main); padding:10px 16px; border-radius:10px; font-weight:800; font-size:11px; cursor:pointer; margin-top:8px; text-transform:uppercase;">
-            🧭 Откалибровать датчики компаса
-        </button>
-    </section>
-
-    <!-- 5. SOS И СПАСЕНИЕ -->
-    <section id="view-sos" class="view-section">
-        <a href="tel:112" class="btn-sos-main">🚨 ЭКСТРЕННЫЙ ВЫЗОВ 112</a>
-        <a id="sos-sms-link" href="sms:112" class="btn-sos-main" style="background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);">
-            📨 SMS С КООРДИНАТАМИ СПАСАТЕЛЯМ
-        </a>
-
-        <div style="background:var(--panel-bg); border:1px solid var(--panel-border); border-radius:14px; padding:14px; width:100%; margin-top:10px;">
-            <h3 style="font-size:13px; color:var(--neon-color); margin-bottom:6px;">🔊 Голосовой отпугиватель зверей</h3>
-            <p style="font-size:12px; opacity:0.8; margin-bottom:10px;">Синтез резких частот 800–2600 Гц для отпугивания хищников в тайге.</p>
-            <button onclick="toggleAudioRepeller()" id="btn-repeller-state" style="background:#121A15; border:1px solid var(--panel-border); color:var(--text-main); padding:10px; width:100%; border-radius:8px; font-weight:800; font-size:11px; cursor:pointer;">
-                ▶ ВКЛЮЧИТЬ СИРЕНУ-ОТПУГИВАТЕЛЬ
-            </button>
-        </div>
-    </section>
-
-    <!-- СКРИПТЫ ЛОГИКИ ТАКТИЧЕСКОГО БОРТОВОГО КОМПЛЕКСА -->
+    <!-- СКРИПТЫ ТАКТИЧЕСКОГО КОМПЛЕКСА -->
     <script>
-        // 1. ФИЛЬТР КАЛМАНА ДЛЯ СКОРОСТИ
+        // 1. Фильтр Калмана для плавной скорости без рывков
         class KalmanSpeedFilter {
             constructor(q = 0.02, r = 0.6) {
                 this.q = q; this.r = r; this.x = null; this.p = 1.0;
@@ -493,59 +524,51 @@
         }
         const speedKalman = new KalmanSpeedFilter(0.02, 0.6);
 
-        // 2. ЦВЕТОВЫЕ СХЕМЫ ПОДСВЕТКИ (СТРОГИЙ МУЖСКОЙ СТИЛЬ)
-        const glowThemes = [
-            { name: "Изумруд", color: "#22C55E", glow: "rgba(34, 197, 94, 0.45)" },
-            { name: "Бирюза", color: "#06B6D4", glow: "rgba(6, 182, 212, 0.45)" },
-            { name: "Красный", color: "#EF4444", glow: "rgba(239, 68, 68, 0.45)" },
-            { name: "Оранжевый", color: "#F39C12", glow: "rgba(243, 156, 18, 0.45)" },
-            { name: "Белый", color: "#FFFFFF", glow: "rgba(255, 255, 255, 0.45)" }
+        // Палитра подсветки (строгий TECH стиль)
+        const themesList = [
+            { name: "Изумруд", color: "#2D5A27", glow: "rgba(45, 90, 39, 0.3)" },
+            { name: "Бирюза", color: "#06B6D4", glow: "rgba(6, 182, 212, 0.3)" },
+            { name: "Красный", color: "#DC2626", glow: "rgba(220, 38, 38, 0.3)" },
+            { name: "Оранжевый", color: "#E67E22", glow: "rgba(230, 126, 34, 0.3)" },
+            { name: "Белый", color: "#333333", glow: "rgba(51, 51, 51, 0.3)" }
         ];
-        let currentThemeIdx = 0;
+        let currentThemeIndex = 0;
 
-        function cycleNeonColor() {
-            currentThemeIdx = (currentThemeIdx + 1) % glowThemes.length;
-            const th = glowThemes[currentThemeIdx];
+        function cycleThemeColor() {
+            currentThemeIndex = (currentThemeIndex + 1) % themesList.length;
+            const th = themesList[currentThemeIndex];
             document.documentElement.style.setProperty('--neon-color', th.color);
             document.documentElement.style.setProperty('--neon-glow', th.glow);
             document.getElementById('glow-theme-name').innerText = th.name;
         }
 
-        // 3. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
-        function setMainView(viewId, e) {
-            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+        function switchSection(secId, e) {
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('view-' + viewId).classList.add('active');
+            document.getElementById('sec-' + secId).classList.add('active');
             e.target.classList.add('active');
-            if (viewId === 'map' && yMap) yMap.container.fitToViewport();
+            if (secId === 'map' && yMap) yMap.container.fitToViewport();
         }
 
-        // 4. ГЕНЕРАЦИЯ ДЕТАЛИЗИРОВАННОЙ ШКАЛЫ СПИДОМЕТРА (КАЖДЫЕ 2 КМ/Ч)
-        function generateSpeedTicks() {
-            const group = document.getElementById('svg-speed-ticks-group');
+        // Шкала спидометра (каждые 2 км/ч)
+        function generateSpeedTicksSVG() {
+            const group = document.getElementById('svg-speed-ticks');
             group.innerHTML = '';
-            const cx = 150, cy = 150, r = 120;
+            const cx = 150, cy = 150, radius = 120;
 
             for (let k = 0; k <= 120; k += 2) {
                 const pct = k / 120;
                 const angle = 135 + (pct * 270);
                 const rad = (angle - 90) * (Math.PI / 180);
 
-                let len = 4;
-                let strokeW = 1;
-                let opacity = 0.25;
+                let len = 4, strokeW = 1, opacity = 0.3;
+                if (k % 10 === 0) { len = 10; strokeW = 2; opacity = 0.6; }
+                if (k % 20 === 0) { len = 15; strokeW = 2.5; opacity = 0.9; }
 
-                if (k % 10 === 0) {
-                    len = 10; strokeW = 2; opacity = 0.6;
-                }
-                if (k % 20 === 0) {
-                    len = 16; strokeW = 3; opacity = 0.9;
-                }
-
-                const x1 = cx + (r - len) * Math.cos(rad);
-                const y1 = cy + (r - len) * Math.sin(rad);
-                const x2 = cx + r * Math.cos(rad);
-                const y2 = cy + r * Math.sin(rad);
+                const x1 = cx + (radius - len) * Math.cos(rad);
+                const y1 = cy + (radius - len) * Math.sin(rad);
+                const x2 = cx + radius * Math.cos(rad);
+                const y2 = cy + radius * Math.sin(rad);
 
                 const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("x1", x1.toFixed(1)); line.setAttribute("y1", y1.toFixed(1));
@@ -556,55 +579,46 @@
             }
         }
 
-        // 5. ТЕЛЕМЕТРИЯ СПИДОМЕТРА, ОДОМЕТРА И СКОРОСТИ
-        let currentRawKmh = 0, filteredKmh = 0;
-        let maxKmhRecord = 0, speedUnitMode = 'kmh';
+        // Телеметрия спидометра
+        let filteredSpeedKmh = 0, maxSpeedRecord = 0, speedUnitMode = 'kmh';
         let totalOdometerMeters = parseFloat(localStorage.getItem('leso_odo_m')) || 0;
-        let speedSamplesCount = 0, speedSumKmh = 0;
-        let lastGpsLat = null, lastGpsLon = null;
+        let speedSamples = 0, speedSum = 0;
+        let lastLat = null, lastLon = null;
 
-        function setSpeedUnit(unit, e) {
+        function setSpeedUnits(unit, e) {
             speedUnitMode = unit;
-            document.querySelectorAll('.btn-unit-opt').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('active'));
             e.target.classList.add('active');
-            document.getElementById('speed-unit-text').innerText = (unit === 'kmh') ? 'км/ч' : 'миль/ч';
-            renderSpeedUI(filteredKmh);
+            document.getElementById('speed-unit-lbl').innerText = (unit === 'kmh') ? 'км/ч' : 'миль/ч';
+            renderSpeedometerUI(filteredSpeedKmh);
         }
 
-        function renderSpeedUI(kmh) {
-            let displayVal = kmh;
-            if (speedUnitMode === 'mph') displayVal *= 0.621371;
+        function renderSpeedometerUI(kmh) {
+            let val = kmh;
+            if (speedUnitMode === 'mph') val *= 0.621371;
 
-            document.getElementById('speed-main-num').innerText = displayVal.toFixed(1);
+            document.getElementById('speed-num-val').innerText = val.toFixed(1);
 
             let pct = Math.min(kmh / 120, 1.0);
             let angle = -135 + (pct * 270);
-            document.getElementById('speed-arrow-pointer').style.transform = `rotate(${angle}deg)`;
+            document.getElementById('speed-needle-group').style.transform = `rotate(${angle}deg)`;
 
             let offset = 565 - (pct * 565);
-            document.getElementById('speed-radial-bar').style.strokeDashoffset = offset;
+            document.getElementById('speed-arc-progress').style.strokeDashoffset = offset;
 
-            let maxVal = maxKmhRecord;
-            let avgVal = speedSamplesCount > 0 ? (speedSumKmh / speedSamplesCount) : 0;
-            if (speedUnitMode === 'mph') { maxVal *= 0.621371; avgVal *= 0.621371; }
+            let maxV = maxSpeedRecord;
+            let avgV = speedSamples > 0 ? (speedSum / speedSamples) : 0;
+            if (speedUnitMode === 'mph') { maxV *= 0.621371; avgV *= 0.621371; }
 
-            document.getElementById('tac-max-spd').innerText = maxVal.toFixed(1);
-            document.getElementById('tac-avg-spd').innerText = avgVal.toFixed(1);
+            document.getElementById('tac-max-val').innerText = maxV.toFixed(1);
+            document.getElementById('tac-avg-val').innerText = avgV.toFixed(1);
 
-            let odoKm = totalOdometerMeters / 1000;
-            if (speedUnitMode === 'mph') odoKm *= 0.621371;
-            document.getElementById('tac-odometer').innerText = odoKm.toFixed(2) + (speedUnitMode === 'kmh' ? ' км' : ' миль');
+            let odo = totalOdometerMeters / 1000;
+            if (speedUnitMode === 'mph') odo *= 0.621371;
+            document.getElementById('tac-odo-val').innerText = odo.toFixed(2) + (speedUnitMode === 'kmh' ? ' км' : ' миль');
         }
 
-        function resetTripOdometerTotal() {
-            if (confirm("Сбросить максимальную скорость, среднюю и одометр?")) {
-                totalOdometerMeters = 0; maxKmhRecord = 0; speedSamplesCount = 0; speedSumKmh = 0;
-                localStorage.removeItem('leso_odo_m');
-                renderSpeedUI(0);
-            }
-        }
-
-        // GPS ГЛОНАСС ТРЕКИНГ
+        // GPS Трекинг
         if ('geolocation' in navigator) {
             navigator.geolocation.watchPosition(pos => {
                 const lat = pos.coords.latitude;
@@ -612,121 +626,105 @@
                 const spd = pos.coords.speed;
                 const acc = pos.coords.accuracy;
 
-                document.getElementById('gps-indicator').innerText = `🛰️ ГЛОНАСС (±${Math.round(acc)}м)`;
+                document.getElementById('gps-status-label').innerText = `🛰️ ГЛОНАСС (±${Math.round(acc)}м)`;
 
-                let spdVal = (spd !== null && spd >= 0) ? spd * 3.6 : 0;
-                filteredKmh = speedKalman.filter(spdVal);
+                let rawKmh = (spd !== null && spd >= 0) ? spd * 3.6 : 0;
+                filteredSpeedKmh = speedKalman.filter(rawKmh);
 
-                if (filteredKmh > maxKmhRecord) maxKmhRecord = filteredKmh;
-                if (filteredKmh > 2.0) {
-                    speedSamplesCount++; speedSumKmh += filteredKmh;
-                }
+                if (filteredSpeedKmh > maxSpeedRecord) maxSpeedRecord = filteredSpeedKmh;
+                if (filteredSpeedKmh > 2.0) { speedSamples++; speedSum += filteredSpeedKmh; }
 
-                if (lastGpsLat !== null && lastGpsLon !== null) {
+                if (lastLat !== null && lastLon !== null) {
                     const R = 6371e3;
-                    const dL = (lat - lastGpsLat) * Math.PI / 180;
-                    const dL2 = (lon - lastGpsLon) * Math.PI / 180;
-                    const a = Math.sin(dL/2)**2 + Math.cos(lastGpsLat*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dL2/2)**2;
-                    const d = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                    const dL = (lat - lastLat) * Math.PI / 180;
+                    const dL2 = (lon - lastLon) * Math.PI / 180;
+                    const a = Math.sin(dL/2)**2 + Math.cos(lastLat*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dL2/2)**2;
+                    const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-                    if (acc < 35 && d > 1.8 && d < 120) {
-                        totalOdometerMeters += d;
+                    if (acc < 35 && dist > 1.8 && dist < 120) {
+                        totalOdometerMeters += dist;
                         localStorage.setItem('leso_odo_m', totalOdometerMeters);
                     }
                 }
-                lastGpsLat = lat; lastGpsLon = lon;
-                renderSpeedUI(filteredKmh);
+                lastLat = lat; lastLon = lon;
+                renderSpeedometerUI(filteredSpeedKmh);
 
-                // Обновление SMS SOS
-                const smsTxt = encodeURIComponent(`SOS! Нужна помощь в лесу/на воде. Координаты ГЛОНАСС: https://maps.google.com/?q=${lat},${lon}`);
-                document.getElementById('sos-sms-link').href = `sms:112?body=${smsTxt}`;
+                const smsText = encodeURIComponent(`SOS! Нужна помощь. Координаты: https://maps.google.com/?q=${lat},${lon}`);
+                document.getElementById('sos-sms-link').href = `sms:112?body=${smsText}`;
 
                 if (yUserPlacemark && yMap) yUserPlacemark.geometry.setCoordinates([lat, lon]);
             }, err => {
-                document.getElementById('gps-indicator').innerText = '⚠️ Поиск спутников...';
+                document.getElementById('gps-status-label').innerText = '⚠️ Поиск спутников...';
             }, { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 });
         }
 
-        // 6. БОРТОВОЙ КОМПЬЮТЕР МОТОЧАСОВ И ТОПЛИВА
-        let isTripActive = false;
-        let tripStartTime = null;
-        let tripTimerInterval = null;
-        let fuelStartLiters = 50;
-        let fuelRatePerHour = 12;
+        // Бортовой компьютер (моточасы и топливо)
+        let isTripRunning = false, tripStartMs = null, tripTimerRef = null;
+        let startFuelLiters = 50, ratePerHour = 12;
 
         function toggleTripEngine() {
-            isTripActive = !isTripActive;
-            const btn = document.getElementById('btn-toggle-trip');
+            isTripRunning = !isTripRunning;
+            const btn = document.getElementById('btn-comp-toggle');
             const ind = document.getElementById('trip-live-indicator');
 
-            if (isTripActive) {
-                fuelStartLiters = parseFloat(document.getElementById('inp-fuel-tank').value) || 50;
-                fuelRatePerHour = parseFloat(document.getElementById('inp-fuel-rate').value) || 12;
-                tripStartTime = Date.now();
+            if (isTripRunning) {
+                startFuelLiters = parseFloat(document.getElementById('comp-tank-liters').value) || 50;
+                ratePerHour = parseFloat(document.getElementById('comp-rate-value').value) || 12;
+                tripStartMs = Date.now();
                 btn.innerText = '⏹ ОСТАНОВИТЬ РЕЙС';
-                btn.classList.add('active-stop');
-                ind.innerText = '● В ПУТИ (АКТИВЕН)';
-                ind.style.color = 'var(--neon-color)';
-
-                tripTimerInterval = setInterval(updateTripTelemetry, 1000);
+                btn.style.background = 'var(--danger-red)';
+                tripTimerRef = setInterval(updateTripTelemetryUI, 1000);
             } else {
-                clearInterval(tripTimerInterval);
+                clearInterval(tripTimerRef);
                 btn.innerText = '▶ ЗАПУСК РЕЙСА (СЧЕТ ТОПЛИВА И ВРЕМЕНИ)';
-                btn.classList.remove('active-stop');
-                ind.innerText = '● СТОП';
-                ind.style.color = 'var(--danger-red)';
+                btn.style.background = 'var(--promo-orange)';
             }
         }
 
-        function updateTripTelemetry() {
-            if (!isTripActive || !tripStartTime) return;
-            const elapsedSec = Math.floor((Date.now() - tripStartTime) / 1000);
-            const hrs = Math.floor(elapsedSec / 3600);
-            const mins = Math.floor((elapsedSec % 3600) / 60);
-            const secs = elapsedSec % 60;
+        function updateTripTelemetryUI() {
+            if (!isTripRunning || !tripStartMs) return;
+            const elapsedSec = Math.floor((Date.now() - tripStartMs) / 1000);
+            const hh = Math.floor(elapsedSec / 3600).toString().padStart(2, '0');
+            const mm = Math.floor((elapsedSec % 3600) / 60).toString().padStart(2, '0');
+            const ss = (elapsedSec % 60).toString().padStart(2, '0');
 
-            const timeStr = `${hrs.toString().padStart(2,'0')}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
-            document.getElementById('trip-timer-display').innerText = timeStr;
+            document.getElementById('comp-timer-lbl').innerText = `${hh}:${mm}:${ss}`;
 
-            const hoursFloat = elapsedSec / 3600;
-            const spentFuel = hoursFloat * fuelRatePerHour;
-            const remainFuel = Math.max(0, fuelStartLiters - spentFuel);
-            const hoursLeft = fuelRatePerHour > 0 ? (remainFuel / fuelRatePerHour) : 0;
+            const hours = elapsedSec / 3600;
+            const spent = hours * ratePerHour;
+            const remain = Math.max(0, startFuelLiters - spent);
+            const hrsLeft = ratePerHour > 0 ? (remain / ratePerHour) : 0;
 
-            document.getElementById('trip-fuel-spent').innerText = `${spentFuel.toFixed(1)} л`;
-            document.getElementById('trip-fuel-remain').innerText = `${remainFuel.toFixed(1)} л`;
-            document.getElementById('trip-hours-left').innerText = `~${hoursLeft.toFixed(1)} ч`;
+            document.getElementById('comp-spent-lbl').innerText = `${spent.toFixed(1)} л`;
+            document.getElementById('comp-remain-lbl').innerText = `${remain.toFixed(1)} л`;
+            document.getElementById('comp-hours-left-lbl').innerText = `~${hrsLeft.toFixed(1)} ч`;
         }
 
-        // 7. ЯНДЕКС КАРТА С РАЗНЕСЕННЫМИ КНОПКАМИ И МАРКЕРАМИ
-        let yMap = null, yUserPlacemark = null, yMarksGroup = null;
-        let isMapFs = false;
+        // Яндекс Карта
+        let yMap = null, yUserPlacemark = null, yMarkersCol = null;
+        let isFsMap = false;
 
         function initMapSafe() {
             if (typeof ymaps === 'undefined') return;
             ymaps.ready(() => {
-                yMap = new ymaps.Map("map-canvas-container", {
-                    center: [61.6688, 50.8364], // Сыктывкар
-                    zoom: 15,
-                    controls: [] // Отключаем стандартные элементы
+                yMap = new ymaps.Map("yandex-map-view", {
+                    center: [61.6688, 50.8364], zoom: 15, controls: []
                 });
                 yUserPlacemark = new ymaps.Placemark([61.6688, 50.8364], { hintContent: 'Вы здесь' }, { preset: 'islands#redCircleDotIcon' });
                 yMap.geoObjects.add(yUserPlacemark);
-                yMarksGroup = new ymaps.GeoObjectCollection();
-                yMap.geoObjects.add(yMarksGroup);
-                loadStoredMapMarkers();
+                yMarkersCol = new ymaps.GeoObjectCollection();
+                yMap.geoObjects.add(yMarkersCol);
             });
         }
 
         function zoomMapStep(delta) {
-            if (!yMap) return;
-            yMap.setZoom(yMap.getZoom() + delta, { duration: 200 });
+            if (yMap) yMap.setZoom(yMap.getZoom() + delta, { duration: 200 });
         }
 
         function toggleMapFullscreen() {
-            isMapFs = !isMapFs;
+            isFsMap = !isFsMap;
             const btn = document.getElementById('btn-map-fs');
-            if (isMapFs) {
+            if (isFsMap) {
                 document.body.classList.add('fullscreen-mode');
                 btn.innerText = '✕ Свернуть';
             } else {
@@ -737,42 +735,26 @@
         }
 
         function centerMapUser() {
-            if (lastGpsLat && lastGpsLon && yMap) {
-                yMap.setCenter([lastGpsLat, lastGpsLon], 16, { duration: 300 });
-            } else {
-                alert("Ожидание сигнала со спутников...");
-            }
+            if (lastLat && lastLon && yMap) yMap.setCenter([lastLat, lastLon], 16, { duration: 300 });
+            else alert("Ожидание ГЛОНАСС...");
         }
 
         function dropMapMarker() {
-            if (lastGpsLat && lastGpsLon && yMap) {
+            if (lastLat && lastLon && yMap) {
                 const t = new Date().toLocaleTimeString();
-                const p = new ymaps.Placemark([lastGpsLat, lastGpsLon], { balloonContent: 'Засечка ' + t }, { preset: 'islands#orangeDotIcon' });
-                yMarksGroup.add(p);
-                let saved = JSON.parse(localStorage.getItem('leso_markers_v2') || '[]');
-                saved.push({ lat: lastGpsLat, lon: lastGpsLon, time: t });
-                localStorage.setItem('leso_markers_v2', JSON.stringify(saved));
+                const pm = new ymaps.Placemark([lastLat, lastLon], { balloonContent: 'Засечка ' + t }, { preset: 'islands#orangeDotIcon' });
+                yMarkersCol.add(pm);
                 alert("Точка зафиксирована на карте!");
             }
         }
 
-        function loadStoredMapMarkers() {
-            let saved = JSON.parse(localStorage.getItem('leso_markers_v2') || '[]');
-            saved.forEach(m => {
-                const p = new ymaps.Placemark([m.lat, m.lon], { balloonContent: 'Засечка ' + m.time }, { preset: 'islands#orangeDotIcon' });
-                yMarksGroup.add(p);
-            });
-        }
-
         function clearAllMarkers() {
-            if (confirm("Удалить все поставленные точки?")) {
-                if (yMarksGroup) yMarksGroup.removeAll();
-                localStorage.removeItem('leso_markers_v2');
-                alert("Точки удалены.");
+            if (confirm("Удалить точки с карты?")) {
+                if (yMarkersCol) yMarkersCol.removeAll();
             }
         }
 
-        // 8. КОМПАС И ПУЗЫРЬКОВЫЙ УРОВЕНЬ ГОРИЗОНТА
+        // Компас и пузырьковый уровень
         function buildCompassTicksSVG() {
             const layer = document.getElementById('compass-svg-ticks-layer');
             layer.innerHTML = '';
@@ -780,32 +762,27 @@
 
             for (let deg = 0; deg < 360; deg += 5) {
                 const rad = (deg - 90) * (Math.PI / 180);
-                let len = 8, strokeW = 1.5, strokeColor = "rgba(255, 255, 255, 0.4)";
-
-                if (deg % 90 === 0) {
-                    len = 18; strokeW = 3.5; strokeColor = (deg === 0) ? "#DC2626" : "var(--neon-color)";
-                } else if (deg % 30 === 0) {
-                    len = 14; strokeW = 2.5; strokeColor = "rgba(255, 255, 255, 0.85)";
-                }
+                let len = 8, strokeW = 1.5, strokeColor = "rgba(0,0,0,0.3)";
+                if (deg % 90 === 0) { len = 18; strokeW = 3.5; strokeColor = (deg === 0) ? "#DC2626" : "var(--forest-green)"; }
+                else if (deg % 30 === 0) { len = 14; strokeW = 2.5; strokeColor = "rgba(0,0,0,0.6)"; }
 
                 const x1 = cx + (radius - len) * Math.cos(rad);
                 const y1 = cy + (radius - len) * Math.sin(rad);
                 const x2 = cx + radius * Math.cos(rad);
                 const y2 = cy + radius * Math.sin(rad);
 
-                const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                l.setAttribute("x1", x1.toFixed(1)); l.setAttribute("y1", y1.toFixed(1));
-                l.setAttribute("x2", x2.toFixed(1)); l.setAttribute("y2", y2.toFixed(1));
-                l.setAttribute("stroke", strokeColor); l.setAttribute("stroke-width", strokeW);
-                layer.appendChild(l);
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", x1.toFixed(1)); line.setAttribute("y1", y1.toFixed(1));
+                line.setAttribute("x2", x2.toFixed(1)); line.setAttribute("y2", y2.toFixed(1));
+                line.setAttribute("stroke", strokeColor); line.setAttribute("stroke-width", strokeW);
+                layer.appendChild(line);
 
                 if (deg % 30 === 0 && deg % 90 !== 0) {
-                    const textRad = (deg - 90) * (Math.PI / 180);
-                    const tx = cx + 158 * Math.cos(textRad);
-                    const ty = cy + 158 * Math.sin(textRad);
+                    const tx = cx + 158 * Math.cos(rad);
+                    const ty = cy + 158 * Math.sin(rad);
                     const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
                     txt.setAttribute("x", tx.toFixed(1)); txt.setAttribute("y", ty.toFixed(1));
-                    txt.setAttribute("fill", "rgba(255, 255, 255, 0.7)");
+                    txt.setAttribute("fill", "var(--text-graphite)"); txt.setAttribute("opacity", "0.7");
                     txt.setAttribute("font-size", "11"); txt.setAttribute("font-weight", "800");
                     txt.setAttribute("font-family", "monospace");
                     txt.setAttribute("text-anchor", "middle"); txt.setAttribute("dominant-baseline", "central");
@@ -822,23 +799,20 @@
 
             if (heading !== null) {
                 heading = (heading + 360) % 360;
-                document.getElementById('compass-disc-svg').style.transform = `rotate(${-heading}deg)`;
+                document.getElementById('compass-svg-disc').style.transform = `rotate(${-heading}deg)`;
                 const dirs = ['С', 'СВ', 'В', 'ЮВ', 'Ю', 'ЮЗ', 'З', 'СЗ'];
                 let idx = Math.round(heading / 45);
-                document.getElementById('compass-azimuth-label').innerText = `${Math.round(heading)}° ${dirs[idx % 8]}`;
+                document.getElementById('compass-azimuth-txt').innerText = `${Math.round(heading)}° ${dirs[idx % 8]}`;
             }
 
-            // Пузырьковый уровень горизонта
             if (e.gamma !== null && e.beta !== null) {
-                const bubble = document.getElementById('spirit-level-bubble');
-                const maxTilt = 18; const maxPx = 14;
-                let cGamma = Math.max(-maxTilt, Math.min(maxTilt, e.gamma));
-                let cBeta = Math.max(-maxTilt, Math.min(maxTilt, e.beta));
-                let dx = (cGamma / maxTilt) * maxPx;
-                let dy = (cBeta / maxTilt) * maxPx;
-                bubble.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`;
-                if (Math.abs(e.gamma) < 2.5 && Math.abs(e.beta) < 2.5) bubble.classList.add('perfect-level');
-                else bubble.classList.remove('perfect-level');
+                const ball = document.getElementById('spirit-level-ball');
+                const maxT = 18, maxPx = 13;
+                let dx = (Math.max(-maxT, Math.min(maxT, e.gamma)) / maxT) * maxPx;
+                let dy = (Math.max(-maxT, Math.min(maxT, e.beta)) / maxT) * maxPx;
+                ball.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`;
+                if (Math.abs(e.gamma) < 2.5 && Math.abs(e.beta) < 2.5) ball.classList.add('level-ok');
+                else ball.classList.remove('level-ok');
             }
         }
 
@@ -847,49 +821,19 @@
                 DeviceOrientationEvent.requestPermission().then(res => {
                     if (res === 'granted') {
                         window.addEventListener('deviceorientation', handleOrientationSensors, true);
-                        alert("Датчики откалиброваны! Покрутите телефон «восьмеркой» в воздухе.");
+                        alert("Датчики откалиброваны!");
                     }
                 });
             } else {
                 window.addEventListener('deviceorientation', handleOrientationSensors, true);
-                alert("Датчики откалиброваны! Покрутите телефон «восьмеркой» в воздухе.");
+                alert("Датчики откалиброваны!");
             }
         }
 
-        // 9. АВТОНОМНЫЙ ЗВУКОВОЙ РЕПЕЛЛЕР
-        let aCtx = null, repellerLoop = null;
-        function toggleAudioRepeller() {
-            const btn = document.getElementById('btn-repeller-state');
-            if (repellerLoop) {
-                clearInterval(repellerLoop); repellerLoop = null;
-                if (aCtx) aCtx.close(); aCtx = null;
-                btn.innerText = '▶ ВКЛЮЧИТЬ СИРЕНУ-ОТПУГИВАТЕЛЬ';
-                btn.style.background = '#121A15';
-                return;
-            }
-            aCtx = new (window.AudioContext || window.webkitAudioContext)();
-            btn.innerText = '⏹ ОСТАНОВИТЬ СИРЕНУ';
-            btn.style.background = 'var(--danger-red)';
-
-            repellerLoop = setInterval(() => {
-                if (!aCtx) return;
-                let osc = aCtx.createOscillator();
-                let g = aCtx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(800, aCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(2600, aCtx.currentTime + 0.35);
-                g.gain.setValueAtTime(0.5, aCtx.currentTime);
-                g.gain.exponentialRampToValueAtTime(0.01, aCtx.currentTime + 0.35);
-                osc.connect(g); g.connect(aCtx.destination);
-                osc.start(); osc.stop(aCtx.currentTime + 0.36);
-            }, 550);
-        }
-
-        // ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ
         window.addEventListener('DOMContentLoaded', () => {
-            generateSpeedTicks();
+            generateSpeedTicksSVG();
             buildCompassTicksSVG();
-            renderSpeedUI(0);
+            renderSpeedometerUI(0);
             if (typeof DeviceOrientationEvent === 'undefined' || typeof DeviceOrientationEvent.requestPermission !== 'function') {
                 window.addEventListener('deviceorientation', handleOrientationSensors, true);
             }
