@@ -189,7 +189,7 @@
         .traverse-direction-wrapper { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px dashed var(--border-color); padding-top: 8px; }
         .select-traverse { padding: 4px; border-radius: 4px; font-size: 12px; background: var(--card-bg); color: var(--text-graphite); border: 1px solid var(--border-color); font-weight: 600; }
 
-        /* ИНТЕРФЕЙС ЮСТИРОВКИ И ПОПРАВКИ МАГНИТНОГО СКЛОНЕНИЯ */
+        /* ИНТЕРФЕЙС РАЗДЕЛЬНОЙ ЮСТИРОВКИ */
         .calibration-offset-wrapper { display: flex; flex-direction: column; gap: 6px; border-top: 1px dashed var(--border-color); padding-top: 8px; margin-top: 8px; }
         .offset-controls-flex { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
         .select-offset-sign { padding: 4px; border-radius: 4px; font-size: 13px; font-weight: bold; background: var(--card-bg); color: var(--text-graphite); border: 1px solid var(--border-color); }
@@ -218,8 +218,33 @@
 
         .camera-viewport-wrapper { position: relative; width: 100%; max-width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid var(--border-color); box-sizing: border-box; }
         #video-preview { width: 100%; height: 100%; object-fit: cover; transform-origin: center center; transition: transform 0.1s ease-out; }
+
+        /* КНОПКА ПЕРЕЗАГРУЗКИ КАМЕРЫ НА ВИЗИРЕ */
+        .btn-reload-camera-quick {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 30;
+            background: rgba(0, 0, 0, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            color: #FFF;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            backdrop-filter: blur(4px);
+        }
+        .btn-reload-camera-quick:active {
+            transform: translateX(-50%) scale(0.95);
+            background: var(--forest-green);
+        }
         
-        /* УЛУЧШЕННЫЙ ЛИМБ PRO (Плавный поворот диска, ЯРКАЯ КРАСНАЯ ЛИНИЯ ПРИЦЕЛА) */
+        /* УЛУЧШЕННЫЙ ЛИМБ PRO */
         .digital-compass-disk-container {
             display: none;
             position: absolute;
@@ -592,7 +617,7 @@
             <button class="popup-close" onclick="closePopup('offset-info-popup')">&times;</button>
             <h3>Юстировка и Магнитное склонение</h3>
             <ul class="instruction-steps" style="font-size: 13px; line-height: 1.5;">
-                <li><strong>Компенсация погрешности смартфона:</strong> Если магнитометр вашего устройства имеет систематическое отклонение, выберите знак «-» и введите градусы для калибровки «в ноль».</li>
+                <li><strong>Раздельная юстировка:</strong> Поправка настраивается отдельно для режима «Вертикально (Камера)» и отдельно для «Буссоль (Лимб)». Это позволяет устранить аппаратную разницу в 2–3° между плоскостями датчика в смартфоне.</li>
                 <li><strong>Учет магнитного склонения:</strong> Для перехода от магнитных азимутов к истинным введите величину склонения со знаком «+» (восточное) или «-» (западное).</li>
             </ul>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closePopup('offset-info-popup')">Понятно</button>
@@ -670,11 +695,11 @@
                         </select>
                     </div>
 
-                    <!-- ИНТЕРФЕЙС МАГНИТНОГО СКЛОНЕНИЯ И ЮСТИРОВКИ -->
+                    <!-- ИНТЕРФЕЙС РАЗДЕЛЬНОЙ ЮСТИРОВКИ ДЛЯ РЕЖИМОВ -->
                     <div class="calibration-offset-wrapper">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <label style="font-weight:700; color:var(--forest-green); display:flex; align-items:center; gap:5px;">
-                                🎯 Магнитное склонение / Поправка
+                                🎯 <span id="offset-mode-title">Юстировка (Вертикально)</span>:
                                 <span class="btn-help-circle" onclick="openPopup('offset-info-popup', event)">?</span>
                             </label>
                         </div>
@@ -688,13 +713,18 @@
                             <input type="number" id="offset-min-input" class="input-offset-num" placeholder="0" min="0" max="59" oninput="updateOffsetFromUI()">
                             <label style="font-weight:bold;">'</label>
                             
-                            <button class="btn-clear-offset" onclick="clearCalibrationOffset()" title="Удалить поправку из памяти">🗑️ Сбросить</button>
+                            <button class="btn-clear-offset" onclick="clearCalibrationOffset()" title="Сбросить поправку текущего режима">🗑️ Сбросить</button>
                         </div>
                     </div>
                 </div>
 
                 <div class="camera-viewport-wrapper">
-                    <!-- УЛУЧШЕННЫЙ ИНТЕРАКТИВНЫЙ ЛИМБ С ЯРКОЙ КРАСНОЙ ЛИНИЕЙ ПРИЦЕЛА -->
+                    <!-- КНОПКА БЫСТРОЙ ПЕРЕЗАГРУЗКИ КАМЕРЫ ПРИ ЗАВИСАНИИ -->
+                    <button class="btn-reload-camera-quick" onclick="restartCameraManual()" title="Перезагрузить видеопоток без обновления страницы">
+                        🔄 Перезапустить камеру
+                    </button>
+
+                    <!-- ИНТЕРАКТИВНЫЙ ЛИМБ -->
                     <div id="digital-compass-disk" class="digital-compass-disk-container">
                         <div class="compass-device-sight-line"></div>
                         <svg id="compass-svg-canvas" viewBox="0 0 300 300"></svg>
@@ -883,7 +913,23 @@
     let currentAltitude = 150;
     let currentAccuracy = 0;
 
-    let calibrationOffsetDecimal = 0.0;
+    // РАЗДЕЛЬНЫЕ ЗНАЧЕНИЯ ЮСТИРОВКИ ДЛЯ РЕЖИМОВ
+    let offsetMagnetic = 0.0;
+    let offsetTheodolite = 0.0;
+
+    function getCurrentOffsetDecimal() {
+        return (currentSystemMode === 'magnetic') ? offsetMagnetic : offsetTheodolite;
+    }
+
+    function setCurrentOffsetDecimal(val) {
+        if (currentSystemMode === 'magnetic') {
+            offsetMagnetic = val;
+            localStorage.setItem('lesovik_offset_magnetic', offsetMagnetic);
+        } else {
+            offsetTheodolite = val;
+            localStorage.setItem('lesovik_offset_theodolite', offsetTheodolite);
+        }
+    }
 
     function updateOffsetFromUI() {
         const sign = document.getElementById('offset-sign-select').value;
@@ -893,32 +939,49 @@
         let total = deg + (min / 60.0);
         if (sign === '-') total = -total;
 
-        calibrationOffsetDecimal = total;
-        localStorage.setItem('lesovik_calibration_offset', calibrationOffsetDecimal);
+        setCurrentOffsetDecimal(total);
     }
 
-    function loadCalibrationOffset() {
-        const savedOffset = localStorage.getItem('lesovik_calibration_offset');
-        if (savedOffset !== null) {
-            calibrationOffsetDecimal = parseFloat(savedOffset) || 0.0;
-            
-            let absVal = Math.abs(calibrationOffsetDecimal);
-            let sign = calibrationOffsetDecimal < 0 ? '-' : '+';
-            let deg = Math.floor(absVal);
-            let min = Math.round((absVal - deg) * 60);
+    function syncOffsetInputsToUI() {
+        const currentVal = getCurrentOffsetDecimal();
+        const absVal = Math.abs(currentVal);
+        const sign = currentVal < 0 ? '-' : '+';
+        const deg = Math.floor(absVal);
+        const min = Math.round((absVal - deg) * 60);
 
-            document.getElementById('offset-sign-select').value = sign;
-            document.getElementById('offset-deg-input').value = deg > 0 ? deg : '';
-            document.getElementById('offset-min-input').value = min > 0 ? min : '';
+        document.getElementById('offset-sign-select').value = sign;
+        document.getElementById('offset-deg-input').value = deg > 0 ? deg : '';
+        document.getElementById('offset-min-input').value = min > 0 ? min : '';
+
+        const titleLabel = document.getElementById('offset-mode-title');
+        if (titleLabel) {
+            titleLabel.innerText = (currentSystemMode === 'magnetic') 
+                ? 'Юстировка (Вертикально)' 
+                : 'Юстировка (Лимб)';
         }
     }
 
+    function loadCalibrationOffset() {
+        const savedMag = localStorage.getItem('lesovik_offset_magnetic');
+        const savedTheo = localStorage.getItem('lesovik_offset_theodolite');
+        const legacyOld = localStorage.getItem('lesovik_calibration_offset');
+
+        if (savedMag !== null) {
+            offsetMagnetic = parseFloat(savedMag) || 0.0;
+        } else if (legacyOld !== null) {
+            offsetMagnetic = parseFloat(legacyOld) || 0.0;
+        }
+
+        if (savedTheo !== null) {
+            offsetTheodolite = parseFloat(savedTheo) || 0.0;
+        }
+
+        syncOffsetInputsToUI();
+    }
+
     function clearCalibrationOffset() {
-        calibrationOffsetDecimal = 0.0;
-        localStorage.removeItem('lesovik_calibration_offset');
-        document.getElementById('offset-sign-select').value = '+';
-        document.getElementById('offset-deg-input').value = '';
-        document.getElementById('offset-min-input').value = '';
+        setCurrentOffsetDecimal(0.0);
+        syncOffsetInputsToUI();
     }
 
     function closeBottomBanner() {
@@ -1089,8 +1152,8 @@
     function switchSystemMode(mode) {
         currentSystemMode = mode;
         applyModeUI();
+        syncOffsetInputsToUI();
         saveToLocalStorage();
-        showToast("Режим успешно переключен. Данные сохранены!");
     }
 
     function applyModeUI() {
@@ -1106,6 +1169,7 @@
         const btnLockZero = document.getElementById('btn-lock-zero');
         const btnClearZero = document.getElementById('btn-clear-zero');
         const btnFsToggle = document.getElementById('btn-fullscreen-toggle');
+        const reloadBtn = document.querySelector('.btn-reload-camera-quick');
 
         if (currentSystemMode === 'magnetic') {
             document.getElementById('mode-mag').classList.add('active-mode');
@@ -1115,6 +1179,7 @@
             compassDisk.style.display = 'none'; videoPreview.style.display = 'block'; vLine.style.display = 'block';
             vDot.style.display = 'block'; gyroRing.style.display = 'block'; zoomPanel.style.display = 'block';
             btnLockZero.style.display = 'block'; btnClearZero.style.display = 'block'; btnFsToggle.style.display = 'none';
+            if (reloadBtn) reloadBtn.style.display = 'inline-flex';
         } else {
             document.getElementById('mode-theo').classList.add('active-mode'); 
             document.getElementById('label-live-mode').innerText = "БУССОЛЬ:";
@@ -1124,6 +1189,7 @@
             compassDisk.style.display = 'flex'; videoPreview.style.display = 'none'; vLine.style.display = 'none';
             vDot.style.display = 'none'; gyroRing.style.display = 'none'; zoomPanel.style.display = 'block';
             btnLockZero.style.display = 'none'; btnClearZero.style.display = 'none'; btnFsToggle.style.display = 'block';
+            if (reloadBtn) reloadBtn.style.display = 'none';
 
             drawCompassDialSVG('compass-svg-canvas');
         }
@@ -1165,15 +1231,38 @@
         drawPolygon();
     }
 
+    // МЯГКИЙ ПЕРЕЗАПУСК ВИДЕОПОТОКА БЕЗ ПЕРЕЗАГРУЗКИ СТРАНИЦЫ
     async function startCamera() {
         const video = document.getElementById('video-preview');
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+            if (video.srcObject) {
+                const tracks = video.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                video.srcObject = null;
+            }
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: { ideal: "environment" } }, 
+                audio: false 
+            });
             video.srcObject = stream;
+            video.play().catch(e => console.log("Камера готова к воспроизведению"));
         } catch (err) {
             navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-                .then(stream => { video.srcObject = stream; })
+                .then(stream => { 
+                    video.srcObject = stream; 
+                    video.play().catch(e => console.log(e));
+                })
                 .catch(e => console.error("Камера заблокирована", e));
+        }
+    }
+
+    function restartCameraManual() {
+        startCamera();
+        const reloadBtn = document.querySelector('.btn-reload-camera-quick');
+        if (reloadBtn) {
+            const originalText = reloadBtn.innerHTML;
+            reloadBtn.innerHTML = "⏳ Запуск...";
+            setTimeout(() => { reloadBtn.innerHTML = originalText; }, 1000);
         }
     }
 
@@ -1209,7 +1298,8 @@
         }
         
         let rawAzimuth = smoothedAzimuth;
-        currentAzimuth = (rawAzimuth + calibrationOffsetDecimal + 360) % 360;
+        let activeOffset = getCurrentOffsetDecimal();
+        currentAzimuth = (rawAzimuth + activeOffset + 360) % 360;
 
         let pitch = Math.round(event.beta || 0); let roll = Math.round(event.gamma || 0);  
 
@@ -1263,7 +1353,6 @@
         const btnCapture = document.getElementById('btn-capture');
         const btnFsCapture = document.getElementById('btn-fs-capture');
 
-        // --- РАСШИРЕННЫЙ ПОЛЕВОЙ ДОПУСК УРОВНЯ В МАГНИТНОМ РЕЖИМЕ ДО ±18° ---
         if (currentSystemMode === 'magnetic') {
             const isPitchOk = Math.abs(pitch - 90) <= 18 || Math.abs(pitch - 0) <= 18 || Math.abs(pitch + 90) <= 18;
             const isRollOk = Math.abs(roll) <= 18 || Math.abs(roll - 180) <= 18 || Math.abs(roll + 180) <= 18;
@@ -1606,6 +1695,7 @@
             document.getElementById('traverse-select-direction').value = currentTraverseDirection;
             
             applyModeUI();
+            syncOffsetInputsToUI();
             if (baseAzimuth !== null) { document.getElementById('base-azimuth').innerText = `${baseAzimuth.toFixed(1)}°`; }
             else { document.getElementById('base-azimuth').innerText = `НЕТ`; }
             
