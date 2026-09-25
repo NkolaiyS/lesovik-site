@@ -219,31 +219,51 @@
         .camera-viewport-wrapper { position: relative; width: 100%; max-width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid var(--border-color); box-sizing: border-box; }
         #video-preview { width: 100%; height: 100%; object-fit: cover; transform-origin: center center; transition: transform 0.1s ease-out; }
 
-        /* КНОПКА ПЕРЕЗАГРУЗКИ КАМЕРЫ НА ВИЗИРЕ */
-        .btn-reload-camera-quick {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 30;
-            background: rgba(0, 0, 0, 0.65);
-            border: 1px solid rgba(255, 255, 255, 0.35);
-            color: #FFF;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
+        /* КРАСИВАЯ УЗКАЯ КНОПКА ПЕРЕЗАГРУЗКИ КАМЕРЫ ПОД ВИЗИРОМ */
+        .camera-reload-row {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            margin-top: 8px;
+            margin-bottom: 2px;
+        }
+        .btn-reload-camera-bar {
+            background: rgba(45, 90, 39, 0.08);
+            border: 1.5px solid var(--forest-green);
+            color: var(--forest-green);
+            padding: 7px 20px;
+            border-radius: 8px;
+            font-size: 11.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            backdrop-filter: blur(4px);
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+            width: auto;
+            min-width: 210px;
         }
-        .btn-reload-camera-quick:active {
-            transform: translateX(-50%) scale(0.95);
+        .btn-reload-camera-bar:hover {
             background: var(--forest-green);
+            color: #FFFFFF;
         }
-        
+        .btn-reload-camera-bar:active {
+            transform: scale(0.97);
+        }
+        [data-theme="dark"] .btn-reload-camera-bar {
+            background: rgba(143, 188, 143, 0.1);
+            border-color: var(--forest-light);
+            color: var(--forest-light);
+        }
+        [data-theme="dark"] .btn-reload-camera-bar:hover {
+            background: var(--forest-light);
+            color: #111815;
+        }
+
         /* УЛУЧШЕННЫЙ ЛИМБ PRO */
         .digital-compass-disk-container {
             display: none;
@@ -719,11 +739,6 @@
                 </div>
 
                 <div class="camera-viewport-wrapper">
-                    <!-- КНОПКА БЫСТРОЙ ПЕРЕЗАГРУЗКИ КАМЕРЫ ПРИ ЗАВИСАНИИ -->
-                    <button class="btn-reload-camera-quick" onclick="restartCameraManual()" title="Перезагрузить видеопоток без обновления страницы">
-                        🔄 Перезапустить камеру
-                    </button>
-
                     <!-- ИНТЕРАКТИВНЫЙ ЛИМБ -->
                     <div id="digital-compass-disk" class="digital-compass-disk-container">
                         <div class="compass-device-sight-line"></div>
@@ -759,6 +774,13 @@
                     </div>
 
                     <video id="video-preview" autoplay playsinline muted></video>
+                </div>
+
+                <!-- КНОПКА ПЕРЕЗАГРУЗКИ КАМЕРЫ (АККУРАТНАЯ, УЗКАЯ, ВНИЗУ ПО ЦЕНТРУ) -->
+                <div class="camera-reload-row" id="camera-reload-row">
+                    <button class="btn-reload-camera-bar" onclick="restartCameraManual()" title="Перезапустить видеопоток камеры">
+                        🔄 Перезапустить камеру
+                    </button>
                 </div>
 
                 <div class="control-panel-buttons">
@@ -1169,7 +1191,7 @@
         const btnLockZero = document.getElementById('btn-lock-zero');
         const btnClearZero = document.getElementById('btn-clear-zero');
         const btnFsToggle = document.getElementById('btn-fullscreen-toggle');
-        const reloadBtn = document.querySelector('.btn-reload-camera-quick');
+        const reloadRow = document.getElementById('camera-reload-row');
 
         if (currentSystemMode === 'magnetic') {
             document.getElementById('mode-mag').classList.add('active-mode');
@@ -1179,7 +1201,7 @@
             compassDisk.style.display = 'none'; videoPreview.style.display = 'block'; vLine.style.display = 'block';
             vDot.style.display = 'block'; gyroRing.style.display = 'block'; zoomPanel.style.display = 'block';
             btnLockZero.style.display = 'block'; btnClearZero.style.display = 'block'; btnFsToggle.style.display = 'none';
-            if (reloadBtn) reloadBtn.style.display = 'inline-flex';
+            if (reloadRow) reloadRow.style.display = 'flex';
         } else {
             document.getElementById('mode-theo').classList.add('active-mode'); 
             document.getElementById('label-live-mode').innerText = "БУССОЛЬ:";
@@ -1189,7 +1211,7 @@
             compassDisk.style.display = 'flex'; videoPreview.style.display = 'none'; vLine.style.display = 'none';
             vDot.style.display = 'none'; gyroRing.style.display = 'none'; zoomPanel.style.display = 'block';
             btnLockZero.style.display = 'none'; btnClearZero.style.display = 'none'; btnFsToggle.style.display = 'block';
-            if (reloadBtn) reloadBtn.style.display = 'none';
+            if (reloadRow) reloadRow.style.display = 'none';
 
             drawCompassDialSVG('compass-svg-canvas');
         }
@@ -1258,7 +1280,7 @@
 
     function restartCameraManual() {
         startCamera();
-        const reloadBtn = document.querySelector('.btn-reload-camera-quick');
+        const reloadBtn = document.querySelector('.btn-reload-camera-bar');
         if (reloadBtn) {
             const originalText = reloadBtn.innerHTML;
             reloadBtn.innerHTML = "⏳ Запуск...";
