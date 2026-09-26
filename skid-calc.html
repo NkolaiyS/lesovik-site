@@ -10,8 +10,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
     <title>Расчет расстояния трелевки и технологическая карта лесосеки онлайн | Лесовик PRO</title>
-    <meta name="description" content="Камеральное составление технологических карт лесосек по правилам заготовки древесины РФ. Расчет дальности трелевки, нарезка волоков, склады, извилистые ручьи, ОЗУ, семенные куртины, глухариные тока, нормативы подроста и семенников. Печать на 1 лист А4.">
-    <meta name="keywords" content="технологическая карта разработки лесосеки, расчет расстояния трелевки, пасечные волоки, верхний склад лесосеки, водоохранная зона ОЗУ, семенные деревья сосны, глухариный ток, лесная декларация, лесовик про">
+    <meta name="description" content="Камеральное составление технологических карт лесосек по правилам заготовки древесины РФ. Расчет дальности трелевки, нарезка волоков, склады, извилистые ручьи, ОЗУ, замыкающая линия контура и печать на 1 лист А4.">
+    <meta name="keywords" content="технологическая карта разработки лесосеки, расчет расстояния трелевки, пасечные волоки, верхний склад лесосеки, водоохранная зона ОЗУ, замыкающая линия делянки, лесовик про">
     <link rel="canonical" href="https://lesovik-pro.ru/skid-calc.html">
     <meta property="og:title" content="Расчет расстояния трелевки и технологическая карта лесосеки | Лесовик PRO">
     <meta property="og:description" content="Инженерный онлайн-калькулятор трелевки и генератор чертежа технологической карты лесосеки с привязкой координат WGS-84 и печатью на 1 лист А4.">
@@ -28,7 +28,7 @@
       "name": "Лесовик: Технологическая карта и расчет трелевки",
       "operatingSystem": "All",
       "applicationCategory": "BusinessApplication",
-      "description": "Профессиональный инструмент лесного инженера для расчета дальности трелевки древесины, размещения складов, извилистых водоохранных зон, семенных куртин, токов и проектирования волоков.",
+      "description": "Профессиональный инструмент лесного инженера для расчета дальности трелевки древесины, замыкающих линий контура делянки, складов и волоков.",
       "author": {
         "@type": "Person",
         "name": "ИП Худяков Николай Сергеевич"
@@ -134,7 +134,7 @@
             background: var(--forest-green); color: #FFF; border-color: var(--forest-green); font-weight: 600;
         }
 
-        .points-table-wrapper { width: 100%; max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 10px; }
+        .points-table-wrapper { width: 100%; max-height: 220px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 10px; }
         .points-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
         .points-table th, .points-table td { padding: 5px 6px; border-bottom: 1px solid var(--border-color); text-align: center; }
         .points-table th { background: rgba(0, 0, 0, 0.04); font-weight: 600; font-size: 10.5px; }
@@ -144,10 +144,31 @@
         .btn-primary { background: var(--forest-green); color: #FFF; border-color: var(--forest-green); }
         .btn-danger { background: var(--danger); color: #FFF; border-color: var(--danger); }
 
-        .results-box {
-            border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 4px; margin-bottom: 14px; font-size: 12px; line-height: 1.6; background: rgba(0, 0, 0, 0.015);
+        .results-box-container {
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin-bottom: 14px;
+            background: rgba(0, 0, 0, 0.015);
         }
-        .results-box div { margin: 2px 0; }
+        .results-box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            cursor: pointer;
+            user-select: none;
+            background: rgba(0, 0, 0, 0.03);
+            border-bottom: 1px solid transparent;
+        }
+        .results-box-header.open {
+            border-bottom-color: var(--border-color);
+        }
+        .results-box-content {
+            padding: 10px 14px;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .results-box-content div { margin: 2px 0; }
 
         .canvas-container { position: relative; width: 100%; background: #FFFFFF; border: 1px solid var(--border-color); border-radius: 4px; display: flex; flex-direction: column; align-items: center; padding: 6px; box-sizing: border-box; }
         #skid-canvas { width: 100%; max-width: 100%; aspect-ratio: 4/3; background: #FFFFFF; }
@@ -174,7 +195,7 @@
                 size: A4 portrait;
                 margin: 8mm 10mm 8mm 10mm;
             }
-            .glass-header, .print-toolbar, .btn-action, .theme-toggle, footer, .tabs-panel, .points-table-wrapper, #tab-course, #tab-roads, #tab-spines, #tab-landings, #tab-zones, #tab-silviculture, #interactive-results-box, .canvas-container { display: none !important; }
+            .glass-header, .print-toolbar, .btn-action, .theme-toggle, footer, .tabs-panel, .points-table-wrapper, #tab-course, #tab-roads, #tab-spines, #tab-landings, #tab-zones, #tab-silviculture, .results-box-container, .canvas-container { display: none !important; }
             
             body, html {
                 background: #FFFFFF !important;
@@ -262,7 +283,6 @@
     <main class="container">
         <div class="card">
             
-            <!-- ОФИЦИАЛЬНАЯ ШАПКА ДОКУМЕНТА (РЕДАКТИРУЕМАЯ, БЕЗ РАМОК) -->
             <div class="doc-header-block">
                 <div class="doc-approval-row">
                     <div class="doc-approval-box">
@@ -340,7 +360,7 @@
                 </div>
 
                 <div style="display:flex; justify-content:space-between; align-items:center; margin: 8px 0 4px 0;">
-                    <span style="font-size:11.5px; font-weight:600;">Линии границ лесосеки (ход):</span>
+                    <span style="font-size:11.5px; font-weight:600;">Линии границ лесосеки (включая автоматическое замыкание на Т.1):</span>
                     <button class="btn-action" style="padding:2px 8px; font-size:11px;" onclick="addCourseLeg()">+ Линия</button>
                 </div>
 
@@ -352,7 +372,7 @@
                                 <th>Азимут (°)</th>
                                 <th>Длина (м)</th>
                                 <th>WGS-84 конца линии</th>
-                                <th>Удалить</th>
+                                <th>Действие</th>
                             </tr>
                         </thead>
                         <tbody id="course-tbody"></tbody>
@@ -478,8 +498,14 @@
                 </div>
             </div>
 
-            <!-- ИНТЕРАКТИВНЫЙ БЛОК ВЫВОДА РАСЧЕТОВ НА ЭКРАНЕ -->
-            <div class="results-box" id="interactive-results-box"></div>
+            <!-- СВОРАЧИВАЕМЫЙ БЛОК ВЫВОДА РАСЧЕТОВ НА ЭКРАНЕ -->
+            <div class="results-box-container">
+                <div class="results-box-header open" id="results-toggle-header" onclick="toggleResultsBox()">
+                    <span style="font-weight: 600; font-size: 12px; color: var(--forest-green);">📋 Сводные технологические показатели лесосеки</span>
+                    <span id="results-toggle-btn" style="font-size: 11px; font-weight: 600; color: var(--text-graphite); background: var(--card-bg); border: 1px solid var(--border-color); padding: 2px 8px; border-radius: 4px;">▲ Свернуть блок</span>
+                </div>
+                <div class="results-box-content" id="interactive-results-box"></div>
+            </div>
 
             <!-- ИНТЕРАКТИВНЫЙ ЭКРАННЫЙ ЧЕРТЕЖ -->
             <div class="canvas-container">
@@ -553,11 +579,12 @@
         { azimuth: 0,   distance: 250 },
         { azimuth: 75,  distance: 200 },
         { azimuth: 140, distance: 180 },
-        { azimuth: 195, distance: 160 },
-        { azimuth: 270, distance: 235 }
+        { azimuth: 195, distance: 160 }
     ];
 
     let customPoints = [];
+    let closingLeg = { distance: 0, azimuth: 0 };
+    let allDisplayLegs = [];
 
     let spineRoads = [
         { id: 1, name: "МВ-1", startX: 20, startY: 15, azimuth: 45, length: 280, width: 5 }
@@ -602,6 +629,21 @@
             ]
         }
     ];
+
+    function toggleResultsBox() {
+        const content = document.getElementById('interactive-results-box');
+        const header = document.getElementById('results-toggle-header');
+        const btn = document.getElementById('results-toggle-btn');
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            header.classList.add('open');
+            btn.innerText = '▲ Свернуть блок';
+        } else {
+            content.style.display = 'none';
+            header.classList.remove('open');
+            btn.innerText = '▼ Развернуть блок';
+        }
+    }
 
     function toggleTheme() {
         const body = document.documentElement;
@@ -657,6 +699,19 @@
             pts.push({ x: curX, y: curY, lat: ptLat, lon: ptLon });
         });
 
+        let lastPt = pts[pts.length - 1];
+        let dxClose = -lastPt.x;
+        let dyClose = -lastPt.y;
+        let distClose = Math.hypot(dxClose, dyClose);
+        let azCloseRad = Math.atan2(dxClose, dyClose);
+        let azCloseDeg = (azCloseRad * 180 / Math.PI + 360) % 360;
+
+        closingLeg = {
+            distance: Math.round(distClose),
+            azimuth: Math.round(azCloseDeg)
+        };
+
+        allDisplayLegs = [...courseLegs, closingLeg];
         customPoints = pts;
     }
 
@@ -677,6 +732,17 @@
                 </tr>
             `;
         });
+
+        let n = customPoints.length;
+        tbody.innerHTML += `
+            <tr style="background: rgba(45, 90, 39, 0.08); font-weight: 600;">
+                <td style="color: var(--forest-green);">Линия ${n} - 1 (Замыкающая)</td>
+                <td><input type="number" class="input-tbl" value="${closingLeg.azimuth}" readonly style="background: transparent; border: none; font-weight: bold; color: var(--forest-green);"></td>
+                <td><input type="number" class="input-tbl" value="${closingLeg.distance}" readonly style="background: transparent; border: none; font-weight: bold; color: var(--forest-green);"></td>
+                <td style="font-size:11px; color: var(--forest-green);">${customPoints[0].lat.toFixed(6)}, ${customPoints[0].lon.toFixed(6)} (Т.1)</td>
+                <td style="font-size:10px; opacity:0.8;">Авто-расчет</td>
+            </tr>
+        `;
     }
 
     function addCourseLeg() {
@@ -686,8 +752,8 @@
     }
 
     function removeCourseLeg(idx) {
-        if (courseLegs.length <= 3) {
-            alert("Для замкнутого контура делянки требуется минимум 3 линии!");
+        if (courseLegs.length <= 2) {
+            alert("Для замкнутого контура делянки требуется минимум 2 открытые линии + замыкающая!");
             return;
         }
         courseLegs.splice(idx, 1);
@@ -699,6 +765,7 @@
         let parsed = parseFloat(val);
         if (!isNaN(parsed)) {
             courseLegs[idx][field] = parsed;
+            computePointsFromCourse();
             renderCourseTable();
             calculateAndDraw();
         }
@@ -845,8 +912,9 @@
         if (savedLog) {
             try {
                 const log = JSON.parse(savedLog);
-                if (log && log.length >= 3) {
+                if (log && log.length >= 2) {
                     courseLegs = log.map(m => ({ azimuth: Math.round(m.azimuth), distance: Math.round(m.distance) }));
+                    computePointsFromCourse();
                     renderCourseTable();
                     calculateAndDraw();
                     alert("Линии азимутов и дистанций импортированы из полевой буссоли.");
@@ -866,9 +934,7 @@
 
         if (customPoints.length < 3) return;
 
-        let endPt = customPoints[customPoints.length - 1];
-        let closureError = Math.hypot(endPt.x, endPt.y);
-        let perimeter = courseLegs.reduce((sum, l) => sum + l.distance, 0);
+        let perimeter = allDisplayLegs.reduce((sum, l) => sum + l.distance, 0);
 
         let area = 0;
         let j = customPoints.length - 1;
@@ -930,7 +996,7 @@
         let zonesListStr = specialZones.map(z => `${z.name} [буфер ${z.buffer} м]`).join('; ') || 'не выделялись';
 
         document.getElementById('interactive-results-box').innerHTML = `
-            <div>Площадь лесосеки: ${areaHa.toFixed(2)} га (эксплуатационная: ${explHa.toFixed(2)} га, неэксплуатационная: ${nonExplHa.toFixed(2)} га), периметр: ${Math.round(perimeter)} м, невязка: ${closureError.toFixed(2)} м</div>
+            <div>Площадь лесосеки: ${areaHa.toFixed(2)} га (эксплуатационная: ${explHa.toFixed(2)} га, неэксплуатационная: ${nonExplHa.toFixed(2)} га), периметр: ${Math.round(perimeter)} м, замыкающая линия ${customPoints.length}-1: ${closingLeg.distance} м (азимут ${closingLeg.azimuth}°)</div>
             <div>Неэксплуатационные участки, биотопы, ручьи (${specialZones.length} шт.): ${zonesListStr}</div>
             <div>Магистральные волоки (${spineRoads.length} шт.): ${spinesListStr}</div>
             <div>Склады и погрузочные пункты (${landings.length} шт.): ${landingsListStr}</div>
@@ -953,11 +1019,12 @@
 
         const printTbody = document.getElementById('print-points-tbody');
         printTbody.innerHTML = '';
-        customPoints.slice(0, -1).forEach((pt, idx) => {
-            let leg = courseLegs[idx] || { distance: '-', azimuth: '-' };
+        customPoints.forEach((pt, idx) => {
+            let leg = allDisplayLegs[idx] || { distance: '-', azimuth: '-' };
+            let nextPointLabel = (idx === customPoints.length - 1) ? "Т.1" : `Т.${idx + 2}`;
             printTbody.innerHTML += `
                 <tr>
-                    <td>Т.${idx + 1}</td>
+                    <td>Т.${idx + 1} ➔ ${nextPointLabel}</td>
                     <td>${pt.lat.toFixed(6)}</td>
                     <td>${pt.lon.toFixed(6)}</td>
                     <td>${leg.azimuth}°</td>
@@ -1165,7 +1232,7 @@
             ctx.fillText(`${sp.name}`, (p1.x + p2.x) / 2, (p1.y + p2.y) / 2 - 4);
         });
 
-        // 5. КОНТУР ДЕЛЯНКИ
+        // 5. КОНТУР ДЕЛЯНКИ (ЗАМКНУТЫЙ)
         ctx.lineWidth = 2.2;
         ctx.strokeStyle = '#2D5A27';
         ctx.beginPath();
@@ -1179,18 +1246,21 @@
         ctx.fill();
         ctx.stroke();
 
-        for (let i = 0; i < courseLegs.length; i++) {
+        // Подписи всех линий, включая замыкающую
+        for (let i = 0; i < customPoints.length; i++) {
             let pStart = toPx(customPoints[i]);
-            let pEnd = toPx(customPoints[i + 1] || customPoints[0]);
+            let pEnd = toPx(customPoints[(i + 1) % customPoints.length]);
             let midX = (pStart.x + pEnd.x) / 2;
             let midY = (pStart.y + pEnd.y) / 2;
 
-            ctx.fillStyle = '#374151';
+            let leg = allDisplayLegs[i];
+            ctx.fillStyle = (i === customPoints.length - 1) ? '#166534' : '#374151';
             ctx.font = isPrint ? "8px 'Times New Roman'" : "9px Inter";
             ctx.textAlign = "center";
-            ctx.fillText(`${courseLegs[i].distance}м`, midX, midY - 2);
+            ctx.fillText(`${leg.distance}м (${leg.azimuth}°)`, midX, midY - 2);
         }
 
+        // Вершины делянки (столбы)
         customPoints.forEach((pt, idx) => {
             let px = toPx(pt);
             ctx.beginPath();
@@ -1256,6 +1326,7 @@
     }
 
     window.onload = function() {
+        computePointsFromCourse();
         renderCourseTable();
         renderSpinesTable();
         renderLandingsTable();
