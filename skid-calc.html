@@ -35,6 +35,38 @@
       }
     }
     </script>
+
+    <!-- Yandex.RTB Скрипт загрузчика -->
+    <script>window.yaContextCb=window.yaContextCb||[]</script>
+    <script src="https://yandex.ru/ads/system/context.js" async></script>
+
+    <!-- Yandex.RTB Рекламные форматы: Полноэкранный и Оверлей -->
+    <script>
+        // Touch Fullscreen
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-2",
+                "type": "fullscreen",
+                "platform": "touch"
+            })
+        });
+        // Desktop Fullscreen
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-3",
+                "type": "fullscreen",
+                "platform": "desktop"
+            })
+        });
+        // Touch Overlay R-A-19250236-7
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-7",
+                "type": "overlay",
+                "platform": "touch"
+            })
+        });
+    </script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Times+New+Roman&family=Inter:wght@400;500;600;700&display=swap');
@@ -92,7 +124,24 @@
         .glass-header h1 { color: var(--forest-green); margin: 0; font-size: 15px; font-weight: 700; }
 
         .header-right { display: flex; align-items: center; gap: 8px; }
-        .btn-back { background: transparent; color: var(--forest-green); border: 1px solid var(--forest-green); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: 600; text-decoration: none; font-size: 12px; }
+        
+        /* Кнопка "К инструментам" без лишней стрелки и расширения */
+        .btn-back { 
+            background: transparent; 
+            color: var(--forest-green); 
+            border: 1px solid var(--forest-green); 
+            padding: 5px 9px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            text-decoration: none; 
+            font-size: 11.5px;
+            white-space: nowrap;
+        }
+        .btn-back:hover {
+            background-color: var(--forest-green);
+            color: var(--bg-paper);
+        }
         .theme-toggle { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 5px 8px; border-radius: 6px; cursor: pointer; font-size: 12px; }
 
         .container { max-width: 1050px; width: 100%; margin: 65px auto 30px; padding: 0 10px; }
@@ -146,7 +195,10 @@
 
         .btn-action { padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 11.5px; cursor: pointer; background: var(--card-bg); color: var(--text-graphite); }
         .btn-primary { background: var(--forest-green); color: #FFF; border-color: var(--forest-green); }
+        .btn-primary:hover { background: #23471f; }
         .btn-danger { background: var(--danger); color: #FFF; border-color: var(--danger); }
+        .btn-help { background: #E67E22; color: #FFF; border-color: #E67E22; font-weight: 700; }
+        .btn-help:hover { background: #D35400; }
 
         .results-box-container {
             border: 1px solid var(--border-color);
@@ -192,6 +244,94 @@
         .legend-item { display: flex; align-items: center; gap: 5px; }
         .legend-color { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
 
+        /* Нижний блок РСЯ ленты */
+        .yandex-rtb-feed-container {
+            margin: 20px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        /* МОДАЛЬНОЕ ОКНО ИНСТРУКЦИИ */
+        .modal-instruction {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 4000;
+            background: rgba(0,0,0,0.72);
+            backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+        }
+        .modal-instruction-content {
+            width: 100%;
+            max-width: 680px;
+            max-height: 90vh;
+            background: var(--card-bg);
+            border: 2px solid var(--forest-green);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.35);
+            color: var(--text-graphite);
+        }
+        .modal-instruction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .modal-instruction-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-family: 'Merriweather', serif;
+            color: var(--forest-green);
+        }
+        .modal-instruction-close {
+            font-size: 24px;
+            cursor: pointer;
+            opacity: 0.7;
+            border: none;
+            background: transparent;
+            color: var(--text-graphite);
+        }
+        .modal-instruction-close:hover { opacity: 1; }
+        .modal-instruction-body {
+            padding: 16px 18px;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .instruction-step {
+            margin-bottom: 14px;
+            background: var(--bg-paper);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 14px;
+        }
+        .instruction-step-title {
+            font-weight: 700;
+            color: var(--forest-green);
+            margin-bottom: 4px;
+            font-size: 13.5px;
+        }
+        /* Аккуратный баннер 90-100px в попапе */
+        .modal-instruction-ad {
+            border-top: 1px solid var(--border-color);
+            padding: 8px 14px;
+            min-height: 90px;
+            max-height: 105px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.02);
+            overflow: hidden;
+            border-radius: 0 0 10px 10px;
+        }
+
         #print-doc-layout { display: none; }
 
         @media print {
@@ -199,7 +339,7 @@
                 size: A4 portrait;
                 margin: 8mm 10mm 8mm 10mm;
             }
-            .glass-header, .print-toolbar, .archive-toolbar, .btn-action, .theme-toggle, footer, .tabs-panel, .points-table-wrapper, #tab-course, #tab-roads, #tab-spines, #tab-landings, #tab-zones, #tab-silviculture, .results-box-container, .canvas-container { display: none !important; }
+            .glass-header, .print-toolbar, .archive-toolbar, .btn-action, .theme-toggle, footer, .tabs-panel, .points-table-wrapper, #tab-course, #tab-roads, #tab-spines, #tab-landings, #tab-zones, #tab-silviculture, .results-box-container, .canvas-container, .yandex-rtb-feed-container, .modal-instruction { display: none !important; }
             
             body, html {
                 background: #FFFFFF !important;
@@ -279,7 +419,8 @@
             <h1>Лесовик • Технокарта и волоки PRO</h1>
         </a>
         <div class="header-right">
-            <a href="tools.html" class="btn-back">← К инструментам</a>
+            <!-- Кнопка без стрелки -->
+            <a href="tools.html" class="btn-back">К инструментам</a>
             <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тема</button>
         </div>
     </header>
@@ -349,6 +490,8 @@
             <div class="print-toolbar">
                 <button class="btn-action btn-primary" onclick="prepareAndPrint()">🖨️ Печать бланка на лист А4 (PDF)</button>
                 <button class="btn-action" onclick="loadFromBusolJournal()">📥 Импорт из буссоли</button>
+                <!-- Кнопка вызова инструкции -->
+                <button class="btn-action btn-help" onclick="openInstructionModal()">📖 Инструкция</button>
             </div>
 
             <!-- ВКЛАДКИ -->
@@ -583,7 +726,57 @@
             </div>
 
         </div>
+
+        <!-- НИЖНИЙ РСЯ БЛОК ЛЕНТЫ ПЕРЕД ФУТЕРОМ -->
+        <div class="yandex-rtb-feed-container">
+            <div id="yandex_rtb_R-A-19250236-5"></div>
+            <script>
+            window.yaContextCb.push(() => {
+                Ya.Context.AdvManager.render({
+                    "blockId": "R-A-19250236-5",
+                    "renderTo": "yandex_rtb_R-A-19250236-5",
+                    "type": "feed"
+                })
+            })
+            </script>
+        </div>
     </main>
+
+    <!-- ПОПАП МОДУЛЬ ПОДРОБНОЙ ИНСТРУКЦИИ -->
+    <div class="modal-instruction" id="instructionModal">
+        <div class="modal-instruction-content">
+            <div class="modal-instruction-header">
+                <h3>📖 Руководство по проектированию технологической карты</h3>
+                <button class="modal-instruction-close" onclick="closeInstructionModal()">&times;</button>
+            </div>
+            <div class="modal-instruction-body">
+                <div class="instruction-step">
+                    <div class="instruction-step-title">1. Привязка делянки и буссольный ход</div>
+                    Укажите широту и долготу WGS-84 стартового столба Т.1. В таблице хода введите азимуты (в градусах) и промеры (в метрах) по сторонам лесосеки. Система автоматически замкнет контур на точку Т.1 и рассчитает невязку. Вы также можете импортировать замеры из журнала буссоли.
+                </div>
+                <div class="instruction-step">
+                    <div class="instruction-step-title">2. Магистральные и пасечные волоки</div>
+                    Задайте шаг пасечных волоков (стандартно 25–30 м) и их направление (единый азимут или разделение на 2 зоны). При необходимости добавьте магистральные волоки с указанием их начала, азимута и длины. Программа автоматически вычислит среднюю и максимальную дальность трелевки.
+                </div>
+                <div class="instruction-step">
+                    <div class="instruction-step-title">3. Склады и погрузочные пункты</div>
+                    Настройте верхние склады (ВС) и погрузочные пункты (ПП). Задайте их габариты (длина, ширина в метрах), координаты привязки и угол разворота. Они будут масштабированы и нанесены на чертеж с точными размерами.
+                </div>
+                <div class="instruction-step">
+                    <div class="instruction-step-title">4. Ручьи, водоохранные зоны (ОЗУ) и биотопы</div>
+                    Во вкладке «Ручьи, ОЗУ, семенники» можно нанести как простые ручьи без запреток, так и водотоки с буферной зоной (ОЗУ), семенные куртины и глухариные тока. Извилистые ручьи задаются цепочкой точек и сглаживаются плавными кривыми. Площадь запреток автоматически вычитается из эксплуатационной площади.
+                </div>
+                <div class="instruction-step">
+                    <div class="instruction-step-title">5. Архив и официальная печать на лист А4</div>
+                    Сохраняйте проекты в локальный архив браузера («Сохранить текущую») для быстрой загрузки других лесосек. Кнопка «Печать бланка на лист А4» автоматически формирует строгий протокольный двухколоночный документ с ведомостью координат WGS-84, чертежом и реквизитами без полей и рекламы.
+                </div>
+            </div>
+            <!-- Аккуратный блок РСЯ в попапе (90-100px) -->
+            <div class="modal-instruction-ad">
+                <div id="yandex_rtb_R-A-19250236-1"></div>
+            </div>
+        </div>
+    </div>
 
     <footer>
         &copy; 2026 ИП Худяков Н.С. • Экосистема «Лесовик ПРО»
@@ -596,6 +789,34 @@
             if (e.target.type !== 'button' && e.target.type !== 'submit' && e.target.type !== 'checkbox' && e.target.type !== 'radio') {
                 e.target.select();
             }
+        }
+    });
+
+    let isInstructionAdRendered = false;
+
+    function openInstructionModal() {
+        document.getElementById('instructionModal').style.display = 'flex';
+        if (!isInstructionAdRendered) {
+            window.yaContextCb = window.yaContextCb || [];
+            window.yaContextCb.push(() => {
+                Ya.Context.AdvManager.render({
+                    "blockId": "R-A-19250236-1",
+                    "renderTo": "yandex_rtb_R-A-19250236-1",
+                    "type": "floorAd",
+                    "platform": "touch"
+                });
+            });
+            isInstructionAdRendered = true;
+        }
+    }
+
+    function closeInstructionModal() {
+        document.getElementById('instructionModal').style.display = 'none';
+    }
+
+    window.addEventListener('click', function(event) {
+        if (event.target === document.getElementById('instructionModal')) {
+            closeInstructionModal();
         }
     });
 
