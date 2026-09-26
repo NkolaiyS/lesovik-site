@@ -122,6 +122,7 @@
         .traverse-direction-wrapper { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px dashed var(--border-color); padding-top: 8px; }
         .select-traverse { padding: 4px; border-radius: 4px; font-size: 12px; background: var(--card-bg); color: var(--text-graphite); border: 1px solid var(--border-color); font-weight: 600; }
 
+        /* ИНТЕРФЕЙС РАЗДЕЛЬНОЙ ЮСТИРОВКИ ДЛЯ РЕЖИМОВ */
         .calibration-offset-wrapper { display: flex; flex-direction: column; gap: 6px; border-top: 1px dashed var(--border-color); padding-top: 8px; margin-top: 8px; }
         .offset-controls-flex { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
         .select-offset-sign { padding: 4px; border-radius: 4px; font-size: 13px; font-weight: bold; background: var(--card-bg); color: var(--text-graphite); border: 1px solid var(--border-color); }
@@ -150,6 +151,81 @@
 
         .camera-viewport-wrapper { position: relative; width: 100%; max-width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid var(--border-color); box-sizing: border-box; }
         #video-preview { width: 100%; height: 100%; object-fit: cover; transform-origin: center center; transition: transform 0.1s ease-out; }
+
+        /* ВЕРХНИЙ БЛОК БЫСТРОГО ДЕЙСТВИЯ (НА ВСЮ ШИРИНУ ПОД ВИЗИРОМ) */
+        .camera-reload-row {
+            display: flex;
+            width: 100%;
+            margin-top: 10px;
+            margin-bottom: 8px;
+        }
+        .btn-reload-camera-bar {
+            background: rgba(45, 90, 39, 0.08);
+            border: 1.5px solid var(--forest-green);
+            color: var(--forest-green);
+            padding: 9px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+            width: 100%;
+        }
+        .btn-reload-camera-bar:hover {
+            background: var(--forest-green);
+            color: #FFFFFF;
+        }
+        .btn-reload-camera-bar:active {
+            transform: scale(0.98);
+        }
+        [data-theme="dark"] .btn-reload-camera-bar {
+            background: rgba(143, 188, 143, 0.1);
+            border-color: var(--forest-light);
+            color: var(--forest-light);
+        }
+        [data-theme="dark"] .btn-reload-camera-bar:hover {
+            background: var(--forest-light);
+            color: #111815;
+        }
+
+        /* КНОПКА ФИКСАЦИИ НА ВСЮ ШИРИНУ ЭКРАНА СРАЗУ ПОД КАМЕРОЙ */
+        .capture-fullwidth-wrapper {
+            width: 100%;
+            margin-bottom: 12px;
+        }
+        .btn-capture-fullwidth {
+            width: 100%;
+            padding: 15px 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+            background-color: #E0E0E0;
+            color: #888;
+            cursor: not-allowed;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            touch-action: manipulation;
+        }
+        .btn-capture-fullwidth.ready-to-fire {
+            background: linear-gradient(135deg, #16A34A 0%, #15803D 100%);
+            color: #FFFFFF;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(22, 163, 74, 0.35);
+        }
+        .btn-capture-fullwidth.ready-to-fire:active {
+            transform: scale(0.98);
+        }
 
         .digital-compass-disk-container {
             display: none;
@@ -416,12 +492,10 @@
         .gps-acc-med { background: rgba(245, 158, 11, 0.8); color: #111; }
         .gps-acc-low { background: rgba(220, 38, 38, 0.8); color: #FFF; }
 
-        .control-panel-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; box-sizing: border-box; }
+        .control-panel-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; box-sizing: border-box; }
         .btn-action { padding: 12px; border: none; border-radius: 8px; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; text-align: center; }
         .btn-set-zero { background-color: var(--forest-green); color: #FFF; }
         .btn-reset-zero { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-graphite); }
-        .btn-lock-measure { grid-column: span 2; background-color: #E0E0E0; color: #888; cursor: not-allowed; font-size: 14px; }
-        .btn-lock-measure.ready-to-fire { background-color: var(--forest-green); color: #FFF; cursor: pointer; }
 
         .btn-fullscreen-toggle { grid-column: span 2; display: none; background: rgba(45, 90, 39, 0.15); border: 1px solid var(--forest-green); color: var(--forest-green); padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; text-transform: uppercase; }
 
@@ -766,6 +840,19 @@
         </div>
     </div>
 
+    <!-- ВСПЛЫВАЮЩАЯ ИНСТРУКЦИЯ ПО МАГНИТНОМУ СКЛОНЕНИЮ / ЮСТИРОВКЕ -->
+    <div id="offset-info-popup" class="popup-overlay" onclick="closePopupOuter('offset-info-popup', event)">
+        <div class="popup-window">
+            <button class="popup-close" onclick="closePopup('offset-info-popup')">&times;</button>
+            <h3>Юстировка и Магнитное склонение</h3>
+            <ul class="instruction-steps" style="font-size: 13px; line-height: 1.5;">
+                <li><strong>Раздельная юстировка:</strong> Поправка настраивается отдельно для режима «Вертикально (Камера)» и отдельно для «Буссоль (Лимб)». Это позволяет устранить аппаратную разницу в 2–3° между плоскостями датчика в смартфоне.</li>
+                <li><strong>Учет магнитного склонения:</strong> Для перехода от магнитных азимутов к истинным введите величину склонения со знаком «+» (восточное) или «-» (западное).</li>
+            </ul>
+            <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closePopup('offset-info-popup')">Понятно</button>
+        </div>
+    </div>
+
     <div id="calibration-popup" class="popup-overlay" onclick="closeCalibrationOuter(event)">
         <div class="popup-window">
             <button class="popup-close" onclick="closeCalibration()">&times;</button>
@@ -849,9 +936,13 @@
                         </select>
                     </div>
 
+                    <!-- ИНТЕРФЕЙС РАЗДЕЛЬНОЙ ЮСТИРОВКИ ДЛЯ РЕЖИМОВ -->
                     <div class="calibration-offset-wrapper">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <label style="font-weight:700; color:var(--forest-green);">🎯 Юстировочная поправка (Магнитное склонение):</label>
+                            <label style="font-weight:700; color:var(--forest-green); display:flex; align-items:center; gap:5px;">
+                                🎯 <span id="offset-mode-title">Юстировка (Вертикально)</span>:
+                                <span class="btn-help-circle" onclick="openPopup('offset-info-popup', event)">?</span>
+                            </label>
                         </div>
                         <div class="offset-controls-flex">
                             <select id="offset-sign-select" class="select-offset-sign" onchange="updateOffsetFromUI()">
@@ -863,7 +954,7 @@
                             <input type="number" id="offset-min-input" class="input-offset-num" placeholder="0" min="0" max="59" oninput="updateOffsetFromUI()">
                             <label style="font-weight:bold;">'</label>
                             
-                            <button class="btn-clear-offset" onclick="clearCalibrationOffset()" title="Удалить поправку из памяти">🗑️ Сбросить</button>
+                            <button class="btn-clear-offset" onclick="clearCalibrationOffset()" title="Сбросить поправку текущего режима">🗑️ Сбросить</button>
                         </div>
                     </div>
                 </div>
@@ -909,14 +1000,27 @@
                     <video id="video-preview" autoplay playsinline muted></video>
                 </div>
 
+                <!-- 1. КНОПКА ПЕРЕЗАГРУЗКИ КАМЕРЫ (НА ВСЮ ШИРИНУ) -->
+                <div class="camera-reload-row" id="camera-reload-row">
+                    <button class="btn-reload-camera-bar" onclick="restartCameraManual()" title="Перезапустить видеопоток камеры">
+                        🔄 Перезапустить камеру
+                    </button>
+                </div>
+
+                <!-- 2. ГЛАВНАЯ КНОПКА ФИКСАЦИИ ЗАМЕРА (НА ВСЮ ШИРИНУ ПОД КАМЕРОЙ) -->
+                <div class="capture-fullwidth-wrapper">
+                    <button id="btn-capture" class="btn-capture-fullwidth" onclick="captureMeasurement()" disabled>
+                        Поймайте уровень horizon
+                    </button>
+                </div>
+
+                <!-- 3. ПАНЕЛЬ ВТОРОСТЕПЕННЫХ КНОПОК -->
                 <div class="control-panel-buttons">
                     <button class="btn-action btn-set-zero" id="btn-gps-start" style="display:none; grid-column: span 1;" onclick="startGpsLine()">📍 Старт точки Т1</button>
                     <button class="btn-action btn-reset-zero" id="btn-gps-reset" style="display:none; grid-column: span 1;" onclick="resetGpsLine()">🔄 Сброс точки</button>
 
                     <button class="btn-action btn-set-zero" id="btn-lock-zero" onclick="setZeroDirection()">🔒 Фиксировать 0°</button>
                     <button class="btn-action btn-reset-zero" id="btn-clear-zero" onclick="resetZeroDirection()">Сбросить</button>
-                    
-                    <button id="btn-capture" class="btn-action btn-lock-measure" onclick="captureMeasurement()" disabled>Поймайте уровень horizon</button>
                     
                     <button class="btn-action btn-set-zero" style="grid-column: span 2; background:#1E3A1A; border:1px solid #8FBC8F; color:#8FBC8F;" onclick="openPhotoModal()">📷 Фотофиксация с координатами</button>
 
@@ -1081,7 +1185,25 @@
     let isFsMapOpen = false;
 
     let lastVibratedSector = -1; 
-    let calibrationOffsetDecimal = 0.0;
+
+    // РАЗДЕЛЬНЫЕ ЗНАЧЕНИЯ ЮСТИРОВКИ ДЛЯ РЕЖИМОВ
+    let offsetMagnetic = 0.0;
+    let offsetTheodolite = 0.0;
+
+    function getCurrentOffsetDecimal() {
+        return (currentSystemMode === 'theodolite') ? offsetTheodolite : offsetMagnetic;
+    }
+
+    function setCurrentOffsetDecimal(val) {
+        if (currentSystemMode === 'theodolite') {
+            offsetTheodolite = val;
+            localStorage.setItem('lesovik_offset_theodolite', offsetTheodolite);
+        } else {
+            offsetMagnetic = val;
+            localStorage.setItem('lesovik_offset_magnetic', offsetMagnetic);
+        }
+    }
+
     let wasLevelLastTick = false;
 
     let photoVideoStream = null;
@@ -1370,32 +1492,53 @@
         let total = deg + (min / 60.0);
         if (sign === '-') total = -total;
 
-        calibrationOffsetDecimal = total;
-        localStorage.setItem('lesovik_calibration_offset', calibrationOffsetDecimal);
+        setCurrentOffsetDecimal(total);
     }
 
-    function loadCalibrationOffset() {
-        const savedOffset = localStorage.getItem('lesovik_calibration_offset');
-        if (savedOffset !== null) {
-            calibrationOffsetDecimal = parseFloat(savedOffset) || 0.0;
-            
-            let absVal = Math.abs(calibrationOffsetDecimal);
-            let sign = calibrationOffsetDecimal < 0 ? '-' : '+';
-            let deg = Math.floor(absVal);
-            let min = Math.round((absVal - deg) * 60);
+    function syncOffsetInputsToUI() {
+        const currentVal = getCurrentOffsetDecimal();
+        const absVal = Math.abs(currentVal);
+        const sign = currentVal < 0 ? '-' : '+';
+        const deg = Math.floor(absVal);
+        const min = Math.round((absVal - deg) * 60);
 
-            document.getElementById('offset-sign-select').value = sign;
-            document.getElementById('offset-deg-input').value = deg > 0 ? deg : '';
-            document.getElementById('offset-min-input').value = min > 0 ? min : '';
+        document.getElementById('offset-sign-select').value = sign;
+        document.getElementById('offset-deg-input').value = deg > 0 ? deg : '';
+        document.getElementById('offset-min-input').value = min > 0 ? min : '';
+
+        const titleLabel = document.getElementById('offset-mode-title');
+        if (titleLabel) {
+            if (currentSystemMode === 'theodolite') {
+                titleLabel.innerText = 'Юстировка (Лимб)';
+            } else if (currentSystemMode === 'gps_heading') {
+                titleLabel.innerText = 'Юстировка (GPS-Курс)';
+            } else {
+                titleLabel.innerText = 'Юстировка (Вертикально)';
+            }
         }
     }
 
+    function loadCalibrationOffset() {
+        const savedMag = localStorage.getItem('lesovik_offset_magnetic');
+        const savedTheo = localStorage.getItem('lesovik_offset_theodolite');
+        const legacyOld = localStorage.getItem('lesovik_calibration_offset');
+
+        if (savedMag !== null) {
+            offsetMagnetic = parseFloat(savedMag) || 0.0;
+        } else if (legacyOld !== null) {
+            offsetMagnetic = parseFloat(legacyOld) || 0.0;
+        }
+
+        if (savedTheo !== null) {
+            offsetTheodolite = parseFloat(savedTheo) || 0.0;
+        }
+
+        syncOffsetInputsToUI();
+    }
+
     function clearCalibrationOffset() {
-        calibrationOffsetDecimal = 0.0;
-        localStorage.removeItem('lesovik_calibration_offset');
-        document.getElementById('offset-sign-select').value = '+';
-        document.getElementById('offset-deg-input').value = '';
-        document.getElementById('offset-min-input').value = '';
+        setCurrentOffsetDecimal(0.0);
+        syncOffsetInputsToUI();
     }
 
     function openFullscreenCompass() {
@@ -1756,6 +1899,7 @@
     function processGpsHeadingMode() {
         const btnCapture = document.getElementById('btn-capture');
         const nextPt = getNextPointNumber();
+        const activeOffset = getCurrentOffsetDecimal();
         
         if (!gpsPoint1) {
             if (currentSystemMode === 'gps_heading') {
@@ -1773,7 +1917,7 @@
         
         if (dist >= 3.0) {
             let bearing = calculateBearing(gpsPoint1.lat, gpsPoint1.lng, currentLat, currentLng);
-            calculatedGpsAzimuth = (bearing + calibrationOffsetDecimal + 360) % 360;
+            calculatedGpsAzimuth = (bearing + activeOffset + 360) % 360;
             
             if (currentSystemMode === 'gps_heading') {
                 currentAzimuth = calculatedGpsAzimuth;
@@ -1981,6 +2125,7 @@
     function switchSystemMode(mode) {
         currentSystemMode = mode;
         applyModeUI();
+        syncOffsetInputsToUI();
         saveToLocalStorage();
         updateFsMapUI();
         showToast(`Режим переключен. Данные сохранены!`);
@@ -2003,6 +2148,7 @@
         const btnGpsStart = document.getElementById('btn-gps-start');
         const btnGpsReset = document.getElementById('btn-gps-reset');
         const btnFsToggle = document.getElementById('btn-fullscreen-toggle');
+        const reloadRow = document.getElementById('camera-reload-row');
 
         if (currentSystemMode === 'magnetic') {
             document.getElementById('mode-mag').classList.add('active-mode');
@@ -2020,6 +2166,7 @@
             btnGpsStart.style.display = 'none';
             btnGpsReset.style.display = 'none';
             btnFsToggle.style.display = 'none';
+            if (reloadRow) reloadRow.style.display = 'flex';
         } else if (currentSystemMode === 'theodolite') {
             document.getElementById('mode-theo').classList.add('active-mode'); 
             document.getElementById('label-live-mode').innerText = "БУССОЛЬ:";
@@ -2037,6 +2184,7 @@
             btnGpsStart.style.display = 'none';
             btnGpsReset.style.display = 'none';
             btnFsToggle.style.display = 'block';
+            if (reloadRow) reloadRow.style.display = 'none';
 
             drawCompassDialSVG('compass-svg-canvas');
         } else if (currentSystemMode === 'gps_heading') {
@@ -2056,6 +2204,7 @@
             btnGpsStart.style.display = 'block';
             btnGpsReset.style.display = 'block';
             btnFsToggle.style.display = 'none';
+            if (reloadRow) reloadRow.style.display = 'flex';
 
             processGpsHeadingMode();
         }
@@ -2113,15 +2262,34 @@
     async function startCamera() {
         const video = document.getElementById('video-preview');
         try {
+            if (video.srcObject) {
+                const tracks = video.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                video.srcObject = null;
+            }
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: { ideal: "environment" } }, 
                 audio: false
             });
             video.srcObject = stream;
+            video.play().catch(e => console.log("Камера готова к воспроизведению"));
         } catch (err) {
             navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-                .then(stream => { video.srcObject = stream; })
+                .then(stream => { 
+                    video.srcObject = stream; 
+                    video.play().catch(e => console.log(e));
+                })
                 .catch(e => console.error("Камера заблокирована", e));
+        }
+    }
+
+    function restartCameraManual() {
+        startCamera();
+        const reloadBtn = document.querySelector('.btn-reload-camera-bar');
+        if (reloadBtn) {
+            const originalText = reloadBtn.innerHTML;
+            reloadBtn.innerHTML = "⏳ Запуск...";
+            setTimeout(() => { reloadBtn.innerHTML = originalText; }, 1000);
         }
     }
 
@@ -2173,7 +2341,8 @@
         }
 
         let smoothedHeading = (Math.atan2(filteredSin, filteredCos) * 180 / Math.PI + 360) % 360;
-        let sensorAzimuth = (smoothedHeading + calibrationOffsetDecimal + 360) % 360;
+        let activeOffset = getCurrentOffsetDecimal();
+        let sensorAzimuth = (smoothedHeading + activeOffset + 360) % 360;
 
         // Накопление в буфер сглаживания
         azimuthRingBuffer.push(sensorAzimuth);
@@ -2312,7 +2481,7 @@
                 isLevel = true;
                 document.getElementById('gyro-ring').classList.add('level-perfect');
                 btnCapture.classList.add('ready-to-fire');
-                btnCapture.innerText = "➕ Зафиксировать румб в журнал";
+                btnCapture.innerText = "➕ Зафиксировать азимут в журнал";
                 btnCapture.disabled = false;
 
                 if (!wasLevelLastTick && navigator.vibrate) {
@@ -2853,6 +3022,7 @@
             
             setGlobalDistanceMethod(globalDistanceMethod);
             applyModeUI();
+            syncOffsetInputsToUI();
             renderLogTable();
             saveToLocalStorage();
             drawPolygon();
