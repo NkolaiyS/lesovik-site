@@ -9,7 +9,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Расчет трелевки, волоков и оформление технокарты | Лесовик PRO</title>
-    <meta name="description" content="Профессиональный камеральный модуль: произвольный контур делянки, магистральный волок, секторальные пасечные волоки под любым углом, расстановка погрузочных площадок кликом и печать.">
+    <meta name="description" content="Камеральный ввод делянки по азимутам и промерам, расчет расстояний трелевки, расстановка верхних складов и оформление технологической карты.">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
     
     <style>
@@ -78,7 +78,7 @@
         .card h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 18px; margin-bottom: 6px; }
         .subtitle { font-size: 12px; opacity: 0.7; margin-bottom: 15px; }
 
-        /* ОФИЦИАЛЬНАЯ ШАПКА ТЕХНОКАРТЫ */
+        /* ШАПКА ТЕХНОКАРТЫ */
         .doc-header-block {
             border: 2px solid var(--forest-green);
             padding: 15px;
@@ -129,7 +129,7 @@
             background: var(--forest-green); color: #FFF;
         }
 
-        .points-table-wrapper { width: 100%; max-height: 180px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 12px; }
+        .points-table-wrapper { width: 100%; max-height: 220px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 12px; }
         .points-table { width: 100%; border-collapse: collapse; font-size: 12px; }
         .points-table th, .points-table td { padding: 6px 8px; border-bottom: 1px solid var(--border-color); text-align: center; }
         .points-table th { background: rgba(45, 90, 39, 0.08); color: var(--forest-green); font-weight: 700; font-size: 11px; text-transform: uppercase; }
@@ -168,7 +168,7 @@
         .legend-color { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
 
         @media print {
-            .glass-header, .print-toolbar, .btn-action, .theme-toggle, footer, .tabs-panel, .points-table-wrapper, #tab-points, #tab-roads { display: none !important; }
+            .glass-header, .print-toolbar, .btn-action, .theme-toggle, footer, .tabs-panel, .points-table-wrapper, #tab-course, #tab-roads, #tab-landings { display: none !important; }
             body, html { background: #FFF !important; color: #000 !important; }
             .container { margin: 0 auto !important; max-width: 100% !important; padding: 0 !important; }
             .card { border: none !important; box-shadow: none !important; padding: 0 !important; }
@@ -220,15 +220,15 @@
                         <input type="text" id="doc-les" class="form-control" value="Сыктывкарское лесничество">
                     </div>
                     <div class="form-group">
-                        <label>Квартал / Выдел / Делянка / Площадь:</label>
+                        <label>Квартал / Выдел / Делянка:</label>
                         <input type="text" id="doc-kv-vyd" class="form-control" value="Кв. 42, Выд. 12, Делянка №1">
                     </div>
                     <div class="form-group">
-                        <label>Технология разработки (комплекс машин):</label>
+                        <label>Технология разработки:</label>
                         <input type="text" id="doc-tech" class="form-control" value="Харвестер + Форвардер (сортиментная)">
                     </div>
                     <div class="form-group">
-                        <label>Масштаб чертежа абриса:</label>
+                        <label>Масштаб чертежа:</label>
                         <select id="doc-scale" class="form-control" onchange="calculateAndDraw()">
                             <option value="auto">Автоподбор (вписать в лист)</option>
                             <option value="1000">1 : 1 000 (в 1 см 10 м)</option>
@@ -243,18 +243,51 @@
                 <button class="btn-action btn-success" onclick="window.print()">🖨️ Печать / Сохранить в PDF</button>
                 <button class="btn-action btn-secondary" onclick="loadFromBusolJournal()">📥 Импорт из буссоли</button>
                 <button class="btn-action btn-accent" id="btn-add-land-mode" onclick="toggleAddLandingMode()">🎯 Поставить склад кликом на карте</button>
-                <button class="btn-action btn-danger" onclick="clearLandings()">🗑️ Очистить склады</button>
             </div>
 
             <!-- ВКЛАДКИ НАСТРОЙКИ -->
             <div class="tabs-panel">
-                <button class="tab-btn active" onclick="switchTab('tab-roads')">🛤️ Волоки и зонирование</button>
-                <button class="tab-btn" onclick="switchTab('tab-points')">📍 Точки контура (X, Y)</button>
+                <button class="tab-btn active" onclick="switchTab('tab-course')">🧭 Буссольный ход (Азимут + Дистанция)</button>
+                <button class="tab-btn" onclick="switchTab('tab-roads')">🛤️ Волоки и зонирование</button>
                 <button class="tab-btn" onclick="switchTab('tab-landings')">🏭 Погрузочные пункты (ПП)</button>
             </div>
 
-            <!-- ВКЛАДКА 1: ВОЛОКИ И СЕКТОРА -->
-            <div id="tab-roads">
+            <!-- ВКЛАДКА 1: БУССОЛЬНЫЙ ХОД И СПУТНИКОВЫЕ КООРДИНАТЫ -->
+            <div id="tab-course">
+                <div class="form-grid" style="background: rgba(45, 90, 39, 0.05); padding: 10px; border-radius: 8px;">
+                    <div class="form-group">
+                        <label>🌐 Координата Т.1 (Широта WGS-84, с.ш.):</label>
+                        <input type="number" id="base-lat" class="form-control" value="61.668500" step="0.000001" oninput="calculateAndDraw()">
+                    </div>
+                    <div class="form-group">
+                        <label>🌐 Координата Т.1 (Долгота WGS-84, в.д.):</label>
+                        <input type="number" id="base-lon" class="form-control" value="50.835400" step="0.000001" oninput="calculateAndDraw()">
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin: 10px 0 6px 0;">
+                    <span style="font-size:12px; font-weight:bold; color:var(--forest-green);">Линии буссольного хода (промер и направление):</span>
+                    <button class="btn-action btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="addCourseLeg()">➕ Добавить линию хода</button>
+                </div>
+
+                <div class="points-table-wrapper">
+                    <table class="points-table">
+                        <thead>
+                            <tr>
+                                <th>Линия</th>
+                                <th>Азимут (градусы 0-360°)</th>
+                                <th>Длина (промер, м)</th>
+                                <th>Координаты конца линии (WGS-84)</th>
+                                <th>Удалить</th>
+                            </tr>
+                        </thead>
+                        <tbody id="course-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ВКЛАДКА 2: ВОЛОКИ И СЕКТОРА -->
+            <div id="tab-roads" style="display:none;">
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Шаг пасечных волоков (м):</label>
@@ -293,27 +326,6 @@
                 </div>
             </div>
 
-            <!-- ВКЛАДКА 2: РУЧНЫЕ ТОЧКИ -->
-            <div id="tab-points" style="display:none;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                    <span style="font-size:12px; font-weight:bold; color:var(--forest-green);">Вершины угловых столбов делянки (X, Y метры от Т.1):</span>
-                    <button class="btn-action btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="addPointRow()">➕ Добавить точку</button>
-                </div>
-                <div class="points-table-wrapper">
-                    <table class="points-table">
-                        <thead>
-                            <tr>
-                                <th>Столб</th>
-                                <th>X (Восток, м)</th>
-                                <th>Y (Север, м)</th>
-                                <th>Удалить</th>
-                            </tr>
-                        </thead>
-                        <tbody id="points-tbody"></tbody>
-                    </table>
-                </div>
-            </div>
-
             <!-- ВКЛАДКА 3: ВЕДОМОСТЬ СКЛАДОВ -->
             <div id="tab-landings" style="display:none;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
@@ -348,7 +360,7 @@
                 <canvas id="skid-canvas" width="700" height="520"></canvas>
                 
                 <div class="legend-box">
-                    <div class="legend-item"><span class="legend-color" style="background:#2D5A27;"></span> Граница лесосеки</div>
+                    <div class="legend-item"><span class="legend-color" style="background:#2D5A27;"></span> Граница лесосеки со стрелками хода</div>
                     <div class="legend-item"><span class="legend-color" style="background:#38BDF8;"></span> Пасечные волоки</div>
                     <div class="legend-item"><span class="legend-color" style="background:#E67E22; height:3px; margin-top:5px;"></span> Магистральный волок</div>
                     <div class="legend-item"><span class="legend-color" style="background:#DC2626; border-radius:50%;"></span> Погрузочный пункт (ПП)</div>
@@ -380,19 +392,21 @@
     </footer>
 
 <script>
-    // Базовый контур лесосеки (X, Y в метрах)
-    let customPoints = [
-        { x: 0,   y: 0   },
-        { x: 0,   y: 250 },
-        { x: 180, y: 300 },
-        { x: 320, y: 220 },
-        { x: 280, y: 0   }
+    // Линии буссольного хода (Азимут в градусах, Дистанция в метрах)
+    let courseLegs = [
+        { azimuth: 0,   distance: 250 },
+        { azimuth: 75,  distance: 200 },
+        { azimuth: 140, distance: 180 },
+        { azimuth: 195, distance: 160 },
+        { azimuth: 270, distance: 235 }
     ];
+
+    let customPoints = [];
 
     // Погрузочные пункты (верхние склады)
     let landings = [
-        { id: 1, name: "ПП-1 (Главный склад у дороги)", x: 20, y: 10 },
-        { id: 2, name: "ПП-2 (Промежуточная площадка)", x: 260, y: 20 }
+        { id: 1, name: "ПП-1 (Главный склад у дороги)", x: 20, y: 15 },
+        { id: 2, name: "ПП-2 (Промежуточная площадка)", x: 180, y: 30 }
     ];
 
     let isAddLandingClickActive = false;
@@ -414,8 +428,8 @@
     }
 
     function switchTab(tabId) {
+        document.getElementById('tab-course').style.display = 'none';
         document.getElementById('tab-roads').style.display = 'none';
-        document.getElementById('tab-points').style.display = 'none';
         document.getElementById('tab-landings').style.display = 'none';
         
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -426,11 +440,7 @@
     function toggleZoneInputs() {
         const mode = document.getElementById('skid-mode').value;
         const g2 = document.getElementById('group-angle-2');
-        if (mode === 'dual_split') {
-            g2.style.display = 'flex';
-        } else {
-            g2.style.display = 'none';
-        }
+        g2.style.display = (mode === 'dual_split') ? 'flex' : 'none';
     }
 
     function applyAnglePreset(idx) {
@@ -452,19 +462,78 @@
         return parseFloat(preset) || 0;
     }
 
-    function renderPointsTable() {
-        const tbody = document.getElementById('points-tbody');
+    // Пересчет линий хода в локальные X/Y метры и WGS-84 координаты
+    function computePointsFromCourse() {
+        let baseLat = parseFloat(document.getElementById('base-lat').value) || 61.6685;
+        let baseLon = parseFloat(document.getElementById('base-lon').value) || 50.8354;
+
+        let pts = [{ x: 0, y: 0, lat: baseLat, lon: baseLon }];
+        let curX = 0;
+        let curY = 0;
+
+        // Коэффициенты пересчета метров в градусы для заданной широты
+        const metersPerDegLat = 111132.95;
+        const metersPerDegLon = 111412.84 * Math.cos(baseLat * Math.PI / 180);
+
+        courseLegs.forEach((leg) => {
+            let rad = (leg.azimuth * Math.PI) / 180;
+            // Азимут: 0 - Север (Y+), 90 - Восток (X+), 180 - Юг (Y-), 270 - Запад (X-)
+            let dx = leg.distance * Math.sin(rad);
+            let dy = leg.distance * Math.cos(rad);
+            curX += dx;
+            curY += dy;
+
+            let ptLat = baseLat + (curY / metersPerDegLat);
+            let ptLon = baseLon + (curX / metersPerDegLon);
+
+            pts.push({ x: curX, y: curY, lat: ptLat, lon: ptLon });
+        });
+
+        customPoints = pts;
+    }
+
+    function renderCourseTable() {
+        computePointsFromCourse();
+        const tbody = document.getElementById('course-tbody');
         tbody.innerHTML = '';
-        customPoints.forEach((pt, idx) => {
+
+        courseLegs.forEach((leg, idx) => {
+            let nextPt = customPoints[idx + 1] || customPoints[0];
             tbody.innerHTML += `
                 <tr>
-                    <td><b>Т.${idx + 1}</b></td>
-                    <td><input type="number" class="input-tbl" value="${pt.x}" oninput="updatePointCoord(${idx}, 'x', this.value)"></td>
-                    <td><input type="number" class="input-tbl" value="${pt.y}" oninput="updatePointCoord(${idx}, 'y', this.value)"></td>
-                    <td><button class="btn-action btn-danger" style="padding: 2px 6px; font-size:10px;" onclick="removePointRow(${idx})">🗑️</button></td>
+                    <td><b>Т.${idx + 1} ➔ Т.${idx + 2}</b></td>
+                    <td><input type="number" class="input-tbl" value="${leg.azimuth}" min="0" max="360" step="1" oninput="updateCourseLeg(${idx}, 'azimuth', this.value)"></td>
+                    <td><input type="number" class="input-tbl" value="${leg.distance}" min="1" step="1" oninput="updateCourseLeg(${idx}, 'distance', this.value)"></td>
+                    <td style="font-size:11px; opacity:0.85;">${nextPt.lat.toFixed(6)}, ${nextPt.lon.toFixed(6)}</td>
+                    <td><button class="btn-action btn-danger" style="padding: 2px 6px; font-size:10px;" onclick="removeCourseLeg(${idx})">🗑️</button></td>
                 </tr>
             `;
         });
+    }
+
+    function addCourseLeg() {
+        courseLegs.push({ azimuth: 90, distance: 100 });
+        renderCourseTable();
+        calculateAndDraw();
+    }
+
+    function removeCourseLeg(idx) {
+        if (courseLegs.length <= 3) {
+            alert("Для замкнутого контура делянки требуется минимум 3 линии!");
+            return;
+        }
+        courseLegs.splice(idx, 1);
+        renderCourseTable();
+        calculateAndDraw();
+    }
+
+    function updateCourseLeg(idx, field, val) {
+        let parsed = parseFloat(val);
+        if (!isNaN(parsed)) {
+            courseLegs[idx][field] = parsed;
+            renderCourseTable();
+            calculateAndDraw();
+        }
     }
 
     function renderLandingsTable() {
@@ -483,34 +552,9 @@
         });
     }
 
-    function addPointRow() {
-        let last = customPoints[customPoints.length - 1] || { x: 100, y: 100 };
-        customPoints.push({ x: last.x + 40, y: last.y + 40 });
-        renderPointsTable();
-        calculateAndDraw();
-    }
-
-    function removePointRow(idx) {
-        if (customPoints.length <= 3) {
-            alert("В контуре должно быть не менее 3 столбов!");
-            return;
-        }
-        customPoints.splice(idx, 1);
-        renderPointsTable();
-        calculateAndDraw();
-    }
-
-    function updatePointCoord(idx, axis, val) {
-        let parsed = parseFloat(val);
-        if (!isNaN(parsed)) {
-            customPoints[idx][axis] = parsed;
-            calculateAndDraw();
-        }
-    }
-
     function addLandingManual() {
         let nextId = landings.length + 1;
-        landings.push({ id: nextId, name: `ПП-${nextId} (Погрузочный пункт)`, x: customPoints[0].x + 20, y: customPoints[0].y + 15 });
+        landings.push({ id: nextId, name: `ПП-${nextId} (Погрузочный пункт)`, x: 20, y: 20 });
         renderLandingsTable();
         calculateAndDraw();
     }
@@ -519,14 +563,6 @@
         landings.splice(idx, 1);
         renderLandingsTable();
         calculateAndDraw();
-    }
-
-    function clearLandings() {
-        if (confirm("Удалить все погрузочные площадки?")) {
-            landings = [];
-            renderLandingsTable();
-            calculateAndDraw();
-        }
     }
 
     function toggleAddLandingMode() {
@@ -552,27 +588,23 @@
             try {
                 const log = JSON.parse(savedLog);
                 if (log && log.length >= 3) {
-                    let pts = [{ x: 0, y: 0 }];
-                    let cx = 0, cy = 0;
-                    log.forEach(m => {
-                        let rad = (m.azimuth * Math.PI) / 180;
-                        cx += m.distance * Math.sin(rad);
-                        cy += m.distance * Math.cos(rad);
-                        pts.push({ x: Math.round(cx), y: Math.round(cy) });
-                    });
-                    customPoints = pts;
-                    renderPointsTable();
+                    courseLegs = log.map(m => ({
+                        azimuth: Math.round(m.azimuth),
+                        distance: Math.round(m.distance)
+                    }));
+                    renderCourseTable();
                     calculateAndDraw();
-                    alert("✔️ Контур успешно импортирован из полевой буссоли!");
+                    alert("✔️ Линии азимутов и дистанций импортированы из полевой буссоли!");
                     return;
                 }
             } catch(e) { console.error(e); }
         }
-        alert("⚠️ В журнале буссоли нет данных. Заполните точки вручную в таблице.");
+        alert("⚠️ В журнале буссоли нет сохраненных замеров.");
     }
 
-    // РАСЧЕТ ТРЕЛЕВКИ И ОТРИСОВКА
+    // РАСЧЕТ И ОТРИСОВКА
     function calculateAndDraw() {
+        computePointsFromCourse();
         const spacing = parseFloat(document.getElementById('road-spacing').value) || 25;
         const skidMode = document.getElementById('skid-mode').value;
         const angle1 = getAngle(1);
@@ -580,7 +612,14 @@
 
         if (customPoints.length < 3) return;
 
-        // 1. Площадь Гаусса
+        // Невязка полигона (расстояние между началом Т.1 и концом последней линии)
+        let endPt = customPoints[customPoints.length - 1];
+        let closureError = Math.hypot(endPt.x, endPt.y);
+
+        // Периметр
+        let perimeter = courseLegs.reduce((sum, l) => sum + l.distance, 0);
+
+        // Площадь Гаусса
         let area = 0;
         let j = customPoints.length - 1;
         for (let i = 0; i < customPoints.length; i++) {
@@ -597,22 +636,19 @@
         let widthB = maxX - minX || 50;
         let lengthL = maxY - minY || 50;
 
-        let totalRoadsLength = 0;
         let roadCount = Math.max(1, Math.round(widthB / spacing));
-        totalRoadsLength = roadCount * lengthL;
+        let totalRoadsLength = roadCount * lengthL;
 
-        // Расчет трелевки до ближайшего ПП
         let avgSkidDist = 0;
         let maxSkidDist = 0;
 
         if (landings.length > 0) {
-            // Расчет максимального расстояния от любой вершины делянки до ближайшего склада
             let distances = [];
             customPoints.forEach(pt => {
                 let minDistToLand = Math.min(...landings.map(ld => Math.hypot(pt.x - ld.x, pt.y - ld.y)));
                 distances.push(minDistToLand);
             });
-            maxSkidDist = Math.max(...distances) * 1.08; // 8% коэффициент извилистости волока
+            maxSkidDist = Math.max(...distances) * 1.08;
             avgSkidDist = (maxSkidDist * 0.55);
         } else {
             maxSkidDist = Math.hypot(widthB, lengthL);
@@ -622,7 +658,7 @@
         let landingsListStr = landings.map(l => `<b>${l.name}</b> (X:${Math.round(l.x)}м, Y:${Math.round(l.y)}м)`).join('; ') || 'Не назначены';
 
         document.getElementById('calc-results').innerHTML = `
-            <p>🌲 <b>Площадь лесосеки:</b> <strong>${areaHa.toFixed(4)} га</strong> (${Math.round(area)} м²)</p>
+            <p>🌲 <b>Площадь лесосеки:</b> <strong>${areaHa.toFixed(4)} га</strong> (${Math.round(area)} м²) • <b>Периметр:</b> ${Math.round(perimeter)} м • <b>Линейная невязка:</b> ${closureError.toFixed(2)} м</p>
             <p>🏭 <b>Погрузочные пункты (${landings.length} шт.):</b> ${landingsListStr}</p>
             <p>🛤️ <b>Пасечные волоки:</b> шаг ${spacing} м, расчетное кол-во ~${roadCount} шт. (суммарный метраж: ~${Math.round(totalRoadsLength)} м)</p>
             <p>📏 <b>Среднее расстояние трелевки ($L_{сред}$):</b> <strong>${avgSkidDist.toFixed(1)} м</strong></p>
@@ -645,12 +681,10 @@
         let spanX = maxX - minX || 100;
         let spanY = maxY - minY || 100;
 
-        let scale = Math.min((cWidth - 120) / spanX, (cHeight - 120) / spanY);
+        let scale = Math.min((cWidth - 140) / spanX, (cHeight - 140) / spanY);
 
         const chosenScale = document.getElementById('doc-scale').value;
         if (chosenScale !== 'auto') {
-            // Фиксированный масштаб (1:1000 = 1 метр это 0.01м = пиксели)
-            // При 96 DPI: 1 метр = 3.7795 px / (scale/100)
             let basePixelsPerMeter = 3.78 * (1000 / parseFloat(chosenScale));
             scale = Math.min(scale, basePixelsPerMeter);
         }
@@ -666,12 +700,12 @@
         ctx.fillStyle = isDark ? '#FFF' : '#222';
         ctx.font = "bold 13px Inter, sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("С (Север)", cWidth / 2, 22);
-        ctx.fillText("Ю (Юг)", cWidth / 2, cHeight - 10);
+        ctx.fillText("С (Север 0°)", cWidth / 2, 22);
+        ctx.fillText("Ю (Юг 180°)", cWidth / 2, cHeight - 10);
         ctx.textAlign = "left";
-        ctx.fillText("З (Запад)", 12, cHeight / 2);
+        ctx.fillText("З (Запад 270°)", 12, cHeight / 2);
         ctx.textAlign = "right";
-        ctx.fillText("В (Восток)", cWidth - 12, cHeight / 2);
+        ctx.fillText("В (Восток 90°)", cWidth - 12, cHeight / 2);
 
         // Стрелка севера
         ctx.strokeStyle = '#DC2626';
@@ -684,7 +718,7 @@
         ctx.lineTo(cWidth / 2 + 5, 45);
         ctx.stroke();
 
-        // 2. ОТРИСОВКА ВОЛОКОВ
+        // 2. ОТРИСОВКА ПАСЕЧНЫХ ВОЛОКОВ
         ctx.strokeStyle = '#38BDF8';
         ctx.lineWidth = 1.6;
         ctx.setLineDash([5, 5]);
@@ -720,12 +754,9 @@
         }
 
         if (skidMode === 'dual_split') {
-            // Северная секция (выше середины)
             drawLinesAtAngle(angle1, (x, y) => y >= midY);
-            // Южная секция (ниже середины)
             drawLinesAtAngle(angle2, (x, y) => y < midY);
 
-            // Разделительная технологическая линия
             ctx.setLineDash([2, 4]);
             ctx.strokeStyle = '#94A3B8';
             let pLeft = toPx({ x: minX, y: midY });
@@ -744,8 +775,6 @@
             ctx.strokeStyle = '#E67E22';
             ctx.lineWidth = 3.5;
             ctx.beginPath();
-            
-            // Проводим магистраль от первого склада сквозь центр делянки
             let startSpine = landings[0] || customPoints[0];
             let spineEnd = { x: (minX + maxX) / 2, y: maxY - 15 };
             let p1 = toPx(startSpine);
@@ -754,15 +783,14 @@
             ctx.lineTo(p2.x, p2.y);
             ctx.stroke();
 
-            // Стрелка на магистрали (направление к складу)
             let midSpineX = (p1.x + p2.x) / 2;
             let midSpineY = (p1.y + p2.y) / 2;
             ctx.fillStyle = '#E67E22';
             ctx.font = "bold 10.5px Inter, sans-serif";
-            ctx.fillText("МАГИСТРАЛЬНЫЙ ВОЛОК ➔", midSpineX, midSpineY - 6);
+            ctx.fillText("МАГИСТРАЛЬ ➔", midSpineX, midSpineY - 6);
         }
 
-        // 4. КОНТУР ДЕЛЯНКИ
+        // 4. КОНТУР ДЕЛЯНКИ СО СТРЕЛКАМИ ХОДА И ПОДПИСЯМИ МЕТРАЖА
         ctx.lineWidth = 3;
         ctx.strokeStyle = isDark ? '#8FBC8F' : '#2D5A27';
         ctx.beginPath();
@@ -775,6 +803,21 @@
         ctx.fillStyle = isDark ? 'rgba(143,188,143,0.06)' : 'rgba(45,90,39,0.04)';
         ctx.fill();
         ctx.stroke();
+
+        // Стрелки хода и подписи расстояния на сторонах
+        for (let i = 0; i < courseLegs.length; i++) {
+            let pStart = toPx(customPoints[i]);
+            let pEnd = toPx(customPoints[i + 1] || customPoints[0]);
+
+            let midSegX = (pStart.x + pEnd.x) / 2;
+            let midSegY = (pStart.y + pEnd.y) / 2;
+
+            // Подпись метража и азимута на ребре
+            ctx.fillStyle = isDark ? '#A7F3D0' : '#065F46';
+            ctx.font = "bold 9.5px Inter, sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(`${courseLegs[i].distance}м (${courseLegs[i].azimuth}°)`, midSegX, midSegY - 4);
+        }
 
         // 5. ВЕРШИНЫ (СТОЛБЫ)
         customPoints.forEach((pt, idx) => {
@@ -796,15 +839,12 @@
         // 6. ВСЕ ПОГРУЗОЧНЫЕ ПУНКТЫ (ПП)
         landings.forEach((ld) => {
             let px = toPx(ld);
-            
-            // Зона площадки (прямоугольник кармана)
             ctx.fillStyle = 'rgba(220, 38, 38, 0.25)';
             ctx.strokeStyle = '#DC2626';
             ctx.lineWidth = 1.5;
             ctx.strokeRect(px.x - 14, px.y - 10, 28, 20);
             ctx.fillRect(px.x - 14, px.y - 10, 28, 20);
 
-            // Точка центра
             ctx.beginPath();
             ctx.arc(px.x, px.y, 5, 0, Math.PI * 2);
             ctx.fillStyle = '#DC2626';
@@ -833,9 +873,8 @@
         let maxY = Math.max(...customPoints.map(p => p.y));
         let spanX = maxX - minX || 100;
         let spanY = maxY - minY || 100;
-        let scale = Math.min((this.width - 120) / spanX, (this.height - 120) / spanY);
+        let scale = Math.min((this.width - 140) / spanX, (this.height - 140) / spanY);
 
-        // Обратная проекция пикселей в метры делянки
         let realX = (clickX - this.width / 2) / scale + (maxX + minX) / 2;
         let realY = (this.height / 2 - clickY) / scale + (maxY + minY) / 2;
 
@@ -865,7 +904,7 @@
     }
 
     window.onload = function() {
-        renderPointsTable();
+        renderCourseTable();
         renderLandingsTable();
         calculateAndDraw();
     };
