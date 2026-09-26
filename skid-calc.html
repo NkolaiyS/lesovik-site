@@ -40,17 +40,9 @@
     <script>window.yaContextCb=window.yaContextCb||[]</script>
     <script src="https://yandex.ru/ads/system/context.js" async></script>
 
-    <!-- Yandex.RTB Рекламные форматы: Полноэкранный и Оверлей -->
+    <!-- Yandex.RTB Настройка форматов строго по ТЗ -->
     <script>
-        // Touch Fullscreen
-        window.yaContextCb.push(() => {
-            Ya.Context.AdvManager.render({
-                "blockId": "R-A-19250236-2",
-                "type": "fullscreen",
-                "platform": "touch"
-            })
-        });
-        // Desktop Fullscreen
+        // 1. Десктоп: только Fullscreen
         window.yaContextCb.push(() => {
             Ya.Context.AdvManager.render({
                 "blockId": "R-A-19250236-3",
@@ -58,7 +50,17 @@
                 "platform": "desktop"
             })
         });
-        // Touch Overlay R-A-19250236-7
+
+        // 2. Десктоп: только FloorAd (прилипала внизу)
+        window.yaContextCb.push(() => {
+            Ya.Context.AdvManager.render({
+                "blockId": "R-A-19250236-4",
+                "type": "floorAd",
+                "platform": "desktop"
+            })
+        });
+
+        // 3. Мобильные устройства: ТОЛЬКО Overlay
         window.yaContextCb.push(() => {
             Ya.Context.AdvManager.render({
                 "blockId": "R-A-19250236-7",
@@ -125,7 +127,6 @@
 
         .header-right { display: flex; align-items: center; gap: 8px; }
         
-        /* Кнопка "К инструментам" без лишней стрелки и расширения */
         .btn-back { 
             background: transparent; 
             color: var(--forest-green); 
@@ -244,15 +245,7 @@
         .legend-item { display: flex; align-items: center; gap: 5px; }
         .legend-color { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
 
-        /* Нижний блок РСЯ ленты */
-        .yandex-rtb-feed-container {
-            margin: 20px 0;
-            border-radius: 8px;
-            overflow: hidden;
-            width: 100%;
-        }
-
-        /* МОДАЛЬНОЕ ОКНО ИНСТРУКЦИИ */
+        /* МОДАЛЬНОЕ ОКНО ИНСТРУКЦИИ БЕЗ РЕКЛАМЫ (СКРОЛЛ НЕ ЗАЛИПАЕТ) */
         .modal-instruction {
             display: none;
             position: fixed;
@@ -267,7 +260,7 @@
         .modal-instruction-content {
             width: 100%;
             max-width: 680px;
-            max-height: 90vh;
+            max-height: 85vh;
             background: var(--card-bg);
             border: 2px solid var(--forest-green);
             border-radius: 12px;
@@ -276,6 +269,7 @@
             position: relative;
             box-shadow: 0 12px 36px rgba(0,0,0,0.35);
             color: var(--text-graphite);
+            overflow: hidden;
         }
         .modal-instruction-header {
             display: flex;
@@ -283,6 +277,7 @@
             align-items: center;
             padding: 14px 18px;
             border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
         }
         .modal-instruction-header h3 {
             margin: 0;
@@ -302,6 +297,7 @@
         .modal-instruction-body {
             padding: 16px 18px;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             font-size: 13px;
             line-height: 1.6;
         }
@@ -310,26 +306,16 @@
             background: var(--bg-paper);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 10px 14px;
+            padding: 12px 14px;
+        }
+        .instruction-step:last-child {
+            margin-bottom: 0;
         }
         .instruction-step-title {
             font-weight: 700;
             color: var(--forest-green);
             margin-bottom: 4px;
             font-size: 13.5px;
-        }
-        /* Аккуратный баннер 90-100px в попапе */
-        .modal-instruction-ad {
-            border-top: 1px solid var(--border-color);
-            padding: 8px 14px;
-            min-height: 90px;
-            max-height: 105px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.02);
-            overflow: hidden;
-            border-radius: 0 0 10px 10px;
         }
 
         #print-doc-layout { display: none; }
@@ -339,7 +325,7 @@
                 size: A4 portrait;
                 margin: 8mm 10mm 8mm 10mm;
             }
-            .glass-header, .print-toolbar, .archive-toolbar, .btn-action, .theme-toggle, footer, .tabs-panel, .points-table-wrapper, #tab-course, #tab-roads, #tab-spines, #tab-landings, #tab-zones, #tab-silviculture, .results-box-container, .canvas-container, .yandex-rtb-feed-container, .modal-instruction { display: none !important; }
+            .glass-header, .print-toolbar, .archive-toolbar, .btn-action, .theme-toggle, footer, .tabs-panel, .points-table-wrapper, #tab-course, #tab-roads, #tab-spines, #tab-landings, #tab-zones, #tab-silviculture, .results-box-container, .canvas-container, .modal-instruction { display: none !important; }
             
             body, html {
                 background: #FFFFFF !important;
@@ -419,7 +405,6 @@
             <h1>Лесовик • Технокарта и волоки PRO</h1>
         </a>
         <div class="header-right">
-            <!-- Кнопка без стрелки -->
             <a href="tools.html" class="btn-back">К инструментам</a>
             <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тема</button>
         </div>
@@ -490,7 +475,6 @@
             <div class="print-toolbar">
                 <button class="btn-action btn-primary" onclick="prepareAndPrint()">🖨️ Печать бланка на лист А4 (PDF)</button>
                 <button class="btn-action" onclick="loadFromBusolJournal()">📥 Импорт из буссоли</button>
-                <!-- Кнопка вызова инструкции -->
                 <button class="btn-action btn-help" onclick="openInstructionModal()">📖 Инструкция</button>
             </div>
 
@@ -726,23 +710,9 @@
             </div>
 
         </div>
-
-        <!-- НИЖНИЙ РСЯ БЛОК ЛЕНТЫ ПЕРЕД ФУТЕРОМ -->
-        <div class="yandex-rtb-feed-container">
-            <div id="yandex_rtb_R-A-19250236-5"></div>
-            <script>
-            window.yaContextCb.push(() => {
-                Ya.Context.AdvManager.render({
-                    "blockId": "R-A-19250236-5",
-                    "renderTo": "yandex_rtb_R-A-19250236-5",
-                    "type": "feed"
-                })
-            })
-            </script>
-        </div>
     </main>
 
-    <!-- ПОПАП МОДУЛЬ ПОДРОБНОЙ ИНСТРУКЦИИ -->
+    <!-- ПОПАП МОДУЛЬ ПОДРОБНОЙ ИНСТРУКЦИИ (БЕЗ РЕКЛАМЫ, ПЛАВНЫЙ СКРОЛЛ) -->
     <div class="modal-instruction" id="instructionModal">
         <div class="modal-instruction-content">
             <div class="modal-instruction-header">
@@ -771,10 +741,6 @@
                     Сохраняйте проекты в локальный архив браузера («Сохранить текущую») для быстрой загрузки других лесосек. Кнопка «Печать бланка на лист А4» автоматически формирует строгий протокольный двухколоночный документ с ведомостью координат WGS-84, чертежом и реквизитами без полей и рекламы.
                 </div>
             </div>
-            <!-- Аккуратный блок РСЯ в попапе (90-100px) -->
-            <div class="modal-instruction-ad">
-                <div id="yandex_rtb_R-A-19250236-1"></div>
-            </div>
         </div>
     </div>
 
@@ -792,22 +758,8 @@
         }
     });
 
-    let isInstructionAdRendered = false;
-
     function openInstructionModal() {
         document.getElementById('instructionModal').style.display = 'flex';
-        if (!isInstructionAdRendered) {
-            window.yaContextCb = window.yaContextCb || [];
-            window.yaContextCb.push(() => {
-                Ya.Context.AdvManager.render({
-                    "blockId": "R-A-19250236-1",
-                    "renderTo": "yandex_rtb_R-A-19250236-1",
-                    "type": "floorAd",
-                    "platform": "touch"
-                });
-            });
-            isInstructionAdRendered = true;
-        }
     }
 
     function closeInstructionModal() {
