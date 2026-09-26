@@ -9,7 +9,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Расчет трелевки, волоков и оформление технокарты | Лесовик PRO</title>
-    <meta name="description" content="Профессиональный камеральный модуль: ручной ввод точек делянки, расчет расстояний трелевки, расстановка погрузочных площадок, ориентация по сторонам света и печать официального документа.">
+    <meta name="description" content="Профессиональный камеральный модуль: произвольный контур делянки, магистральный волок, секторальные пасечные волоки под любым углом, расстановка погрузочных площадок кликом и печать.">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
     
     <style>
@@ -26,6 +26,7 @@
             --footer-bg: #2C3531;
             --success: #16A34A;
             --danger: #DC2626;
+            --accent: #E67E22;
         }
 
         [data-theme="dark"] {
@@ -37,6 +38,7 @@
             --card-bg: #22302B;
             --glass-bg: rgba(26, 36, 33, 0.85);
             --footer-bg: #111815;
+            --accent: #F39C12;
         }
 
         html, body {
@@ -70,13 +72,13 @@
 
         .theme-toggle { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
 
-        .container { max-width: 950px; width: 100%; margin: 75px auto 30px; padding: 0 10px; box-sizing: border-box; }
+        .container { max-width: 1000px; width: 100%; margin: 75px auto 30px; padding: 0 10px; box-sizing: border-box; }
 
         .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 4px 4px 0px rgba(0,0,0,0.02); }
         .card h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 18px; margin-bottom: 6px; }
         .subtitle { font-size: 12px; opacity: 0.7; margin-bottom: 15px; }
 
-        /* ОФИЦИАЛЬНАЯ ШАПКА ДОКУМЕНТА (КАК В ПОЛЕВОМ ЮРИСТЕ) */
+        /* ОФИЦИАЛЬНАЯ ШАПКА ТЕХНОКАРТЫ */
         .doc-header-block {
             border: 2px solid var(--forest-green);
             padding: 15px;
@@ -112,15 +114,22 @@
             margin-bottom: 12px;
         }
 
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
-        @media(max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
-
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 15px; }
         .form-group { display: flex; flex-direction: column; gap: 4px; }
-        .form-group label { font-size: 12px; font-weight: 600; color: var(--forest-green); }
+        .form-group label { font-size: 11.5px; font-weight: 700; color: var(--forest-green); }
         .form-control { width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-paper); color: var(--text-graphite); font-size: 13px; font-weight: bold; }
 
-        /* ТАБЛИЦА РУЧНОГО ВВОДА ТОЧЕк */
-        .points-table-wrapper { width: 100%; max-height: 220px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 12px; }
+        .tabs-panel {
+            display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 2px solid var(--border-color); padding-bottom: 6px;
+        }
+        .tab-btn {
+            background: transparent; border: none; padding: 6px 14px; font-weight: 700; font-size: 13px; cursor: pointer; color: var(--text-graphite); border-radius: 6px;
+        }
+        .tab-btn.active {
+            background: var(--forest-green); color: #FFF;
+        }
+
+        .points-table-wrapper { width: 100%; max-height: 180px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 12px; }
         .points-table { width: 100%; border-collapse: collapse; font-size: 12px; }
         .points-table th, .points-table td { padding: 6px 8px; border-bottom: 1px solid var(--border-color); text-align: center; }
         .points-table th { background: rgba(45, 90, 39, 0.08); color: var(--forest-green); font-weight: 700; font-size: 11px; text-transform: uppercase; }
@@ -130,43 +139,41 @@
         .btn-success { background: var(--success); color: #FFF; }
         .btn-danger { background: var(--danger); color: #FFF; }
         .btn-secondary { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); }
+        .btn-accent { background: var(--accent); color: #FFF; }
 
         .results-box { background: rgba(45, 90, 39, 0.06); border: 1px solid var(--forest-light); padding: 14px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; }
         .results-box p { margin: 5px 0; }
         .results-box strong { color: var(--forest-green); }
 
         .canvas-container { position: relative; width: 100%; background: #FFFFFF; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; align-items: center; padding: 8px; box-sizing: border-box; }
-        #skid-canvas { width: 100%; max-width: 100%; aspect-ratio: 4/3; border-radius: 6px; border: 1px dashed rgba(0,0,0,0.1); background: #FAFAFA; }
+        #skid-canvas { width: 100%; max-width: 100%; aspect-ratio: 4/3; border-radius: 6px; border: 1px dashed rgba(0,0,0,0.1); background: #FAFAFA; cursor: crosshair; }
         [data-theme="dark"] #skid-canvas { background: #151e1b; }
 
-        /* ПОДПИСИ И ПЕЧАТЬ */
-        .doc-signatures-row {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 25px;
-            padding-top: 15px;
-            border-top: 1px solid var(--border-color);
-            font-size: 12px;
-        }
-        .signature-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            width: 45%;
-        }
-        .signature-line {
-            border-bottom: 1px solid var(--text-graphite);
-            margin-top: 15px;
+        .canvas-toolbar {
+            width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 12px; flex-wrap: wrap; gap: 8px;
         }
 
-        .print-toolbar { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .doc-signatures-row {
+            display: flex; justify-content: space-between; margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border-color); font-size: 12px;
+        }
+        .signature-group { display: flex; flex-direction: column; gap: 6px; width: 45%; }
+        .signature-line { border-bottom: 1px solid var(--text-graphite); margin-top: 15px; }
+
+        .print-toolbar { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+
+        .legend-box {
+            display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; margin-top: 8px; background: rgba(0,0,0,0.03); padding: 8px 12px; border-radius: 6px; width: 100%;
+        }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .legend-color { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
 
         @media print {
-            .glass-header, .print-toolbar, .btn-action, .theme-toggle, footer { display: none !important; }
+            .glass-header, .print-toolbar, .btn-action, .theme-toggle, footer, .tabs-panel, .points-table-wrapper, #tab-points, #tab-roads { display: none !important; }
             body, html { background: #FFF !important; color: #000 !important; }
             .container { margin: 0 auto !important; max-width: 100% !important; padding: 0 !important; }
             .card { border: none !important; box-shadow: none !important; padding: 0 !important; }
             .doc-header-block { border: 2px solid #000 !important; background: none !important; }
+            #skid-canvas { border: 1px solid #000 !important; }
         }
 
         footer { text-align: center; padding: 20px; font-size: 11px; opacity: 0.6; margin-top: auto; }
@@ -177,7 +184,7 @@
     <header class="glass-header">
         <a href="index.html" class="logo-container">
             <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
-            <h1>Лесовик • Камеральный проект трелевки</h1>
+            <h1>Лесовик • Технокарта и волоки PRO</h1>
         </a>
         <div class="header-right">
             <a href="tools.html" class="btn-back">← К инструментам</a>
@@ -193,19 +200,19 @@
                 <div class="doc-approval-row">
                     <div class="doc-approval-box">
                         <b>УТВЕРЖДАЮ:</b><br>
-                        Руководитель арендатора / лесничества<br>
+                        Руководитель арендатора / лесозаготовителя<br>
                         _________________ / _________________ <br>
                         «____» _______________ 2026 г. М.П.
                     </div>
                     <div class="doc-approval-box" style="text-align: right;">
                         <b>СОГЛАСОВАНО:</b><br>
-                        Инженер-лесопатолог / таксатор<br>
+                        Лесничий / Инженер по лесопользованию<br>
                         _________________ / _________________ <br>
                         «____» _______________ 2026 г.
                     </div>
                 </div>
                 <div class="doc-title-main">ТЕХНОЛОГИЧЕСКАЯ КАРТА РАЗРАБОТКИ ЛЕСОСЕКИ</div>
-                <div class="doc-subtitle-sub">Приложение к проекту освоения лесов • Расчет дальности трелевки и схемы волоков</div>
+                <div class="doc-subtitle-sub">Приложение к лесной декларации • Схема размещения волоков и погрузочных пунктов</div>
                 
                 <div class="form-grid" style="margin-top: 10px; margin-bottom: 0;">
                     <div class="form-group">
@@ -213,72 +220,153 @@
                         <input type="text" id="doc-les" class="form-control" value="Сыктывкарское лесничество">
                     </div>
                     <div class="form-group">
-                        <label>Квартал № / Выдел № / Делянка №:</label>
+                        <label>Квартал / Выдел / Делянка / Площадь:</label>
                         <input type="text" id="doc-kv-vyd" class="form-control" value="Кв. 42, Выд. 12, Делянка №1">
+                    </div>
+                    <div class="form-group">
+                        <label>Технология разработки (комплекс машин):</label>
+                        <input type="text" id="doc-tech" class="form-control" value="Харвестер + Форвардер (сортиментная)">
+                    </div>
+                    <div class="form-group">
+                        <label>Масштаб чертежа абриса:</label>
+                        <select id="doc-scale" class="form-control" onchange="calculateAndDraw()">
+                            <option value="auto">Автоподбор (вписать в лист)</option>
+                            <option value="1000">1 : 1 000 (в 1 см 10 м)</option>
+                            <option value="2000">1 : 2 000 (в 1 см 20 м)</option>
+                            <option value="5000">1 : 5 000 (в 1 см 50 м)</option>
+                        </select>
                     </div>
                 </div>
             </div>
 
             <div class="print-toolbar">
                 <button class="btn-action btn-success" onclick="window.print()">🖨️ Печать / Сохранить в PDF</button>
-                <button class="btn-action btn-secondary" onclick="loadFromBusolJournal()">📥 Подтянуть точки из буссоли</button>
-                <button class="btn-action btn-secondary" onclick="addPointRow()">➕ Добавить точку контура</button>
+                <button class="btn-action btn-secondary" onclick="loadFromBusolJournal()">📥 Импорт из буссоли</button>
+                <button class="btn-action btn-accent" id="btn-add-land-mode" onclick="toggleAddLandingMode()">🎯 Поставить склад кликом на карте</button>
+                <button class="btn-action btn-danger" onclick="clearLandings()">🗑️ Очистить склады</button>
             </div>
 
-            <h2>Параметры разработки и волоков</h2>
-            <div class="subtitle">Укажите точки делянки, шаг волоков и расставьте погрузочные площадки (верхние склады).</div>
+            <!-- ВКЛАДКИ НАСТРОЙКИ -->
+            <div class="tabs-panel">
+                <button class="tab-btn active" onclick="switchTab('tab-roads')">🛤️ Волоки и зонирование</button>
+                <button class="tab-btn" onclick="switchTab('tab-points')">📍 Точки контура (X, Y)</button>
+                <button class="tab-btn" onclick="switchTab('tab-landings')">🏭 Погрузочные пункты (ПП)</button>
+            </div>
 
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Шаг пасечных волоков (между осями, м):</label>
-                    <input type="number" id="road-spacing" class="form-control" value="25" min="10" max="60" oninput="calculateAndDraw()">
+            <!-- ВКЛАДКА 1: ВОЛОКИ И СЕКТОРА -->
+            <div id="tab-roads">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Шаг пасечных волоков (м):</label>
+                        <input type="number" id="road-spacing" class="form-control" value="25" min="10" max="60" oninput="calculateAndDraw()">
+                    </div>
+                    <div class="form-group">
+                        <label>Режим раскладки волоков:</label>
+                        <select id="skid-mode" class="form-control" onchange="toggleZoneInputs(); calculateAndDraw();">
+                            <option value="single">Единый угол для всей делянки</option>
+                            <option value="dual_split">Разделение на 2 секции (Север / Юг)</option>
+                            <option value="spine">С центральным магистральным волоком</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="group-angle-1">
+                        <label>Азимут/угол волоков Секции 1 (°):</label>
+                        <select id="road-angle-preset-1" class="form-control" onchange="applyAnglePreset(1); calculateAndDraw();">
+                            <option value="0">0° (Север - Юг)</option>
+                            <option value="90">90° (Запад - Восток)</option>
+                            <option value="45">45° (Северо-Восток)</option>
+                            <option value="135">135° (Северо-Запад)</option>
+                            <option value="custom">Свой градус...</option>
+                        </select>
+                        <input type="number" id="road-angle-custom-1" class="form-control" value="0" min="0" max="360" style="display:none; margin-top:4px;" placeholder="Градус 0-360" oninput="calculateAndDraw()">
+                    </div>
+                    <div class="form-group" id="group-angle-2" style="display:none;">
+                        <label>Азимут/угол волоков Секции 2 (°):</label>
+                        <select id="road-angle-preset-2" class="form-control" onchange="applyAnglePreset(2); calculateAndDraw();">
+                            <option value="90" selected>90° (Запад - Восток)</option>
+                            <option value="0">0° (Север - Юг)</option>
+                            <option value="45">45° (Северо-Восток)</option>
+                            <option value="135">135° (Северо-Запад)</option>
+                            <option value="custom">Свой градус...</option>
+                        </select>
+                        <input type="number" id="road-angle-custom-2" class="form-control" value="90" min="0" max="360" style="display:none; margin-top:4px;" placeholder="Градус 0-360" oninput="calculateAndDraw()">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Направление пасечных волоков:</label>
-                    <select id="road-direction" class="form-control" onchange="calculateAndDraw()">
-                        <option value="vertical">Вдоль оси Y (Север - Юг)</option>
-                        <option value="horizontal">Вдоль оси X (Запад - Восток)</option>
-                    </select>
+            </div>
+
+            <!-- ВКЛАДКА 2: РУЧНЫЕ ТОЧКИ -->
+            <div id="tab-points" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span style="font-size:12px; font-weight:bold; color:var(--forest-green);">Вершины угловых столбов делянки (X, Y метры от Т.1):</span>
+                    <button class="btn-action btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="addPointRow()">➕ Добавить точку</button>
+                </div>
+                <div class="points-table-wrapper">
+                    <table class="points-table">
+                        <thead>
+                            <tr>
+                                <th>Столб</th>
+                                <th>X (Восток, м)</th>
+                                <th>Y (Север, м)</th>
+                                <th>Удалить</th>
+                            </tr>
+                        </thead>
+                        <tbody id="points-tbody"></tbody>
+                    </table>
                 </div>
             </div>
 
-            <h3 style="font-size: 14px; color: var(--forest-green); margin-bottom: 6px;">📋 Координаты угловых столбов делянки (X, Y в метрах):</h3>
-            <div class="points-table-wrapper">
-                <table class="points-table" id="points-table-element">
-                    <thead>
-                        <tr>
-                            <th>Точка</th>
-                            <th>X (Восток, м)</th>
-                            <th>Y (Север, м)</th>
-                            <th>Удаление / Действие</th>
-                        </tr>
-                    </thead>
-                    <tbody id="points-tbody">
-                        <!-- Динамические строки точек -->
-                    </tbody>
-                </table>
+            <!-- ВКЛАДКА 3: ВЕДОМОСТЬ СКЛАДОВ -->
+            <div id="tab-landings" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span style="font-size:12px; font-weight:bold; color:var(--forest-green);">Погрузочные площадки (ПП) и верхние склады:</span>
+                    <button class="btn-action btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="addLandingManual()">➕ Добавить ПП</button>
+                </div>
+                <div class="points-table-wrapper">
+                    <table class="points-table">
+                        <thead>
+                            <tr>
+                                <th>Номер</th>
+                                <th>Название / Назначение</th>
+                                <th>X (м)</th>
+                                <th>Y (м)</th>
+                                <th>Удалить</th>
+                            </tr>
+                        </thead>
+                        <tbody id="landings-tbody"></tbody>
+                    </table>
+                </div>
             </div>
 
-            <div class="results-box" id="calc-results">
-                <!-- Динамические расчеты трелевки -->
-            </div>
+            <!-- РАСЧЕТЫ ДЛЯ ПОЯСНИТЕЛЬНОЙ ЗАПИСКИ -->
+            <div class="results-box" id="calc-results"></div>
 
+            <!-- ЧЕРТЕЖ ТЕХНОКАРТЫ -->
             <div class="canvas-container">
-                <span style="font-weight: 700; color: var(--forest-green); font-size: 12px; margin-bottom: 6px; align-self: flex-start;">🗺️ АБРИС И ТЕХНОЛОГИЧЕСКАЯ СХЕМА РАЗРАБОТКИ:</span>
-                <canvas id="skid-canvas" width="650" height="500"></canvas>
+                <div class="canvas-toolbar">
+                    <span style="font-weight: 700; color: var(--forest-green);">🗺️ ТЕХНОЛОГИЧЕСКАЯ СХЕМА ЛЕСОСЕКИ (АБРИС):</span>
+                    <span id="click-hint" style="color:var(--accent); font-weight:bold; display:none;">🎯 Кликните на поле карты, чтобы поставить погрузочную площадку!</span>
+                </div>
+                <canvas id="skid-canvas" width="700" height="520"></canvas>
+                
+                <div class="legend-box">
+                    <div class="legend-item"><span class="legend-color" style="background:#2D5A27;"></span> Граница лесосеки</div>
+                    <div class="legend-item"><span class="legend-color" style="background:#38BDF8;"></span> Пасечные волоки</div>
+                    <div class="legend-item"><span class="legend-color" style="background:#E67E22; height:3px; margin-top:5px;"></span> Магистральный волок</div>
+                    <div class="legend-item"><span class="legend-color" style="background:#DC2626; border-radius:50%;"></span> Погрузочный пункт (ПП)</div>
+                    <div class="legend-item"><span class="legend-color" style="background:#16A34A; border-radius:50%;"></span> Столбы делянки (Т)</div>
+                </div>
             </div>
 
-            <!-- ПОДПИСИ И РЕКВИЗИТЫ В КОНЦЕ ДОКУМЕНТА -->
+            <!-- ПОДПИСИ ДОКУМЕНТА -->
             <div class="doc-signatures-row">
                 <div class="signature-group">
-                    <span>Разработчик проекта (Исполнитель):</span>
+                    <span>Разработчик технологической карты:</span>
                     <div style="font-weight: bold; margin-top: 5px;">ИП Худяков Н.С. (Инженер-таксатор)</div>
                     <div class="signature-line"></div>
                     <small style="opacity: 0.7;">(подпись, дата)</small>
                 </div>
                 <div class="signature-group">
-                    <span>Ответственный за лесозаготовку:</span>
-                    <div style="font-weight: bold; margin-top: 5px;">Мастер леса / Начальник участка</div>
+                    <span>Мастер лесозаготовительного участка:</span>
+                    <div style="font-weight: bold; margin-top: 5px;">Ответственный за разработку делянки</div>
                     <div class="signature-line"></div>
                     <small style="opacity: 0.7;">(подпись, дата)</small>
                 </div>
@@ -292,14 +380,22 @@
     </footer>
 
 <script>
-    // Начальные демо-точки для красивого отображения абриса по умолчанию
+    // Базовый контур лесосеки (X, Y в метрах)
     let customPoints = [
         { x: 0,   y: 0   },
-        { x: 0,   y: 220 },
-        { x: 150, y: 260 },
-        { x: 300, y: 220 },
-        { x: 260, y: 0   }
+        { x: 0,   y: 250 },
+        { x: 180, y: 300 },
+        { x: 320, y: 220 },
+        { x: 280, y: 0   }
     ];
+
+    // Погрузочные пункты (верхние склады)
+    let landings = [
+        { id: 1, name: "ПП-1 (Главный склад у дороги)", x: 20, y: 10 },
+        { id: 2, name: "ПП-2 (Промежуточная площадка)", x: 260, y: 20 }
+    ];
+
+    let isAddLandingClickActive = false;
 
     function toggleTheme() {
         const body = document.documentElement;
@@ -317,6 +413,45 @@
         document.documentElement.setAttribute('data-theme', 'dark');
     }
 
+    function switchTab(tabId) {
+        document.getElementById('tab-roads').style.display = 'none';
+        document.getElementById('tab-points').style.display = 'none';
+        document.getElementById('tab-landings').style.display = 'none';
+        
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).style.display = 'block';
+        event.target.classList.add('active');
+    }
+
+    function toggleZoneInputs() {
+        const mode = document.getElementById('skid-mode').value;
+        const g2 = document.getElementById('group-angle-2');
+        if (mode === 'dual_split') {
+            g2.style.display = 'flex';
+        } else {
+            g2.style.display = 'none';
+        }
+    }
+
+    function applyAnglePreset(idx) {
+        const preset = document.getElementById(`road-angle-preset-${idx}`).value;
+        const customInp = document.getElementById(`road-angle-custom-${idx}`);
+        if (preset === 'custom') {
+            customInp.style.display = 'block';
+        } else {
+            customInp.style.display = 'none';
+            customInp.value = preset;
+        }
+    }
+
+    function getAngle(idx) {
+        const preset = document.getElementById(`road-angle-preset-${idx}`).value;
+        if (preset === 'custom') {
+            return parseFloat(document.getElementById(`road-angle-custom-${idx}`).value) || 0;
+        }
+        return parseFloat(preset) || 0;
+    }
+
     function renderPointsTable() {
         const tbody = document.getElementById('points-tbody');
         tbody.innerHTML = '';
@@ -332,16 +467,32 @@
         });
     }
 
+    function renderLandingsTable() {
+        const tbody = document.getElementById('landings-tbody');
+        tbody.innerHTML = '';
+        landings.forEach((ld, idx) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>ПП-${ld.id}</b></td>
+                    <td><input type="text" class="input-tbl" value="${ld.name}" oninput="landings[${idx}].name=this.value; calculateAndDraw();"></td>
+                    <td><input type="number" class="input-tbl" value="${Math.round(ld.x)}" oninput="landings[${idx}].x=parseFloat(this.value)||0; calculateAndDraw();"></td>
+                    <td><input type="number" class="input-tbl" value="${Math.round(ld.y)}" oninput="landings[${idx}].y=parseFloat(this.value)||0; calculateAndDraw();"></td>
+                    <td><button class="btn-action btn-danger" style="padding: 2px 6px; font-size:10px;" onclick="removeLanding(${idx})">🗑️</button></td>
+                </tr>
+            `;
+        });
+    }
+
     function addPointRow() {
         let last = customPoints[customPoints.length - 1] || { x: 100, y: 100 };
-        customPoints.push({ x: last.x + 50, y: last.y + 50 });
+        customPoints.push({ x: last.x + 40, y: last.y + 40 });
         renderPointsTable();
         calculateAndDraw();
     }
 
     function removePointRow(idx) {
         if (customPoints.length <= 3) {
-            alert("Контур должен содержать не менее 3 точек!");
+            alert("В контуре должно быть не менее 3 столбов!");
             return;
         }
         customPoints.splice(idx, 1);
@@ -354,6 +505,44 @@
         if (!isNaN(parsed)) {
             customPoints[idx][axis] = parsed;
             calculateAndDraw();
+        }
+    }
+
+    function addLandingManual() {
+        let nextId = landings.length + 1;
+        landings.push({ id: nextId, name: `ПП-${nextId} (Погрузочный пункт)`, x: customPoints[0].x + 20, y: customPoints[0].y + 15 });
+        renderLandingsTable();
+        calculateAndDraw();
+    }
+
+    function removeLanding(idx) {
+        landings.splice(idx, 1);
+        renderLandingsTable();
+        calculateAndDraw();
+    }
+
+    function clearLandings() {
+        if (confirm("Удалить все погрузочные площадки?")) {
+            landings = [];
+            renderLandingsTable();
+            calculateAndDraw();
+        }
+    }
+
+    function toggleAddLandingMode() {
+        isAddLandingClickActive = !isAddLandingClickActive;
+        const hint = document.getElementById('click-hint');
+        const btn = document.getElementById('btn-add-land-mode');
+        if (isAddLandingClickActive) {
+            hint.style.display = 'inline';
+            btn.classList.remove('btn-accent');
+            btn.classList.add('btn-danger');
+            btn.innerText = "✕ Отменить режим клика";
+        } else {
+            hint.style.display = 'none';
+            btn.classList.add('btn-accent');
+            btn.classList.remove('btn-danger');
+            btn.innerText = "🎯 Поставить склад кликом на карте";
         }
     }
 
@@ -374,21 +563,24 @@
                     customPoints = pts;
                     renderPointsTable();
                     calculateAndDraw();
-                    alert("✔️ Успешно загружено точек из журнала буссоли!");
+                    alert("✔️ Контур успешно импортирован из полевой буссоли!");
                     return;
                 }
             } catch(e) { console.error(e); }
         }
-        alert("⚠️ В памяти браузера не найдены данные журнала буссоли. Используются текущие точки.");
+        alert("⚠️ В журнале буссоли нет данных. Заполните точки вручную в таблице.");
     }
 
+    // РАСЧЕТ ТРЕЛЕВКИ И ОТРИСОВКА
     function calculateAndDraw() {
         const spacing = parseFloat(document.getElementById('road-spacing').value) || 25;
-        const roadDir = document.getElementById('road-direction').value;
+        const skidMode = document.getElementById('skid-mode').value;
+        const angle1 = getAngle(1);
+        const angle2 = getAngle(2);
 
         if (customPoints.length < 3) return;
 
-        // Расчет площади по формуле Гаусса
+        // 1. Площадь Гаусса
         let area = 0;
         let j = customPoints.length - 1;
         for (let i = 0; i < customPoints.length; i++) {
@@ -405,25 +597,42 @@
         let widthB = maxX - minX || 50;
         let lengthL = maxY - minY || 50;
 
-        let spanPrimary = (roadDir === 'vertical') ? widthB : lengthL;
-        let spanSecondary = (roadDir === 'vertical') ? lengthL : widthB;
+        let totalRoadsLength = 0;
+        let roadCount = Math.max(1, Math.round(widthB / spacing));
+        totalRoadsLength = roadCount * lengthL;
 
-        let numRoads = Math.max(1, Math.round(spanPrimary / spacing));
-        let avgSkidDist = (spanSecondary / 3.5) + (spacing / 3);
-        let maxSkidDist = Math.sqrt(Math.pow(widthB, 2) + Math.pow(lengthL, 2)) * 0.75;
-        let totalRoadLength = numRoads * spanSecondary;
+        // Расчет трелевки до ближайшего ПП
+        let avgSkidDist = 0;
+        let maxSkidDist = 0;
+
+        if (landings.length > 0) {
+            // Расчет максимального расстояния от любой вершины делянки до ближайшего склада
+            let distances = [];
+            customPoints.forEach(pt => {
+                let minDistToLand = Math.min(...landings.map(ld => Math.hypot(pt.x - ld.x, pt.y - ld.y)));
+                distances.push(minDistToLand);
+            });
+            maxSkidDist = Math.max(...distances) * 1.08; // 8% коэффициент извилистости волока
+            avgSkidDist = (maxSkidDist * 0.55);
+        } else {
+            maxSkidDist = Math.hypot(widthB, lengthL);
+            avgSkidDist = maxSkidDist * 0.45;
+        }
+
+        let landingsListStr = landings.map(l => `<b>${l.name}</b> (X:${Math.round(l.x)}м, Y:${Math.round(l.y)}м)`).join('; ') || 'Не назначены';
 
         document.getElementById('calc-results').innerHTML = `
-            <p>🌲 <b>Площадь делянки:</b> <strong>${areaHa.toFixed(4)} га</strong> (${Math.round(area)} м²)</p>
-            <p>🛤️ <b>Расчетное число пасечных волоков:</b> ${numRoads} шт. (суммарная длина волоков ~${Math.round(totalRoadLength)} м при шаге ${spacing}м)</p>
+            <p>🌲 <b>Площадь лесосеки:</b> <strong>${areaHa.toFixed(4)} га</strong> (${Math.round(area)} м²)</p>
+            <p>🏭 <b>Погрузочные пункты (${landings.length} шт.):</b> ${landingsListStr}</p>
+            <p>🛤️ <b>Пасечные волоки:</b> шаг ${spacing} м, расчетное кол-во ~${roadCount} шт. (суммарный метраж: ~${Math.round(totalRoadsLength)} м)</p>
             <p>📏 <b>Среднее расстояние трелевки ($L_{сред}$):</b> <strong>${avgSkidDist.toFixed(1)} м</strong></p>
-            <p>📍 <b>Максимальное расстояние трелевки ($L_{макс}$):</b> <strong>${maxSkidDist.toFixed(1)} м</strong></p>
+            <p>📍 <b>Максимальная дальность трелевки ($L_{макс}$):</b> <strong>${maxSkidDist.toFixed(1)} м</strong> (с учетом коэф. извилистости 1.08)</p>
         `;
 
-        drawScheme(minX, maxX, minY, maxY, spacing, roadDir);
+        drawCanvas(minX, maxX, minY, maxY, spacing, skidMode, angle1, angle2);
     }
 
-    function drawScheme(minX, maxX, minY, maxY, spacing, roadDir) {
+    function drawCanvas(minX, maxX, minY, maxY, spacing, skidMode, angle1, angle2) {
         const canvas = document.getElementById('skid-canvas');
         const ctx = canvas.getContext('2d');
         const cWidth = canvas.width;
@@ -435,7 +644,16 @@
 
         let spanX = maxX - minX || 100;
         let spanY = maxY - minY || 100;
-        let scale = Math.min((cWidth - 100) / spanX, (cHeight - 100) / spanY);
+
+        let scale = Math.min((cWidth - 120) / spanX, (cHeight - 120) / spanY);
+
+        const chosenScale = document.getElementById('doc-scale').value;
+        if (chosenScale !== 'auto') {
+            // Фиксированный масштаб (1:1000 = 1 метр это 0.01м = пиксели)
+            // При 96 DPI: 1 метр = 3.7795 px / (scale/100)
+            let basePixelsPerMeter = 3.78 * (1000 / parseFloat(chosenScale));
+            scale = Math.min(scale, basePixelsPerMeter);
+        }
 
         function toPx(pt) {
             return {
@@ -444,11 +662,10 @@
             };
         }
 
-        // 1. СТОРОНЫ СВЕТА (ОРИЕНТАЦИЯ АБРИСА)
-        ctx.fillStyle = isDark ? '#FFF' : '#333';
+        // 1. СТОРОНЫ СВЕТА И СТРЕЛКА СЕВЕРА
+        ctx.fillStyle = isDark ? '#FFF' : '#222';
         ctx.font = "bold 13px Inter, sans-serif";
         ctx.textAlign = "center";
-        // Север сверху
         ctx.fillText("С (Север)", cWidth / 2, 22);
         ctx.fillText("Ю (Юг)", cWidth / 2, cHeight - 10);
         ctx.textAlign = "left";
@@ -458,42 +675,40 @@
 
         // Стрелка севера
         ctx.strokeStyle = '#DC2626';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.moveTo(cWidth / 2, 35);
-        ctx.lineTo(cWidth / 2, 55);
-        ctx.lineTo(cWidth / 2 - 4, 45);
-        ctx.moveTo(cWidth / 2, 35);
-        ctx.lineTo(cWidth / 2 + 4, 45);
+        ctx.moveTo(cWidth / 2, 30);
+        ctx.lineTo(cWidth / 2, 58);
+        ctx.lineTo(cWidth / 2 - 5, 45);
+        ctx.moveTo(cWidth / 2, 30);
+        ctx.lineTo(cWidth / 2 + 5, 45);
         ctx.stroke();
 
-        // 2. ПАСЕЧНЫЕ ВОЛОКИ
+        // 2. ОТРИСОВКА ВОЛОКОВ
         ctx.strokeStyle = '#38BDF8';
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1.6;
+        ctx.setLineDash([5, 5]);
 
-        if (roadDir === 'vertical') {
-            for (let rx = minX + spacing / 2; rx < maxX; rx += spacing) {
+        let midY = (minY + maxY) / 2;
+
+        function drawLinesAtAngle(deg, boundCheck) {
+            let rad = (deg * Math.PI) / 180;
+            let cos = Math.cos(rad);
+            let sin = Math.sin(rad);
+
+            let diag = Math.hypot(spanX, spanY) * 1.5;
+            let cx = (minX + maxX) / 2;
+            let cy = (minY + maxY) / 2;
+
+            for (let offset = -diag; offset <= diag; offset += spacing) {
                 ctx.beginPath();
                 let started = false;
-                for (let y = minY; y <= maxY; y += 4) {
-                    if (isPointInside({x: rx, y: y}, customPoints)) {
-                        let px = toPx({x: rx, y: y});
-                        if (!started) { ctx.moveTo(px.x, px.y); started = true; }
-                        else { ctx.lineTo(px.x, px.y); }
-                    } else {
-                        if (started) { ctx.stroke(); ctx.beginPath(); started = false; }
-                    }
-                }
-                if (started) ctx.stroke();
-            }
-        } else {
-            for (let ry = minY + spacing / 2; ry < maxY; ry += spacing) {
-                ctx.beginPath();
-                let started = false;
-                for (let x = minX; x <= maxX; x += 4) {
-                    if (isPointInside({x: x, y: ry}, customPoints)) {
-                        let px = toPx({x: x, y: ry});
+                for (let d = -diag; d <= diag; d += 4) {
+                    let gx = cx + offset * cos - d * sin;
+                    let gy = cy + offset * sin + d * cos;
+                    
+                    if (isPointInside({x: gx, y: gy}, customPoints) && boundCheck(gx, gy)) {
+                        let px = toPx({x: gx, y: gy});
                         if (!started) { ctx.moveTo(px.x, px.y); started = true; }
                         else { ctx.lineTo(px.x, px.y); }
                     } else {
@@ -503,9 +718,51 @@
                 if (started) ctx.stroke();
             }
         }
+
+        if (skidMode === 'dual_split') {
+            // Северная секция (выше середины)
+            drawLinesAtAngle(angle1, (x, y) => y >= midY);
+            // Южная секция (ниже середины)
+            drawLinesAtAngle(angle2, (x, y) => y < midY);
+
+            // Разделительная технологическая линия
+            ctx.setLineDash([2, 4]);
+            ctx.strokeStyle = '#94A3B8';
+            let pLeft = toPx({ x: minX, y: midY });
+            let pRight = toPx({ x: maxX, y: midY });
+            ctx.beginPath();
+            ctx.moveTo(pLeft.x, pLeft.y);
+            ctx.lineTo(pRight.x, pRight.y);
+            ctx.stroke();
+        } else {
+            drawLinesAtAngle(angle1, () => true);
+        }
         ctx.setLineDash([]);
 
-        // 3. КОНТУР ДЕЛЯНКИ ПО ТОЧКАМ
+        // 3. МАГИСТРАЛЬНЫЙ (ЦЕНТРАЛЬНЫЙ) ВОЛОК
+        if (skidMode === 'spine' || landings.length > 0) {
+            ctx.strokeStyle = '#E67E22';
+            ctx.lineWidth = 3.5;
+            ctx.beginPath();
+            
+            // Проводим магистраль от первого склада сквозь центр делянки
+            let startSpine = landings[0] || customPoints[0];
+            let spineEnd = { x: (minX + maxX) / 2, y: maxY - 15 };
+            let p1 = toPx(startSpine);
+            let p2 = toPx(spineEnd);
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+
+            // Стрелка на магистрали (направление к складу)
+            let midSpineX = (p1.x + p2.x) / 2;
+            let midSpineY = (p1.y + p2.y) / 2;
+            ctx.fillStyle = '#E67E22';
+            ctx.font = "bold 10.5px Inter, sans-serif";
+            ctx.fillText("МАГИСТРАЛЬНЫЙ ВОЛОК ➔", midSpineX, midSpineY - 6);
+        }
+
+        // 4. КОНТУР ДЕЛЯНКИ
         ctx.lineWidth = 3;
         ctx.strokeStyle = isDark ? '#8FBC8F' : '#2D5A27';
         ctx.beginPath();
@@ -515,15 +772,15 @@
             else ctx.lineTo(px.x, px.y);
         });
         ctx.closePath();
-        ctx.fillStyle = isDark ? 'rgba(143,188,143,0.08)' : 'rgba(45,90,39,0.05)';
+        ctx.fillStyle = isDark ? 'rgba(143,188,143,0.06)' : 'rgba(45,90,39,0.04)';
         ctx.fill();
         ctx.stroke();
 
-        // Столбы (номера вершин)
+        // 5. ВЕРШИНЫ (СТОЛБЫ)
         customPoints.forEach((pt, idx) => {
             let px = toPx(pt);
             ctx.beginPath();
-            ctx.arc(px.x, px.y, idx === 0 ? 6 : 4.5, 0, Math.PI * 2);
+            ctx.arc(px.x, px.y, idx === 0 ? 6.5 : 4.5, 0, Math.PI * 2);
             ctx.fillStyle = idx === 0 ? '#DC2626' : '#16A34A';
             ctx.fill();
             ctx.strokeStyle = '#FFF';
@@ -536,23 +793,64 @@
             ctx.fillText(`Т.${idx+1}`, px.x + 7, px.y - 4);
         });
 
-        // 4. ПОГРУЗОЧНАЯ ПЛОЩАДКА (ВЕРХНИЙ СКЛАД ПП-1)
-        let landPt = customPoints[0];
-        let landPx = toPx(landPt);
+        // 6. ВСЕ ПОГРУЗОЧНЫЕ ПУНКТЫ (ПП)
+        landings.forEach((ld) => {
+            let px = toPx(ld);
+            
+            // Зона площадки (прямоугольник кармана)
+            ctx.fillStyle = 'rgba(220, 38, 38, 0.25)';
+            ctx.strokeStyle = '#DC2626';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(px.x - 14, px.y - 10, 28, 20);
+            ctx.fillRect(px.x - 14, px.y - 10, 28, 20);
 
-        ctx.fillStyle = '#DC2626';
-        ctx.beginPath();
-        ctx.arc(landPx.x, landPx.y, 9, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 2.5;
-        ctx.stroke();
+            // Точка центра
+            ctx.beginPath();
+            ctx.arc(px.x, px.y, 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#DC2626';
+            ctx.fill();
+            ctx.strokeStyle = '#FFF';
+            ctx.stroke();
 
-        ctx.fillStyle = isDark ? '#FFF' : '#333';
-        ctx.font = "bold 11.5px Inter, sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("ПП-1 (Верхний склад)", landPx.x, landPx.y - 14);
+            ctx.fillStyle = isDark ? '#FFA726' : '#B91C1C';
+            ctx.font = "bold 11px Inter, sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(`ПП-${ld.id}`, px.x, px.y - 14);
+        });
     }
+
+    // Клик по Canvas для добавления ПП
+    document.getElementById('skid-canvas').addEventListener('click', function(e) {
+        if (!isAddLandingClickActive) return;
+
+        const rect = this.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+
+        let minX = Math.min(...customPoints.map(p => p.x));
+        let maxX = Math.max(...customPoints.map(p => p.x));
+        let minY = Math.min(...customPoints.map(p => p.y));
+        let maxY = Math.max(...customPoints.map(p => p.y));
+        let spanX = maxX - minX || 100;
+        let spanY = maxY - minY || 100;
+        let scale = Math.min((this.width - 120) / spanX, (this.height - 120) / spanY);
+
+        // Обратная проекция пикселей в метры делянки
+        let realX = (clickX - this.width / 2) / scale + (maxX + minX) / 2;
+        let realY = (this.height / 2 - clickY) / scale + (maxY + minY) / 2;
+
+        let nextId = landings.length + 1;
+        landings.push({
+            id: nextId,
+            name: `ПП-${nextId} (Склад)`,
+            x: Math.round(realX),
+            y: Math.round(realY)
+        });
+
+        toggleAddLandingMode();
+        renderLandingsTable();
+        calculateAndDraw();
+    });
 
     function isPointInside(point, vs) {
         let x = point.x, y = point.y;
@@ -568,6 +866,7 @@
 
     window.onload = function() {
         renderPointsTable();
+        renderLandingsTable();
         calculateAndDraw();
     };
 </script>
