@@ -1,0 +1,274 @@
+<!-- 
+  (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
+  Свидетельство ИНН: 111801576622.
+  Программное обеспечение: «Лесовик — Расчет расстояния трелевки»
+-->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Расчет расстояния трелевки и схемы волоков | Лесовик</title>
+    <meta name="description" content="Интерактивный расчет средней и максимальной дальности трелевки древесины для технологических карт лесосек.">
+    <link rel="icon" type="image/jpeg" href="logo.jpeg">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        :root {
+            --bg-paper: #F9FBF9;
+            --text-graphite: #333333;
+            --forest-green: #2D5A27;
+            --forest-light: #8FBC8F;
+            --border-color: #E0E0E0;
+            --card-bg: #FFFFFF;
+            --glass-bg: rgba(249, 251, 249, 0.85);
+            --footer-bg: #2C3531;
+            --success: #16A34A;
+        }
+
+        [data-theme="dark"] {
+            --bg-paper: #1A2421;
+            --text-graphite: #F9FBF9;
+            --forest-green: #8FBC8F;
+            --forest-light: #2D5A27;
+            --border-color: #3A4F46;
+            --card-bg: #22302B;
+            --glass-bg: rgba(26, 36, 33, 0.85);
+            --footer-bg: #111815;
+        }
+
+        html, body {
+            margin: 0; padding: 0;
+            width: 100%; max-width: 100vw;
+            overflow-x: hidden;
+            background-color: var(--bg-paper); color: var(--text-graphite);
+            font-family: 'Inter', sans-serif; line-height: 1.6;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        *, *:before, *:after { box-sizing: inherit; }
+
+        .glass-header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 20px; background: var(--glass-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            box-sizing: border-box;
+        }
+
+        .logo-container { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        .header-logo { width: 32px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--forest-green); }
+        .glass-header h1 { font-family: 'Merriweather', serif; color: var(--forest-green); margin: 0; font-size: 16px; }
+
+        .header-right { display: flex; align-items: center; gap: 8px; }
+        .btn-back { display: inline-flex; align-items: center; gap: 6px; background: transparent; color: var(--forest-green); border: 1px solid var(--forest-green); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; font-size: 12px; }
+        .btn-back:hover { background: var(--forest-green); color: var(--bg-paper); }
+
+        .theme-toggle { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
+
+        .container { max-width: 900px; width: 100%; margin: 75px auto 30px; padding: 0 10px; box-sizing: border-box; }
+
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 4px 4px 0px rgba(0,0,0,0.02); }
+        .card h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 18px; margin-bottom: 6px; }
+        .subtitle { font-size: 12px; opacity: 0.7; margin-bottom: 15px; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+        @media(max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-size: 12px; font-weight: 600; color: var(--forest-green); }
+        .form-control { width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-paper); color: var(--text-graphite); font-size: 13px; font-weight: bold; }
+
+        .results-box { background: rgba(45, 90, 39, 0.06); border: 1px solid var(--forest-light); padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; }
+        .results-box p { margin: 4px 0; }
+        .results-box strong { color: var(--forest-green); }
+
+        .canvas-container { position: relative; width: 100%; background: #FFFFFF; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; align-items: center; padding: 8px; box-sizing: border-box; }
+        #skid-canvas { width: 100%; max-width: 100%; aspect-ratio: 4/3; border-radius: 6px; border: 1px dashed rgba(0,0,0,0.1); background: #FAFAFA; }
+        [data-theme="dark"] #skid-canvas { background: #151e1b; }
+
+        footer { text-align: center; padding: 20px; font-size: 11px; opacity: 0.6; margin-top: auto; }
+    </style>
+</head>
+<body>
+
+    <header class="glass-header">
+        <a href="index.html" class="logo-container">
+            <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
+            <h1>Лесовик • Трелевка</h1>
+        </a>
+        <div class="header-right">
+            <a href="tools.html" class="btn-back">← К инструментам</a>
+            <button class="theme-token theme-toggle" onclick="toggleTheme()" id="themeBtn">Тема</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <h2>Расчет расстояния трелевки и схемы волоков</h2>
+            <div class="subtitle">Обоснование дальности трелевки для технологической карты разработки лесосеки.</div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Длина делянки по ходу (L, м):</label>
+                    <input type="number" id="plot-length" class="form-control" value="250" min="50" max="2000" oninput="calculateSkidding()">
+                </div>
+                <div class="form-group">
+                    <label>Ширина делянки (B, м):</label>
+                    <input type="number" id="plot-width" class="form-control" value="150" min="30" max="1000" oninput="calculateSkidding()">
+                </div>
+                <div class="form-group">
+                    <label>Расстояние между волоками (шаг, м):</label>
+                    <input type="number" id="road-spacing" class="form-control" value="30" min="10" max="100" oninput="calculateSkidding()">
+                </div>
+                <div class="form-group">
+                    <label>Расположение верхнего склада:</label>
+                    <select id="landing-pos" class="form-control" onchange="calculateSkidding()">
+                        <положение value="middle">По центру длинной стороны</положение>
+                        <option value="corner">В углу делянки</option>
+                        <option value="edge">На границе посередине торца</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="results-box" id="calc-results">
+                <!-- Результаты расчетов выводятся динамически -->
+            </div>
+
+            <div class="canvas-container">
+                <span style="font-weight: 700; color: var(--forest-green); font-size: 12px; margin-bottom: 6px; align-self: flex-start;">🗺️ СХЕМА РАЗРАБОТКИ И ВОЛОКОВ:</span>
+                <canvas id="skid-canvas" width="600" height="450"></canvas>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        &copy; 2026 ИП Худяков Н.С. • Экосистема «Лесовик ПРО»
+    </footer>
+
+<script>
+    function toggleTheme() {
+        const body = document.documentElement;
+        if (body.getAttribute('data-theme') === 'dark') {
+            body.removeAttribute('data-theme');
+            localStorage.setItem('lesovik_theme', 'light');
+        } else {
+            body.setAttribute('data-theme', 'dark');
+            localStorage.setItem('lesovik_theme', 'dark');
+        }
+        calculateSkidding();
+    }
+
+    if (localStorage.getItem('lesovik_theme') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+
+    function calculateSkidding() {
+        const L = parseFloat(document.getElementById('plot-length').value) || 200;
+        const B = parseFloat(document.getElementById('plot-width').value) || 100;
+        const spacing = parseFloat(document.getElementById('road-spacing').value) || 30;
+        const landingPos = document.getElementById('landing-pos').value;
+
+        // Расчет базовых показателей трелевки
+        const numRoads = Math.max(1, Math.round(B / spacing));
+        const actualSpacing = B / numRoads;
+        
+        // Среднее расстояние трелевки от полушария волока (L / 4 + поправочный коэффициент на склад)
+        let maxDist = Math.sqrt(Math.pow(L, 2) + Math.pow(B, 2));
+        let avgDist = (L / 3) + (actualSpacing / 4); 
+
+        if (landingPos === 'middle') {
+            maxDist = Math.sqrt(Math.pow(L / 2, 2) + Math.pow(B / 2, 2));
+            avgDist = (L / 4) + (actualSpacing / 3);
+        } else if (landingPos === 'corner') {
+            maxDist = Math.sqrt(Math.pow(L, 2) + Math.pow(B, 2));
+            avgDist = (L / 2.5) + (actualSpacing / 2);
+        }
+
+        const areaHa = (L * B) / 10000;
+
+        document.getElementById('calc-results').innerHTML = `
+            <p>🌲 <b>Площадь делянки:</b> ${areaHa.toFixed(2)} га (${(L*B).toLocaleString()} м²)</p>
+            <p>🛤️ <b>Количество волоков:</b> ${numRoads} шт. (средний шаг: ${actualSpacing.toFixed(1)} м)</p>
+            <p>📏 <b>Среднее расстояние трелевки ($L_{сред}$) :</b> <strong>${avgDist.toFixed(1)} м</strong></p>
+            <p>📍 <b>Максимальное расстояние трелевки ($L_{макс}$):</b> <strong>${maxDist.toFixed(1)} м</strong></p>
+        `;
+
+        drawSkidScheme(L, B, numRoads, landingPos);
+    }
+
+    function drawSkidScheme(L, B, numRoads, landingPos) {
+        const canvas = document.getElementById('skid-canvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        ctx.fillStyle = isDark ? '#22302B' : '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+
+        // Масштабирование делянки под холст
+        const padding = 50;
+        const drawW = width - padding * 2;
+        const drawH = height - padding * 2;
+
+        const scale = Math.min(drawW / B, drawH / L);
+        const plotW = B * scale;
+        const plotL = L * scale;
+
+        const startX = (width - plotW) / 2;
+        const startY = (height - plotL) / 2;
+
+        // Контур делянки
+        ctx.strokeStyle = isDark ? '#8FBC8F' : '#2D5A27';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(startX, startY, plotW, plotL);
+
+        // Волоки (параллельные линии)
+        ctx.strokeStyle = '#38BDF8';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        for (let i = 1; i < numRoads; i++) {
+            let rx = startX + (plotW / numRoads) * i;
+            ctx.beginPath();
+            ctx.moveTo(rx, startY);
+            ctx.lineTo(rx, startY + plotL);
+            ctx.stroke();
+        }
+        ctx.setLineDash([]);
+
+        // Погрузочный пункт (Верхний склад)
+        let landX = startX + plotW / 2;
+        let landY = startY;
+
+        if (landingPos === 'middle') {
+            landX = startX + plotW / 2;
+            landY = startY + plotL / 2;
+        } else if (landingPos === 'corner') {
+            landX = startX;
+            landY = startY;
+        }
+
+        ctx.fillStyle = '#DC2626';
+        ctx.beginPath();
+        ctx.arc(landX, landY, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = isDark ? '#FFF' : '#333';
+        ctx.font = "bold 11px Inter, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("Верхний склад", landX, landY - 12);
+    }
+
+    window.onload = function() {
+        calculateSkidding();
+    };
+</script>
+</body>
+</html>
