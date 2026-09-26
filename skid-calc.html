@@ -1,15 +1,15 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Лесовик — Расчет расстояния трелевки»
+  Программное обеспечение: «Лесовик — Расчет трелевки и волоков (PRO)»
 -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Расчет расстояния трелевки и схемы волоков | Лесовик</title>
-    <meta name="description" content="Интерактивный расчет средней и максимальной дальности трелевки древесины для технологических карт лесосек.">
+    <title>Расчет расстояния трелевки и схемы волоков | Лесовик PRO</title>
+    <meta name="description" content="Расчет средней и максимальной дальности трелевки древесины, оптимизация волоков и погрузочных площадок по данным полевого журнала буссоли.">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
     
     <style>
@@ -25,6 +25,7 @@
             --glass-bg: rgba(249, 251, 249, 0.85);
             --footer-bg: #2C3531;
             --success: #16A34A;
+            --danger: #DC2626;
         }
 
         [data-theme="dark"] {
@@ -90,6 +91,8 @@
         #skid-canvas { width: 100%; max-width: 100%; aspect-ratio: 4/3; border-radius: 6px; border: 1px dashed rgba(0,0,0,0.1); background: #FAFAFA; }
         [data-theme="dark"] #skid-canvas { background: #151e1b; }
 
+        .badge-source { display: inline-block; background: rgba(22, 163, 74, 0.15); color: var(--success); font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 6px; margin-bottom: 10px; }
+
         footer { text-align: center; padding: 20px; font-size: 11px; opacity: 0.6; margin-top: auto; }
     </style>
 </head>
@@ -98,48 +101,42 @@
     <header class="glass-header">
         <a href="index.html" class="logo-container">
             <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
-            <h1>Лесовик • Трелевка</h1>
+            <h1>Лесовик • Трелевка и волоки</h1>
         </a>
         <div class="header-right">
             <a href="tools.html" class="btn-back">← К инструментам</a>
-            <button class="theme-token theme-toggle" onclick="toggleTheme()" id="themeBtn">Тема</button>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тема</button>
         </div>
     </header>
 
     <main class="container">
         <div class="card">
-            <h2>Расчет расстояния трелевки и схемы волоков</h2>
-            <div class="subtitle">Обоснование дальности трелевки для технологической карты разработки лесосеки.</div>
+            <h2>Оптимизация волоков и расчет расстояния трелевки</h2>
+            <div class="subtitle">Построение схемы разработки лесосеки по фактическому журналу буссоли или стандартным параметрам.</div>
+
+            <div id="data-source-badge" class="badge-source">📂 Используются данные из журнала буссоли</div>
 
             <div class="form-grid">
                 <div class="form-group">
-                    <label>Длина делянки по ходу (L, м):</label>
-                    <input type="number" id="plot-length" class="form-control" value="250" min="50" max="2000" oninput="calculateSkidding()">
+                    <label>Шаг волоков (расстояние между осями, м):</label>
+                    <input type="number" id="road-spacing" class="form-control" value="25" min="10" max="60" oninput="calculateAndDraw()">
                 </div>
                 <div class="form-group">
-                    <label>Ширина делянки (B, м):</label>
-                    <input type="number" id="plot-width" class="form-control" value="150" min="30" max="1000" oninput="calculateSkidding()">
-                </div>
-                <div class="form-group">
-                    <label>Расстояние между волоками (шаг, м):</label>
-                    <input type="number" id="road-spacing" class="form-control" value="30" min="10" max="100" oninput="calculateSkidding()">
-                </div>
-                <div class="form-group">
-                    <label>Расположение верхнего склада:</label>
-                    <select id="landing-pos" class="form-control" onchange="calculateSkidding()">
-                        <положение value="middle">По центру длинной стороны</положение>
-                        <option value="corner">В углу делянки</option>
-                        <option value="edge">На границе посередине торца</option>
+                    <label>Позиция верхнего склада (погрузочной площадки):</label>
+                    <select id="landing-pos" class="form-control" onchange="calculateAndDraw()">
+                        <option value="start">У стартового столба (Т.1 / Въезд)</option>
+                        <option value="center">По центру контура делянки</option>
+                        <option value="edge">На дальней границе выдела</option>
                     </select>
                 </div>
             </div>
 
             <div class="results-box" id="calc-results">
-                <!-- Результаты расчетов выводятся динамически -->
+                <!-- Динамические расчеты -->
             </div>
 
             <div class="canvas-container">
-                <span style="font-weight: 700; color: var(--forest-green); font-size: 12px; margin-bottom: 6px; align-self: flex-start;">🗺️ СХЕМА РАЗРАБОТКИ И ВОЛОКОВ:</span>
+                <span style="font-weight: 700; color: var(--forest-green); font-size: 12px; margin-bottom: 6px; align-self: flex-start;">🗺️ ТЕХНОЛОГИЧЕСКАЯ СХЕМА РАЗРАБОТКИ ЛЕСОСЕКИ:</span>
                 <canvas id="skid-canvas" width="600" height="450"></canvas>
             </div>
         </div>
@@ -150,6 +147,8 @@
     </footer>
 
 <script>
+    let plotPoints = [];
+
     function toggleTheme() {
         const body = document.documentElement;
         if (body.getAttribute('data-theme') === 'dark') {
@@ -159,102 +158,168 @@
             body.setAttribute('data-theme', 'dark');
             localStorage.setItem('lesovik_theme', 'dark');
         }
-        calculateSkidding();
+        calculateAndDraw();
     }
 
     if (localStorage.getItem('lesovik_theme') === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
     }
 
-    function calculateSkidding() {
-        const L = parseFloat(document.getElementById('plot-length').value) || 200;
-        const B = parseFloat(document.getElementById('plot-width').value) || 100;
-        const spacing = parseFloat(document.getElementById('road-spacing').value) || 30;
-        const landingPos = document.getElementById('landing-pos').value;
-
-        // Расчет базовых показателей трелевки
-        const numRoads = Math.max(1, Math.round(B / spacing));
-        const actualSpacing = B / numRoads;
-        
-        // Среднее расстояние трелевки от полушария волока (L / 4 + поправочный коэффициент на склад)
-        let maxDist = Math.sqrt(Math.pow(L, 2) + Math.pow(B, 2));
-        let avgDist = (L / 3) + (actualSpacing / 4); 
-
-        if (landingPos === 'middle') {
-            maxDist = Math.sqrt(Math.pow(L / 2, 2) + Math.pow(B / 2, 2));
-            avgDist = (L / 4) + (actualSpacing / 3);
-        } else if (landingPos === 'corner') {
-            maxDist = Math.sqrt(Math.pow(L, 2) + Math.pow(B, 2));
-            avgDist = (L / 2.5) + (actualSpacing / 2);
+    // Загрузка точек из журнала буссоли или демо-данные
+    function loadPlotData() {
+        const savedLog = localStorage.getItem('lesovik_measurements');
+        if (savedLog) {
+            try {
+                const log = JSON.parse(savedLog);
+                if (log && log.length >= 3) {
+                    let pts = [{ x: 0, y: 0 }];
+                    let cx = 0, cy = 0;
+                    log.forEach(m => {
+                        let rad = (m.azimuth * Math.PI) / 180;
+                        cx += m.distance * Math.sin(rad);
+                        cy += m.distance * Math.cos(rad);
+                        pts.push({ x: cx, y: cy });
+                    });
+                    plotPoints = pts;
+                    document.getElementById('data-source-badge').innerText = `✔️ Загружен контур из журнала буссоли (${log.length} линий)`;
+                    return;
+                }
+            } catch(e) { console.error(e); }
         }
 
-        const areaHa = (L * B) / 10000;
-
-        document.getElementById('calc-results').innerHTML = `
-            <p>🌲 <b>Площадь делянки:</b> ${areaHa.toFixed(2)} га (${(L*B).toLocaleString()} м²)</p>
-            <p>🛤️ <b>Количество волоков:</b> ${numRoads} шт. (средний шаг: ${actualSpacing.toFixed(1)} м)</p>
-            <p>📏 <b>Среднее расстояние трелевки ($L_{сред}$) :</b> <strong>${avgDist.toFixed(1)} м</strong></p>
-            <p>📍 <b>Максимальное расстояние трелевки ($L_{макс}$):</b> <strong>${maxDist.toFixed(1)} м</strong></p>
-        `;
-
-        drawSkidScheme(L, B, numRoads, landingPos);
+        // Запасной демо-контур (правильный многоугольник делянки)
+        plotPoints = [
+            {x: 0, y: 0},
+            {x: 0, y: 200},
+            {x: 120, y: 250},
+            {x: 250, y: 200},
+            {x: 220, y: 0}
+        ];
+        document.getElementById('data-source-badge').innerText = `⚠️ Журнал буссоли пуст. Используется демонстрационный контур делянки.`;
     }
 
-    function drawSkidScheme(L, B, numRoads, landingPos) {
+    function calculateAndDraw() {
+        const spacing = parseFloat(document.getElementById('road-spacing').value) || 25;
+        const landingType = document.getElementById('landing-pos').value;
+
+        if (plotPoints.length < 3) return;
+
+        // Расчет площади по формуле Гаусса
+        let area = 0;
+        let j = plotPoints.length - 1;
+        for (let i = 0; i < plotPoints.length; i++) {
+            area += (plotPoints[j].x + plotPoints[i].x) * (plotPoints[j].y - plotPoints[i].y);
+            j = i;
+        }
+        area = Math.abs(area / 2);
+        let areaHa = area / 10000;
+
+        // Находим габариты контура
+        let minX = Math.min(...plotPoints.map(p => p.x));
+        let maxX = Math.max(...plotPoints.map(p => p.x));
+        let minY = Math.min(...plotPoints.map(p => p.y));
+        let maxY = Math.max(...plotPoints.map(p => p.y));
+        let widthB = maxX - minX;
+        let lengthL = maxY - minY;
+
+        // Оценка трелевки на основе геометрии и шага волоков
+        let numRoads = Math.max(1, Math.round(widthB / spacing));
+        let avgSkidDist = (lengthL / 3.5) + (spacing / 3);
+        let maxSkidDist = Math.sqrt(Math.pow(lengthL, 2) + Math.pow(widthB, 2)) * 0.75;
+        let totalRoadLength = numRoads * lengthL;
+
+        document.getElementById('calc-results').innerHTML = `
+            <p>🌲 <b>Площадь делянки:</b> ${areaHa.toFixed(4)} га (${Math.round(area)} м²)</p>
+            <p>🛤️ <b>Расчетное число волоков (при шаге ${spacing}м):</b> ${numRoads} шт. (общая длина путей ~${Math.round(totalRoadLength)} м)</p>
+            <p>📏 <b>Среднее расстояние трелевки ($L_{сред}$):</b> <strong>${avgSkidDist.toFixed(1)} м</strong></p>
+            <p>📍 <b>Максимальное расстояние трелевки ($L_{макс}$):</b> <strong>${maxSkidDist.toFixed(1)} м</strong></p>
+        `;
+
+        drawScheme(minX, maxX, minY, maxY, spacing, landingType);
+    }
+
+    function drawScheme(minX, maxX, minY, maxY, spacing, landingType) {
         const canvas = document.getElementById('skid-canvas');
         const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
+        const cWidth = canvas.width;
+        const cHeight = canvas.height;
 
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         ctx.fillStyle = isDark ? '#22302B' : '#FFFFFF';
-        ctx.fillRect(0, 0, width, height);
+        ctx.fillRect(0, 0, cWidth, cHeight);
 
-        // Масштабирование делянки под холст
-        const padding = 50;
-        const drawW = width - padding * 2;
-        const drawH = height - padding * 2;
+        let spanX = maxX - minX || 100;
+        let spanY = maxY - minY || 100;
+        let scale = Math.min((cWidth - 80) / spanX, (cHeight - 80) / spanY);
 
-        const scale = Math.min(drawW / B, drawH / L);
-        const plotW = B * scale;
-        const plotL = L * scale;
+        function toPx(pt) {
+            return {
+                x: cWidth / 2 + (pt.x - (maxX + minX) / 2) * scale,
+                y: cHeight / 2 - (pt.y - (maxY + minY) / 2) * scale
+            };
+        }
 
-        const startX = (width - plotW) / 2;
-        const startY = (height - plotL) / 2;
-
-        // Контур делянки
-        ctx.strokeStyle = isDark ? '#8FBC8F' : '#2D5A27';
-        ctx.lineWidth = 2.5;
-        ctx.strokeRect(startX, startY, plotW, plotL);
-
-        // Волоки (параллельные линии)
+        // 1. Отрисовка волоков внутри контура
         ctx.strokeStyle = '#38BDF8';
         ctx.lineWidth = 1.5;
-        ctx.setLineDash([4, 4]);
-        for (let i = 1; i < numRoads; i++) {
-            let rx = startX + (plotW / numRoads) * i;
+        ctx.setLineDash([5, 5]);
+
+        for (let rx = minX + spacing / 2; rx < maxX; rx += spacing) {
             ctx.beginPath();
-            ctx.moveTo(rx, startY);
-            ctx.lineTo(rx, startY + plotL);
-            ctx.stroke();
+            let started = false;
+            // Простейшее пересечение вертикальных линий волоков с контуром делянки
+            for (let y = minY; y <= maxY; y += 5) {
+                // Проверка находится ли точка внутри многоугольника (метод ray-casting)
+                if (isPointInside({x: rx, y: y}, plotPoints)) {
+                    let px = toPx({x: rx, y: y});
+                    if (!started) { ctx.moveTo(px.x, px.y); started = true; }
+                    else { ctx.lineTo(px.x, px.y); }
+                } else {
+                    if (started) { ctx.stroke(); ctx.beginPath(); started = false; }
+                }
+            }
+            if (started) ctx.stroke();
         }
         ctx.setLineDash([]);
 
-        // Погрузочный пункт (Верхний склад)
-        let landX = startX + plotW / 2;
-        let landY = startY;
+        // 2. Отрисовка контура делянки по точкам буссоли
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = isDark ? '#8FBC8F' : '#2D5A27';
+        ctx.beginPath();
+        plotPoints.forEach((pt, idx) => {
+            let px = toPx(pt);
+            if (idx === 0) ctx.moveTo(px.x, px.y);
+            else ctx.lineTo(px.x, px.y);
+        });
+        ctx.closePath();
+        ctx.fillStyle = isDark ? 'rgba(143,188,143,0.08)' : 'rgba(45,90,39,0.05)';
+        ctx.fill();
+        ctx.stroke();
 
-        if (landingPos === 'middle') {
-            landX = startX + plotW / 2;
-            landY = startY + plotL / 2;
-        } else if (landingPos === 'corner') {
-            landX = startX;
-            landY = startY;
+        // Вершины (столбы)
+        plotPoints.forEach((pt, idx) => {
+            let px = toPx(pt);
+            ctx.beginPath();
+            ctx.arc(px.x, px.y, idx === 0 ? 6 : 4, 0, Math.PI * 2);
+            ctx.fillStyle = idx === 0 ? '#DC2626' : '#16A34A';
+            ctx.fill();
+            ctx.strokeStyle = '#FFF';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        });
+
+        // 3. Погрузочный пункт (склад)
+        let landPt = plotPoints[0];
+        if (landingType === 'center') {
+            landPt = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
+        } else if (landingType === 'edge') {
+            landPt = plotPoints[Math.floor(plotPoints.length / 2)];
         }
+        let landPx = toPx(landPt);
 
         ctx.fillStyle = '#DC2626';
         ctx.beginPath();
-        ctx.arc(landX, landY, 7, 0, Math.PI * 2);
+        ctx.arc(landPx.x, landPx.y, 8, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = '#FFFFFF';
         ctx.lineWidth = 2;
@@ -263,11 +328,25 @@
         ctx.fillStyle = isDark ? '#FFF' : '#333';
         ctx.font = "bold 11px Inter, sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("Верхний склад", landX, landY - 12);
+        ctx.fillText("Верхний склад", landPx.x, landPx.y - 12);
+    }
+
+    // Вспомогательная функция проверки принадлежности точки многоугольнику
+    function isPointInside(point, vs) {
+        let x = point.x, y = point.y;
+        let inside = false;
+        for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+            let xi = vs[i].x, yi = vs[i].y;
+            let xj = vs[j].x, yj = vs[j].y;
+            let intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+            if (intersect) inside = !inside;
+        }
+        return inside;
     }
 
     window.onload = function() {
-        calculateSkidding();
+        loadPlotData();
+        calculateAndDraw();
     };
 </script>
 </body>
