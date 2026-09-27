@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
     <title>Конструктор актов натурного осмотра лесосек и лесных деклараций | Лесовик PRO</title>
-    <meta name="description" content="Бесплатный конструктор официальных документов для лесопользователей и арендаторов: генерация актов осмотра лесосек и лесных деклараций по формам Минприроды РФ. Печать на А4.">
+    <meta name="description" content="Бесплатный конструктор официальных документов для лесопользователей и арендаторов: генерация актов осмотра лесосек и лесных деклараций по формам Минприроды РФ. Печать на А4 с возможностью ручной дописки текста.">
     <meta name="keywords" content="акт осмотра лесосеки, лесная декларация бланк, акт заключительного осмотра лесосеки, лесопользование документы, минприроды форма акта, лесовик про">
     <link rel="canonical" href="https://lesovik-pro.ru/akt-les.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
@@ -22,7 +22,7 @@
       "name": "Лесовик: Генератор актов и деклараций",
       "operatingSystem": "All",
       "applicationCategory": "BusinessApplication",
-      "description": "Инструмент для автоматического формирования актов натурного осмотра лесосек и лесных деклараций.",
+      "description": "Инструмент для автоматического формирования и ручного редактирования актов натурного осмотра лесосек и лесных деклараций.",
       "author": {
         "@type": "Person",
         "name": "ИП Худяков Николай Сергеевич"
@@ -136,11 +136,25 @@
         .btn-primary { background: var(--forest-green); color: #FFF; border-color: var(--forest-green); }
         .btn-primary:hover { background: #23471f; }
 
-        /* ПРЕВЬЮ ДОКУМЕНТА */
+        .editable-hint {
+            font-size: 11px; color: var(--accent); margin-bottom: 8px; font-weight: 600; display: flex; align-items: center; gap: 4px;
+        }
+
+        /* ПРЕВЬЮ ДОКУМЕНТА (РЕДАКТИРУЕМОЕ) */
         .preview-doc-card {
             background: #FFFFFF; color: #000000; border: 1px solid #999; border-radius: 6px;
-            padding: 30px; font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; margin-top: 20px;
+            padding: 30px; font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; margin-top: 10px;
         }
+        /* Подсветка редактируемых зон при наведении мыши */
+        .preview-doc-card [contenteditable="true"]:hover {
+            background-color: rgba(45, 90, 39, 0.05);
+            outline: 1px dashed var(--forest-green);
+        }
+        .preview-doc-card [contenteditable="true"]:focus {
+            background-color: rgba(45, 90, 39, 0.08);
+            outline: 2px solid var(--forest-green);
+        }
+
         .doc-header-center { text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 15px; font-size: 13pt; }
         .doc-sub-center { text-align: center; font-weight: bold; margin-bottom: 20px; font-size: 11pt; }
         .doc-paragraph { margin-bottom: 12px; text-align: justify; text-indent: 25px; }
@@ -155,10 +169,11 @@
 
         @media print {
             @page { size: A4 portrait; margin: 15mm; }
-            .glass-header, .wizard-steps, .form-grid, .toolbar-btns, footer, .modal-ad-banner-box, .card:not(:has(#preview-container)) { display: none !important; }
+            .glass-header, .wizard-steps, .form-grid, .toolbar-btns, footer, .modal-ad-banner-box, .editable-hint, .card:not(:has(#preview-container)) { display: none !important; }
             body, html { background: #FFFFFF !important; color: #000000 !important; font-size: 12pt !important; }
             .container { margin: 0 !important; max-width: 100% !important; padding: 0 !important; }
             .preview-doc-card { border: none !important; padding: 0 !important; margin: 0 !important; box-shadow: none !important; }
+            .preview-doc-card [contenteditable="true"] { outline: none !important; background: transparent !important; }
         }
 
         footer { text-align: center; padding: 20px; font-size: 11px; opacity: 0.6; margin-top: auto; }
@@ -180,7 +195,7 @@
     <main class="container">
         <div class="card">
             <div class="page-title">Конструктор актов осмотра и лесных деклараций</div>
-            <div class="page-subtitle">Автоматическое формирование официальной документации лесопользователя по стандартам Минприроды РФ</div>
+            <div class="page-subtitle">Автоматическое формирование и свободное ручное редактирование официальной документации лесопользователя</div>
 
             <!-- МАСТЕР ПОШАГОВОГО ЗАПОЛНЕНИЯ -->
             <div class="wizard-steps">
@@ -298,47 +313,49 @@
 
         </div>
 
-        <!-- ЖИВОЙ ПРЕВЬЮ ДОКУМЕНТА -->
+        <!-- ЖИВОЙ ПРЕВЬЮ ДОКУМЕНТА (С ВОЗМОЖНОСТЬЮ РУЧНОЙ ДОПИСКИ) -->
         <div class="card" id="preview-container">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border-color); padding-bottom:8px;">
-                <span style="font-size:12px; font-weight:700; color:var(--forest-green);">📄 Предпросмотр официального документа:</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid var(--border-color); padding-bottom:8px; flex-wrap:wrap; gap:8px;">
+                <span style="font-size:12px; font-weight:700; color:var(--forest-green);">📄 Предпросмотр документа (можно кликнуть и дописать любой текст вручную перед печатью):</span>
                 <button class="btn-action btn-primary" style="padding:6px 12px; font-size:11px; margin-top:0;" onclick="window.print()">🖨️ Печать А4</button>
             </div>
+            
+            <div class="editable-hint">💡 Совет: Любое слово или предложение внизу можно отредактировать прямо на экране кликом мышки!</div>
 
             <div class="preview-doc-card">
-                <div class="doc-header-center" id="prev-doc-title">АКТ НАТУРНОГО ОСМОТРА ЛЕСОСЕКИ</div>
-                <div class="doc-sub-center" id="prev-doc-subtitle">по договору аренды <span id="p-dogovor">№ 145 от 12.04.2024 г.</span></div>
+                <div class="doc-header-center" id="prev-doc-title" contenteditable="true">АКТ НАТУРНОГО ОСМОТРА ЛЕСОСЕКИ</div>
+                <div class="doc-sub-center">по договору аренды <span id="p-dogovor" contenteditable="true">№ 145 от 12.04.2024 г.</span></div>
 
                 <div class="doc-paragraph">
-                    Комиссия в составе представителей лесничества и арендатора <span id="p-user">ООО «Таежный Промысел»</span> произвела натурный осмотр лесного участка, расположенного в <span id="p-les">Сыктывкарское лесничество, Пажгинское участковое лесничество</span>, на площади <span id="p-area">3.28 га / 3.22 га</span> (<span id="p-kvvyd">Квартал 42, Выдел 12, Делянка №1</span>).
+                    Комиссия в составе представителей лесничества и арендатора <span id="p-user" contenteditable="true">ООО «Таежный Промысел»</span> произвела натурный осмотр лесного участка, расположенного в <span id="p-les" contenteditable="true">Сыктывкарское лесничество, Пажгинское участковое лесничество</span>, на площади <span id="p-area" contenteditable="true">3.28 га / 3.22 га</span> (<span id="p-kvvyd" contenteditable="true">Квартал 42, Выдел 12, Делянка №1</span>).
                 </div>
 
                 <div class="doc-paragraph">
-                    1. На разработке участка применялись следующие способы и машины: <span id="p-rubka">Сплошная рубка спелых и перестойных лесных насаждений</span> с использованием комплексов <span id="p-mashine">Харвестер + Форвардер (сортиментная заготовка)</span>. Преобладающие породы: <span id="p-species">Сосна (70%), Ель (20%), Береза (10%)</span>. Общий объем заготовленной древесины составил <span id="p-stock">820 м³</span>.
+                    1. На разработке участка применялись следующие способы и машины: <span id="p-rubka" contenteditable="true">Сплошная рубка спелых и перестойных лесных насаждений</span> с использованием комплексов <span id="p-mashine" contenteditable="true">Харвестер + Форвардер (сортиментная заготовка)</span>. Преобладающие породы: <span id="p-species" contenteditable="true">Сосна (70%), Ель (20%), Береза (10%)</span>. Общий объем заготовленной древесины составил <span id="p-stock" contenteditable="true">820 м³</span>.
                 </div>
 
                 <div class="doc-paragraph">
-                    2. Очистка лесосеки произведена следующим образом: <span id="p-cleanup">Укладка порубочных остатков на трелевочные волоки с последующим уплотнением</span>. Мероприятия по сохранению жизнеспособного подроста выполнены с результатом <span id="p-podrost">74% (норматив выполнен успешно)</span>. <span id="p-semenniki">Оставлено 160 шт. семенных деревьев сосны (20 шт./га)</span>.
+                    2. Очистка лесосеки произведена следующим образом: <span id="p-cleanup" contenteditable="true">Укладка порубочных остатков на трелевочные волоки с последующим уплотнением</span>. Мероприятия по сохранению жизнеспособного подроста выполнены с результатом <span id="p-podrost" contenteditable="true">74% (норматив выполнен успешно)</span>. <span id="p-semenniki" contenteditable="true">Оставлено 160 шт. семенных деревьев сосны (20 шт./га)</span>.
                 </div>
 
                 <div class="doc-paragraph">
-                    3. Состояние граничных знаков: <span id="p-stolby">Столбы установлены на всех углах делянки, покрашены, надписи читаемы</span>. <span id="p-narusheniya">Нарушений лесохозяйственных требований и порчи почв не выявлено</span>.
+                    3. Состояние граничных знаков: <span id="p-stolby" contenteditable="true">Столбы установлены на всех углах делянки, покрашены, надписи читаемы</span>. <span id="p-narusheniya" contenteditable="true">Нарушений лесохозяйственных требований и порчи почв не выявлено</span>.
                 </div>
 
                 <div class="doc-paragraph" style="font-weight: bold; margin-top: 15px;">
-                    ЗАКЛЮЧЕНИЕ КОМИССИИ: <span id="p-rezume" style="font-weight: normal;">Лесосека разработана в полном соответствии с технологической картой. Участок подлежит сдаче.</span>
+                    ЗАКЛЮЧЕНИЕ КОМИССИИ: <span id="p-rezume" contenteditable="true" style="font-weight: normal;">Лесосека разработана в полном соответствии с технологической картой. Участок подлежит сдаче.</span>
                 </div>
 
                 <div class="doc-signatures-block">
                     <div class="doc-sig-col">
                         <b>Представитель лесничества:</b>
                         <div class="sig-line-doc"></div>
-                        <span style="font-size: 10pt; opacity: 0.8;">(подпись, м.п., дата)</span>
+                        <span style="font-size: 10pt; opacity: 0.8;" contenteditable="true">(подпись, м.п., дата)</span>
                     </div>
                     <div class="doc-sig-col">
                         <b>Представитель арендатора:</b>
                         <div class="sig-line-doc"></div>
-                        <span style="font-size: 10pt; opacity: 0.8;">(подпись, м.п., дата)</span>
+                        <span style="font-size: 10pt; opacity: 0.8;" contenteditable="true">(подпись, м.п., дата)</span>
                     </div>
                 </div>
             </div>
