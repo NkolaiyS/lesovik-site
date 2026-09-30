@@ -59,74 +59,6 @@
             --overlay-bg: rgba(0, 0, 0, 0.75);
         }
 
-        /* РЕЖИМ ГЛУБОКОГО ЭНЕРГОСБЕРЕЖЕНИЯ (OLED BLACK) */
-        body.eco-mode-active {
-            --bg-paper: #000000 !important;
-            --card-bg: #050807 !important;
-            --glass-bg: #000000 !important;
-            --border-color: #1A2621 !important;
-            --text-graphite: #D1D5DB !important;
-            --footer-bg: #000000 !important;
-            background-color: #000000 !important;
-            color: #D1D5DB !important;
-        }
-
-        body.eco-mode-active .glass-header {
-            background: #000000 !important;
-            border-bottom-color: #1A2621 !important;
-        }
-
-        body.eco-mode-active .card {
-            background-color: #050807 !important;
-            border-color: #1A2621 !important;
-            box-shadow: none !important;
-        }
-
-        body.eco-mode-active #video-preview {
-            filter: grayscale(100%) contrast(110%);
-        }
-
-        /* ПОЛНОРАЗМЕРНЫЙ БЛОК-ТУМБЛЕР ЭНЕРГОСБЕРЕЖЕНИЯ НА ВСЮ ШИРИНУ */
-        .eco-banner-bar {
-            width: 100%;
-            margin-bottom: 16px;
-        }
-
-        .btn-eco-toggle {
-            width: 100%;
-            padding: 11px 14px;
-            border-radius: 10px;
-            font-size: 12.5px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.25s ease;
-            box-sizing: border-box;
-            background: rgba(45, 90, 39, 0.08);
-            border: 1.5px solid var(--forest-green);
-            color: var(--forest-green);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-            touch-action: manipulation;
-        }
-
-        [data-theme="dark"] .btn-eco-toggle {
-            background: rgba(143, 188, 143, 0.08);
-            border-color: var(--forest-light);
-            color: var(--forest-light);
-        }
-
-        .btn-eco-toggle.active {
-            background: linear-gradient(135deg, #15803D 0%, #166534 100%) !important;
-            border-color: #22C55E !important;
-            color: #FFFFFF !important;
-            box-shadow: 0 4px 14px rgba(22, 163, 74, 0.45) !important;
-        }
-
         html, body {
             margin: 0; padding: 0;
             width: 100%; max-width: 100vw;
@@ -947,14 +879,6 @@
     </div>
 
     <main class="container">
-
-        <!-- ПОЛНОРАЗМЕРНЫЙ БЛОК ЭНЕРГОСБЕРЕЖЕНИЯ СТРОГО НАД АРХИВОМ -->
-        <div class="eco-banner-bar">
-            <button id="btn-eco-toggle" class="btn-eco-toggle" onclick="toggleEcoMode()">
-                🔋 ЭКОНОМИЯ ЭНЕРГИИ: ВЫКЛ
-            </button>
-        </div>
-
         <div class="card" style="margin-bottom: 20px;">
             <h2>Управление проектами и архивом делянок (БГ-ХНС PRO 3.2)</h2>
             <div class="subtitle">Сохранение независимых съемок, подложка KML/KMZ/GeoJSON выдела ФГИС ЛК и выгрузка отчетов.</div>
@@ -1210,11 +1134,6 @@
 <script>
     let isFirstData = true;
 
-    // --- ПЕРЕМЕННЫЕ РЕЖИМА ЭНЕРГОСБЕРЕЖЕНИЯ ---
-    let isEcoModeActive = false;
-    let lastSensorTickTime = 0;
-    const ECO_SENSOR_INTERVAL = 100; // Троттлинг опроса сенсоров в эко-режиме (10 Гц)
-
     // --- ПЕРЕМЕННЫЕ ФИЛЬТРА КАЛМАНА И БУФЕР УСРЕДНЕНИЯ АЗИМУТА ---
     let filteredSin = 0;
     let filteredCos = 0;
@@ -1297,36 +1216,6 @@
             toast.innerText = msg;
             toast.style.display = 'block';
             setTimeout(() => { toast.style.display = 'none'; }, 3500);
-        }
-    }
-
-    // --- ФУНКЦИЯ ВКЛЮЧЕНИЯ/ВЫКЛЮЧЕНИЯ РЕЖИМА ЭНЕРГОСБЕРЕЖЕНИЯ ---
-    function toggleEcoMode() {
-        isEcoModeActive = !isEcoModeActive;
-        const btn = document.getElementById('btn-eco-toggle');
-
-        if (isEcoModeActive) {
-            document.body.classList.add('eco-mode-active');
-            btn.classList.add('active');
-            btn.innerText = "⚡ ЭКО-РЕЖИМ: ВКЛ (OLED ЭКОНОМИЯ)";
-            showToast("🔋 Эко-режим активен: черная тема, снижение нагрузки");
-            if (navigator.vibrate) navigator.vibrate([25, 40, 25]);
-        } else {
-            document.body.classList.remove('eco-mode-active');
-            btn.classList.remove('active');
-            btn.innerText = "🔋 ЭКОНОМИЯ ЭНЕРГИИ: ВЫКЛ";
-            showToast("Эко-режим выключен: стандартная частота");
-            if (navigator.vibrate) navigator.vibrate(20);
-        }
-        localStorage.setItem('lesovik_eco_mode', isEcoModeActive ? '1' : '0');
-        drawPolygon();
-    }
-
-    function loadEcoModeState() {
-        const saved = localStorage.getItem('lesovik_eco_mode');
-        if (saved === '1') {
-            isEcoModeActive = false; // toggle переведет в true
-            toggleEcoMode();
         }
     }
 
@@ -2429,13 +2318,6 @@
     }
 
     function handleOrientation(event) {
-        // Троттлинг в режиме энергосбережения для снижения нагрузки на процессор
-        let now = Date.now();
-        if (isEcoModeActive && (now - lastSensorTickTime < ECO_SENSOR_INTERVAL)) {
-            return;
-        }
-        lastSensorTickTime = now;
-
         let heading = event.webkitCompassHeading;
         if (heading === undefined) {
             heading = (360 - (event.alpha || 0)) % 360;
@@ -2561,7 +2443,7 @@
 
         let currentSector = Math.floor((sensorAzimuth + 2) / 30);
         if (currentSector !== lastVibratedSector) {
-            if (navigator.vibrate && !isEcoModeActive) {
+            if (navigator.vibrate) {
                 navigator.vibrate(10);
             }
             lastVibratedSector = currentSector;
@@ -2877,8 +2759,8 @@
             const width = canvas.width;
             const height = canvas.height;
             
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || isEcoModeActive;
-            ctx.fillStyle = isEcoModeActive ? '#000000' : (isDark ? '#22302B' : '#FFFFFF');
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            ctx.fillStyle = isDark ? '#22302B' : '#FFFFFF';
             ctx.fillRect(0, 0, width, height);
 
             // Стороны света
@@ -2928,16 +2810,14 @@
                 };
             }
 
-            // Фоновая сетка (в эко-режиме отключается для энергосбережения)
-            if (!isEcoModeActive) {
-                ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
-                ctx.lineWidth = 1;
-                for(let i = 0; i < width; i += 40) {
-                    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke();
-                }
-                for(let i = 0; i < height; i += 40) {
-                    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke();
-                }
+            // Фоновая сетка
+            ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
+            ctx.lineWidth = 1;
+            for(let i = 0; i < width; i += 40) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke();
+            }
+            for(let i = 0; i < height; i += 40) {
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke();
             }
 
             // 3. Отрисовка внешних слоев KML/KMZ (если есть)
@@ -3248,7 +3128,6 @@
         startCamera();
         initGPS(); 
         initCanvasDragControls();
-        loadEcoModeState();
         
         const triggerSensorAccess = async () => {
             try {
