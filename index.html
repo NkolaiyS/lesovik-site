@@ -287,7 +287,7 @@
             pointer-events: none;
         }
 
-        /* ГЛАВНАЯ КАРТОЧКА АЭРОЛОДКИ ВОДОЛЕТ-470 (ПОД ПОИСКОМ) */
+        /* ГЛАВНАЯ КАРТОЧКА АЭРОЛОДКИ ВОДОЛЕТ-470 */
         .vodolet-hero-card {
             background: linear-gradient(135deg, rgba(230, 126, 34, 0.08) 0%, rgba(45, 90, 39, 0.08) 100%), var(--card-bg);
             border: 2px solid var(--promo-orange);
@@ -314,11 +314,14 @@
             flex-shrink: 0;
             background-color: #000;
             box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .vodolet-thumb-img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
             display: block;
         }
         .vodolet-hero-text {
@@ -377,17 +380,24 @@
             transform: translateY(-1px);
         }
 
+        /* АДАПТИВ МОБИЛЬНОЙ ВЕРСИИ ДЛЯ КАРТОЧКИ ВОДОЛЕТА: ПОЛНЫЙ КВАДРАТ БЕЗ ОБРЕЗКИ */
         @media (max-width: 768px) {
             .vodolet-hero-card {
                 flex-direction: column;
-                align-items: flex-start;
+                align-items: stretch;
                 padding: 16px;
-                gap: 14px;
+                gap: 16px;
             }
             .vodolet-thumb-wrap {
                 width: 100%;
-                height: 220px;
-                max-height: 240px;
+                height: auto;
+                aspect-ratio: 1 / 1;
+                max-height: none;
+            }
+            .vodolet-thumb-img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
             }
             .vodolet-hero-title {
                 font-size: 17px;
@@ -454,7 +464,7 @@
             padding: 16px; display: flex; flex-direction: column;
             box-shadow: 0 2px 10px rgba(0,0,0,0.03); position: relative; width: 100%; min-width: 0;
             transition: transform 0.2s, box-shadow 0.2s;
-            grid-column: span 2; /* 3 карточки в ряд по умолчанию */
+            grid-column: span 2;
         }
         .bento-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.06); }
 
@@ -485,9 +495,41 @@
             background: radial-gradient(circle at top right, rgba(2, 132, 199, 0.14), transparent 70%), var(--card-bg);
         }
 
+        /* ВОССТАНОВЛЕННЫЙ БЛОК ЛЕСОВИК TECH С ФОТОГРАФИЕЙ */
         .bento-card.tech-highlight {
             border: 2px solid var(--promo-orange);
-            background: radial-gradient(circle at top right, rgba(230, 126, 34, 0.16), transparent 70%), var(--card-bg);
+            background: radial-gradient(circle at top right, rgba(230, 126, 34, 0.12) 0%, transparent 70%), var(--card-bg);
+            padding: 18px 20px;
+        }
+        .tech-highlight-inner {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+        }
+        .tech-highlight-thumb {
+            width: 140px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid var(--promo-orange);
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        }
+        .tech-highlight-body {
+            flex: 1;
+            min-width: 250px;
+        }
+        @media (max-width: 680px) {
+            .tech-highlight-inner {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 14px;
+            }
+            .tech-highlight-thumb {
+                width: 100%;
+                height: 140px;
+            }
         }
 
         .bento-card.comparison-highlight {
@@ -518,7 +560,10 @@
         .bento-card.featured .bento-btn { background-color: #FFFFFF; color: #1a3617; }
         .bento-card.pro-highlight .bento-btn { background-color: #E67E22; color: #FFFFFF; }
         .bento-card.taktik-highlight .bento-btn { background-color: #0284C7; color: #FFFFFF; }
-        .bento-card.tech-highlight .bento-btn { background-color: var(--promo-orange); color: #FFFFFF; }
+        .bento-card.tech-highlight .bento-btn { background-color: var(--promo-orange); color: #FFFFFF; width: auto; padding: 10px 20px; }
+        @media (max-width: 680px) {
+            .bento-card.tech-highlight .bento-btn { width: 100%; }
+        }
 
         @media (max-width: 900px) {
             .bento-grid { grid-template-columns: repeat(2, 1fr); }
@@ -728,7 +773,7 @@
             <input type="text" id="tool-quick-search" class="quick-search-input" placeholder="Быстрый поиск прибора: технокарта, волоки, трелевка, буссоль, вилка, высота, кубатурник, ГОСТ, штраф..." oninput="filterToolsAndCards()" onfocus="this.select()">
         </div>
 
-        <!-- ГЛАВНАЯ КАРТОЧКА АЭРОЛОДКИ ВОДОЛЕТ-470 (НА ВИДНОМ МЕСТЕ ПОД ПОИСКОМ) -->
+        <!-- ГЛАВНАЯ КАРТОЧКА АЭРОЛОДКИ ВОДОЛЕТ-470 (ПОЛНЫЙ КВАДРАТ БЕЗ ОБРЕЗКИ И НА СМАРТФОНАХ И НА ПК) -->
         <div class="vodolet-hero-card">
             <div class="vodolet-thumb-wrap">
                 <img src="https://storage.yandexcloud.net/lesovik-media/vodolet/vodolet-main.jpg.jpg" alt="Аэролодка Водолет-470" class="vodolet-thumb-img" onerror="this.src='https://storage.yandexcloud.net/lesovik-media/vodolet/vodolet-main.jpg'">
@@ -925,16 +970,21 @@
                     <button class="bento-btn" onclick="openFieldHelpModal()">Открыть памятку ▾</button>
                 </div>
 
-                <!-- ЛЕСОВИК TECH ПЕРЕНЕСЕН НИЖЕ СТРОГО НА ВСЮ ШИРИНУ ДЛЯ ДИНАМИКИ -->
+                <!-- ЛЕСОВИК TECH: ПЕРЕНЕСЕН НИЖЕ С КАРТИНКОЙ boat.jpg (ДИНАМИЧНЫЙ ШИРОКИЙ БЛОК) -->
                 <div class="bento-card tech-highlight" data-search-keywords="лесовик tech техника квадроциклы вездеходы пнд лодки снегоходы бензопилы лебедки">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
-                        <h3 style="margin:0;">🚜 Лесовик TECH: Квадроциклы, ПНД лодки, снегоходы и инструмент</h3>
-                        <span style="font-size:10.5px; font-weight:bold; background:rgba(230,126,34,0.15); color:var(--promo-orange); padding:2px 8px; border-radius:6px; text-transform:uppercase;">Спецтехника</span>
+                    <div class="tech-highlight-inner">
+                        <img src="boat.jpg" alt="ПНД лодки и спецтехника" class="tech-highlight-thumb" onerror="this.style.display='none'">
+                        <div class="tech-highlight-body">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
+                                <h3 style="margin:0;">🚜 Лесовик TECH: Квадроциклы, ПНД лодки, снегоходы и инструмент</h3>
+                                <span style="font-size:10.5px; font-weight:bold; background:rgba(230,126,34,0.15); color:var(--promo-orange); padding:2px 8px; border-radius:6px; text-transform:uppercase;">Спецтехника</span>
+                            </div>
+                            <div class="bento-desc" style="margin-bottom:12px;">
+                                Практические руководства по надежной технике для таежного бездорожья и рек: защита картера квадроциклов, бронирование днища лодок из ПНД, расконсервация снегоходов к морозам и аварийный полевой ремонт бензопил.
+                            </div>
+                            <a href="tech.html" class="bento-btn">Перейти в раздел техники TECH →</a>
+                        </div>
                     </div>
-                    <div class="bento-desc">
-                        Практические руководства по надежной технике для таежного бездорожья и рек: защита картера квадроциклов, бронирование днища лодок из ПНД, расконсервация снегоходов к морозам и аварийный полевой ремонт бензопил.
-                    </div>
-                    <a href="tech.html" class="bento-btn">Перейти в раздел техники TECH →</a>
                 </div>
 
             </div>
@@ -1201,7 +1251,7 @@
                 <div class="pages-cat-title">🧭 Отвод лесосек, съемка и навигация</div>
                 <div class="pages-link-grid">
                     <a href="skid-calc.html" class="pages-link-item" style="color: var(--forest-green); font-weight:800;">
-                        <span>🗺️ Технокарта и волоки PRO</span> ➔
+                        <span>🗺️️ Технокарта и волоки PRO</span> ➔
                     </a>
                     <a href="busol-pro.html" class="pages-link-item" style="color: #E67E22; font-weight:800;">
                         <span>⭐ Буссоль БГ-ХНС PRO 3.2</span> ➔
@@ -1236,7 +1286,7 @@
                         <span>📏 Мерная вилка диаметров</span> ➔
                     </a>
                     <a href="bitterlich.html" class="pages-link-item">
-                        <span>👁️️ Полнотомер Биттерлиха</span> ➔
+                        <span>👁️ Полнотомер Биттерлиха</span> ➔
                     </a>
                     <a href="journal.html" class="pages-link-item">
                         <span>📋 Полевой журнал таксатора</span> ➔
