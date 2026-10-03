@@ -9,10 +9,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- SEO Оптимизация -->
     <title>ИИ-Помощник Лесника: Конструктор документов и Чат-консультант | Лесовик ПРО</title>
-    <meta name="description" content="Автоматическое составление документов по 8 профильным блокам лесной отрасли с помощью ИИ. Юридический чат по Лесному кодексу РФ.">
-    <meta name="keywords" content="лесовик, ии помощник лесника, чат лесной кодекс, консультация лесничего, генератор лесных актов">
+    <meta name="description" content="Автоматическое составление документов по 8 профильным блокам лесной отрасли с приложениями и фотофиксацией. Юридический чат по Лесному кодексу РФ.">
+    <meta name="keywords" content="лесовик, ии помощник лесника, чат лесной кодекс, генератор лесных актов, перечетная ведомость, технологическая карта">
     <meta name="author" content="ИП Худяков Николай Сергеевич">
 
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
@@ -118,7 +117,15 @@
             background: var(--bg-paper); color: var(--text-graphite); font-family: 'Inter', sans-serif; font-size: 13.5px;
         }
         .ai-textarea { resize: vertical; min-height: 100px; }
-        
+
+        /* Поле загрузки фото/сканов */
+        .file-upload-box {
+            border: 1.5px dashed var(--forest-green); border-radius: 8px; padding: 12px; background: rgba(45, 90, 39, 0.03);
+            display: flex; flex-direction: column; gap: 6px;
+        }
+        .file-upload-box input[type="file"] { font-size: 12.5px; }
+        .file-hint { font-size: 11.5px; opacity: 0.8; }
+
         .ai-submit-btn {
             background: linear-gradient(135deg, var(--forest-green) 0%, #1a3617 100%);
             color: #FFF; border: none; padding: 14px 20px; border-radius: 8px; font-weight: 800;
@@ -138,7 +145,7 @@
             box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3); text-decoration: none;
         }
 
-        /* --- СТИЛИ МЕССЕНДЖЕРА (ЧАТ-КОНСУЛЬТАНТ) --- */
+        /* Чат-консультант */
         #chat-interface { display: none; margin-top: 10px; }
         .chat-history {
             display: flex; flex-direction: column; gap: 12px; max-height: 440px; overflow-y: auto;
@@ -160,7 +167,7 @@
             font-weight: 800; font-size: 13px; text-transform: uppercase; cursor: pointer;
         }
 
-        /* Модальное окно пополнения */
+        /* Модальное окно пополнения (Пайвол) */
         .paywall-modal {
             display: none; background: rgba(0,0,0,0.7); position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 3000; justify-content: center; align-items: center; padding: 20px;
@@ -202,49 +209,68 @@
         <div class="ai-hero-box">
             <h2 id="section-title">🌲 ИИ-Помощник Лесника (Конструктор документов)</h2>
             <div id="section-desc" class="ai-hero-desc">
-                Выберите один из 8 профильных блоков, укажите свои реквизиты и тезисно опишите ситуацию.
+                Выберите категорию, укажите свои реквизиты, приложите данные/фото и тезисно опишите ситуацию.
             </div>
 
-            <!-- 1. ИНТЕРФЕЙС КОНСТРУКТОРА -->
+            <!-- ИНТЕРФЕЙС КОНСТРУКТОРА -->
             <div id="doc-interface">
                 <div class="ai-form-group">
                     <label>1. Профильный блок документа</label>
                     <select id="ai-block-type" class="ai-select" onchange="updateDefaultPrompt()">
-                        <option value="1">1. Юридический блок (Споры, предписания лесничества, иски)</option>
-                        <option value="2">2. Лесовосстановление (Проекты, посадки, уходы, приемка)</option>
-                        <option value="3">3. Лесоводство (Уходы за лесом, рубки, МДО)</option>
-                        <option value="4">4. Лесопатологический блок (ЛПО, акты осмотра)</option>
-                        <option value="5">5. Бухгалтерия и отчетность (Первичка, акты сдачи-приемки)</option>
-                        <option value="6">6. Хозяйственная часть (Лесные дороги, склады, минполосы)</option>
-                        <option value="7">7. Техника и механика (Путевки, дефектовка узлов)</option>
+                        <option value="1">1. Юридический блок (Споры, предписания лесничества, иски, договоры купли-продажи)</option>
+                        <option value="2">2. Лесовосстановление (Проекты, посадки, агротехнические уходы, приемка)</option>
+                        <option value="3">3. Лесоводство (Уходы за лесом, рубки, МДО, перечетные ведомости)</option>
+                        <option value="4">4. Лесопатологический блок (ЛПО, акты осмотра, повреждения)</option>
+                        <option value="5">5. Бухгалтерия и отчетность (Первичка, акты сдачи-приемки, накладные)</option>
+                        <option value="6">6. Хозяйственная часть (Лесные дороги, склады, минполосы, техкарты)</option>
+                        <option value="7">7. Техника и механика (Путевки, акты дефектовки узлов)</option>
                         <option value="8">8. Лесные пожары (Предупреждение, расчет ущерба № 2464)</option>
                     </select>
                 </div>
 
                 <div class="ai-form-group">
-                    <label>2. Ваши реквизиты (Организация, Лесничество, Квартал, Выдел)</label>
+                    <label>2. Ваши вводные реквизиты (Организация, Лесничество, Квартал, Выдел)</label>
                     <input type="text" id="ai-user-info" class="ai-input" placeholder="Например: ИП Иванов И.И., Удорское лесничество, кв. 45, выдел 2">
                 </div>
 
                 <div class="ai-form-group">
-                    <label>3. Опишите суть или тезисы задачи</label>
-                    <textarea id="ai-user-prompt" class="ai-textarea" placeholder="Например: Составить акт осмотра поврежденных деревьев..."></textarea>
+                    <label>3. Тип обязательного Приложения к документу</label>
+                    <select id="ai-attachment-type" class="ai-select">
+                        <option value="none">Без отдельного приложения</option>
+                        <option value="perechetka">Приложение № 1: Перечетная ведомость деревьев / пней</option>
+                        <option value="techkarta">Приложение № 1: Технологическая карта разработки лесосеки / схема</option>
+                        <option value="contract_extract">Приложение № 1: Выписка из договора купли-продажи насаждений / аренды</option>
+                        <option value="photo_act">Приложение № 1: Акт фотофиксации натурного осмотра участка</option>
+                    </select>
                 </div>
 
-                <button class="ai-submit-btn" onclick="generateDocumentAction()">✨ Сформировать документ</button>
+                <div class="ai-form-group">
+                    <label>4. Прикрепить фото или скан (техкарта, перечетка, акт, договор)</label>
+                    <div class="file-upload-box">
+                        <input type="file" id="ai-file-upload" accept="image/*,.pdf,.doc,.docx,.txt" onchange="handleFileUpload(event)">
+                        <div class="file-hint" id="file-status-text">📎 Прикрепите фото или скан. ИИ учтет факт наличия документа при формировании описи и приложений.</div>
+                    </div>
+                </div>
+
+                <div class="ai-form-group">
+                    <label id="task-label">5. Опишите суть задачи или исходные цифры</label>
+                    <textarea id="ai-user-prompt" class="ai-textarea" placeholder="Опишите ситуацию, параметры рубки, диаметры или претензию..."></textarea>
+                </div>
+
+                <button class="ai-submit-btn" id="submit-btn" onclick="generateDocumentAction()">✨ Сформировать официальный документ</button>
 
                 <div id="ai-result-container" class="ai-result-box">
                     <div id="ai-result-text"></div>
-                    <button class="download-doc-btn" onclick="downloadCleanDocument()">📥 Скачать готовый документ (.doc)</button>
+                    <button id="download-btn" class="download-doc-btn" onclick="downloadCleanDocument()">📥 Скачать готовый документ (.doc)</button>
                 </div>
             </div>
 
-            <!-- 2. ИНТЕРФЕЙС МЕССЕНДЖЕРА (ЧАТ-КОНСУЛЬТАНТ) -->
+            <!-- ИНТЕРФЕЙС ЧАТА-КОНСУЛЬТАНТА -->
             <div id="chat-interface">
                 <div id="chat-stream" class="chat-history">
                     <div class="chat-bubble bubble-ai">
                         <div class="bubble-author">Лесовик (Консультант)</div>
-                        Приветствую! Я готов проконсультировать вас по статьям Лесного кодекса РФ, нормативам рубок, правилам пожарной безопасности или расчетам. В чем ваш вопрос?
+                        Приветствую! Готов проконсультировать вас по статьям Лесного кодекса РФ, нормативам рубок, правилам пожарной безопасности или расчетам вреда. В чем ваш вопрос?
                     </div>
                 </div>
 
@@ -267,13 +293,13 @@
     </div>
 
     <footer>
-        &copy; 2026 ИП Худяков Николай Сергеевич. ИИ-агент «Лесовик ПРО».
+        &copy; 2026 ИП Худяков Николай Сергеевич. ИИ-агент генератора документов «Лесовик ПРО».
     </footer>
 
     <script>
         let currentMode = 'document';
-        // Храним последние реплики для отправки в модель
         let chatContext = [];
+        let attachedFileName = "";
 
         function toggleTheme() {
             const body = document.body;
@@ -288,6 +314,18 @@
             updateDefaultPrompt();
             checkLimits();
         });
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            const statusLabel = document.getElementById('file-status-text');
+            if (file) {
+                attachedFileName = file.name;
+                statusLabel.innerHTML = `✅ Прикреплен файл: <b>${file.name}</b> (${Math.round(file.size / 1024)} КБ). ИИ сошлется на него в реквизитах и приложении.`;
+            } else {
+                attachedFileName = "";
+                statusLabel.innerText = "📎 Прикрепите фото или скан. ИИ учтет факт наличия документа при формировании описи и приложений.";
+            }
+        }
 
         function checkLimits() {
             const today = new Date().toDateString();
@@ -350,7 +388,7 @@
                 chatInterface.style.display = 'none';
                 docInterface.style.display = 'block';
                 title.innerText = '🌲 ИИ-Помощник Лесника (Конструктор документов)';
-                desc.innerText = 'Выберите профильный блок, укажите реквизиты и тезисы — ИИ сформирует готовый официальный документ.';
+                desc.innerText = 'Выберите категорию, укажите свои реквизиты, приложите данные/фото и тезисно опишите ситуацию.';
                 updateDefaultPrompt();
             }
         }
@@ -360,19 +398,29 @@
             const blockNum = document.getElementById('ai-block-type').value;
             const promptArea = document.getElementById('ai-user-prompt');
             const prompts = {
-                "1": "Лесничество выставило претензию за якобы поврежденный подрост при трелевке...",
+                "1": "Лесничество выставило претензию за нарушение условий договора купли-продажи лесных насаждений при трелевке...",
                 "2": "Готовим проект и акт приемки по искусственному лесовосстановлению. Квартал 40, выдел 5, площадь 3.5 га.",
-                "3": "Требуется составить ведомость МДО и перечетную ведомость под рубку прочистки. Квартал 18, выдел 2.",
-                "4": "Обнаружены поврежденные деревья (ветровал и короед) на площади 1.2 га. Нужен акт ЛПО.",
+                "3": "Требуется составить акт отвода лесосеки и перечетную ведомость под рубку прочистки. Квартал 18, выдел 2.",
+                "4": "Обнаружены поврежденные деревья (ветровал и короед) на площади 1.2 га. Нужен акт осмотра и ЛПО.",
                 "5": "Нужен первичный акт сдачи-приемки выполненных лесохозяйственных работ за текущий месяц.",
-                "6": "Оформляем документы на устройство лесного склада и минерализованной полосы. Квартал 55.",
-                "7": "Нужен путевой лист и акт осмотра/дефектовки узлов трактора МТЗ-82.",
+                "6": "Оформляем технологическую карту разработки лесосеки и обустройства склада. Квартал 55.",
+                "7": "Нужен путевой лист трактора и акт дефектовки гидравлических узлов.",
                 "8": "Требуется первичный оперативный акт по лесному пожару и расчет ущерба по постановлению № 2464."
             };
             promptArea.value = prompts[blockNum] || "Опишите суть или тезисы...";
         }
 
-        // Вызов в режиме Конструктора документов
+        // Функция фильтрации Markdown-символов (звездочек, решеток)
+        function cleanMarkdownFormatting(text) {
+            if (!text) return "";
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '$1')   // жирный
+                .replace(/\*(.*?)\*/g, '$1')       // курсив
+                .replace(/^#{1,6}\s+/gm, '')       // заголовки ###
+                .replace(/`/g, '')                 // обратные кавычки
+                .trim();
+        }
+
         async function generateDocumentAction() {
             if (checkLimits() <= 0) {
                 document.getElementById('paywall-modal').style.display = 'flex';
@@ -382,6 +430,8 @@
             const blockNum = document.getElementById('ai-block-type').value;
             const userInfo = document.getElementById('ai-user-info').value.trim();
             const promptText = document.getElementById('ai-user-prompt').value.trim();
+            const attachmentType = document.getElementById('ai-attachment-type').value;
+            
             const resultBox = document.getElementById('ai-result-container');
             const resultText = document.getElementById('ai-result-text');
 
@@ -392,7 +442,22 @@
                 return;
             }
 
-            resultText.innerText = "⏳ ИИ-агент составляет официальный документ...";
+            resultText.innerText = "⏳ ИИ-агент составляет официальный документ и формирует приложение по ГОСТу...";
+
+            // Формируем расширенное задание с учетом прикрепленного файла и приложения
+            let fullTaskText = promptText;
+            if (attachedFileName) {
+                fullTaskText += `\n[К запросу прикреплен файл/фото: ${attachedFileName}. Укажи его в перечне приложений и реквизитах].`;
+            }
+            if (attachmentType !== 'none') {
+                const attachMap = {
+                    'perechetka': 'Сформируй также официальное "Приложение № 1. Перечетная ведомость деревьев / пней" со структурированной таблицей.',
+                    'techkarta': 'Сформируй также официальное "Приложение № 1. Технологическая карта разработки лесосеки" со схемой размещения технологических элементов.',
+                    'contract_extract': 'Сформируй также официальное "Приложение № 1. Выписка условий договора купли-продажи лесных насаждений".',
+                    'photo_act': 'Сформируй также официальное "Приложение № 1. Акт фотофиксации и схема натурного осмотра".'
+                };
+                fullTaskText += `\n${attachMap[attachmentType]}`;
+            }
 
             try {
                 const cloudFunctionUrl = 'https://functions.yandexcloud.net/d4e4isog4du3q37tnvea';
@@ -403,13 +468,14 @@
                         mode: 'document',
                         block: blockNum,
                         requisites: userInfo,
-                        task: promptText
+                        task: fullTaskText
                     })
                 });
 
                 const data = await response.json();
                 if (data.documentText) {
-                    resultText.innerText = data.documentText;
+                    // Очищаем от случайных звездочек и выводим
+                    resultText.innerText = cleanMarkdownFormatting(data.documentText);
                     consumeLimit();
                 } else {
                     resultText.innerText = "❌ Ошибка: " + (data.error || "сервер не вернул ответ");
@@ -420,7 +486,6 @@
             }
         }
 
-        // Вызов в режиме Чата-консультанта
         async function sendChatMessage() {
             if (checkLimits() <= 0) {
                 document.getElementById('paywall-modal').style.display = 'flex';
@@ -433,7 +498,6 @@
 
             const chatStream = document.getElementById('chat-stream');
 
-            // Сообщение пользователя
             const userBubble = document.createElement('div');
             userBubble.className = 'chat-bubble bubble-user';
             userBubble.innerText = question;
@@ -442,16 +506,14 @@
             input.value = '';
             chatStream.scrollTop = chatStream.scrollHeight;
 
-            // Индикатор загрузки ответа
             const aiBubble = document.createElement('div');
             aiBubble.className = 'chat-bubble bubble-ai';
             aiBubble.innerHTML = `<div class="bubble-author">Лесовик</div><i>Печатает ответ...</i>`;
             chatStream.appendChild(aiBubble);
             chatStream.scrollTop = chatStream.scrollHeight;
 
-            // Сохраняем в локальную историю
             chatContext.push(`Пользователь: ${question}`);
-            if (chatContext.length > 4) chatContext.shift(); // храним только последние 4 реплики
+            if (chatContext.length > 4) chatContext.shift();
 
             try {
                 const cloudFunctionUrl = 'https://functions.yandexcloud.net/d4e4isog4du3q37tnvea';
@@ -468,8 +530,9 @@
 
                 const data = await response.json();
                 if (data.documentText) {
-                    aiBubble.innerHTML = `<div class="bubble-author">Лесовик</div>${data.documentText.replace(/\n/g, '<br>')}`;
-                    chatContext.push(`Лесовик: ${data.documentText}`);
+                    const cleanText = cleanMarkdownFormatting(data.documentText);
+                    aiBubble.innerHTML = `<div class="bubble-author">Лесовик</div>${cleanText.replace(/\n/g, '<br>')}`;
+                    chatContext.push(`Лесовик: ${cleanText}`);
                     consumeLimit();
                 } else {
                     aiBubble.innerHTML = `<div class="bubble-author">Лесовик</div>❌ Ошибка: ` + (data.error || "нет ответа");
@@ -481,10 +544,12 @@
             chatStream.scrollTop = chatStream.scrollHeight;
         }
 
-        // Скачивание строго для документов через чистый текст в .doc
+        // Скачивание строго чистого текста с расширением .doc без Markdown-символов
         function downloadCleanDocument() {
-            const textContent = document.getElementById('ai-result-text').innerText;
-            const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+            let textContent = document.getElementById('ai-result-text').innerText;
+            textContent = cleanMarkdownFormatting(textContent);
+
+            const blob = new Blob(['\ufeff' + textContent], { type: 'text/plain;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
