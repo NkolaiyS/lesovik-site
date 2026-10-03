@@ -11,7 +11,7 @@
     
     <!-- SEO Оптимизация -->
     <title>ИИ-Помощник Лесника: Конструктор документов и Чат-консультант | Лесовик ПРО</title>
-    <meta name="description" content="Профессиональный ИИ-агент для лесной отрасли. Конструктор документов, альбомый/книжный формат для таблиц, консультации по Лесному кодексу РФ.">
+    <meta name="description" content="Профессиональный ИИ-агент для лесной отрасли. Конструктор документов, консультации по Лесному кодексу РФ.">
     <meta name="keywords" content="лесовик, ии помощник лесника, лесной кодекс консультация, путевой лист трактора, акт лесопатологического обследования, перечетная ведомость">
     <meta name="author" content="ИП Худяков Николай Сергеевич">
 
@@ -116,10 +116,6 @@
         }
         .ai-textarea { resize: vertical; min-height: 110px; }
 
-        /* Настройки формата документа */
-        .format-row { display: flex; gap: 15px; align-items: center; margin-bottom: 16px; font-size: 13px; font-weight: 600; }
-        .format-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
-
         .ai-submit-btn {
             background: linear-gradient(135deg, var(--forest-green) 0%, #1a3617 100%);
             color: #FFF; border: none; padding: 14px 20px; border-radius: 8px; font-weight: 800;
@@ -205,12 +201,6 @@
                     <label>2. Ваши реквизиты / Организация</label>
                     <input type="text" id="ai-user-info" class="ai-input" placeholder="Например: ИП Иванов И.И., Удорское лесничество">
                 </div>
-
-                <div class="format-row">
-                    <span>Формат документа для Word:</span>
-                    <label><input type="radio" name="doc-format" value="portrait" checked> Книжный</label>
-                    <label><input type="radio" name="doc-format" value="landscape"> Альбомный (для таблиц / перечетки)</label>
-                </div>
             </div>
 
             <div class="ai-form-group">
@@ -222,7 +212,7 @@
 
             <div id="ai-result-container" class="ai-result-box">
                 <div id="ai-result-text"></div>
-                <button id="download-btn" class="download-doc-btn" onclick="downloadCleanDocument()">📥 Скачать документ (.html)</button>
+                <button id="download-btn" class="download-doc-btn" onclick="downloadCleanDocument()">📥 Скачать документ (.doc)</button>
             </div>
         </div>
     </main>
@@ -352,7 +342,6 @@
             const blockNum = currentMode === 'document' ? document.getElementById('ai-block-type').value : '1';
             const userInfo = currentMode === 'document' ? document.getElementById('ai-user-info').value.trim() : 'Консультация';
             const promptText = document.getElementById('ai-user-prompt').value.trim();
-            const formatVal = document.querySelector('input[name="doc-format"]:checked').value;
             
             const resultBox = document.getElementById('ai-result-container');
             const resultText = document.getElementById('ai-result-text');
@@ -376,8 +365,7 @@
                         mode: currentMode,
                         block: blockNum,
                         requisites: userInfo,
-                        task: promptText,
-                        format: formatVal
+                        task: promptText
                     })
                 });
 
@@ -397,28 +385,14 @@
 
         function downloadCleanDocument() {
             const textContent = document.getElementById('ai-result-text').innerText;
-            const formatVal = document.querySelector('input[name="doc-format"]:checked').value;
+            // Возвращаем проверенную выгрузку в .doc через msword MIME-тип, как было в рабочей ранней версии
+            const htmlContent = `<html><head><meta charset="utf-8"><title>Документ Лесовик</title></head><body style="font-family: 'Times New Roman', serif; font-size: 12pt; white-space: pre-wrap;">${textContent}</body></html>`;
             
-            let htmlContent = `<!DOCTYPE html>
-            <html lang="ru">
-            <head>
-                <meta charset="utf-8">
-                <title>Документ Лесовик</title>
-                <style>
-                    @page { size: ${formatVal === 'landscape' ? '297mm 210mm' : '210mm 297mm'}; margin: 20mm; }
-                    body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; color: #000; padding: 20px; white-space: pre-wrap; }
-                </style>
-            </head>
-            <body>
-                ${textContent.replace(/\n/g, '<br>')}
-            </body>
-            </html>`;
-
-            const blob = new Blob(['\ufeff' + htmlContent], { type: 'text/html;charset=utf-8' });
+            const blob = new Blob(['\ufeff' + htmlContent], { type: 'application/msword;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `Lesovik_Document_${formatVal}.html`;
+            link.download = 'Lesovik_Document.doc';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
