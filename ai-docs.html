@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «ИИ-Помощник Лесника • Генератор документов (Lesovik AI-Docs)»
+  Программное обеспечение: «ИИ-Помощник Лесника • Конструктор документов и Чат-консультант (Lesovik AI-Docs)»
 -->
 <!DOCTYPE html>
 <html lang="ru">
@@ -222,7 +222,7 @@
 
             <div id="ai-result-container" class="ai-result-box">
                 <div id="ai-result-text"></div>
-                <button id="download-btn" class="download-doc-btn" onclick="downloadCleanDocument()">📥 Скачать документ (.doc)</button>
+                <button id="download-btn" class="download-doc-btn" onclick="downloadCleanDocument()">📥 Скачать документ (.html)</button>
             </div>
         </div>
     </main>
@@ -264,7 +264,7 @@
             let limitData = JSON.parse(localStorage.getItem('lesovik_limits')) || { date: today, count: 0, extra: 0 };
             
             if (limitData.date !== today) {
-                limitData = { date: today, count: 0, extra: limitData.extra }; // сброс суточных 5 запросов
+                limitData = { date: today, count: 0, extra: limitData.extra };
                 localStorage.setItem('lesovik_limits', JSON.stringify(limitData));
             }
 
@@ -289,9 +289,8 @@
         }
 
         function simulatePayment() {
-            // Заглушка под эквайринг Т-Банка
             let limitData = JSON.parse(localStorage.getItem('lesovik_limits'));
-            limitData.extra += 10; // добавляем 10 запросов после оплаты
+            limitData.extra += 10;
             localStorage.setItem('lesovik_limits', JSON.stringify(limitData));
             document.getElementById('paywall-modal').style.display = 'none';
             checkLimits();
@@ -386,7 +385,7 @@
 
                 if (data.documentText) {
                     resultText.innerText = data.documentText;
-                    consumeLimit(); // списываем 1 лимит при успешном ответе
+                    consumeLimit();
                 } else {
                     resultText.innerText = "❌ Ошибка: " + (data.error || "неизвестная ошибка");
                 }
@@ -400,20 +399,26 @@
             const textContent = document.getElementById('ai-result-text').innerText;
             const formatVal = document.querySelector('input[name="doc-format"]:checked').value;
             
-            // Добавляем теги ориентации страницы для Word, если выбран альбомный формат для таблиц
-            let htmlContent = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/1999/xlink">
-            <head><meta charset="utf-8"><title>Документ Лесовик</title>
-            <style>
-                @page { size: ${formatVal === 'landscape' ? '297mm 210mm' : '210mm 297mm'}; margin: 20mm; }
-                body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.5; white-space: pre-wrap; }
-            </style></head>
-            <body>${textContent}</body></html>`;
+            let htmlContent = `<!DOCTYPE html>
+            <html lang="ru">
+            <head>
+                <meta charset="utf-8">
+                <title>Документ Лесовик</title>
+                <style>
+                    @page { size: ${formatVal === 'landscape' ? '297mm 210mm' : '210mm 297mm'}; margin: 20mm; }
+                    body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; color: #000; padding: 20px; white-space: pre-wrap; }
+                </style>
+            </head>
+            <body>
+                ${textContent.replace(/\n/g, '<br>')}
+            </body>
+            </html>`;
 
-            const blob = new Blob(['\ufeff' + htmlContent], { type: 'application/msword;charset=utf-8' });
+            const blob = new Blob(['\ufeff' + htmlContent], { type: 'text/html;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `Lesovik_Document_${formatVal}.doc`;
+            link.download = `Lesovik_Document_${formatVal}.html`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
