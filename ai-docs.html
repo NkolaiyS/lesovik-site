@@ -8,10 +8,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ИИ-Помощник Лесника: Генератор официальных документов | Лесовик ПРО</title>
-    <meta name="description" content="Автоматическое составление документов по 8 профильным блокам лесной отрасли с помощью ИИ. Юриспруденция, лесовосстановление, бухгалтерия, техника и пожары.">
+    
+    <!-- SEO Оптимизация -->
+    <title>ИИ-Помощник Лесника: Генератор официальных лесных документов | Лесовик ПРО</title>
+    <meta name="description" content="Автоматическое составление документов по 8 профильным блокам лесной отрасли с помощью ИИ (YandexGPT). Юриспруденция, лесовосстановление, лесопатология, бухгалтерия, техника и пожарная безопасность.">
+    <meta name="keywords" content="лесовик, ии помощник лесника, генератор документов лесоводство, лесовосстановление акт, лесопатологическое обследование, путевые листы лесозаготовка, лесные пожары расчет ущерба">
+    <meta name="author" content="ИП Худяков Николай Сергеевич">
+
+    <!-- Open Graph / SEO Socials -->
+    <meta property="og:title" content="ИИ-Помощник Лесника • Генератор официальных документов">
+    <meta property="og:description" content="Профессиональный конструктор документов для лесной отрасли. Быстро, без лишней воды, с опорой на лесное законодательство РФ.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="logo.jpeg">
+
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap">
+
+    <!-- Яндекс.Метрика -->
+    <script type="text/javascript">
+        (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+        (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+        ym(98765432, "init", {
+             clickmap:true,
+             trackLinks:true,
+             accurateTrackBounce:true,
+             webvisor:true
+        });
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/98765432" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+    <!-- / Яндекс.Метрика -->
 
     <style>
         :root {
@@ -197,7 +226,7 @@
             promptArea.value = prompts[blockNum] || "Привет, мне нужна помощь...";
         }
 
-        function generateDocumentWithAI() {
+        async function generateDocumentWithAI() {
             const blockNum = document.getElementById('ai-block-type').value;
             const userInfo = document.getElementById('ai-user-info').value.trim();
             const promptText = document.getElementById('ai-user-prompt').value.trim();
@@ -206,58 +235,38 @@
 
             resultBox.style.display = 'block';
 
-            // Если пользователь ничего особо не написал или оставил шаблон без конкретики — ИИ задает наводящие вопросы
-            if (!userInfo || promptText.length < 25 || promptText.includes("нужна помощь...")) {
-                let blockNames = {
-                    "1": "юридическому блоку (споры/предписания)",
-                    "2": "лесовосстановлению",
-                    "3": "лесоводству",
-                    "4": "лесопатологии",
-                    "5": "бухгалтерии и первичке",
-                    "6": "хозяйственной части",
-                    "7": "технике, путевкам и узлам",
-                    "8": "лесным пожарам"
-                };
-                
-                resultText.innerHTML = `🤖 <b>ИИ-помощник:</b> Привет! Я готов помочь вам по направлению: <u>${blockNames[blockNum]}</u>.\n\n` +
-                    `Чтобы составить точный и юридически чистый документ без лишней «воды», мне нужны следующие уточнения:\n` +
-                    `1. Уточните точное название вашей организации или ИП.\n` +
-                    `2. Напишите номер лесничества, квартала и выдела (если применимо).\n` +
-                    `3. Какая конкретно стоит задача или какие цифры/даты нужно отразить?\n\n` +
-                    `Заполните эти данные в поле выше и нажмите кнопку снова, и я выдам готовый текст документа.`;
+            if (!userInfo || promptText.length < 10) {
+                resultText.innerHTML = `⚠️ <b>ИИ-помощник:</b> Укажите ваши реквизиты и опишите задачу подробнее, чтобы нейросеть могла составить документ.`;
                 return;
             }
 
-            resultText.innerText = "⏳ ИИ обрабатывает запрос и формирует чистый документ...";
+            resultText.innerText = "⏳ ИИ-агент анализирует лесное законодательство и формирует документ...";
 
-            setTimeout(() => {
-                let blockTitles = {
-                    "1": "ОФИЦИАЛЬНОЕ ВОЗРАЖЕНИЕ НА ПРЕДПИСАНИЕ ЛЕСНИЧЕСТВА",
-                    "2": "АКТ ВЫПОЛНЕНИЯ РАБОТ ПО ЛЕСОВОСТАНОВЛЕНИЮ",
-                    "3": "МАТЕРИАЛЫ И ВЕДОМОСТЬ ПО ЛЕСОВОДСТВУ",
-                    "4": "АКТ ОСМОТРА И ЗАЯВКА НА ЛПО",
-                    "5": "ПЕРВИЧНЫЙ БУХГАЛТЕРСКИЙ АКТ СДАЧИ-ПРИЕМКИ",
-                    "6": "ДОКУМЕНТ НА ОБУСТРОЙСТВО ЛЕСНОЙ ИНФРАСТРУКТУРЫ",
-                    "7": "АКТ ДЕФЕКТОВКИ УЗЛОВ И ПУТЕВОЙ ЛИСТ ТЕХНИКИ",
-                    "8": "АКТ И ПЕРВИЧНЫЕ МАТЕРИАЛЫ ПО ЛЕСНОМУ ПОЖАРУ"
-                };
+            try {
+                // Подключена ваша реальная Yandex Cloud Function
+                const cloudFunctionUrl = 'https://functions.yandexcloud.net/d4e4isog4du3q37tnvea';
 
-                let docTitle = blockTitles[blockNum] || "ОФИЦИАЛЬНЫЙ ДОКУМЕНТ";
+                const response = await fetch(cloudFunctionUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        block: blockNum,
+                        requisites: userInfo,
+                        task: promptText
+                    })
+                });
 
-                let cleanDocument = `${docTitle}\n\n` +
-                    `Составитель: ${userInfo}\n` +
-                    `Дата: ${new Date().toLocaleDateString('ru-RU')}\n\n` +
-                    `1. ВВОДНЫЕ ПОЛОЖЕНИЯ:\n` +
-                    `Настоящий документ составлен в соответствии с требованиями действующего законодательства Российской Федерации в области лесных отношений и хозяйственной деятельности.\n\n` +
-                    `2. СУЩЕСТВО ВОПРОСА:\n` +
-                    `${promptText}\n\n` +
-                    `3. РЕЗУЛЬТАТЫ И ЗАКЛЮЧЕНИЕ:\n` +
-                    `- Все мероприятия проведены в установленном порядке.\n` +
-                    `- Нарушений обязательных требований не зафиксировано.\n\n` +
-                    `Подпись ответственного лица: _______________ / ${userInfo.split(',')[0]} /`;
+                const data = await response.json();
 
-                resultText.innerText = cleanDocument;
-            }, 1000);
+                if (data.documentText) {
+                    resultText.innerText = data.documentText;
+                } else {
+                    resultText.innerText = "❌ Ошибка генерации: " + (data.error || "неизвестная ошибка от сервера");
+                }
+            } catch (err) {
+                console.error(err);
+                resultText.innerText = "❌ Ошибка связи с облачной функцией. Проверьте правильность URL и интернет-соединение.";
+            }
         }
 
         function downloadCleanDocument() {
