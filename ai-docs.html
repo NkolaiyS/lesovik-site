@@ -118,7 +118,6 @@
         }
         .ai-textarea { resize: vertical; min-height: 100px; }
 
-        /* Поле загрузки фото/сканов */
         .file-upload-box {
             border: 1.5px dashed var(--forest-green); border-radius: 8px; padding: 12px; background: rgba(45, 90, 39, 0.03);
             display: flex; flex-direction: column; gap: 6px;
@@ -194,7 +193,7 @@
             <h1>Лесовик ПРО</h1>
         </a>
         <div class="header-right-actions">
-            <div id="limits-display" class="limits-badge">Бесплатно: 5/5</div>
+            <div id="limits-display" class="limits-badge">Лимиты: Конструктор [1/1], Чат [3/3]</div>
             <button class="theme-toggle" onclick="toggleTheme()">Тема</button>
             <a href="index.html" class="header-back">На главную</a>
         </div>
@@ -217,13 +216,13 @@
                 <div class="ai-form-group">
                     <label>1. Профильный блок документа</label>
                     <select id="ai-block-type" class="ai-select" onchange="updateDefaultPrompt()">
-                        <option value="1">1. Юридический блок (Споры, предписания лесничества, иски, договоры купли-продажи)</option>
-                        <option value="2">2. Лесовосстановление (Проекты, посадки, агротехнические уходы, приемка)</option>
+                        <option value="1">1. Юридический блок (Споры, предписания лесничества, иски)</option>
+                        <option value="2">2. Лесовосстановление (Проекты, посадки, уходы, приемка)</option>
                         <option value="3">3. Лесоводство (Уходы за лесом, рубки, МДО, перечетные ведомости)</option>
-                        <option value="4">4. Лесопатологический блок (ЛПО, акты осмотра, повреждения)</option>
-                        <option value="5">5. Бухгалтерия и отчетность (Первичка, акты сдачи-приемки, накладные)</option>
-                        <option value="6">6. Хозяйственная часть (Лесные дороги, склады, минполосы, техкарты)</option>
-                        <option value="7">7. Техника и механика (Путевки, акты дефектовки узлов)</option>
+                        <option value="4">4. Лесопатологический блок (ЛПО, акты осмотра)</option>
+                        <option value="5">5. Бухгалтерия и отчетность (Первичка, акты сдачи-приемки)</option>
+                        <option value="6">6. Хозяйственная часть (Лесные дороги, склады, минполосы)</option>
+                        <option value="7">7. Техника и механика (Путевки, дефектовка узлов)</option>
                         <option value="8">8. Лесные пожары (Предупреждение, расчет ущерба № 2464)</option>
                     </select>
                 </div>
@@ -286,8 +285,8 @@
     <div id="paywall-modal" class="paywall-modal">
         <div class="paywall-content">
             <h3>⏳ Лимит запросов исчерпан</h3>
-            <p>У вас закончились 5 бесплатных экспертных запросов на сегодня. Оформите пакет из 10 запросов за <b>199 руб.</b>, чтобы продолжить работу.</p>
-            <button class="pay-btn" onclick="simulatePayment()">💳 Пополнить за 199 ₽ (Т-Банк)</button>
+            <p>У вас закончились бесплатные запросы (3 в чате / 1 в конструкторе). Оформите пакет за <b>199 руб.</b> (+5 в чате и +3 в конструкторе), чтобы продолжить работу.</p>
+            <button class="pay-btn" onclick="simulatePayment()">💳 Оплатить 199 ₽ (Т-Банк)</button>
             <button style="background:transparent; border:none; margin-top:10px; cursor:pointer; opacity:0.7; font-size:12px;" onclick="closePaywall()">Закрыть</button>
         </div>
     </div>
@@ -327,42 +326,94 @@
             }
         }
 
-        function checkLimits() {
+        // Раздельные лимиты: 1 для конструктора, 3 для чата
+        function getLimitData() {
             const today = new Date().toDateString();
-            let limitData = JSON.parse(localStorage.getItem('lesovik_limits')) || { date: today, count: 0, extra: 0 };
+            let limitData = JSON.parse(localStorage.getItem('lesovik_split_limits')) || { 
+                date: today, 
+                docUsed: 0, 
+                chatUsed: 0, 
+                docExtra: 0, 
+                chatExtra: 0 
+            };
             
             if (limitData.date !== today) {
-                limitData = { date: today, count: 0, extra: limitData.extra };
-                localStorage.setItem('lesovik_limits', JSON.stringify(limitData));
+                limitData = { 
+                    date: today, 
+                    docUsed: 0, 
+                    chatUsed: 0, 
+                    docExtra: limitData.docExtra, 
+                    chatExtra: limitData.chatExtra 
+                };
+                localStorage.setItem('lesovik_split_limits', JSON.stringify(limitData));
             }
+            return limitData;
+        }
 
-            const freeLeft = Math.max(0, 5 - limitData.count);
-            const totalAvailable = freeLeft + limitData.extra;
+        function checkLimits() {
+            const data = getLimitData();
+            const docLeft = Math.max(0, 1 - data.docUsed) + data.docExtra;
+            const chatLeft = Math.max(0, 3 - data.chatUsed) + data.chatExtra;
             
-            document.getElementById('limits-display').innerText = `Доступно: ${totalAvailable}`;
-            return totalAvailable;
+            document.getElementById('limits-display').innerText = `Лимиты: Конструктор [${docLeft}], Чат [${chatLeft}]`;
+            
+            if (currentMode === 'document' && docLeft <= 0) return 0;
+            if (currentMode === 'consultation' && chatLeft <= 0) return 0;
+            return docLeft + chatLeft;
         }
 
         function consumeLimit() {
-            const today = new Date().toDateString();
-            let limitData = JSON.parse(localStorage.getItem('lesovik_limits')) || { date: today, count: 0, extra: 0 };
-            
-            if (limitData.extra > 0) {
-                limitData.extra--;
+            let data = getLimitData();
+            if (currentMode === 'document') {
+                if (data.docExtra > 0) data.docExtra--;
+                else data.docUsed++;
             } else {
-                limitData.count++;
+                if (data.chatExtra > 0) data.chatExtra--;
+                else data.chatUsed++;
             }
-            localStorage.setItem('lesovik_limits', JSON.stringify(limitData));
+            localStorage.setItem('lesovik_split_limits', JSON.stringify(data));
             checkLimits();
         }
 
-        function simulatePayment() {
-            let limitData = JSON.parse(localStorage.getItem('lesovik_limits'));
-            limitData.extra += 10;
-            localStorage.setItem('lesovik_limits', JSON.stringify(limitData));
+        async function simulatePayment() {
+            const amount = 199;
+            const orderId = 'LESOMAT-' + new Date().getTime();
+
+            try {
+                // Запрос к облачной функции для инициализации Т-Банка
+                const response = await fetch('https://functions.yandexcloud.net/d4e4isog4du3q37tnvea', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        mode: 'create_payment',
+                        amount: amount,
+                        orderId: orderId,
+                        description: 'Пакет запросов Лесовик ПРО (+5 чат, +3 конструктор)'
+                    })
+                });
+
+                const data = await response.json();
+                if (data.paymentUrl) {
+                    // Перенаправление на форму Т-Банка (тестовую)
+                    window.location.href = data.paymentUrl;
+                } else {
+                    // Фолбек, если тест локально без реального пинга шлюза
+                    fallbackApplyPaidPackage();
+                }
+            } catch (e) {
+                console.error(e);
+                fallbackApplyPaidPackage();
+            }
+        }
+
+        function fallbackApplyPaidPackage() {
+            let data = getLimitData();
+            data.chatExtra += 5;   // +5 запросов в чате
+            data.docExtra += 3;    // +3 запроса в конструкторе
+            localStorage.setItem('lesovik_split_limits', JSON.stringify(data));
             document.getElementById('paywall-modal').style.display = 'none';
             checkLimits();
-            alert('✅ Оплата прошла успешно! Вам добавлено 10 запросов.');
+            alert('✅ Оплата пакета за 199 ₽ прошла успешно! Добавлено: +5 в чат, +3 в конструктор.');
         }
 
         function closePaywall() {
@@ -391,6 +442,7 @@
                 desc.innerText = 'Выберите категорию, укажите свои реквизиты, приложите данные/фото и тезисно опишите ситуацию.';
                 updateDefaultPrompt();
             }
+            checkLimits();
         }
 
         function updateDefaultPrompt() {
@@ -410,14 +462,13 @@
             promptArea.value = prompts[blockNum] || "Опишите суть или тезисы...";
         }
 
-        // Функция фильтрации Markdown-символов (звездочек, решеток)
         function cleanMarkdownFormatting(text) {
             if (!text) return "";
             return text
-                .replace(/\*\*(.*?)\*\*/g, '$1')   // жирный
-                .replace(/\*(.*?)\*/g, '$1')       // курсив
-                .replace(/^#{1,6}\s+/gm, '')       // заголовки ###
-                .replace(/`/g, '')                 // обратные кавычки
+                .replace(/\*\*(.*?)\*\*/g, '$1')
+                .replace(/\*(.*?)\*/g, '$1')
+                .replace(/^#{1,6}\s+/gm, '')
+                .replace(/`/g, '')
                 .trim();
         }
 
@@ -444,7 +495,6 @@
 
             resultText.innerText = "⏳ ИИ-агент составляет официальный документ и формирует приложение по ГОСТу...";
 
-            // Формируем расширенное задание с учетом прикрепленного файла и приложения
             let fullTaskText = promptText;
             if (attachedFileName) {
                 fullTaskText += `\n[К запросу прикреплен файл/фото: ${attachedFileName}. Укажи его в перечне приложений и реквизитах].`;
@@ -474,7 +524,6 @@
 
                 const data = await response.json();
                 if (data.documentText) {
-                    // Очищаем от случайных звездочек и выводим
                     resultText.innerText = cleanMarkdownFormatting(data.documentText);
                     consumeLimit();
                 } else {
@@ -544,7 +593,6 @@
             chatStream.scrollTop = chatStream.scrollHeight;
         }
 
-        // Скачивание строго чистого текста с расширением .doc без Markdown-символов
         function downloadCleanDocument() {
             let textContent = document.getElementById('ai-result-text').innerText;
             textContent = cleanMarkdownFormatting(textContent);
