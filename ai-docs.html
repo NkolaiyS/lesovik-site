@@ -10,9 +10,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <!-- SEO Оптимизация -->
-    <title>ИИ-Помощник Лесника: Генератор официальных документов | Лесовик ПРО</title>
-    <meta name="description" content="Автоматическое составление документов по 8 профильным блокам лесной отрасли с помощью ИИ. Ответы на предписания, лесовосстановление, пожары, техника, акты и лесоустройство.">
-    <meta name="keywords" content="лесовик, ии помощник лесника, лесной кодекс консультация, путевой лист трактора, акт лесопатологического обследования, перечетная ведомость">
+    <title>ИИ-Помощник Лесника: Конструктор документов и Чат-консультант | Лесовик ПРО</title>
+    <meta name="description" content="Автоматическое составление документов по 8 профильным блокам лесной отрасли с помощью ИИ. Юридический чат по Лесному кодексу РФ.">
+    <meta name="keywords" content="лесовик, ии помощник лесника, чат лесной кодекс, консультация лесничего, генератор лесных актов">
     <meta name="author" content="ИП Худяков Николай Сергеевич">
 
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
@@ -41,6 +41,8 @@
             --glass-bg: rgba(249, 251, 249, 0.88);
             --footer-bg: #2C3531;
             --promo-orange: #E67E22;
+            --msg-user: #E8F5E9;
+            --msg-ai: #F1F3F4;
         }
 
         [data-theme="dark"] {
@@ -53,6 +55,8 @@
             --glass-bg: rgba(26, 36, 33, 0.88);
             --footer-bg: #111815;
             --promo-orange: #F39C12;
+            --msg-user: #2E4C38;
+            --msg-ai: #2B3A34;
         }
 
         *, *:before, *:after { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
@@ -82,7 +86,6 @@
 
         main { flex: 1; width: 100%; max-width: 900px; margin: 20px auto 40px; padding: 0 14px; }
 
-        /* Переключатель режимов */
         .mode-switcher {
             display: flex; gap: 10px; margin-bottom: 20px; background: var(--card-bg); padding: 6px; border-radius: 12px; border: 1.5px solid var(--border-color);
         }
@@ -135,7 +138,29 @@
             box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3); text-decoration: none;
         }
 
-        /* Модальное окно пополнения (Пайвол) */
+        /* --- СТИЛИ МЕССЕНДЖЕРА (ЧАТ-КОНСУЛЬТАНТ) --- */
+        #chat-interface { display: none; margin-top: 10px; }
+        .chat-history {
+            display: flex; flex-direction: column; gap: 12px; max-height: 440px; overflow-y: auto;
+            padding: 16px; background: var(--card-bg); border: 1.5px solid var(--border-color);
+            border-radius: 12px; margin-bottom: 14px;
+        }
+        .chat-bubble {
+            max-width: 82%; padding: 12px 16px; border-radius: 12px; font-size: 13.5px; line-height: 1.5; word-wrap: break-word;
+        }
+        .bubble-user { align-self: flex-end; background-color: var(--msg-user); border-bottom-right-radius: 2px; }
+        .bubble-ai { align-self: flex-start; background-color: var(--msg-ai); border-bottom-left-radius: 2px; }
+        .bubble-author { font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 4px; color: var(--forest-green); }
+        [data-theme="dark"] .bubble-author { color: var(--forest-light); }
+
+        .chat-input-row { display: flex; gap: 10px; }
+        .chat-input-row textarea { flex: 1; min-height: 54px; height: 54px; resize: none; }
+        .chat-send-btn {
+            width: 120px; background: var(--forest-green); color: #FFF; border: none; border-radius: 8px;
+            font-weight: 800; font-size: 13px; text-transform: uppercase; cursor: pointer;
+        }
+
+        /* Модальное окно пополнения */
         .paywall-modal {
             display: none; background: rgba(0,0,0,0.7); position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 3000; justify-content: center; align-items: center; padding: 20px;
@@ -169,55 +194,69 @@
     </header>
 
     <main>
-        <!-- Переключатель режимов -->
         <div class="mode-switcher">
             <button id="btn-mode-doc" class="mode-btn active" onclick="switchMode('document')">📝 Конструктор документов</button>
             <button id="btn-mode-chat" class="mode-btn" onclick="switchMode('consultation')">💬 Чат-консультант Лесовик</button>
         </div>
 
         <div class="ai-hero-box">
-            <h2 id="section-title">🌲 ИИ-Помощник Лесника (Экспертный конструктор)</h2>
+            <h2 id="section-title">🌲 ИИ-Помощник Лесника (Конструктор документов)</h2>
             <div id="section-desc" class="ai-hero-desc">
-                Выберите один из 8 профильных блоков, укажите свои реквизиты и тезисно опишите ситуацию. Если информации не хватит для составления документа по закону, ИИ укажет, чего именно не хватает.
+                Выберите один из 8 профильных блоков, укажите свои реквизиты и тезисно опишите ситуацию.
             </div>
 
-            <!-- Блок полей для Конструктора документов -->
-            <div id="constructor-settings">
+            <!-- 1. ИНТЕРФЕЙС КОНСТРУКТОРА -->
+            <div id="doc-interface">
                 <div class="ai-form-group">
                     <label>1. Профильный блок документа</label>
                     <select id="ai-block-type" class="ai-select" onchange="updateDefaultPrompt()">
-                        <option value="1">1. Юридический блок (Споры, предписания лесничества, иски, возражения)</option>
-                        <option value="2">2. Лесовосстановление (Проекты, посадки, агротехнические уходы, приемка)</option>
-                        <option value="3">3. Лесоводство (Уходы за лесом, рубки прочистки/прореживания, МДО)</option>
-                        <option value="4">4. Лесопатологический блок (ЛПО, акты осмотра, аварийные деревья)</option>
-                        <option value="5">5. Бухгалтерия и отчетность (Первичка, акты сдачи-приемки лесных работ)</option>
-                        <option value="6">6. Хозяйственная часть (Лесные дороги, склады, инфраструктура)</option>
-                        <option value="7">7. Техника и механика (Путевки, акты осмотра узлов тракторов, валочных машин, лодок)</option>
-                        <option value="8">8. Лесные пожары (Предупреждение, расчет ущерба по Постановлению № 2464)</option>
+                        <option value="1">1. Юридический блок (Споры, предписания лесничества, иски)</option>
+                        <option value="2">2. Лесовосстановление (Проекты, посадки, уходы, приемка)</option>
+                        <option value="3">3. Лесоводство (Уходы за лесом, рубки, МДО)</option>
+                        <option value="4">4. Лесопатологический блок (ЛПО, акты осмотра)</option>
+                        <option value="5">5. Бухгалтерия и отчетность (Первичка, акты сдачи-приемки)</option>
+                        <option value="6">6. Хозяйственная часть (Лесные дороги, склады, минполосы)</option>
+                        <option value="7">7. Техника и механика (Путевки, дефектовка узлов)</option>
+                        <option value="8">8. Лесные пожары (Предупреждение, расчет ущерба № 2464)</option>
                     </select>
                 </div>
 
                 <div class="ai-form-group">
-                    <label>2. Ваши вводные реквизиты (ИП / ООО, Лесничество, Квартал, Выдел)</label>
+                    <label>2. Ваши реквизиты (Организация, Лесничество, Квартал, Выдел)</label>
                     <input type="text" id="ai-user-info" class="ai-input" placeholder="Например: ИП Иванов И.И., Удорское лесничество, кв. 45, выдел 2">
+                </div>
+
+                <div class="ai-form-group">
+                    <label>3. Опишите суть или тезисы задачи</label>
+                    <textarea id="ai-user-prompt" class="ai-textarea" placeholder="Например: Составить акт осмотра поврежденных деревьев..."></textarea>
+                </div>
+
+                <button class="ai-submit-btn" onclick="generateDocumentAction()">✨ Сформировать документ</button>
+
+                <div id="ai-result-container" class="ai-result-box">
+                    <div id="ai-result-text"></div>
+                    <button class="download-doc-btn" onclick="downloadCleanDocument()">📥 Скачать готовый документ (.doc)</button>
                 </div>
             </div>
 
-            <div class="ai-form-group">
-                <label id="task-label">3. Опишите суть или тезисы простыми словами</label>
-                <textarea id="ai-user-prompt" class="ai-textarea" placeholder="Например: Лесничество выставило претензию за якобы поврежденный подрост при трелевке..."></textarea>
-            </div>
+            <!-- 2. ИНТЕРФЕЙС МЕССЕНДЖЕРА (ЧАТ-КОНСУЛЬТАНТ) -->
+            <div id="chat-interface">
+                <div id="chat-stream" class="chat-history">
+                    <div class="chat-bubble bubble-ai">
+                        <div class="bubble-author">Лесовик (Консультант)</div>
+                        Приветствую! Я готов проконсультировать вас по статьям Лесного кодекса РФ, нормативам рубок, правилам пожарной безопасности или расчетам. В чем ваш вопрос?
+                    </div>
+                </div>
 
-            <button class="ai-submit-btn" id="submit-btn" onclick="sendAiRequest()">✨ Сформировать документ</button>
-
-            <div id="ai-result-container" class="ai-result-box">
-                <div id="ai-result-text"></div>
-                <button id="download-btn" class="download-doc-btn" onclick="downloadCleanDocument()">📥 Скачать готовый документ (.doc)</button>
+                <div class="chat-input-row">
+                    <textarea id="chat-input" class="ai-textarea" placeholder="Спросите статью закона или норму..."></textarea>
+                    <button class="chat-send-btn" onclick="sendChatMessage()">Отправить</button>
+                </div>
             </div>
         </div>
     </main>
 
-    <!-- Модальное окно платного пополнения (Пайвол) -->
+    <!-- Модальное окно пополнения (Пайвол) -->
     <div id="paywall-modal" class="paywall-modal">
         <div class="paywall-content">
             <h3>⏳ Лимит запросов исчерпан</h3>
@@ -228,11 +267,13 @@
     </div>
 
     <footer>
-        &copy; 2026 ИП Худяков Николай Сергеевич. ИИ-агент генератора документов «Лесовик ПРО».
+        &copy; 2026 ИП Худяков Николай Сергеевич. ИИ-агент «Лесовик ПРО».
     </footer>
 
     <script>
-        let currentMode = 'document'; // 'document' или 'consultation'
+        let currentMode = 'document';
+        // Храним последние реплики для отправки в модель
+        let chatContext = [];
 
         function toggleTheme() {
             const body = document.body;
@@ -248,7 +289,6 @@
             checkLimits();
         });
 
-        // Управление лимитами (5 бесплатных в сутки)
         function checkLimits() {
             const today = new Date().toDateString();
             let limitData = JSON.parse(localStorage.getItem('lesovik_limits')) || { date: today, count: 0, extra: 0 };
@@ -296,23 +336,22 @@
             document.getElementById('btn-mode-doc').classList.toggle('active', mode === 'document');
             document.getElementById('btn-mode-chat').classList.toggle('active', mode === 'consultation');
             
-            const constructorSettings = document.getElementById('constructor-settings');
+            const docInterface = document.getElementById('doc-interface');
+            const chatInterface = document.getElementById('chat-interface');
             const title = document.getElementById('section-title');
             const desc = document.getElementById('section-desc');
-            const downloadBtn = document.getElementById('download-btn');
 
             if (mode === 'consultation') {
-                constructorSettings.style.display = 'none';
+                docInterface.style.display = 'none';
+                chatInterface.style.display = 'block';
                 title.innerText = '💬 Чат-консультант Лесовик';
-                desc.innerText = 'Задавайте вопросы по лесному законодательству, статьям Лесного кодекса РФ и правилам. ИИ ответит коротко и точно.';
-                document.getElementById('ai-user-prompt').value = 'Лесовик, привет! Подскажи, какая статья Лесного кодекса регулирует рубки ухода в защитных лесах?';
-                downloadBtn.style.display = 'none';
+                desc.innerText = 'Живой диалог с ИИ по лесному законодательству. Задавайте вопросы, уточняйте статьи и правила.';
             } else {
-                constructorSettings.style.display = 'block';
-                title.innerText = '🌲 ИИ-Помощник Лесника (Экспертный конструктор)';
-                desc.innerText = 'Выберите один из 8 профильных блоков, укажите свои реквизиты и тезисно опишите ситуацию. Если информации не хватит для составления документа по закону, ИИ укажет, чего именно не хватает.';
+                chatInterface.style.display = 'none';
+                docInterface.style.display = 'block';
+                title.innerText = '🌲 ИИ-Помощник Лесника (Конструктор документов)';
+                desc.innerText = 'Выберите профильный блок, укажите реквизиты и тезисы — ИИ сформирует готовый официальный документ.';
                 updateDefaultPrompt();
-                downloadBtn.style.display = 'inline-flex';
             }
         }
 
@@ -333,36 +372,35 @@
             promptArea.value = prompts[blockNum] || "Опишите суть или тезисы...";
         }
 
-        async function sendAiRequest() {
+        // Вызов в режиме Конструктора документов
+        async function generateDocumentAction() {
             if (checkLimits() <= 0) {
                 document.getElementById('paywall-modal').style.display = 'flex';
                 return;
             }
 
-            const blockNum = currentMode === 'document' ? document.getElementById('ai-block-type').value : '1';
-            const userInfo = currentMode === 'document' ? document.getElementById('ai-user-info').value.trim() : 'Консультация';
+            const blockNum = document.getElementById('ai-block-type').value;
+            const userInfo = document.getElementById('ai-user-info').value.trim();
             const promptText = document.getElementById('ai-user-prompt').value.trim();
-            
             const resultBox = document.getElementById('ai-result-container');
             const resultText = document.getElementById('ai-result-text');
 
             resultBox.style.display = 'block';
 
             if (promptText.length < 5) {
-                resultText.innerHTML = `⚠️ Уточните ваш запрос.`;
+                resultText.innerHTML = `⚠️ Уточните задачу для составления документа.`;
                 return;
             }
 
-            resultText.innerText = "⏳ ИИ-агент обрабатывает ваш запрос по лесному законодательству...";
+            resultText.innerText = "⏳ ИИ-агент составляет официальный документ...";
 
             try {
                 const cloudFunctionUrl = 'https://functions.yandexcloud.net/d4e4isog4du3q37tnvea';
-
                 const response = await fetch(cloudFunctionUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        mode: currentMode,
+                        mode: 'document',
                         block: blockNum,
                         requisites: userInfo,
                         task: promptText
@@ -370,12 +408,11 @@
                 });
 
                 const data = await response.json();
-
                 if (data.documentText) {
                     resultText.innerText = data.documentText;
                     consumeLimit();
                 } else {
-                    resultText.innerText = "❌ Ошибка: " + (data.error || "неизвестная ошибка");
+                    resultText.innerText = "❌ Ошибка: " + (data.error || "сервер не вернул ответ");
                 }
             } catch (err) {
                 console.error(err);
@@ -383,6 +420,68 @@
             }
         }
 
+        // Вызов в режиме Чата-консультанта
+        async function sendChatMessage() {
+            if (checkLimits() <= 0) {
+                document.getElementById('paywall-modal').style.display = 'flex';
+                return;
+            }
+
+            const input = document.getElementById('chat-input');
+            const question = input.value.trim();
+            if (!question) return;
+
+            const chatStream = document.getElementById('chat-stream');
+
+            // Сообщение пользователя
+            const userBubble = document.createElement('div');
+            userBubble.className = 'chat-bubble bubble-user';
+            userBubble.innerText = question;
+            chatStream.appendChild(userBubble);
+
+            input.value = '';
+            chatStream.scrollTop = chatStream.scrollHeight;
+
+            // Индикатор загрузки ответа
+            const aiBubble = document.createElement('div');
+            aiBubble.className = 'chat-bubble bubble-ai';
+            aiBubble.innerHTML = `<div class="bubble-author">Лесовик</div><i>Печатает ответ...</i>`;
+            chatStream.appendChild(aiBubble);
+            chatStream.scrollTop = chatStream.scrollHeight;
+
+            // Сохраняем в локальную историю
+            chatContext.push(`Пользователь: ${question}`);
+            if (chatContext.length > 4) chatContext.shift(); // храним только последние 4 реплики
+
+            try {
+                const cloudFunctionUrl = 'https://functions.yandexcloud.net/d4e4isog4du3q37tnvea';
+                const response = await fetch(cloudFunctionUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        mode: 'consultation',
+                        block: '1',
+                        requisites: 'Чат',
+                        task: chatContext.join('\n')
+                    })
+                });
+
+                const data = await response.json();
+                if (data.documentText) {
+                    aiBubble.innerHTML = `<div class="bubble-author">Лесовик</div>${data.documentText.replace(/\n/g, '<br>')}`;
+                    chatContext.push(`Лесовик: ${data.documentText}`);
+                    consumeLimit();
+                } else {
+                    aiBubble.innerHTML = `<div class="bubble-author">Лесовик</div>❌ Ошибка: ` + (data.error || "нет ответа");
+                }
+            } catch (err) {
+                console.error(err);
+                aiBubble.innerHTML = `<div class="bubble-author">Лесовик</div>❌ Ошибка связи с сервером.`;
+            }
+            chatStream.scrollTop = chatStream.scrollHeight;
+        }
+
+        // Скачивание строго для документов через чистый текст в .doc
         function downloadCleanDocument() {
             const textContent = document.getElementById('ai-result-text').innerText;
             const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
