@@ -66,7 +66,6 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
-        /* Двухэтажная шапка */
         .glass-header {
             position: sticky; top: 0; z-index: 2000; display: flex; flex-direction: column;
             background: var(--glass-bg); backdrop-filter: blur(12px);
@@ -186,21 +185,41 @@
             font-weight: 800; font-size: 13px; text-transform: uppercase; cursor: pointer;
         }
 
-        /* Модальное окно пополнения (Пайвол) */
+        /* Модальное окно пополнения (Пайвол с тарифами и РСЯ) */
         .paywall-modal {
-            display: none; background: rgba(0,0,0,0.72); position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 3000; justify-content: center; align-items: center; padding: 20px;
+            display: none; background: rgba(0,0,0,0.75); position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 3000; justify-content: center; align-items: center; padding: 15px; overflow-y: auto;
         }
         .paywall-content {
-            background: var(--card-bg); padding: 28px 24px; border-radius: 14px; max-width: 420px; width: 100%; text-align: center;
-            border: 2px solid var(--forest-green);
+            background: var(--card-bg); padding: 24px 20px; border-radius: 14px; max-width: 440px; width: 100%; text-align: center;
+            border: 2px solid var(--forest-green); box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
-        .paywall-content h3 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-bottom: 10px; font-size: 18px; }
-        .paywall-content p { font-size: 13.5px; margin-bottom: 18px; opacity: 0.9; line-height: 1.5; }
+        .paywall-content h3 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-bottom: 8px; font-size: 17px; }
+        .paywall-content p { font-size: 13px; margin-bottom: 14px; opacity: 0.9; line-height: 1.4; }
+        
+        .tariffs-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+        .tariff-card {
+            border: 1.5px solid var(--border-color); border-radius: 10px; padding: 12px; cursor: pointer;
+            text-align: left; transition: 0.2s; background: var(--bg-paper); display: flex; justify-content: space-between; align-items: center;
+        }
+        .tariff-card:hover, .tariff-card.selected { border-color: var(--forest-green); background: rgba(45, 90, 39, 0.05); }
+        .tariff-title { font-weight: 700; font-size: 13.5px; color: var(--forest-green); }
+        [data-theme="dark"] .tariff-title { color: var(--forest-light); }
+        .tariff-desc { font-size: 11.5px; opacity: 0.8; margin-top: 2px; }
+        .tariff-price { font-weight: 800; font-size: 14px; color: var(--promo-orange); text-align: right; }
+
         .pay-btn {
-            background: var(--promo-orange); color: #FFF; border: none; padding: 13px 20px; border-radius: 8px;
+            background: var(--promo-orange); color: #FFF; border: none; padding: 12px 20px; border-radius: 8px;
             font-weight: 800; font-size: 13px; text-transform: uppercase; cursor: pointer; width: 100%;
         }
+
+        /* РСЯ блок в модалке (высота 90-120px) */
+        .rsya-modal-container {
+            margin-top: 14px; width: 100%; height: 100px; background: rgba(0,0,0,0.04);
+            border: 1px dashed var(--border-color); border-radius: 8px; display: flex;
+            align-items: center; justify-content: center; overflow: hidden; font-size: 11px; opacity: 0.7;
+        }
+        [data-theme="dark"] .rsya-modal-container { background: rgba(255,255,255,0.03); }
 
         footer { background-color: var(--footer-bg); color: #E0E0E0; padding: 24px 16px; margin-top: auto; font-size: 12.5px; text-align: center; }
     </style>
@@ -220,7 +239,7 @@
         </div>
         <div class="header-bottom-row">
             <div id="limits-display" class="limits-badge">Лимиты: Конструктор [1], Чат [3]</div>
-            <div class="status-badge">🟢 Шлюз Т-Банк подключен</div>
+            <div class="status-badge">🟢 Т-Банк (Рабочий)</div>
         </div>
     </header>
 
@@ -262,7 +281,7 @@
                         <option value="none">Без отдельного приложения</option>
                         <option value="perechetka">Приложение № 1: Перечетная ведомость деревьев / пней</option>
                         <option value="techkarta">Приложение № 1: Технологическая карта разработки лесосеки / схема</option>
-                        <option value="contract_extract">Приложение № 1: Выписка из договора купли-продажи насаждений / аренды</option>
+                        <option value="contract_extract">Приложение № 1: Выписка условий договора купли-продажи насаждений / аренды</option>
                         <option value="photo_act">Приложение № 1: Акт фотофиксации натурного осмотра участка</option>
                     </select>
                 </div>
@@ -304,12 +323,38 @@
         </div>
     </main>
 
+    <!-- МОДАЛЬНОЕ ОКНО С ТАРИФАМИ И РСЯ -->
     <div id="paywall-modal" class="paywall-modal">
         <div class="paywall-content">
             <h3>⏳ Лимит запросов исчерпан</h3>
-            <p>У вас закончились бесплатные запросы (3 в чате / 1 в конструкторе). Оформите пакет за <b>199 руб.</b> (+5 в чате и +3 в конструкторе), чтобы продолжить работу.</p>
-            <button class="pay-btn" onclick="simulatePayment()">💳 Оплатить 199 ₽ (Т-Банк)</button>
-            <button style="background:transparent; border:none; margin-top:10px; cursor:pointer; opacity:0.7; font-size:12px;" onclick="closePaywall()">Закрыть</button>
+            <p>Выберите подходящий пакет для продолжения работы с ИИ-агентом «Лесовик ПРО»:</p>
+            
+            <div class="tariffs-container">
+                <div class="tariff-card selected" onclick="selectTariff(199, this)">
+                    <div>
+                        <div class="tariff-title">Пакет «Профессионал»</div>
+                        <div class="tariff-desc">+3 конструктор / +5 в чате</div>
+                    </div>
+                    <div class="tariff-price">199 ₽</div>
+                </div>
+
+                <div class="tariff-card" onclick="selectTariff(499, this)">
+                    <div>
+                        <div class="tariff-title">Пакет «Лесопромышленник»</div>
+                        <div class="tariff-desc">+10 конструктор / +20 в чате</div>
+                    </div>
+                    <div class="tariff-price">499 ₽</div>
+                </div>
+            </div>
+
+            <button class="pay-btn" onclick="simulatePayment()">💳 Оплатить через Т-Банк</button>
+            <button style="background:transparent; border:none; margin-top:8px; cursor:pointer; opacity:0.7; font-size:12px;" onclick="closePaywall()">Закрыть</button>
+
+            <!-- РСЯ Блок высотой 90-120px -->
+            <div class="rsya-modal-container">
+                <!-- Сюда вставляется код рекламной сети Яндекса (РСЯ) -->
+                <span>[ Рекламный блок РСЯ • 90-120px ]</span>
+            </div>
         </div>
     </div>
 
@@ -321,6 +366,7 @@
         let currentMode = 'document';
         let chatContext = [];
         let attachedFileName = "";
+        let selectedAmount = 199; // Тариф по умолчанию
 
         function toggleTheme() {
             const body = document.body;
@@ -333,20 +379,35 @@
             const saved = localStorage.getItem('theme') || 'dark';
             document.body.setAttribute('data-theme', saved);
 
-            // Проверка возврата из Т-Банка после успешной оплаты
+            // Обработка возврата из Т-Банка после оплаты
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('pay') === 'success') {
+                const tariffPaid = parseInt(urlParams.get('tariff')) || 199;
                 let limitData = getLimitData();
-                limitData.chatExtra += 5;   // +5 в чат
-                limitData.docExtra += 3;    // +3 в конструктор
+                
+                if (tariffPaid === 499) {
+                    limitData.docExtra += 10;
+                    limitData.chatExtra += 20;
+                    alert('✅ Оплата тарифа «Лесопромышленник» (499 ₽) прошла успешно! Добавлено: +10 в конструктор, +20 в чат.');
+                } else {
+                    limitData.docExtra += 3;
+                    limitData.chatExtra += 5;
+                    alert('✅ Оплата тарифа «Профессионал» (199 ₽) прошла успешно! Добавлено: +3 в конструктор, +5 в чат.');
+                }
+
                 localStorage.setItem('lesovik_split_limits', JSON.stringify(limitData));
-                alert('✅ Оплата на 199 ₽ прошла успешно! Вам добавлено +5 запросов в чат и +3 в конструктор.');
-                window.history.replaceState({}, document.title, window.location.pathname); // Очищаем URL
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
 
             updateDefaultPrompt();
             checkLimits();
         });
+
+        function selectTariff(amount, cardElement) {
+            selectedAmount = amount;
+            document.querySelectorAll('.tariff-card').forEach(c => c.classList.remove('selected'));
+            cardElement.classList.add('selected');
+        }
 
         function handleFileUpload(event) {
             const file = event.target.files[0];
@@ -399,13 +460,10 @@
             checkLimits();
         }
 
-        // РЕАЛЬНЫЙ ЗАПРОС К API Т-БАНКА ЧЕРЕЗ ОБЛАЧНУЮ ФУНКЦИЮ
+        // РЕАЛЬНЫЙ ПЛАТЕЖ ЧЕРЕЗ Т-БАНК (Рабочий терминал с выбором тарифа)
         async function simulatePayment() {
-            const amount = 199;
-            const orderId = 'LESOVIK-' + new Date().getTime();
             const payBtn = document.querySelector('.pay-btn');
-
-            payBtn.innerText = '⏳ Создание счета в Т-Банке...';
+            payBtn.innerText = `⏳ Переход в Т-Банк (${selectedAmount} ₽)...`;
             payBtn.disabled = true;
 
             try {
@@ -414,9 +472,8 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         mode: 'create_payment',
-                        amount: amount,
-                        orderId: orderId,
-                        description: 'Пакет запросов Лесовик ПРО (+5 чат, +3 конструктор)'
+                        amount: selectedAmount,
+                        description: selectedAmount === 499 ? 'Пакет Лесопромышленник' : 'Пакет Профессионал'
                     })
                 });
 
@@ -425,13 +482,13 @@
                     window.location.href = data.paymentUrl;
                 } else {
                     alert('Ошибка Т-Банка: ' + (data.error || 'Не удалось получить ссылку'));
-                    payBtn.innerText = '💳 Оплатить 199 ₽ (Т-Банк)';
+                    payBtn.innerText = '💳 Оплатить через Т-Банк';
                     payBtn.disabled = false;
                 }
             } catch (e) {
                 console.error(e);
-                alert('Ошибка соединения с функцией создания платежа.');
-                payBtn.innerText = '💳 Оплатить 199 ₽ (Т-Банк)';
+                alert('Ошибка соединения с платежной функцией.');
+                payBtn.innerText = '💳 Оплатить через Т-Банк';
                 payBtn.disabled = false;
             }
         }
@@ -526,7 +583,7 @@
                     'contract_extract': 'Сформируй также официальное "Приложение № 1. Выписка условий договора купли-продажи лесных насаждений".',
                     'photo_act': 'Сформируй также официальное "Приложение № 1. Акт фотофиксации и схема натурного осмотра".'
                 };
-                fullTaskText += `\n${attachMap[attachmentType]}`;
+                fullTaskText += `\n${attachMap[attachmentYpe]}`;
             }
 
             try {
