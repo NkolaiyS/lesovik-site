@@ -208,7 +208,6 @@
 <body data-theme="dark">
 
     <header class="glass-header">
-        <!-- 1-й этаж: Логотип и основные кнопки -->
         <div class="header-top-row">
             <a href="index.html" class="logo-container">
                 <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
@@ -219,7 +218,6 @@
                 <a href="index.html" class="header-back">На главную</a>
             </div>
         </div>
-        <!-- 2-й этаж: Баланс запросов и статус -->
         <div class="header-bottom-row">
             <div id="limits-display" class="limits-badge">Лимиты: Конструктор [1], Чат [3]</div>
             <div class="status-badge">🟢 Шлюз Т-Банк подключен</div>
@@ -238,7 +236,6 @@
                 Выберите категорию, укажите свои реквизиты, приложите данные/фото и тезисно опишите ситуацию.
             </div>
 
-            <!-- ИНТЕРФЕЙС КОНСТРУКТОРА -->
             <div id="doc-interface">
                 <div class="ai-form-group">
                     <label>1. Профильный блок документа</label>
@@ -291,7 +288,6 @@
                 </div>
             </div>
 
-            <!-- ИНТЕРФЕЙС ЧАТА-КОНСУЛЬТАНТА -->
             <div id="chat-interface">
                 <div id="chat-stream" class="chat-history">
                     <div class="chat-bubble bubble-ai">
@@ -308,7 +304,6 @@
         </div>
     </main>
 
-    <!-- Модальное окно пополнения (Пайвол) -->
     <div id="paywall-modal" class="paywall-modal">
         <div class="paywall-content">
             <h3>⏳ Лимит запросов исчерпан</h3>
@@ -337,6 +332,18 @@
         document.addEventListener('DOMContentLoaded', () => {
             const saved = localStorage.getItem('theme') || 'dark';
             document.body.setAttribute('data-theme', saved);
+
+            // Проверка возврата из Т-Банка после успешной оплаты
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('pay') === 'success') {
+                let limitData = getLimitData();
+                limitData.chatExtra += 5;   // +5 в чат
+                limitData.docExtra += 3;    // +3 в конструктор
+                localStorage.setItem('lesovik_split_limits', JSON.stringify(limitData));
+                alert('✅ Оплата на 199 ₽ прошла успешно! Вам добавлено +5 запросов в чат и +3 в конструктор.');
+                window.history.replaceState({}, document.title, window.location.pathname); // Очищаем URL
+            }
+
             updateDefaultPrompt();
             checkLimits();
         });
@@ -356,20 +363,12 @@
         function getLimitData() {
             const today = new Date().toDateString();
             let limitData = JSON.parse(localStorage.getItem('lesovik_split_limits')) || { 
-                date: today, 
-                docUsed: 0, 
-                chatUsed: 0, 
-                docExtra: 0, 
-                chatExtra: 0 
+                date: today, docUsed: 0, chatUsed: 0, docExtra: 0, chatExtra: 0 
             };
             
             if (limitData.date !== today) {
                 limitData = { 
-                    date: today, 
-                    docUsed: 0, 
-                    chatUsed: 0, 
-                    docExtra: limitData.docExtra, 
-                    chatExtra: limitData.chatExtra 
+                    date: today, docUsed: 0, chatUsed: 0, docExtra: limitData.docExtra, chatExtra: limitData.chatExtra 
                 };
                 localStorage.setItem('lesovik_split_limits', JSON.stringify(limitData));
             }
@@ -400,7 +399,7 @@
             checkLimits();
         }
 
-        // НАСТОЯЩИЙ ШЛЮЗ Т-БАНКА
+        // РЕАЛЬНЫЙ ЗАПРОС К API Т-БАНКА ЧЕРЕЗ ОБЛАЧНУЮ ФУНКЦИЮ
         async function simulatePayment() {
             const amount = 199;
             const orderId = 'LESOVIK-' + new Date().getTime();
@@ -423,16 +422,15 @@
 
                 const data = await response.json();
                 if (data.paymentUrl) {
-                    // Прямой редирект на платежную страницу Т-Банка
                     window.location.href = data.paymentUrl;
                 } else {
-                    alert('Ошибка банка: ' + (data.error || 'Не удалось сформировать ссылку на оплату'));
+                    alert('Ошибка Т-Банка: ' + (data.error || 'Не удалось получить ссылку'));
                     payBtn.innerText = '💳 Оплатить 199 ₽ (Т-Банк)';
                     payBtn.disabled = false;
                 }
             } catch (e) {
                 console.error(e);
-                alert('Ошибка соединения с облачной функцией платежей.');
+                alert('Ошибка соединения с функцией создания платежа.');
                 payBtn.innerText = '💳 Оплатить 199 ₽ (Т-Банк)';
                 payBtn.disabled = false;
             }
