@@ -1190,6 +1190,98 @@
     let offsetMagnetic = 0.0;
     let offsetTheodolite = 0.0;
 
+    // ================================================================
+    // БГ-ХНС ПРО 3.3 — ПОДГОТОВКА К ВНЕШНЕМУ МОДУЛЮ
+    // ================================================================
+    // Существующая логика БГ-ХНС ПРО 3.2 не переписывается.
+    // Пока ESP32-C3 + BNO055 не подключены, приложение работает
+    // полностью по прежнему алгоритму через датчики телефона.
+    //
+    // Реальное USB-C подключение и протокол передачи будут добавлены
+    // после проверки BNO055 и определения ориентации его осей.
+    // ================================================================
+
+    const EXTERNAL_MODULE_PROTOCOL_VERSION = "1.0";
+    let externalModuleConnected = false;
+
+    let externalModuleData = {
+        azimuth: null,
+        pitch: null,
+        roll: null,
+        calibrated: false,
+        timestamp: 0
+    };
+
+    function setExternalModuleOrientation(data) {
+        if (!data || typeof data !== 'object') return;
+
+        const az = Number(data.azimuth);
+        const pi = Number(data.pitch);
+        const ro = Number(data.roll);
+
+        if (!Number.isFinite(az) ||
+            !Number.isFinite(pi) ||
+            !Number.isFinite(ro)) {
+            return;
+        }
+
+        externalModuleData.azimuth = ((az % 360) + 360) % 360;
+        externalModuleData.pitch = pi;
+        externalModuleData.roll = ro;
+        externalModuleData.calibrated = data.calibrated === true;
+        externalModuleData.timestamp = Date.now();
+        externalModuleConnected = true;
+    }
+
+    function disconnectExternalModule() {
+        externalModuleConnected = false;
+        externalModuleData.azimuth = null;
+        externalModuleData.pitch = null;
+        externalModuleData.roll = null;
+        externalModuleData.calibrated = false;
+        externalModuleData.timestamp = 0;
+    }
+
+    function isExternalModuleDataFresh(maxAgeMs = 1000) {
+        return externalModuleConnected &&
+               externalModuleData.timestamp > 0 &&
+               (Date.now() - externalModuleData.timestamp) <= maxAgeMs;
+    }
+
+    // Будущий USB/Serial bridge.
+    // В этой версии он не активирует никакого нового оборудования.
+    window.LesovikExternalModule = {
+        protocolVersion: EXTERNAL_MODULE_PROTOCOL_VERSION,
+
+        connect: function () {
+            console.log(
+                "LesovikExternalModule: внешний модуль пока не активирован."
+            );
+            return false;
+        },
+
+        disconnect: function () {
+            disconnectExternalModule();
+        },
+
+        setOrientation: function (data) {
+            setExternalModuleOrientation(data);
+        },
+
+        isConnected: function () {
+            return externalModuleConnected;
+        },
+
+        getData: function () {
+            return { ...externalModuleData };
+        }
+    };
+
+    // ================================================================
+    // КОНЕЦ ПОДГОТОВИТЕЛЬНОГО БЛОКА
+    // ================================================================
+
+
     function getCurrentOffsetDecimal() {
         return (currentSystemMode === 'theodolite') ? offsetTheodolite : offsetMagnetic;
     }
