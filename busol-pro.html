@@ -89,6 +89,48 @@
         @media (min-width: 900px) { .header-seo-text { display: block; } }
 
         .header-right { display: flex; align-items: center; gap: 8px; }
+        
+        .btn-hardware-module {
+            background: transparent;
+            border: 1.5px solid var(--forest-green);
+            color: var(--forest-green);
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            min-height: 36px;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+        .btn-hardware-module:hover {
+            background: rgba(45, 90, 39, 0.1);
+        }
+        .btn-hardware-module.connected {
+            background: var(--success);
+            border-color: var(--success);
+            color: #FFFFFF;
+            box-shadow: 0 0 10px rgba(22, 163, 74, 0.45);
+        }
+        .btn-hardware-module.connected:hover {
+            background: #15803D;
+            border-color: #15803D;
+        }
+        [data-theme="dark"] .btn-hardware-module {
+            border-color: var(--forest-green);
+            color: var(--forest-green);
+        }
+        [data-theme="dark"] .btn-hardware-module.connected {
+            background: var(--success);
+            border-color: var(--success);
+            color: #FFFFFF;
+        }
+
         .btn-instruction { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
         .btn-instruction:hover { background: var(--forest-green); color: #FFF; }
 
@@ -446,7 +488,7 @@
             box-shadow: 0 0 8px #16A34A; pointer-events: none;
         }
         .fs-mini-azimuth-label {
-            position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
+            position: absolute bottom: -20px; left: 50%; transform: translateX(-50%);
             background: var(--forest-green); color: #FFF; font-family: monospace;
             font-size: 13px; font-weight: 800; padding: 2px 10px; border-radius: 6px;
             white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.3);
@@ -647,6 +689,7 @@
         </a>
         <div class="header-seo-text">Электронная буссоль • Геодезия выдела • Отвод лесосек</div>
         <div class="header-right">
+            <button id="btn-hardware-module" class="btn-hardware-module" onclick="toggleHardwareModule()">🔌 Модуль: ВЫКЛ</button>
             <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тема</button>
         </div>
     </header>
@@ -795,6 +838,7 @@
                 <li><strong>📡 GPS-Курс (По 2 точкам):</strong> Нажмите «📍 Старт точки», пройдите 5–10 метров по визиру и нажмите «🏁 Зафиксировать вектор». Точки связываются непрерывной цепочкой (Т1 ➔ Т2 ➔ Т3).</li>
                 <li><strong>📡 GPS-расчет расстояний:</strong> При выбранном методе длина вычисляется со спутника между точками автоматически.</li>
                 <li><strong>📂 Загрузка KML / KMZ / GeoJSON:</strong> Загружайте файлы квартальных сеток и выделов из ФГИС ЛК прямо на чертёж без подключения к интернету.</li>
+                <li><strong>🔌 Внешний модуль ESP32-C3:</strong> Подключите модуль по USB-C (OTG). При первом подключении нажмите «🔌 Модуль: ВЫКЛ» для авторизации, после чего модуль будет подхватываться автоматически при каждом втыкании кабеля.</li>
             </ol>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closeInstruction()">Понятно, к замеру</button>
         </div>
@@ -1091,7 +1135,8 @@
                         <li style="margin-bottom: 4px;"><b>3. 🧭 Буссоль (Лимб):</b> Положите смартфон горизонтально на ладонь. При нажатии «Зафиксировать» точка автоматически записывается в текущих координатах GPS!</li>
                         <li style="margin-bottom: 4px;"><b>4. 📡 GPS-Курс (По 2 точкам):</b> Непрерывный цепной ход (Т1 ➔ Т2 ➔ Т3). Старт Т1 берётся строго там, где вы нажали кнопку, а Т2 сразу становится стартом для Т3.</li>
                         <li style="margin-bottom: 4px;"><b>5. 📏 Расчет расстояний по спутнику:</b> При выборе режима «📡 GPS-расчет» длина вычисляется автоматически по спутниковым координатам.</li>
-                        <li><b>6. 📂 Подложка ФГИС ЛК:</b> Загружайте файлы квартальных сеток и выделов в формате KML, KMZ или GeoJSON для навигации без интернета.</li>
+                        <li style="margin-bottom: 4px;"><b>6. 📂 Подложка ФГИС ЛК:</b> Загружайте файлы квартальных сеток и выделов в формате KML, KMZ или GeoJSON для навигации без интернета.</li>
+                        <li><b>7. 🔌 Аппаратный модуль:</b> Подключение BNO055 + лазерного дальномера через Web Serial по OTG кабелю для работы без магнитных искажений телефона. Автоподхват при втыкании кабеля.</li>
                     </ul>
                 </div>
             </div>
@@ -1133,6 +1178,13 @@
 
 <script>
     let isFirstData = true;
+
+    // --- ПЕРЕМЕННЫЕ ИСТОЧНИКА ДАННЫХ И ВНЕШНЕГО МОДУЛЯ (WEB SERIAL API) ---
+    let orientationSource = 'phone'; // 'phone' или 'external'
+    let hardwareSerialPort = null;
+    let hardwareReader = null;
+    let hardwareReadableStreamClosed = null;
+    let hardwareKeepReading = false;
 
     // --- ПЕРЕМЕННЫЕ ФИЛЬТРА КАЛМАНА И БУФЕР УСРЕДНЕНИЯ АЗИМУТА ---
     let filteredSin = 0;
@@ -1190,98 +1242,6 @@
     let offsetMagnetic = 0.0;
     let offsetTheodolite = 0.0;
 
-    // ================================================================
-    // БГ-ХНС ПРО 3.3 — ПОДГОТОВКА К ВНЕШНЕМУ МОДУЛЮ
-    // ================================================================
-    // Существующая логика БГ-ХНС ПРО 3.2 не переписывается.
-    // Пока ESP32-C3 + BNO055 не подключены, приложение работает
-    // полностью по прежнему алгоритму через датчики телефона.
-    //
-    // Реальное USB-C подключение и протокол передачи будут добавлены
-    // после проверки BNO055 и определения ориентации его осей.
-    // ================================================================
-
-    const EXTERNAL_MODULE_PROTOCOL_VERSION = "1.0";
-    let externalModuleConnected = false;
-
-    let externalModuleData = {
-        azimuth: null,
-        pitch: null,
-        roll: null,
-        calibrated: false,
-        timestamp: 0
-    };
-
-    function setExternalModuleOrientation(data) {
-        if (!data || typeof data !== 'object') return;
-
-        const az = Number(data.azimuth);
-        const pi = Number(data.pitch);
-        const ro = Number(data.roll);
-
-        if (!Number.isFinite(az) ||
-            !Number.isFinite(pi) ||
-            !Number.isFinite(ro)) {
-            return;
-        }
-
-        externalModuleData.azimuth = ((az % 360) + 360) % 360;
-        externalModuleData.pitch = pi;
-        externalModuleData.roll = ro;
-        externalModuleData.calibrated = data.calibrated === true;
-        externalModuleData.timestamp = Date.now();
-        externalModuleConnected = true;
-    }
-
-    function disconnectExternalModule() {
-        externalModuleConnected = false;
-        externalModuleData.azimuth = null;
-        externalModuleData.pitch = null;
-        externalModuleData.roll = null;
-        externalModuleData.calibrated = false;
-        externalModuleData.timestamp = 0;
-    }
-
-    function isExternalModuleDataFresh(maxAgeMs = 1000) {
-        return externalModuleConnected &&
-               externalModuleData.timestamp > 0 &&
-               (Date.now() - externalModuleData.timestamp) <= maxAgeMs;
-    }
-
-    // Будущий USB/Serial bridge.
-    // В этой версии он не активирует никакого нового оборудования.
-    window.LesovikExternalModule = {
-        protocolVersion: EXTERNAL_MODULE_PROTOCOL_VERSION,
-
-        connect: function () {
-            console.log(
-                "LesovikExternalModule: внешний модуль пока не активирован."
-            );
-            return false;
-        },
-
-        disconnect: function () {
-            disconnectExternalModule();
-        },
-
-        setOrientation: function (data) {
-            setExternalModuleOrientation(data);
-        },
-
-        isConnected: function () {
-            return externalModuleConnected;
-        },
-
-        getData: function () {
-            return { ...externalModuleData };
-        }
-    };
-
-    // ================================================================
-    // КОНЕЦ ПОДГОТОВИТЕЛЬНОГО БЛОКА
-    // ================================================================
-
-
     function getCurrentOffsetDecimal() {
         return (currentSystemMode === 'theodolite') ? offsetTheodolite : offsetMagnetic;
     }
@@ -1310,6 +1270,250 @@
             setTimeout(() => { toast.style.display = 'none'; }, 3500);
         }
     }
+
+    // --- ЛОГИКА ПОДКЛЮЧЕНИЯ И АВТОПОДХВАТА ВНЕШНЕГО МОДУЛЯ (ESP32-C3 + BNO055 + ЛАЗЕР) ---
+    async function toggleHardwareModule() {
+        if (orientationSource === 'external') {
+            await disconnectHardwareModule();
+        } else {
+            await requestConnectHardwareModule();
+        }
+    }
+
+    async function requestConnectHardwareModule() {
+        if (!('serial' in navigator)) {
+            alert("Ваш браузер не поддерживает Web Serial API. Используйте Google Chrome, Яндекс.Браузер или Edge с поддержкой OTG.");
+            return;
+        }
+
+        try {
+            const port = await navigator.serial.requestPort();
+            await connectHardwarePort(port);
+        } catch (err) {
+            console.error("Выбор Serial-порта отменён:", err);
+            showToast("❌ Модуль не подключен или выбор отменён");
+            await disconnectHardwareModule();
+        }
+    }
+
+    async function connectHardwarePort(port) {
+        try {
+            if (hardwareSerialPort && hardwareSerialPort.readable) {
+                await disconnectHardwareModule();
+            }
+
+            hardwareSerialPort = port;
+            await hardwareSerialPort.open({ baudRate: 115200 });
+
+            orientationSource = 'external';
+            updateHardwareButtonUI(true);
+            showToast("⚡ Внешний модуль ESP32-C3 подключен!");
+
+            hardwareKeepReading = true;
+            readSerialDataLoop();
+        } catch (err) {
+            console.error("Ошибка открытия порта:", err);
+            showToast("❌ Ошибка соединения с портом ESP32");
+            await disconnectHardwareModule();
+        }
+    }
+
+    async function disconnectHardwareModule() {
+        hardwareKeepReading = false;
+        try {
+            if (hardwareReader) {
+                await hardwareReader.cancel();
+                hardwareReader = null;
+            }
+            if (hardwareReadableStreamClosed) {
+                await hardwareReadableStreamClosed.catch(() => {});
+                hardwareReadableStreamClosed = null;
+            }
+            if (hardwareSerialPort) {
+                await hardwareSerialPort.close();
+                hardwareSerialPort = null;
+            }
+        } catch (e) {
+            console.warn("Ошибка при закрытии порта:", e);
+        }
+
+        orientationSource = 'phone';
+        isFilterInitialized = false;
+        updateHardwareButtonUI(false);
+        showToast("🔌 Переход на встроенные датчики смартфона");
+    }
+
+    function updateHardwareButtonUI(connected) {
+        const btn = document.getElementById('btn-hardware-module');
+        if (!btn) return;
+        if (connected) {
+            btn.classList.add('connected');
+            btn.innerHTML = '⚡ Модуль: ВКЛ';
+        } else {
+            btn.classList.remove('connected');
+            btn.innerHTML = '🔌 Модуль: ВЫКЛ';
+        }
+    }
+
+    async function checkAutoConnectSerial() {
+        if (!('serial' in navigator)) return;
+        try {
+            const ports = await navigator.serial.getPorts();
+            if (ports && ports.length > 0) {
+                console.log("Найден ранее авторизованный порт ESP32, подключаемся...");
+                await connectHardwarePort(ports[0]);
+            }
+        } catch (e) {
+            console.warn("Ошибка автоподключения сохранённого порта:", e);
+        }
+    }
+
+    if ('serial' in navigator) {
+        // Автоматический подхват при физическом подключении кабеля OTG
+        navigator.serial.addEventListener('connect', async (event) => {
+            showToast("⚡ Обнаружен USB-модуль ESP32-C3! Автоподключение...");
+            await connectHardwarePort(event.target);
+        });
+
+        // Бесшовный сброс при отключении кабеля OTG
+        navigator.serial.addEventListener('disconnect', (event) => {
+            showToast("⚠️ Кабель модуля отсоединён!");
+            disconnectHardwareModule();
+        });
+    }
+
+    async function readSerialDataLoop() {
+        let textDecoder = new TextDecoderStream();
+        hardwareReadableStreamClosed = hardwareSerialPort.readable.pipeTo(textDecoder.writable);
+        hardwareReader = textDecoder.readable.getReader();
+
+        let partialChunk = '';
+        try {
+            while (hardwareKeepReading) {
+                const { value, done } = await hardwareReader.read();
+                if (done) break;
+                if (value) {
+                    partialChunk += value;
+                    let lines = partialChunk.split('\n');
+                    partialChunk = lines.pop();
+
+                    for (let line of lines) {
+                        let cleanLine = line.trim();
+                        if (cleanLine.length > 0) {
+                            parseHardwareTelemetry(cleanLine);
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.warn("Поток Web Serial завершён или прерван:", err);
+        } finally {
+            if (orientationSource === 'external') {
+                disconnectHardwareModule();
+            }
+        }
+    }
+
+    function parseHardwareTelemetry(telemetryString) {
+        // Протокол: AZ=127.4;PITCH=2.1;ROLL=-0.8;DIST=43.7;CAL=3
+        let rawTokens = telemetryString.split(';');
+        let packet = {};
+
+        for (let token of rawTokens) {
+            let parts = token.split('=');
+            if (parts.length === 2) {
+                let key = parts[0].trim().toUpperCase();
+                let val = parseFloat(parts[1].trim());
+                if (!isNaN(val)) {
+                    packet[key] = val;
+                }
+            }
+        }
+
+        let parsedAz = packet['AZ'] !== undefined ? packet['AZ'] : packet['HEADING'];
+        let parsedPitch = packet['PITCH'] !== undefined ? packet['PITCH'] : packet['X'];
+        let parsedRoll = packet['ROLL'] !== undefined ? packet['ROLL'] : packet['Y'];
+        let parsedDist = packet['DIST'] !== undefined ? packet['DIST'] : packet['DISTANCE'];
+
+        // 1. Азимут и углы наклона Bosch BNO055
+        if (parsedAz !== undefined && orientationSource === 'external') {
+            let heading = (parsedAz % 360 + 360) % 360;
+            let pitch = parsedPitch !== undefined ? parsedPitch : 0;
+            let roll = parsedRoll !== undefined ? parsedRoll : 0;
+
+            applyExternalOrientationData(heading, pitch, roll);
+        }
+
+        // 2. Лазерный дальномер
+        if (parsedDist !== undefined && parsedDist > 0) {
+            applyLaserDistanceTelemetry(parsedDist);
+        }
+    }
+
+    function applyLaserDistanceTelemetry(distMeters) {
+        let roundedDist = parseFloat(distMeters.toFixed(1));
+        if (measurementsLog.length > 0) {
+            let lastIdx = measurementsLog.length - 1;
+            measurementsLog[lastIdx].distance = roundedDist;
+            
+            let distInput = document.getElementById(`dist-${measurementsLog[lastIdx].id}`);
+            if (distInput) {
+                distInput.value = roundedDist;
+            }
+
+            saveToLocalStorage();
+            drawPolygon();
+            if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
+            showToast(`🎯 Дальномер: ${roundedDist} м записано в линию №${measurementsLog[lastIdx].id}`);
+        } else {
+            showToast(`🎯 Дальномер: ${roundedDist} м (зафиксируйте точку для записи)`);
+        }
+    }
+
+    function applyExternalOrientationData(heading, pitch, roll) {
+        let rad = (heading * Math.PI) / 180;
+        let rawSin = Math.sin(rad);
+        let rawCos = Math.cos(rad);
+
+        if (!isFilterInitialized) {
+            filteredSin = rawSin;
+            filteredCos = rawCos;
+            isFilterInitialized = true;
+        } else {
+            filteredSin = filteredSin + 0.25 * (rawSin - filteredSin);
+            filteredCos = filteredCos + 0.25 * (rawCos - filteredCos);
+        }
+
+        let smoothedHeading = (Math.atan2(filteredSin, filteredCos) * 180 / Math.PI + 360) % 360;
+        let activeOffset = getCurrentOffsetDecimal();
+        let sensorAzimuth = (smoothedHeading + activeOffset + 360) % 360;
+
+        azimuthRingBuffer.push(sensorAzimuth);
+        if (azimuthRingBuffer.length > AZIMUTH_SMOOTH_BUFFER_SIZE) {
+            azimuthRingBuffer.shift();
+        }
+
+        if (currentSystemMode !== 'gps_heading') {
+            currentAzimuth = sensorAzimuth;
+        }
+
+        updateCompassAndHorizonUI(sensorAzimuth, pitch, roll);
+    }
+
+    // Сохранение обратной совместимости для LesovikExternalModule
+    window.LesovikExternalModule = {
+        protocolVersion: "1.0",
+        connect: function () {
+            requestConnectHardwareModule();
+            return true;
+        },
+        disconnect: function () {
+            disconnectHardwareModule();
+        },
+        isConnected: function () {
+            return orientationSource === 'external';
+        }
+    };
 
     function setGlobalDistanceMethod(mode) {
         globalDistanceMethod = mode;
@@ -2410,6 +2614,11 @@
     }
 
     function handleOrientation(event) {
+        // Если активен внешний BNO055 — внутренний гироскоп/компас смартфона игнорируется
+        if (orientationSource === 'external') {
+            return;
+        }
+
         let heading = event.webkitCompassHeading;
         if (heading === undefined) {
             heading = (360 - (event.alpha || 0)) % 360;
@@ -2474,9 +2683,6 @@
         let pitch = Math.round(event.beta || 0); 
         let roll = Math.round(event.gamma || 0);  
 
-        document.getElementById('live-pitch').innerText = `${pitch}°`;
-        document.getElementById('live-roll').innerText = `${roll}°`;
-
         if (isCalibrating) {
             if (sensorAzimuth >= 0 && sensorAzimuth < 90) calibSectors.q1 = true;
             if (sensorAzimuth >= 90 && sensorAzimuth < 180) calibSectors.q2 = true;
@@ -2492,6 +2698,14 @@
             if(calibTiltOk) score += 15;
             document.getElementById('calib-bar').style.width = `${score}%`;
         }
+
+        updateCompassAndHorizonUI(sensorAzimuth, pitch, roll);
+    }
+
+    // Единая функция обновления интерфейса для внутренних и внешних датчиков
+    function updateCompassAndHorizonUI(sensorAzimuth, pitch, roll) {
+        document.getElementById('live-pitch').innerText = `${Math.round(pitch)}°`;
+        document.getElementById('live-roll').innerText = `${Math.round(roll)}°`;
 
         const badge = document.getElementById('angle-turn-badge');
         
@@ -3220,6 +3434,7 @@
         startCamera();
         initGPS(); 
         initCanvasDragControls();
+        checkAutoConnectSerial(); // Автоматическая проверка уже подключённого ранее USB-модуля
         
         const triggerSensorAccess = async () => {
             try {
