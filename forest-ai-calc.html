@@ -1,0 +1,158 @@
+<!-- 
+  (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
+  Свидетельство ИНН: 111801576622.
+  Программное обеспечение: «Лесовик ПРО • Интеллектуальный полевой калькулятор таксатора и корректор подлеска (Edge Math Module)»
+-->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <title>Интеллектуальный полевой калькулятор таксатора | Лесовик ПРО</title>
+    <meta name="description" content="Автономный полевой модуль для компенсации скрытых подлеском стволов и расчета запаса древесины на пробной площади.">
+    <meta name="author" content="ИП Худяков Николай Сергеевич">
+
+    <link rel="icon" type="image/jpeg" href="logo.jpeg">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap">
+
+    <style>
+        :root {
+            --bg-paper: #121A16;
+            --text-graphite: #F4F7F4;
+            --forest-green: #8FBC8F;
+            --forest-light: #2D5A27;
+            --border-color: #26382F;
+            --card-bg: #1B2620;
+            --promo-orange: #F39C12;
+            --water-blue: #38BDF8;
+        }
+
+        *, *:before, *:after { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+        html { scroll-behavior: smooth; width: 100%; max-width: 100%; overflow-x: hidden; }
+        body {
+            font-family: 'Inter', sans-serif; background-color: var(--bg-paper); color: var(--text-graphite);
+            line-height: 1.5; display: flex; flex-direction: column; min-height: 100vh; width: 100%; max-width: 100%;
+            padding: 12px;
+        }
+
+        .header-box {
+            background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+            padding: 14px; text-align: center; margin-bottom: 14px;
+        }
+        .header-box h1 { font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 16px; margin-bottom: 4px; }
+        .header-box p { font-size: 11.5px; opacity: 0.8; }
+
+        .card {
+            background: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: 12px;
+            padding: 16px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 10px;
+        }
+        .card-title {
+            font-family: 'Merriweather', serif; font-size: 13.5px; font-weight: 700; color: var(--forest-green);
+            border-bottom: 1px solid var(--border-color); padding-bottom: 6px;
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--forest-green); }
+        .form-control {
+            width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);
+            background: var(--bg-paper); color: var(--text-graphite); font-size: 13px; font-family: 'Inter', sans-serif;
+        }
+
+        .btn-main {
+            background: linear-gradient(135deg, var(--forest-light) 0%, var(--forest-green) 100%);
+            color: #121A16; border: none; padding: 12px; border-radius: 8px; font-weight: 800;
+            font-size: 12.5px; text-transform: uppercase; cursor: pointer; width: 100%; margin-top: 6px;
+        }
+
+        .result-box {
+            background: rgba(143, 188, 143, 0.08); border: 1px dashed var(--forest-green); border-radius: 8px;
+            padding: 12px; font-size: 12.5px; display: none; line-height: 1.5;
+        }
+        .result-box b { color: var(--promo-orange); }
+
+        footer { text-align: center; font-size: 10.5px; opacity: 0.6; margin-top: auto; padding: 10px 0; }
+    </style>
+</head>
+<body>
+
+    <div class="header-box">
+        <h1>🌲 Лесовик ПРО • Полевой Модуль</h1>
+        <p>Интеллектуальная коррекция слепых зон при густом подлеске и расчет запаса</p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">📊 Параметры пробной площади и подлеска</div>
+
+        <div class="form-group">
+            <label>Видимая сумма площадей сечений (G, м²/га)</label>
+            <input type="number" id="input-visible-g" class="form-control" value="18.5" step="0.1" onfocus="this.select()">
+        </div>
+
+        <div class="form-group">
+            <label>Плотность подроста / подлеска (от 0 до 1)</label>
+            <input type="number" id="input-undergrowth" class="form-control" value="0.6" min="0" max="1" step="0.1" onfocus="this.select()">
+        </div>
+
+        <div class="form-group">
+            <label>Класс бонитета насаждения</label>
+            <select id="input-site-index" class="form-control">
+                <option value="1">I бонитет (высокопродуктивные)</option>
+                <option value="2" selected>II бонитет (средние условия)</option>
+                <option value="3">III бонитет (умеренные)</option>
+                <option value="4">IV бонитет (низкие)</option>
+                <option value="5">V бонитет (низкопродуктивные)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Средняя высота древостоя (м)</label>
+            <input type="number" id="input-height" class="form-control" value="22.0" step="0.5" onfocus="this.select()">
+        </div>
+
+        <button class="btn-main" onclick="runSmartCalculation()">⚡ Рассчитать с поправкой ИИ</button>
+
+        <div id="result-container" class="result-box"></div>
+    </div>
+
+    <footer>
+        &copy; 2026 ИП Худяков Николай Сергеевич. Лесовик ПРО.
+    </footer>
+
+    <script>
+        document.addEventListener('focusin', function(e) {
+            if (e.target && (e.target.tagName === 'INPUT')) {
+                e.target.select();
+            }
+        });
+
+        function runSmartCalculation() {
+            const visibleG = parseFloat(document.getElementById('input-visible-g').value) || 0;
+            const undergrowth = parseFloat(document.getElementById('input-undergrowth').value) || 0;
+            const siteIndex = parseInt(document.getElementById('input-site-index').value) || 2;
+            const avgHeight = parseFloat(document.getElementById('input-height').value) || 20;
+            const resBox = document.getElementById('result-container');
+
+            if (visibleG <= 0 || avgHeight <= 0) {
+                alert("Пожалуйста, введите корректные числовые значения.");
+                return;
+            }
+
+            // Математический алгоритм аппроксимации скрытых стволов
+            const shieldingCoefficient = 1.0 + (undergrowth * 0.22) + ((5 - site_index) * 0.015);
+            const adjustedBasalArea = visibleG * shieldingCoefficient;
+            const formFactor = 0.45 + (0.002 * avgHeight);
+            const estimatedStock = adjustedBasalArea * avgHeight * formFactor;
+            const correctionPercent = (shieldingCoefficient - 1.0) * 100;
+
+            resBox.style.display = 'block';
+            resBox.innerHTML = `
+                🔹 Видимая сумма сечений: <b>${visibleG.toFixed(2)} м²/га</b><br>
+                🔸 Скорректированная сумма сечений (с учетом подлеска): <b>${adjustedBasalArea.toFixed(2)} м²/га</b><br>
+                🌲 Расчетный запас на 1 га: <b>${estimatedStock.toFixed(1)} м³/га</b><br>
+                📈 Поправка на скрытые зоны: <b>+${correctionPercent.toFixed(1)}%</b>
+            `;
+        }
+    </script>
+</body>
+</html>
