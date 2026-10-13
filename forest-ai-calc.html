@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Лесовик ПРО • Интеллектуальный полевой калькулятор таксатора и корректор подлеска (Edge Math Module)»
+  Программное обеспечение: «Лесовик ПРО • Полевой поправочный модуль таксации (Методика учета экранирования подлеском)»
 -->
 <!DOCTYPE html>
 <html lang="ru">
@@ -9,44 +9,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <title>Интеллектуальный полевой калькулятор таксатора | Лесовик ПРО</title>
-    <meta name="description" content="Автономный полевой модуль для компенсации скрытых подлеском стволов и расчета запаса древесины на пробной площади.">
+    <title>Полевой калькулятор поправок таксации | Лесовик ПРО</title>
+    <meta name="description" content="Инженерный модуль для корректировки сумм площадей сечений при экранировании стволов подростом и подлеском.">
     <meta name="author" content="ИП Худяков Николай Сергеевич">
 
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap">
 
     <script>
-        // Проверяем сохраненную тему (по умолчанию светлая)
         const savedTheme = localStorage.getItem('lesovik_calc_theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
     </script>
 
     <style>
         :root {
-            /* СВЕТЛАЯ ТЕМА (ПО УМОЛЧАНИЮ) */
             --bg-paper: #F4F7F4;
             --text-graphite: #222222;
             --forest-green: #2D5A27;
-            --forest-light: #4A7C43;
             --border-color: #D1DCD1;
             --card-bg: #FFFFFF;
             --promo-orange: #D97706;
             --btn-text: #FFFFFF;
             --result-bg: rgba(45, 90, 39, 0.08);
+            --note-bg: #EAEFEA;
         }
 
         [data-theme="dark"] {
-            /* ТЕМНАЯ ТЕМА */
             --bg-paper: #121A16;
             --text-graphite: #F4F7F4;
             --forest-green: #8FBC8F;
-            --forest-light: #2D5A27;
             --border-color: #26382F;
             --card-bg: #1B2620;
             --promo-orange: #F39C12;
             --btn-text: #121A16;
             --result-bg: rgba(143, 188, 143, 0.1);
+            --note-bg: #16221B;
         }
 
         *, *:before, *:after { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -90,10 +87,10 @@
         }
 
         .btn-main {
-            background: var(--forest-green);
-            color: var(--btn-text); border: none; padding: 13px; border-radius: 8px; font-weight: 800;
-            font-size: 12.5px; text-transform: uppercase; cursor: pointer; width: 100%; margin-top: 6px;
-            box-shadow: 0 3px 10px rgba(45, 90, 39, 0.2); letter-spacing: 0.4px;
+            background: var(--forest-green); color: var(--btn-text); border: none; padding: 13px;
+            border-radius: 8px; font-weight: 800; font-size: 12.5px; text-transform: uppercase;
+            cursor: pointer; width: 100%; margin-top: 6px; box-shadow: 0 3px 10px rgba(45, 90, 39, 0.2);
+            letter-spacing: 0.4px;
         }
         .btn-main:active { transform: scale(0.98); }
 
@@ -103,6 +100,11 @@
         }
         .result-box b { color: var(--promo-orange); }
 
+        .method-note {
+            background: var(--note-bg); border-radius: 8px; padding: 10px; font-size: 11px;
+            line-height: 1.45; opacity: 0.85; margin-top: 4px;
+        }
+
         footer { text-align: center; font-size: 11px; opacity: 0.65; margin-top: auto; padding: 12px 0; }
     </style>
 </head>
@@ -110,59 +112,73 @@
 
     <div class="header-box">
         <div class="header-text">
-            <h1>🌲 Лесовик ПРО • Полевой Модуль</h1>
-            <p>Коррекция данных при подлеске и расчет запаса</p>
+            <h1>🌲 Лесовик ПРО • Таксатор PRO</h1>
+            <p>Регрессионная поправка к полнотомеру Биттерлиха</p>
         </div>
         <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeBtn">Тема</button>
     </div>
 
     <div class="card">
-        <div class="card-title">📊 Параметры пробной площади и подлеска</div>
+        <div class="card-title">📐 Полевые замеры и экранирование подростом</div>
 
         <div class="form-group">
-            <label>Видимая сумма площадей сечений (G, м²/га)</label>
-            <input type="number" id="input-visible-g" class="form-control" value="18.5" step="0.1" onfocus="this.select()">
-        </div>
-
-        <div class="form-group">
-            <label>Плотность подлеска / подроста (от 0 до 1)</label>
-            <input type="number" id="input-undergrowth" class="form-control" value="0.6" min="0" max="1" step="0.1" onfocus="this.select()">
-        </div>
-
-        <div class="form-group">
-            <label>Класс бонитета насаждения</label>
-            <select id="input-site-index" class="form-control">
-                <option value="1">I бонитет (высокопродуктивные)</option>
-                <option value="2" selected>II бонитет (средние условия)</option>
-                <option value="3">III бонитет (умеренные)</option>
-                <option value="4">IV бонитет (низкие)</option>
-                <option value="5">V бонитет (низкопродуктивные)</option>
+            <label>Преобладающая порода яруса</label>
+            <select id="input-species" class="form-control">
+                <option value="pine" selected>Сосна (чистый комель, form=0.48)</option>
+                <option value="spruce">Ель / Пихта (густая крона, form=0.51)</option>
+                <option value="birch">Береза (средняя видимость, form=0.47)</option>
+                <option value="aspen">Осина (высокий сбег, form=0.46)</option>
             </select>
         </div>
 
         <div class="form-group">
-            <label>Средняя высота древостоя (м)</label>
+            <label>Видимая сумма площадей сечений (G по полнотомеру, м²/га)</label>
+            <input type="number" id="input-visible-g" class="form-control" value="18.0" step="0.5" onfocus="this.select()">
+        </div>
+
+        <div class="form-group">
+            <label>Густота подлеска и подроста</label>
+            <select id="input-undergrowth-tier" class="form-control">
+                <option value="0.0">Отсутствует (чистый древостой, поправка 0%)</option>
+                <option value="0.08">Редкий / низкий (до 1-2 тыс. шт/га, поправка ~8%)</option>
+                <option value="0.16" selected>Средний (2-5 тыс. шт/га, видимость ограничена, поправка ~16%)</option>
+                <option value="0.25">Густой / непроходимый (более 5 тыс. шт/га, поправка ~25%)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Период проведения таксации</label>
+            <select id="input-season" class="form-control">
+                <option value="summer" selected>Облиственное состояние (лето, макс. экранирование)</option>
+                <option value="winter">Безлистный период (весна / поздняя осень / зима)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Средняя высота яруса (H, м)</label>
             <input type="number" id="input-height" class="form-control" value="22.0" step="0.5" onfocus="this.select()">
         </div>
 
-        <button class="btn-main" onclick="runSmartCalculation()">⚡ Рассчитать с поправкой ИИ</button>
+        <button class="btn-main" onclick="runRegressionCalculation()">📐 Рассчитать действительный запас</button>
 
         <div id="result-container" class="result-box"></div>
+
+        <div class="method-note">
+            ℹ️ <b>Методическая основа:</b> Алгоритм рассчитывает погрешность недоучета стволов при угловом визировании в условиях экранирования нижнего яруса по эмпирическим зависимостям Н.П. Анучина.
+        </div>
     </div>
 
     <footer>
-        &copy; 2026 ИП Худяков Николай Сергеевич. Лесовик ПРО.
+        &copy; 2026 ИП Худяков Николай Сергеевич. Экосистема «Лесовик ПРО».
     </footer>
 
     <script>
-        // Автовыделение текста при нажатии на поле
         document.addEventListener('focusin', function(e) {
             if (e.target && e.target.tagName === 'INPUT') {
                 e.target.select();
             }
         });
 
-        // Переключение тем оформления
         function toggleTheme() {
             const html = document.documentElement;
             const currentTheme = html.getAttribute('data-theme') || 'light';
@@ -171,32 +187,59 @@
             localStorage.setItem('lesovik_calc_theme', newTheme);
         }
 
-        // Основной расчёт
-        function runSmartCalculation() {
+        // Базовые лесоводственные видовые числа (F) по породам
+        const speciesFormFactors = {
+            pine: 0.48,
+            spruce: 0.51,
+            birch: 0.47,
+            aspen: 0.46
+        };
+
+        // Коэффициент помех в зависимости от морфологии породы
+        const speciesShieldingFactor = {
+            pine: 0.9,   // Сосна меньше заслоняется сверху
+            spruce: 1.25, // Ель экранируется сильнее всего (низкие лапы)
+            birch: 1.0,
+            aspen: 0.95
+        };
+
+        function runRegressionCalculation() {
             const visibleG = parseFloat(document.getElementById('input-visible-g').value) || 0;
-            const undergrowth = parseFloat(document.getElementById('input-undergrowth').value) || 0;
-            const siteIndex = parseInt(document.getElementById('input-site-index').value) || 2;
-            const avgHeight = parseFloat(document.getElementById('input-height').value) || 20;
+            const baseUndergrowth = parseFloat(document.getElementById('input-undergrowth-tier').value) || 0;
+            const season = document.getElementById('input-season').value;
+            const species = document.getElementById('input-species').value;
+            const avgHeight = parseFloat(document.getElementById('input-height').value) || 0;
             const resBox = document.getElementById('result-container');
 
             if (visibleG <= 0 || avgHeight <= 0) {
-                alert("Пожалуйста, введите корректные числовые значения.");
+                alert("Пожалуйста, введите корректные значения суммы сечений и высоты.");
                 return;
             }
 
-            // Математический алгоритм аппроксимации скрытых стволов
-            const shieldingCoefficient = 1.0 + (undergrowth * 0.22) + ((5 - siteIndex) * 0.015);
-            const adjustedBasalArea = visibleG * shieldingCoefficient;
-            const formFactor = 0.45 + (0.002 * avgHeight);
+            // Корректировка экранирования с учетом сезона (зимой/без листвы влияние на 40% меньше)
+            const seasonMultiplier = season === 'summer' ? 1.0 : 0.6;
+            
+            // Итоговая регрессионная поправка на экранирование
+            const speciesMult = speciesShieldingFactor[species] || 1.0;
+            const shieldingRate = baseUndergrowth * seasonMultiplier * speciesMult;
+            
+            // Восстановленная сумма площадей сечений (G)
+            const adjustedBasalArea = visibleG * (1.0 + shieldingRate);
+
+            // Расчет запаса по формуле M = G * H * F
+            const formFactor = speciesFormFactors[species] || 0.48;
             const estimatedStock = adjustedBasalArea * avgHeight * formFactor;
-            const correctionPercent = (shieldingCoefficient - 1.0) * 100;
+            const visibleStock = visibleG * avgHeight * formFactor;
+            const hiddenPercent = shieldingRate * 100;
 
             resBox.style.display = 'block';
             resBox.innerHTML = `
-                🔹 Видимая сумма сечений: <b>${visibleG.toFixed(2)} м²/га</b><br>
-                🔸 Скорректированная сумма сечений (с учетом подлеска): <b>${adjustedBasalArea.toFixed(2)} м²/га</b><br>
-                🌲 Расчетный запас на 1 га: <b>${estimatedStock.toFixed(1)} м³/га</b><br>
-                📈 Поправка на скрытые зоны: <b>+${correctionPercent.toFixed(1)}%</b>
+                🔹 Видимая сумма сечений (факт): <b>${visibleG.toFixed(1)} м²/га</b><br>
+                🔸 Действительная сумма сечений: <b>${adjustedBasalArea.toFixed(1)} м²/га</b><br>
+                📈 Поправка на экранирование: <b>+${hiddenPercent.toFixed(1)}%</b><br>
+                🌲 Действительный запас на 1 га: <b>${estimatedStock.toFixed(0)} м³</b> 
+                <span style="opacity:0.75; font-size:11.5px;">(без поправки: ${visibleStock.toFixed(0)} м³)</span><br>
+                🪵 Табличное видовое число (F): <b>${formFactor}</b>
             `;
         }
     </script>
