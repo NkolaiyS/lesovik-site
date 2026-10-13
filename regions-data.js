@@ -23,7 +23,7 @@ window.LESOVIK_FED_DISTRICTS = [
         regions: [
             { code: "kirov", name: "Кировская область", file: "kirov-data.js", active: true },
             { code: "perm", name: "Пермский край", file: "perm-data.js", active: true },
-            { code: "bashkortostan", name: "Республика Башкортостан", file: "bash-data.js", active: false },
+            { code: "bashkortostan", name: "Республика Башкортостан", file: "bash-data.js", active: true },
             { code: "tatarstan", name: "Республика Татарстан", file: "tatar-data.js", active: false },
             { code: "udmurtia", name: "Удмуртская Республика", file: "udm-data.js", active: false },
             { code: "mariel", name: "Республика Марий Эл", file: "mari-data.js", active: false },
