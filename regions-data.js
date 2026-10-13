@@ -11,7 +11,7 @@ window.LESOVIK_FED_DISTRICTS = [
             { code: "vologda", name: "Вологодская область", file: "vologda-data.js", active: true },
             { code: "karelia", name: "Республика Карелия", file: "karelia-data.js", active: true },
             { code: "leningrad", name: "Ленинградская область", file: "len-data.js", active: true },
-            { code: "murmansk", name: "Мурманская область", file: "murmansk-data.js", active: false },
+            { code: "murmansk", name: "Мурманская область", file: "murmansk-data.js", active: true },
             { code: "novgorod", name: "Новгородская область", file: "novgorod-data.js", active: false },
             { code: "pskov", name: "Псковская область", file: "pskov-data.js", active: false },
             { code: "kaliningrad", name: "Калининградская область", file: "kaliningrad-data.js", active: false },
