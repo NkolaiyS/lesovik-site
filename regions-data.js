@@ -16,7 +16,6 @@ window.LESOVIK_FED_DISTRICTS = [
             { code: "pskov", name: "Псковская область", file: "pskov-data.js", active: true },
             { code: "kaliningrad", name: "Калининградская область", file: "kaliningrad-data.js", active: true },
             { code: "nenets", name: "Ненецкий автономный округ", file: "nao-data.js", active: true },
-            { code: "spb", name: "г. Санкт-Петербург", file: "spb-data.js", active: false }
         ]
     },
     {
