@@ -729,22 +729,15 @@
         }
     }
 
-    // --- ДИНАМИЧЕСКИЙ ЗАГРУЗЧИК РЕГИОНОВ И ОКРУГОВ ---
+    // --- ДИНАМИЧЕСКИЙ ЗАГРУЗЧИК РЕГИОНОВ И ОКРУГОВ ИЗ ВНЕШНЕГО ФАЙЛА ---
     function populateRegionDropdown(filterText = '') {
         const sel = document.getElementById('mdo-region');
         if (!sel) return;
-        const prevVal = sel.value;
+        const prevVal = sel.value || 'komi';
         sel.innerHTML = '';
 
-        const districts = window.LESOVIK_FED_DISTRICTS || [
-            {
-                name: "Северо-Западный федеральный округ",
-                regions: [
-                    { code: "komi", name: "Республика Коми", file: "komi-data.js", active: true },
-                    { code: "arkhangelsk", name: "Архангельская область", file: "arkh-data.js", active: true }
-                ]
-            }
-        ];
+        // Берем готовый полный классификатор РФ из regions-data.js
+        const districts = window.LESOVIK_FED_DISTRICTS || [];
 
         const cleanFilter = filterText.trim().toLowerCase();
         let totalMatches = 0;
@@ -761,7 +754,7 @@
                     const opt = document.createElement('option');
                     opt.value = reg.code;
                     opt.innerText = reg.name + (reg.active ? ' (База активна)' : ' [В разработке]');
-                    if (reg.code === (prevVal || 'komi')) opt.selected = true;
+                    if (reg.code === prevVal) opt.selected = true;
                     grp.appendChild(opt);
                     totalMatches++;
                 });
