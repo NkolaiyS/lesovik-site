@@ -66,7 +66,7 @@
     <!-- ПОДКЛЮЧЕНИЕ РЕЕСТРА РЕГИОНОВ РФ -->
     <script src="regions-data.js" onerror="console.log('regions-data.js загружается локально')"></script>
 
-    <!-- 4. РЕКЛАМА РСЯ (ПОЛНЫЙ КОМПЛЕКТ ВЫЗОВОВ, ПЕРЕХВАТЫВАЕТСЯ LESOVIKCORE У PRO) -->
+    <!-- 4. РЕКЛАМА РСЯ -->
     <script>
         window.yaContextCb = window.yaContextCb || [];
         window.yaContextCb.push(() => {
@@ -306,7 +306,7 @@
             background: #fff;
         }
 
-        /* КАРТОЧКА СТУПЕНИ С РАЗБИВКОЙ ДЕЛ/ПОЛУ/ДРОВА */
+        /* КАРТОЧКА СТУПЕНИ */
         .steps-cards-deck { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
         .step-cat-card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; padding: 8px; }
         .step-cat-header { font-size: 12px; font-weight: 800; color: var(--primary-forest); text-align: center; border-bottom: 1px solid var(--border-light); padding-bottom: 4px; margin-bottom: 6px; }
@@ -370,25 +370,33 @@
         .btn-exp-xls { background: #107C41; color: #FFF; }
         .btn-exp-xls:hover { opacity: 0.9; }
 
-        /* ВСПЛЫВАЮЩИЙ МИКРО-ПУЛЬТ КАТЕГОРИИ */
+        /* ВСПЛЫВАЮЩИЙ МИКРО-ПУЛЬТ КАТЕГОРИИ С ТОЧНЫМИ КНОПКАМИ + И - */
         .flyout-backdrop {
             position: fixed; inset: 0; z-index: 5000; background: rgba(0,0,0,0.4); display: none;
             align-items: center; justify-content: center; padding: 15px;
         }
         .flyout-box {
             background: var(--bg-card); border: 2px solid var(--primary-forest); border-radius: 12px;
-            padding: 16px; width: 100%; max-width: 360px; box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+            padding: 16px; width: 100%; max-width: 380px; box-shadow: 0 12px 30px rgba(0,0,0,0.25);
             display: flex; flex-direction: column; gap: 10px;
         }
         .flyout-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding-bottom: 8px; }
-        .flyout-btn-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-        .btn-fly-cat {
-            padding: 10px 4px; border-radius: 6px; font-weight: 800; font-size: 11px; cursor: pointer;
-            text-align: center; border: 1px solid transparent; text-transform: uppercase; display: flex; flex-direction: column; gap: 2px; align-items: center;
+        
+        .flyout-cat-control-row {
+            display: grid; grid-template-columns: 1fr 44px 44px; gap: 6px; align-items: center;
+            background: var(--input-bg); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-light);
         }
-        .btn-fly-cat.del { background: rgba(22, 163, 74, 0.15); border-color: var(--success); color: var(--success); }
-        .btn-fly-cat.polu { background: rgba(230, 126, 34, 0.15); border-color: var(--poludel); color: var(--poludel); }
-        .btn-fly-cat.drova { background: rgba(120, 53, 15, 0.15); border-color: var(--drova); color: var(--drova); }
+        .fly-cat-label { font-size: 12px; font-weight: 800; display: flex; flex-direction: column; }
+        .fly-cat-cnt { font-size: 11px; opacity: 0.75; font-weight: 600; }
+        
+        .btn-step-action {
+            height: 36px; border-radius: 6px; border: 1px solid transparent; font-weight: 900;
+            font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: 0.15s;
+        }
+        .btn-step-action:active { transform: scale(0.92); }
+        .btn-step-add { background: var(--primary-forest); color: #fff; }
+        .btn-step-sub { background: rgba(194, 65, 12, 0.12); color: var(--fire-accent); border-color: var(--fire-accent); }
 
         /* ОФИЦИАЛЬНЫЙ АЛЬБОМНЫЙ ПЕЧАТНЫЙ БЛАНК А4 СТРОГО ПО ГОСТУ НА 1 СТРАНИЦУ */
         #printable-mdo-sheet {
@@ -447,7 +455,7 @@
         <div class="update-badge-banner">
             <span style="font-size: 18px;">⚙️</span>
             <div style="font-size: 12px; color: var(--text-main); line-height: 1.4;">
-                <b>Идет плановое обновление модуля МДО PRO:</b> подключен выбор регионов по федеральным округам с быстрым поиском, классификатор участковых лесничеств, сквозное управление ставками платы и учет категорий годности (деловые, полуделовые, дрова).
+                <b>Модульная архитектура регионов активна:</b> перечетные сетки и ставки подгружаются автоматически. При отсутствии отдельной базы региона действует универсальная таежная модель.
             </div>
         </div>
 
@@ -564,7 +572,7 @@
             <button class="mode-tab-btn" id="tab-mode-cards" onclick="switchInputMode('cards')">🗂️ Карточки категорий (Деловые / Полудел / Дрова)</button>
         </div>
 
-        <!-- 1. МАТРИЧНЫЙ РЕЖИМ (СЕТКА ДЛЯ ПЕРЕЧЕТА В 1 ТАП) -->
+        <!-- 1. МАТРИЧНЫЙ РЕЖИМ -->
         <div id="view-matrix-container">
             
             <!-- ПАНЕЛЬ УПРАВЛЕНИЯ СТАВКАМИ ПЛАТЫ В МАТРИЧНОМ РЕЖИМЕ -->
@@ -573,9 +581,7 @@
                     <span>💰 Ставки платы за древесину (руб./м³) по добавленным породам:</span>
                 </div>
                 <div class="matrix-rates-table-wrap">
-                    <table class="matrix-rates-table" id="matrix-rates-table-el">
-                        <!-- Наполняется динамически -->
-                    </table>
+                    <table class="matrix-rates-table" id="matrix-rates-table-el"></table>
                 </div>
             </div>
 
@@ -587,14 +593,14 @@
                 </div>
             </div>
             <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">
-                💡 <b>Быстрый ввод:</b> Нажмите на ячейку ступени, чтобы открыть пульт распределения (+1 в категорию Деловые, Полудел или Дрова).
+                💡 <b>Быстрый ввод:</b> Нажмите на ячейку ступени, чтобы открыть пульт с раздельными кнопками управления категориями.
             </div>
             <div class="matrix-table-wrapper">
                 <table class="matrix-table" id="matrix-table-el"></table>
             </div>
         </div>
 
-        <!-- 2. КАРТОЧНЫЙ РЕЖИМ (ПОЛНЫЙ ВВОД КАТЕГОРИЙ И ЦЕН) -->
+        <!-- 2. КАРТОЧНЫЙ РЕЖИМ -->
         <div id="view-cards-container" style="display: none;">
             <div class="field-peruchet-section-title">Карточки пород (Настройка разрядов высот, ставок платы и поштучного перечета):</div>
             <div id="peruchet-dynamic-container"></div>
@@ -624,32 +630,45 @@
     </div>
 </div>
 
-<!-- ВСПЛЫВАЮЩИЙ МИКРО-ПУЛЬТ ДЛЯ МАТРИЧНОГО ВВОДА КАТЕГОРИИ -->
+<!-- ВСПЛЫВАЮЩИЙ МИКРО-ПУЛЬТ ДЛЯ МАТРИЧНОГО ВВОДА С ТОЧНЫМИ КНОПКАМИ + И - -->
 <div class="flyout-backdrop" id="flyoutModal" onclick="closeFlyout(event)">
     <div class="flyout-box" onclick="event.stopPropagation()">
         <div class="flyout-header">
-            <b id="flyoutTitle" style="color:var(--primary-forest); font-size:13px;">Ступень: 24 см</b>
-            <span id="flyoutTotalCount" style="font-size:11px; font-weight:700; color:gray;">0 шт</span>
+            <b id="flyoutTitle" style="color:var(--primary-forest); font-size:13.5px;">Ступень: 24 см</b>
+            <span id="flyoutTotalCount" style="font-size:12px; font-weight:800; color:var(--text-main);">0 шт</span>
         </div>
-        <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:gray;">Добавить ствол в категорию:</div>
-        <div class="flyout-btn-grid">
-            <button class="btn-fly-cat del" onclick="flyoutAdd('del')">
-                <span>🟢 Деловые</span>
-                <small id="fly-del-cnt">0 шт</small>
-            </button>
-            <button class="btn-fly-cat polu" onclick="flyoutAdd('polu')">
-                <span>🟠 Полудел</span>
-                <small id="fly-polu-cnt">0 шт</small>
-            </button>
-            <button class="btn-fly-cat drova" onclick="flyoutAdd('drova')">
-                <span>🟤 Дрова</span>
-                <small id="fly-drova-cnt">0 шт</small>
-            </button>
+        
+        <!-- КАТЕГОРИЯ: ДЕЛОВЫЕ -->
+        <div class="flyout-cat-control-row">
+            <div class="fly-cat-label">
+                <span style="color:var(--success);">🟢 Деловые</span>
+                <span class="fly-cat-cnt" id="fly-del-cnt">0 шт</span>
+            </div>
+            <button class="btn-step-action btn-step-sub" onclick="stepCategoryModify('del', -1)">−</button>
+            <button class="btn-step-action btn-step-add" onclick="stepCategoryModify('del', 1)">+</button>
         </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
-            <button class="btn-action-main" style="background:transparent; color:var(--danger); border:1px solid var(--danger); padding:4px 8px; font-size:11px;" onclick="flyoutSubtract()">➖ Убавить (-1)</button>
-            <button class="btn-action-main" style="padding:5px 14px;" onclick="document.getElementById('flyoutModal').style.display='none'">Готово ✓</button>
+
+        <!-- КАТЕГОРИЯ: ПОЛУДЕЛОВЫЕ -->
+        <div class="flyout-cat-control-row">
+            <div class="fly-cat-label">
+                <span style="color:var(--poludel);">🟠 Полуделовые</span>
+                <span class="fly-cat-cnt" id="fly-polu-cnt">0 шт</span>
+            </div>
+            <button class="btn-step-action btn-step-sub" onclick="stepCategoryModify('polu', -1)">−</button>
+            <button class="btn-step-action btn-step-add" onclick="stepCategoryModify('polu', 1)">+</button>
         </div>
+
+        <!-- КАТЕГОРИЯ: ДРОВА -->
+        <div class="flyout-cat-control-row">
+            <div class="fly-cat-label">
+                <span style="color:var(--drova);">🟤 Дрова / Техсырье</span>
+                <span class="fly-cat-cnt" id="fly-drova-cnt">0 шт</span>
+            </div>
+            <button class="btn-step-action btn-step-sub" onclick="stepCategoryModify('drova', -1)">−</button>
+            <button class="btn-step-action btn-step-add" onclick="stepCategoryModify('drova', 1)">+</button>
+        </div>
+
+        <button class="btn-action-main" style="width:100%; margin-top:4px;" onclick="document.getElementById('flyoutModal').style.display='none'">Готово ✓</button>
     </div>
 </div>
 
@@ -818,6 +837,11 @@
                 opt.innerText = item[0] + " лесничество";
                 lesSelect.appendChild(opt);
             });
+
+            if (lesSelect.options.length > 1 && !lesSelect.value) {
+                lesSelect.selectedIndex = 1;
+                handleForestryChange(lesSelect.value);
+            }
         }
     }
 
@@ -849,15 +873,21 @@
                     uchSelect.appendChild(opt);
                 });
                 
-                uchSelect.selectedIndex = 1;
-                document.getElementById('mdo-lesnichestvo').value = uchSelect.value;
+                if (uchSelect.options.length > 1) {
+                    uchSelect.selectedIndex = 1;
+                    document.getElementById('mdo-lesnichestvo').value = `${val} лесничество, ${uchSelect.value}`;
+                } else {
+                    document.getElementById('mdo-lesnichestvo').value = `${val} лесничество`;
+                }
                 syncPassportToCore();
+                autoRecalcIfActive();
             }
         }
     }
 
     function handleUchChange(val) {
-        document.getElementById('mdo-lesnichestvo').value = val;
+        const lesVal = document.getElementById('mdo-lesnichestvo-select').value;
+        document.getElementById('mdo-lesnichestvo').value = lesVal ? `${lesVal} лесничество, ${val}` : val;
         syncPassportToCore();
         autoRecalcIfActive();
     }
@@ -892,12 +922,13 @@
         if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
             const activeProj = window.LesovikCore.getActiveProject();
             if (activeProj) {
+                activeProj.passport = activeProj.passport || {};
                 activeProj.passport.lesnichestvo = les;
                 activeProj.passport.kvartal = kv;
                 activeProj.passport.delyanka = del;
                 activeProj.passport.vydel = vydel;
                 activeProj.passport.target = target;
-                if (activeProj.plots.length > 0) {
+                if (activeProj.plots && activeProj.plots.length > 0) {
                     activeProj.plots[0].area = space;
                 }
                 const projects = window.LesovikCore.getProjects();
@@ -936,9 +967,9 @@
                         <select class="species-h-select" onchange="renderMatrixGrid(); autoRecalcIfActive();">
                             <option value="Ia">Ia разряд</option>
                             <option value="I">I разряд</option>
-                            <option value="II">II разряд</option>
+                            <option value="II" selected>II разряд</option>
                             <option value="III">III разряд</option>
-                            <option value="IV" selected>IV разряд</option>
+                            <option value="IV">IV разряд</option>
                             <option value="V">V разряд</option>
                         </select>
                     </div>
@@ -998,7 +1029,7 @@
         if (block) { 
             block.remove(); 
             addedSpeciesCodes.delete(rawCode); 
-            renderMatrixGrid();
+            renderMatrixGrid(); 
             autoRecalcIfActive();
         }
     }
@@ -1146,7 +1177,7 @@
         table.innerHTML = `<thead>${thead}</thead><tbody>${tbody}</tbody>`;
     }
 
-    // МИКРО-ПУЛЬТ ДЛЯ МАТРИЧНОГО ВВОДА
+    // МИКРО-ПУЛЬТ ДЛЯ МАТРИЧНОГО ВВОДА С РАЗДЕЛЬНЫМИ КНОПКАМИ + И -
     function openFlyout(rawCode, d) {
         activeFlyoutTarget = { rawCode, d };
         const block = document.getElementById(`block-${rawCode}`);
@@ -1175,7 +1206,8 @@
         }
     }
 
-    function flyoutAdd(cat) {
+    // ТОЧНОЕ ИЗМЕНЕНИЕ: УБАВЛЯЕТ ИЛИ ПРИБАВЛЯЕТ ТОЛЬКО ВЫБРАННУЮ КАТЕГОРИЮ
+    function stepCategoryModify(cat, delta) {
         const { rawCode, d } = activeFlyoutTarget;
         if (!rawCode || !d) return;
         const block = document.getElementById(`block-${rawCode}`);
@@ -1184,40 +1216,23 @@
         let inputClass = cat === 'del' ? '.inp-cat-del' : (cat === 'polu' ? '.inp-cat-polu' : '.inp-cat-drova');
         const inp = block.querySelector(`${inputClass}[data-diameter="${d}"]`);
         if (inp) {
-            let v = (parseInt(inp.value, 10) || 0) + 1;
-            inp.value = v;
-            if (navigator.vibrate) navigator.vibrate(15);
+            let currentVal = parseInt(inp.value, 10) || 0;
+            let newVal = currentVal + delta;
+            if (newVal < 0) newVal = 0;
+            inp.value = newVal;
+
+            if (navigator.vibrate) navigator.vibrate(delta > 0 ? 15 : 25);
             openFlyout(rawCode, d);
             renderMatrixGrid();
             autoRecalcIfActive();
         }
     }
 
-    function flyoutSubtract() {
-        const { rawCode, d } = activeFlyoutTarget;
-        if (!rawCode || !d) return;
-        const block = document.getElementById(`block-${rawCode}`);
-        if (!block) return;
-
-        const inpDrova = block.querySelector(`.inp-cat-drova[data-diameter="${d}"]`);
-        const inpPolu = block.querySelector(`.inp-cat-polu[data-diameter="${d}"]`);
-        const inpDel = block.querySelector(`.inp-cat-del[data-diameter="${d}"]`);
-
-        if (parseInt(inpDrova.value, 10) > 0) inpDrova.value = parseInt(inpDrova.value, 10) - 1;
-        else if (parseInt(inpPolu.value, 10) > 0) inpPolu.value = parseInt(inpPolu.value, 10) - 1;
-        else if (parseInt(inpDel.value, 10) > 0) inpDel.value = parseInt(inpDel.value, 10) - 1;
-
-        if (navigator.vibrate) navigator.vibrate(25);
-        openFlyout(rawCode, d);
-        renderMatrixGrid();
-        autoRecalcIfActive();
-    }
-
     // УНИВЕРСАЛЬНЫЙ РАСЧЕТ КУБАТУРЫ ОДНОГО СТВОЛА
     function calculateStemVolume(rawCode, hSelector, dia) {
         const regCode = document.getElementById('mdo-region').value;
         const hNumMap = { "Ia": 1, "I": 1, "II": 2, "III": 3, "IV": 4, "V": 5 };
-        const hRankNum = hNumMap[hSelector] || 3;
+        const hRankNum = hNumMap[hSelector] || 2;
 
         let regionalVolumeTable = null;
         if (regCode === 'komi' && window.VOLUMES_KOMI) regionalVolumeTable = window.VOLUMES_KOMI;
@@ -1285,6 +1300,10 @@
         let speciesVolumesReport = [];
         let grandTotalSampleVolume = 0;
 
+        // Проверяем наличие отдельной товарной таблицы региона
+        const dynamicCommodityKey = `COMMODITY_${selectedRegion.toUpperCase()}`;
+        const regionalCommodityTable = window[dynamicCommodityKey] || null;
+
         blocks.forEach(block => {
             const rawCode = block.getAttribute('data-rawcode');
             const isConiferous = block.getAttribute('data-coniferous') === 'true';
@@ -1344,6 +1363,7 @@
 
         let speciesDetailedRows = [];
 
+        blocks.forEach(block => {}); // noop
         speciesVolumesReport.forEach(species => {
             let spLarge = 0, spMedium = 0, spSmall = 0, spFire = 0, spWaste = 0;
             let spDelStemsVol = 0, spPoluStemsVol = 0, spDrovaStemsVol = 0;
@@ -1361,15 +1381,27 @@
                 spDrovaStemsVol += stepDrovaVol;
 
                 let pLarge = 0, pMedium = 0, pSmall = 0, pFire = 0, pWaste = 6;
-                if (dia >= 26) {
-                    pLarge = (species.hSelector === 'Ia' || species.hSelector === 'I') ? 70 : 60;
-                    pMedium = 18; pSmall = 2; pFire = 14;
-                } else if (dia >= 14 && dia <= 24) {
-                    pLarge = 0;
-                    pMedium = (species.hSelector === 'Ia' || species.hSelector === 'I') ? 55 : 45;
-                    pSmall = 25; pFire = 14;
+
+                // 1. Проверяем точный товарный выход для региона
+                if (regionalCommodityTable && regionalCommodityTable[species.rawCode] && regionalCommodityTable[species.rawCode][dia]) {
+                    const hNumMap = { "Ia": 1, "I": 1, "II": 2, "III": 3, "IV": 4, "V": 5 };
+                    const rankNum = hNumMap[species.hSelector] || 2;
+                    const rData = regionalCommodityTable[species.rawCode][dia][rankNum] || regionalCommodityTable[species.rawCode][dia][1];
+                    if (rData) {
+                        pLarge = rData.large; pMedium = rData.medium; pSmall = rData.small; pFire = rData.fire; pWaste = rData.waste;
+                    }
                 } else {
-                    pLarge = 0; pMedium = 0; pSmall = 60; pFire = 24;
+                    // 2. Резервная сетка Анучина
+                    if (dia >= 26) {
+                        pLarge = (species.hSelector === 'Ia' || species.hSelector === 'I') ? 70 : 60;
+                        pMedium = 18; pSmall = 2; pFire = 14;
+                    } else if (dia >= 14 && dia <= 24) {
+                        pLarge = 0;
+                        pMedium = (species.hSelector === 'Ia' || species.hSelector === 'I') ? 55 : 45;
+                        pSmall = 25; pFire = 14;
+                    } else {
+                        pLarge = 0; pMedium = 0; pSmall = 60; pFire = 24;
+                    }
                 }
 
                 if (species.rawCode === 'Б' || species.rawCode === 'Ос') {
@@ -1494,7 +1526,7 @@
         };
     }
 
-    // 1. ОФИЦИАЛЬНАЯ ПЕЧАТЬ В АЛЬБОМНЫЙ PDF А4 ПОД ПОДПИСИ (СТРОГО ПО ГОСТУ НА 1 ЛИСТЕ)
+    // 1. ОФИЦИАЛЬНАЯ ПЕЧАТЬ В АЛЬБОМНЫЙ PDF А4 ПОД ПОДПИСИ
     function printOfficialMDO() {
         if (!lastMdoCalculatedData) {
             runMDO();
@@ -1799,10 +1831,10 @@
         
         const selector = document.getElementById('species-selector');
         selector.selectedIndex = 0;
-        addSpeciesBlock();
+        addSpeciesBlock(); // Ель
         
-        selector.selectedIndex = 1;
-        addSpeciesBlock();
+        selector.selectedIndex = 2;
+        addSpeciesBlock(); // Сосна
         
         updateMDOArchiveSelect();
 
@@ -1816,7 +1848,7 @@
                 document.getElementById('mdo-delyanka').value = p.delyanka || '';
                 document.getElementById('mdo-vydel').value = p.vydel || '1';
                 document.getElementById('mdo-target').value = p.target || '';
-                if (activeProj.plots.length > 0 && activeProj.plots[0].area) {
+                if (activeProj.plots && activeProj.plots.length > 0 && activeProj.plots[0].area) {
                     document.getElementById('mdo-space').value = activeProj.plots[0].area;
                 }
                 syncPassportToCore();
