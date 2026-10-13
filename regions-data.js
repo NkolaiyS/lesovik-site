@@ -22,7 +22,7 @@ window.LESOVIK_FED_DISTRICTS = [
         name: "Приволжский федеральный округ",
         regions: [
             { code: "kirov", name: "Кировская область", file: "kirov-data.js", active: true },
-            { code: "perm", name: "Пермский край", file: "perm-data.js", active: false },
+            { code: "perm", name: "Пермский край", file: "perm-data.js", active: true },
             { code: "bashkortostan", name: "Республика Башкортостан", file: "bash-data.js", active: false },
             { code: "tatarstan", name: "Республика Татарстан", file: "tatar-data.js", active: false },
             { code: "udmurtia", name: "Удмуртская Республика", file: "udm-data.js", active: false },
