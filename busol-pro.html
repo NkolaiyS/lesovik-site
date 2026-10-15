@@ -22,6 +22,11 @@
     <meta name="geo.region" content="RU-KO">
     <meta name="geo.placename" content="Сыктывкар">
 
+    <!-- Применение сохранённой темы до отрисовки (без мерцания) -->
+    <script>
+        try { if (localStorage.getItem('lesovik_theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) {}
+    </script>
+
     <!-- Подключение JSZip для распаковки KMZ в офлайне -->
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
@@ -385,6 +390,7 @@
             position: fixed;
             top: 0; left: 0;
             width: 100vw; height: 100vh;
+            height: 100dvh;
             background: #0D1311;
             z-index: 9999999;
             flex-direction: column;
@@ -491,6 +497,7 @@
             position: fixed;
             top: 0; left: 0;
             width: 100vw; height: 100vh;
+            height: 100dvh;
             background: var(--bg-paper);
             z-index: 9999999;
             flex-direction: column;
@@ -544,7 +551,7 @@
             background: #FdfFfd;
         }
         [data-theme="dark"] .fs-map-canvas-container { background: #151e1b; }
-        #fs-polygon-canvas { width: 100%; height: 100%; cursor: grab; }
+        #fs-polygon-canvas { width: 100%; height: 100%; cursor: grab; touch-action: none; }
         #fs-polygon-canvas:active { cursor: grabbing; }
 
         .fs-map-bottom-bar {
@@ -622,7 +629,7 @@
         .btn-clear-log:hover { background: var(--danger); color: #FFF; }
 
         .canvas-container { position: relative; width: 100%; max-width: 100%; background: #FFFFFF; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-top: 12px; display: flex; flex-direction: column; align-items: center; padding: 8px; box-sizing: border-box; }
-        #polygon-canvas { background: #FdfFfd; border-radius: 6px; width: 100%; max-width: 100%; aspect-ratio: 1; border: 1px dashed rgba(0,0,0,0.1); box-sizing: border-box; cursor: grab; }
+        #polygon-canvas { background: #FdfFfd; border-radius: 6px; width: 100%; max-width: 100%; aspect-ratio: 1; border: 1px dashed rgba(0,0,0,0.1); box-sizing: border-box; cursor: grab; touch-action: none; }
         #polygon-canvas:active { cursor: grabbing; }
         [data-theme="dark"] #polygon-canvas { background: #151e1b; border: 1px dashed rgba(255,255,255,0.1); }
         
@@ -656,7 +663,7 @@
         .footer-column h4 { font-family: 'Merriweather', serif; color: #E0E0E0; font-size: 15px; margin-top: 0; margin-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 8px; }
         .footer-bottom { text-align: center; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.05); font-size: 11px; opacity: 0.6; }
 
-        .toast-notification { position: fixed; top: 110px; left: 50%; transform: translateX(-50%); background: #2D5A27; color: #FFF; padding: 10px 20px; border-radius: 8px; font-size: 12px; font-weight: bold; z-index: 99999; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3); text-align: center; }
+        .toast-notification { position: fixed; top: 110px; left: 50%; transform: translateX(-50%); background: #2D5A27; color: #FFF; padding: 10px 20px; border-radius: 8px; font-size: 12px; font-weight: bold; z-index: 99999999; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3); text-align: center; max-width: 92vw; }
 
         /* ОТДЕЛЬНОЕ ПОЛНОЭКРАННОЕ ОКНО ФОТОФИКСАЦИИ */
         .photo-modal-screen {
@@ -664,6 +671,7 @@
             position: fixed;
             top: 0; left: 0;
             width: 100vw; height: 100vh;
+            height: 100dvh;
             background: #000;
             z-index: 99999999;
             flex-direction: column;
@@ -810,8 +818,8 @@
 
         <div class="fs-bottom-controls-container">
             <div id="fs-dms-azimuth" style="font-size: 20px; font-weight: bold; color: #8FBC8F; margin-bottom: 2px;">АЗИМУТ: 0° 00' 00"</div>
-            <div id="fs-dms-coords" style="font-size: 11px; opacity: 0.9;">61° 28' 48" с.ш.  50° 30' 06" в.д. (61.480000, 50.501667)</div>
-            <div id="fs-altitude" style="font-size: 12px; color: #8FBC8F; margin-bottom: 6px;">Высота: 150 м (Точность: ±3 м)</div>
+            <div id="fs-dms-coords" style="font-size: 11px; opacity: 0.9;">GPS: поиск спутников...</div>
+            <div id="fs-altitude" style="font-size: 12px; color: #8FBC8F; margin-bottom: 6px;">Высота: н/д (Точность: поиск...)</div>
             
             <button id="btn-fs-capture" class="btn-action btn-lock-measure btn-fs-huge-trigger" onclick="captureMeasurement(); closeFullscreenCompass();" disabled>Поймайте уровень horizon</button>
         </div>
@@ -823,7 +831,7 @@
             <div class="fs-map-info-card">
                 <div id="fs-map-area" style="font-weight:bold; color:#8FBC8F; font-size:12.5px;">Площадь: 0.0000 га</div>
                 <div id="fs-map-coords" style="font-size:10.5px; opacity:0.9;">GPS: поиск...</div>
-                <div id="fs-map-alt" style="font-size:10px; color:#8FBC8F;">Высота: 150 м (±3 м)</div>
+                <div id="fs-map-alt" style="font-size:10px; color:#8FBC8F;">Высота: н/д</div>
             </div>
             
             <div class="fs-mini-compass-box">
@@ -871,7 +879,7 @@
                 
                 <button class="btn-action btn-set-zero" style="text-align:left; padding:12px; background:#2563EB;" onclick="setGlobalDistanceMethod('gps')">
                     <b>📡 GPS-расчет (По спутниковым координатам)</b><br>
-                    <small style="font-size:11px; opacity:0.9; font-weight:normal;">Длина считается автоматически между точками Т1➔Т2➔Т3 (для Т1 ставится прочерк)</small>
+                    <small style="font-size:11px; opacity:0.9; font-weight:normal;">Длина линии — расстояние от её начала до следующей точки (последняя линия считается до Т1, замыкание)</small>
                 </button>
             </div>
             
@@ -891,7 +899,7 @@
                 <b>Точность GPS:</b> <span id="t1-acc-display">--</span>
             </div>
             <p style="font-size: 13px; line-height: 1.4; color: var(--text-graphite);">
-                Столб успешно записан в память. Теперь пройдите <b>5–10 метров</b> строго по линии визира. Направление вычислится автоматически со спутника!
+                Столб успешно записан в память. Теперь пройдите строго по линии визира <b>не менее 10 метров</b> (чем хуже точность GPS, тем дальше). Направление вычислится автоматически со спутника!
             </p>
             <button class="btn-action btn-set-zero" style="width: 100%; margin-top: 5px;" onclick="closePopup('gps-t1-popup')">Понятно, иду по линии</button>
         </div>
@@ -905,8 +913,8 @@
                 <li><strong>Оптический визир (Вертикально):</strong> Наведите вертикальную нить экрана на веху угла делянки. Дождитесь зеленого уровня авиагоризонта и зафиксируйте румб в журнал. Допуск горизонта смягчен до ±12° для быстрой фиксации без дрожи.</li>
                 <li><strong>📷 Фотофиксация столба с координатами:</strong> Нажмите кнопку «📷 Фото столба с координатами». Сделайте снимок — паспорт выдела, азимут и ГЛОНАСС впекаются в кадр.</li>
                 <li><strong>Электронная буссоль (Горизонтально):</strong> Положите телефон на ладонь горизонтально. При нажатии «Зафиксировать» точка ставится в текущих координатах GPS автоматически!</li>
-                <li><strong>📡 GPS-Курс (По 2 точкам):</strong> Нажмите «📍 Старт точки», пройдите 5–10 метров по визиру и нажмите «🏁 Зафиксировать вектор». Точки связываются непрерывной цепочкой (Т1 ➔ Т2 ➔ Т3).</li>
-                <li><strong>📡 GPS-расчет расстояний:</strong> При выбранном методе длина вычисляется со спутника между точками автоматически.</li>
+                <li><strong>📡 GPS-Курс (По 2 точкам):</strong> Нажмите «📍 Старт точки», пройдите по визиру не менее 10 метров (чем хуже точность GPS, тем дальше) и нажмите «🏁 Зафиксировать вектор». Точки связываются непрерывной цепочкой (Т1 ➔ Т2 ➔ Т3).</li>
+                <li><strong>📡 GPS-расчет расстояний:</strong> При выбранном методе длина линии вычисляется со спутника как расстояние до следующей точки (последняя линия — до Т1).</li>
                 <li><strong>📂 Загрузка KML / KMZ / GeoJSON:</strong> Загружайте файлы квартальных сеток и выделов из ФГИС ЛК прямо на чертёж без подключения к интернету.</li>
                 <li><strong>🔌 Точный магнитометр (Android):</strong> Подключите внешний модуль через OTG-кабель. При первом подключении подтвердите порт, далее соединение восстанавливается автоматически.</li>
             </ol>
@@ -945,10 +953,10 @@
             <ul class="instruction-steps">
                 <li><strong>Цепной алгоритм:</strong>
                     <br>1. На стартовом столбе нажмите <b>«📍 Старт линии (Т1)»</b>. Точка привязывается к месту стоянки.
-                    <br>2. Пройдите 5–10 метров вдоль визира. Программа непрерывно вычисляет истинный азимут и дистанцию.
+                    <br>2. Пройдите вдоль визира не менее 10 метров (чем хуже точность GPS, тем дальше). Программа непрерывно вычисляет истинный азимут и дистанцию.
                     <br>3. Нажмите <b>«🏁 Зафиксировать вектор»</b>. Отрезок заносится в журнал, а точка Т2 автоматически становится стартом для Т3!
                 </li>
-                <li><strong>Без магнитных помех:</strong> Магнитометр не используется. Металл и ЛЭП не влияют!</li>
+                <li><strong>Без магнитных помех:</strong> Магнитометр не используется. Металл и ЛЭП не влияют! Азимут истинный (от географического севера), поправка склонения не применяется.</li>
             </ul>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closePopup('gps-info-popup')">Понятно</button>
         </div>
@@ -962,6 +970,7 @@
             <ul class="instruction-steps" style="font-size: 13px; line-height: 1.5;">
                 <li><strong>Раздельная юстировка:</strong> Поправка настраивается отдельно для режима «Вертикально (Камера)» и отдельно для «Буссоль (Лимб)». Это позволяет устранить аппаратную разницу в 2–3° между плоскостями датчика в смартфоне.</li>
                 <li><strong>Учет магнитного склонения:</strong> Для перехода от магнитных азимутов к истинным введите величину склонения со знаком «+» (восточное) или «-» (западное).</li>
+                <li><strong>GPS-Курс:</strong> В режиме GPS азимут уже истинный, поэтому юстировка там не применяется и скрыта.</li>
             </ul>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closePopup('offset-info-popup')">Понятно</button>
         </div>
@@ -1051,7 +1060,7 @@
                     </div>
 
                     <!-- ИНТЕРФЕЙС РАЗДЕЛЬНОЙ ЮСТИРОВКИ ДЛЯ РЕЖИМОВ -->
-                    <div class="calibration-offset-wrapper">
+                    <div class="calibration-offset-wrapper" id="calibration-offset-wrapper">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <label style="font-weight:700; color:var(--forest-green); display:flex; align-items:center; gap:5px;">
                                 🎯 <span id="offset-mode-title">Юстировка (Вертикально)</span>:
@@ -1085,8 +1094,8 @@
 
                         <div class="compass-bottom-info-panel">
                             <div id="dms-azimuth-text" style="font-size: 15px; font-weight: bold; color: #8FBC8F; margin-bottom: 2px;">АЗИМУТ: 0° 00' 00"</div>
-                            <div id="dms-coords-text" style="font-size: 10px; opacity: 0.9;">61° 28' 48" с.ш. 50° 30' 06" в.д. (61.480000, 50.501667)</div>
-                            <div id="altitude-text" style="font-size: 10px; color: #8FBC8F;">Высота: 150 м (Точность: поиск...)</div>
+                            <div id="dms-coords-text" style="font-size: 10px; opacity: 0.9;">GPS: поиск спутников...</div>
+                            <div id="altitude-text" style="font-size: 10px; color: #8FBC8F;">Высота: н/д (Точность: поиск...)</div>
                         </div>
                     </div>
 
@@ -1163,7 +1172,7 @@
                                 <th>Линия</th>
                                 <th id="th-mode-label">Азимут / Угол</th>
                                 <th>Длина, м</th>
-                                <th>Координаты (DMS + DD)</th>
+                                <th>Координаты начала линии (DMS + DD)</th>
                                 <th>Удал.</th>
                             </tr>
                         </thead>
@@ -1247,6 +1256,36 @@
     </footer>
 
 <script>
+    // =====================================================================
+    //  ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+    // =====================================================================
+    const M_PER_DEG = 111139; // метров в градусе широты (единая константа для всех проекций)
+
+    function safeGet(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+    function safeSet(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
+    function safeJSON(key, fallback) {
+        try {
+            const raw = localStorage.getItem(key);
+            return raw ? JSON.parse(raw) : fallback;
+        } catch (e) {
+            console.warn("Повреждённые данные в localStorage:", key, e);
+            return fallback;
+        }
+    }
+    function round1(v) { return parseFloat(Number(v).toFixed(1)); }
+    function hasCoords(o) {
+        return !!o && typeof o.lat === 'number' && typeof o.lng === 'number' && !isNaN(o.lat) && !isNaN(o.lng);
+    }
+    function escapeXml(s) {
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+    }
+    function csvCell(v) {
+        let s = String(v === null || v === undefined ? '' : v);
+        // защита от CSV-инъекции (формулы Excel)
+        if (/^[=+\-@\t\r]/.test(s) && isNaN(Number(s))) s = "'" + s;
+        return '"' + s.replace(/"/g, '""') + '"';
+    }
+
     let isFirstData = true;
 
     // --- ПЕРЕМЕННЫЕ ИСТОЧНИКА ДАННЫХ И ВНЕШНЕГО МОДУЛЯ ---
@@ -1256,11 +1295,11 @@
     let hardwareReadableStreamClosed = null;
     let hardwareKeepReading = false;
 
-    // --- ПЕРЕМЕННЫЕ ФИЛЬТРА КАЛМАНА И БУФЕР УСРЕДНЕНИЯ АЗИМУТА ---
+    // --- ПЕРЕМЕННЫЕ СГЛАЖИВАНИЯ АЗИМУТА (экспоненциальный фильтр по sin/cos) И БУФЕР УСРЕДНЕНИЯ ---
     let filteredSin = 0;
     let filteredCos = 0;
     let isFilterInitialized = false;
-    const kalmanAlpha = 0.05;
+    const smoothAlpha = 0.05;
 
     // Кольцевой буфер последних 10 отсчетов для чистого усреднения при замере
     const AZIMUTH_SMOOTH_BUFFER_SIZE = 10;
@@ -1287,9 +1326,12 @@
     let calibTiltOk = false; 
 
     // GPS ПЕРЕМЕННЫЕ
+    // Значения по умолчанию используются ТОЛЬКО для отображения, пока нет реальной фиксации (gpsFixed === false).
+    // В журнал, на фото и в экспорт заведомо ложные координаты не попадают.
+    let gpsFixed = false;
     let currentLat = 61.4800; 
     let currentLng = 50.5016;
-    let currentAltitude = 150;
+    let currentAltitude = null;
     let currentAccuracy = 0;
 
     let gpsPoint1 = null; 
@@ -1297,7 +1339,6 @@
     let uploadedGisPolygons = [];
 
     let canvasZoomMultiplier = 1.0; 
-    let isFollowUser = false;
     let panOffsetX = 0;
     let panOffsetY = 0;
     let isDraggingCanvas = false;
@@ -1319,26 +1360,66 @@
     function setCurrentOffsetDecimal(val) {
         if (currentSystemMode === 'theodolite') {
             offsetTheodolite = val;
-            localStorage.setItem('lesovik_offset_theodolite', offsetTheodolite);
+            safeSet('lesovik_offset_theodolite', offsetTheodolite);
         } else {
             offsetMagnetic = val;
-            localStorage.setItem('lesovik_offset_magnetic', offsetMagnetic);
+            safeSet('lesovik_offset_magnetic', offsetMagnetic);
         }
     }
 
     let wasLevelLastTick = false;
 
     let photoVideoStream = null;
+    let photoOwnsStream = false;
     let capturedPhotoBlob = null;
     let capturedPhotoFileName = "";
 
+    // --- ТОСТЫ (без наложения таймеров) ---
+    let toastTimer = null;
     function showToast(msg) {
         const toast = document.getElementById('toast-message');
         if (toast) {
             toast.innerText = msg;
             toast.style.display = 'block';
-            setTimeout(() => { toast.style.display = 'none'; }, 3500);
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => { toast.style.display = 'none'; toastTimer = null; }, 3500);
         }
+    }
+
+    // --- ФОРМАТИРОВАНИЕ GPS-ДАННЫХ (с учётом отсутствия фиксации) ---
+    function coordsDMSText() {
+        return gpsFixed ? `${decimalToDMS(currentLat, true)} ${decimalToDMS(currentLng, false)}` : 'GPS: нет фиксации';
+    }
+    function coordsFullText() {
+        return gpsFixed
+            ? `${decimalToDMS(currentLat, true)} ${decimalToDMS(currentLng, false)} (${currentLat.toFixed(6)}, ${currentLng.toFixed(6)})`
+            : 'GPS: поиск спутников...';
+    }
+    function altitudeText() {
+        const alt = (currentAltitude !== null && currentAltitude !== undefined) ? `${currentAltitude} м` : 'н/д';
+        const acc = gpsFixed ? `±${currentAccuracy} м` : 'поиск...';
+        return `Высота: ${alt} (Точность: ${acc})`;
+    }
+    function altitudeShortText() {
+        const alt = (currentAltitude !== null && currentAltitude !== undefined) ? `${currentAltitude} м` : 'н/д';
+        return `Высота: ${alt} (${gpsFixed ? '±' + currentAccuracy + ' м' : 'поиск...'})`;
+    }
+
+    // --- ПРОЕКЦИЯ ГЕОГРАФИЧЕСКИХ КООРДИНАТ В ЛОКАЛЬНЫЕ МЕТРЫ ---
+    function latLngToLocal(origin, lat, lng) {
+        return {
+            x: (lng - origin.lng) * M_PER_DEG * Math.cos(origin.lat * Math.PI / 180),
+            y: (lat - origin.lat) * M_PER_DEG
+        };
+    }
+
+    // Начало чертежа = начало первой линии хода
+    function getTraverseOrigin() {
+        if (measurementsLog.length > 0 && hasCoords(measurementsLog[0])) {
+            return { lat: measurementsLog[0].lat, lng: measurementsLog[0].lng };
+        }
+        if (gpsPoint1) return { lat: gpsPoint1.lat, lng: gpsPoint1.lng };
+        return null;
     }
 
     // --- ЛОГИКА ПОДКЛЮЧЕНИЯ И АВТОПОДХВАТА ВНЕШНЕГО МОДУЛЯ ---
@@ -1534,6 +1615,7 @@
             let distInput = document.getElementById(`dist-${measurementsLog[lastIdx].id}`);
             if (distInput) {
                 distInput.value = roundedDist;
+                distInput.style.borderColor = '';
             }
 
             saveToLocalStorage();
@@ -1572,7 +1654,7 @@
             currentAzimuth = sensorAzimuth;
         }
 
-        updateCompassAndHorizonUI(sensorAzimuth, pitch, roll);
+        queueUiUpdate(sensorAzimuth, pitch, roll);
     }
 
     window.LesovikExternalModule = {
@@ -1589,46 +1671,55 @@
         }
     };
 
-    function setGlobalDistanceMethod(mode) {
-        globalDistanceMethod = mode;
-        localStorage.setItem('lesovik_dist_method', mode);
-        
+    // --- МЕТОД ВЫЧИСЛЕНИЯ ДЛИН ---
+    function applyDistMethodLabel() {
         const label = document.getElementById('current-dist-mode-label');
         const stepBar = document.getElementById('step-settings-bar');
+        if (!label) return;
 
-        if (mode === 'manual') {
+        if (globalDistanceMethod === 'manual') {
             label.innerText = "📏 Ручной ввод";
             if (stepBar) stepBar.style.display = 'none';
-        } else if (mode === 'steps') {
+        } else if (globalDistanceMethod === 'steps') {
             label.innerText = "👣 Шагомер";
             if (stepBar) stepBar.style.display = 'flex';
-        } else if (mode === 'gps') {
+        } else if (globalDistanceMethod === 'gps') {
             label.innerText = "📡 GPS-расчет";
             if (stepBar) stepBar.style.display = 'none';
         }
+    }
+
+    function setGlobalDistanceMethod(mode) {
+        globalDistanceMethod = mode;
+        safeSet('lesovik_dist_method', mode);
+        applyDistMethodLabel();
 
         closePopup('dist-mode-popup');
         recalculateDistancesByMethod();
         renderLogTable();
         drawPolygon();
-        showToast(`Выбран метод: ${label.innerText}`);
+        showToast(`Выбран метод: ${document.getElementById('current-dist-mode-label').innerText}`);
     }
 
+    // Согласованная модель: строка журнала = линия, НАЧИНАЮЩАЯСЯ в точке (lat, lng) и идущая по азимуту.
+    // Длина линии i при GPS-методе = расстояние от начала линии i до начала линии i+1.
+    // Последняя линия замыкается на первую точку (если в ходе уже есть хотя бы 3 линии).
+    // Векторы, снятые в режиме «GPS-Курс», уже содержат измеренную длину и не пересчитываются.
     function recalculateDistancesByMethod() {
+        const n = measurementsLog.length;
         measurementsLog.forEach((m, idx) => {
             m.mode = globalDistanceMethod;
             if (globalDistanceMethod === 'gps') {
-                if (idx === 0) {
+                if (m.systemMode === 'gps_heading') return;
+                const next = idx < n - 1 ? measurementsLog[idx + 1] : (n >= 3 ? measurementsLog[0] : null);
+                if (!next) {
                     m.distance = 0;
-                } else {
-                    let prev = measurementsLog[idx - 1];
-                    if (prev.lat && prev.lng && m.lat && m.lng) {
-                        m.distance = parseFloat(calculateDistance(prev.lat, prev.lng, m.lat, m.lng).toFixed(1));
-                    }
+                } else if (hasCoords(m) && hasCoords(next)) {
+                    m.distance = round1(calculateDistance(m.lat, m.lng, next.lat, next.lng));
                 }
             } else if (globalDistanceMethod === 'steps') {
                 if (m.steps > 0) {
-                    m.distance = parseFloat((m.steps * stepLength).toFixed(1));
+                    m.distance = round1(m.steps * stepLength);
                 }
             }
         });
@@ -1643,7 +1734,6 @@
     }
 
     function recenterCanvasOnUser() {
-        isFollowUser = false;
         canvasZoomMultiplier = 1.0;
         panOffsetX = 0;
         panOffsetY = 0;
@@ -1655,10 +1745,6 @@
         isFsMapOpen = true;
         const modal = document.getElementById('fullscreen-map-modal');
         modal.style.display = 'flex';
-        
-        const fsCanvas = document.getElementById('fs-polygon-canvas');
-        fsCanvas.width = window.innerWidth;
-        fsCanvas.height = window.innerHeight;
 
         drawCompassDialSVG('fs-mini-compass-svg');
         updateFsMapUI();
@@ -1706,9 +1792,9 @@
             btnCapture.classList.remove('ready-to-fire');
         }
 
-        document.getElementById('fs-map-coords').innerText = `GPS: ${decimalToDMS(currentLat, true)} ${decimalToDMS(currentLng, false)}`;
+        document.getElementById('fs-map-coords').innerText = gpsFixed ? `GPS: ${coordsDMSText()}` : 'GPS: поиск спутников...';
         const fsAlt = document.getElementById('fs-map-alt');
-        if (fsAlt) fsAlt.innerText = `Высота: ${currentAltitude} м (±${currentAccuracy} м)`;
+        if (fsAlt) fsAlt.innerText = altitudeShortText();
     }
 
     function initCanvasDragControls() {
@@ -1746,27 +1832,35 @@
             canvas.addEventListener('mousemove', moveDrag);
             window.addEventListener('mouseup', stopDrag);
 
+            // touch-action: none в CSS отключает прокрутку страницы при сдвиге чертежа
             canvas.addEventListener('touchstart', startDrag, { passive: true });
             canvas.addEventListener('touchmove', moveDrag, { passive: true });
             window.addEventListener('touchend', stopDrag);
+            window.addEventListener('touchcancel', stopDrag);
         });
     }
 
+    // --- ЗАГРУЗКА СЛОЁВ KML / KMZ / GEOJSON ---
     async function handleGISLayerUpload(event) {
-        const file = event.target.files[0];
+        const input = event.target;
+        const file = input.files[0];
         if (!file) return;
 
         const fileName = file.name.toLowerCase();
         try {
             if (fileName.endsWith('.kmz')) {
-                const zip = new JSZip();
-                const zipData = await zip.loadAsync(file);
-                const kmlFile = Object.keys(zipData.files).find(name => name.toLowerCase().endsWith('.kml'));
-                if (kmlFile) {
-                    const kmlText = await zipData.files[kmlFile].async('string');
-                    parseKMLText(kmlText);
+                if (typeof JSZip === 'undefined') {
+                    showToast("❌ Библиотека JSZip не загружена (нужен интернет при первом запуске)");
                 } else {
-                    showToast("❌ Внутри KMZ не найден файл KML!");
+                    const zip = new JSZip();
+                    const zipData = await zip.loadAsync(file);
+                    const kmlFile = Object.keys(zipData.files).find(name => name.toLowerCase().endsWith('.kml'));
+                    if (kmlFile) {
+                        const kmlText = await zipData.files[kmlFile].async('string');
+                        parseKMLText(kmlText);
+                    } else {
+                        showToast("❌ Внутри KMZ не найден файл KML!");
+                    }
                 }
             } else if (fileName.endsWith('.kml')) {
                 const reader = new FileReader();
@@ -1781,6 +1875,8 @@
             console.error(err);
             showToast("❌ Ошибка чтения файла слоя!");
         }
+        // позволяет повторно выбрать тот же файл
+        input.value = '';
     }
 
     function parseKMLText(xmlText) {
@@ -1800,7 +1896,7 @@
                     
                     if (poly.length > 0) uploadedGisPolygons.push(poly);
                 }
-                showToast(`✔️ Загружено полигонов ФГИС ЛК: ${uploadedGisPolygons.length}`);
+                showToast(`✔️ Загружено объектов ФГИС ЛК: ${uploadedGisPolygons.length}`);
                 drawPolygon();
             } else {
                 showToast("❌ В KML не найдены координаты полигонов!");
@@ -1832,6 +1928,8 @@
                 } else if (geometry.type === 'LineString') {
                     const poly = geometry.coordinates.map(pt => ({ lng: pt[0], lat: pt[1] }));
                     if (poly.length > 0) uploadedGisPolygons.push(poly);
+                } else if (geometry.type === 'Point') {
+                    uploadedGisPolygons.push([{ lng: geometry.coordinates[0], lat: geometry.coordinates[1] }]);
                 }
             };
 
@@ -1880,8 +1978,6 @@
         if (titleLabel) {
             if (currentSystemMode === 'theodolite') {
                 titleLabel.innerText = 'Юстировка (Лимб)';
-            } else if (currentSystemMode === 'gps_heading') {
-                titleLabel.innerText = 'Юстировка (GPS-Курс)';
             } else {
                 titleLabel.innerText = 'Юстировка (Вертикально)';
             }
@@ -1889,9 +1985,9 @@
     }
 
     function loadCalibrationOffset() {
-        const savedMag = localStorage.getItem('lesovik_offset_magnetic');
-        const savedTheo = localStorage.getItem('lesovik_offset_theodolite');
-        const legacyOld = localStorage.getItem('lesovik_calibration_offset');
+        const savedMag = safeGet('lesovik_offset_magnetic');
+        const savedTheo = safeGet('lesovik_offset_theodolite');
+        const legacyOld = safeGet('lesovik_calibration_offset');
 
         if (savedMag !== null) {
             offsetMagnetic = parseFloat(savedMag) || 0.0;
@@ -1965,13 +2061,16 @@
         return (brng + 360) % 360;
     }
 
+    let gpsErrorShown = false;
     function initGPS() {
         if (navigator.geolocation) {
             navigator.geolocation.watchPosition(
                 (position) => {
+                    gpsFixed = true;
                     currentLat = position.coords.latitude;
                     currentLng = position.coords.longitude;
-                    currentAltitude = position.coords.altitude ? Math.round(position.coords.altitude) : 150;
+                    currentAltitude = (position.coords.altitude !== null && position.coords.altitude !== undefined)
+                        ? Math.round(position.coords.altitude) : null;
                     currentAccuracy = Math.round(position.coords.accuracy) || 0;
 
                     updateGPSAccuracyBadge();
@@ -1983,7 +2082,13 @@
                     updateFsMapUI();
                     updatePhotoModalHUD();
                 },
-                (error) => { console.error("Ошибка GPS:", error); },
+                (error) => {
+                    console.error("Ошибка GPS:", error);
+                    if (!gpsErrorShown && error && error.code === 1) {
+                        gpsErrorShown = true;
+                        showToast("❌ Доступ к геолокации запрещён. Разрешите GPS для сайта в настройках браузера.");
+                    }
+                },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         }
@@ -2005,15 +2110,15 @@
         }
 
         badge.className = `gps-accuracy-indicator ${qualityClass}`;
-        badge.innerText = `GPS: ±${currentAccuracy}м (${qualityText})`;
+        badge.innerText = gpsFixed ? `GPS: ±${currentAccuracy}м (${qualityText})` : 'GPS: поиск...';
 
-        const altText = `Высота: ${currentAltitude} м (±${currentAccuracy} м)`;
         const altEl = document.getElementById('altitude-text');
-        if (altEl) altEl.innerText = altText;
+        if (altEl) altEl.innerText = altitudeText();
         const fsAltEl = document.getElementById('fs-altitude');
-        if (fsAltEl) fsAltEl.innerText = altText;
+        if (fsAltEl) fsAltEl.innerText = altitudeText();
     }
 
+    // --- ФОТОФИКСАЦИЯ ---
     function openPhotoModal() {
         const modal = document.getElementById('photo-modal-screen');
         modal.style.display = 'flex';
@@ -2029,6 +2134,19 @@
 
     async function startPhotoCamera() {
         const video = document.getElementById('photo-video-feed');
+        const mainVideo = document.getElementById('video-preview');
+
+        // Повторно используем уже запущенный поток основной камеры:
+        // второй getUserMedia к той же камере на ряде Android-устройств «убивает» первый.
+        if (isStreamLive(mainVideo && mainVideo.srcObject)) {
+            photoVideoStream = mainVideo.srcObject;
+            photoOwnsStream = false;
+            video.srcObject = photoVideoStream;
+            video.play().catch(() => {});
+            return;
+        }
+
+        photoOwnsStream = true;
         try {
             photoVideoStream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: { exact: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } },
@@ -2054,10 +2172,12 @@
     }
 
     function stopPhotoCamera() {
-        if (photoVideoStream) {
+        // Общий поток основной камеры не останавливаем
+        if (photoVideoStream && photoOwnsStream) {
             photoVideoStream.getTracks().forEach(t => t.stop());
-            photoVideoStream = null;
         }
+        photoVideoStream = null;
+        photoOwnsStream = false;
         const video = document.getElementById('photo-video-feed');
         if (video) video.srcObject = null;
     }
@@ -2072,7 +2192,9 @@
         const az = currentAzimuth.toFixed(1);
         
         hudTitle.innerText = `Ход Т${prevPt} ➔ Т${nextPt} • Азимут: ${az}°`;
-        hudCoords.innerText = `${decimalToDMS(currentLat, true)} ${decimalToDMS(currentLng, false)} (±${currentAccuracy}м)`;
+        hudCoords.innerText = gpsFixed
+            ? `${coordsDMSText()} (±${currentAccuracy}м)`
+            : 'GPS: нет фиксации (координаты не будут записаны)';
     }
 
     function takeInspectionPhoto() {
@@ -2135,9 +2257,11 @@
             lesStr = rawProj.split(/кв/i)[0].trim() || "Уч. лесничество";
         }
 
-        const dmsStr = `${decimalToDMS(currentLat, true)}   ${decimalToDMS(currentLng, false)}`;
-        const ddStr = `${currentLat.toFixed(6)}°,  ${currentLng.toFixed(6)}°`;
+        const dmsStr = gpsFixed ? `${decimalToDMS(currentLat, true)}   ${decimalToDMS(currentLng, false)}` : 'GPS: НЕТ ФИКСАЦИИ';
+        const ddStr = gpsFixed ? `${currentLat.toFixed(6)}°,  ${currentLng.toFixed(6)}°` : '—';
         const azStr = `${currentAzimuth.toFixed(1)}° (${getCardinalDirection(currentAzimuth)})`;
+        const altStr = (currentAltitude !== null && currentAltitude !== undefined) ? `${currentAltitude} м` : 'н/д';
+        const accStr = gpsFixed ? `±${currentAccuracy} м` : 'н/д';
         const dateStr = new Date().toLocaleString('ru-RU');
 
         ctx.textAlign = 'left';
@@ -2170,7 +2294,7 @@
         currentY += lineSpacing;
         ctx.fillStyle = '#38BDF8';
         ctx.font = `bold ${Math.round(baseSize * 0.94)}px monospace`;
-        ctx.fillText(`ВЫСОТА: ${currentAltitude} м  |  ТОЧНОСТЬ GPS: ±${currentAccuracy} м`, paddingLeft, currentY);
+        ctx.fillText(`ВЫСОТА: ${altStr}  |  ТОЧНОСТЬ GPS: ${accStr}`, paddingLeft, currentY);
 
         currentY += lineSpacing;
         ctx.fillStyle = '#94A3B8';
@@ -2185,9 +2309,10 @@
         document.getElementById('photo-shutter-panel').style.display = 'none';
         document.getElementById('photo-review-panel').style.display = 'flex';
 
+        const coordPart = gpsFixed ? `${currentLat.toFixed(4)}_${currentLng.toFixed(4)}` : 'noGPS';
         canvas.toBlob((blob) => {
             capturedPhotoBlob = blob;
-            capturedPhotoFileName = `Фото_Кв${kvStr}_Выд${vydStr}_Т${prevPt}-Т${nextPt}_${currentLat.toFixed(4)}_${currentLng.toFixed(4)}.jpg`;
+            capturedPhotoFileName = `Фото_Кв${kvStr}_Выд${vydStr}_Т${prevPt}-Т${nextPt}_${coordPart}.jpg`;
         }, 'image/jpeg', 0.94);
 
         if (navigator.vibrate) navigator.vibrate([40, 50, 40]);
@@ -2231,7 +2356,7 @@
             document.getElementById('t1-popup-title').innerText = `📍 Точка ${ptNum} (Т${ptNum}) Зафиксирована!`;
             document.getElementById('t1-dms-display').innerText = `${decimalToDMS(lat, true)} ${decimalToDMS(lng, false)}`;
             document.getElementById('t1-dd-display').innerText = `(${lat.toFixed(6)}, ${lng.toFixed(6)})`;
-            document.getElementById('t1-alt-display').innerText = `${alt} м`;
+            document.getElementById('t1-alt-display').innerText = (alt !== null && alt !== undefined) ? `${alt} м` : 'н/д';
             document.getElementById('t1-acc-display').innerText = `±${acc} м`;
             
             openPopup('gps-t1-popup');
@@ -2239,23 +2364,30 @@
             drawPolygon();
         };
 
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    currentLat = pos.coords.latitude;
-                    currentLng = pos.coords.longitude;
-                    currentAltitude = pos.coords.altitude ? Math.round(pos.coords.altitude) : currentAltitude;
-                    currentAccuracy = Math.round(pos.coords.accuracy) || 0;
-                    setPoint(currentLat, currentLng, currentAltitude, currentAccuracy);
-                },
-                (err) => {
-                    setPoint(currentLat, currentLng, currentAltitude, currentAccuracy);
-                },
-                { enableHighAccuracy: true, timeout: 4000, maximumAge: 0 }
-            );
-        } else {
-            setPoint(currentLat, currentLng, currentAltitude, currentAccuracy);
+        if (!navigator.geolocation) {
+            showToast("❌ Геолокация недоступна на этом устройстве");
+            return;
         }
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                gpsFixed = true;
+                currentLat = pos.coords.latitude;
+                currentLng = pos.coords.longitude;
+                currentAltitude = (pos.coords.altitude !== null && pos.coords.altitude !== undefined)
+                    ? Math.round(pos.coords.altitude) : currentAltitude;
+                currentAccuracy = Math.round(pos.coords.accuracy) || 0;
+                setPoint(currentLat, currentLng, currentAltitude, currentAccuracy);
+            },
+            (err) => {
+                if (gpsFixed) {
+                    setPoint(currentLat, currentLng, currentAltitude, currentAccuracy);
+                } else {
+                    showToast("❌ Нет GPS-фиксации. Выйдите на открытое место и повторите.");
+                }
+            },
+            { enableHighAccuracy: true, timeout: 4000, maximumAge: 0 }
+        );
     }
 
     function resetGpsLine() {
@@ -2266,16 +2398,21 @@
         updateFsMapUI();
     }
 
+    // Минимальная база для надёжного азимута: чем хуже точность GPS, тем длиннее нужен отрезок
+    function getGpsMinBase() {
+        return Math.min(60, Math.max(10, 3 * (currentAccuracy || 0)));
+    }
+
     function processGpsHeadingMode() {
         const btnCapture = document.getElementById('btn-capture');
         const nextPt = getNextPointNumber();
-        const activeOffset = getCurrentOffsetDecimal();
         
         if (!gpsPoint1) {
             if (currentSystemMode === 'gps_heading') {
                 document.getElementById('live-azimuth').innerText = "0.0°";
             }
             isLevel = false;
+            calculatedGpsAzimuth = null;
             btnCapture.classList.remove('ready-to-fire');
             btnCapture.innerText = `Нажмите «Старт точки Т${nextPt}»`;
             btnCapture.disabled = true;
@@ -2284,10 +2421,11 @@
         }
 
         let dist = calculateDistance(gpsPoint1.lat, gpsPoint1.lng, currentLat, currentLng);
+        const minBase = getGpsMinBase();
         
-        if (dist >= 3.0) {
-            let bearing = calculateBearing(gpsPoint1.lat, gpsPoint1.lng, currentLat, currentLng);
-            calculatedGpsAzimuth = (bearing + activeOffset + 360) % 360;
+        if (dist >= minBase) {
+            // calculateBearing даёт ИСТИННЫЙ азимут — магнитная юстировка здесь не применяется
+            calculatedGpsAzimuth = calculateBearing(gpsPoint1.lat, gpsPoint1.lng, currentLat, currentLng);
             
             if (currentSystemMode === 'gps_heading') {
                 currentAzimuth = calculatedGpsAzimuth;
@@ -2299,12 +2437,13 @@
             btnCapture.innerText = `🏁 Зафиксировать вектор Т${gpsPoint1.ptNum} ➔ (${dist.toFixed(1)}м)`;
             btnCapture.disabled = false;
         } else {
+            calculatedGpsAzimuth = null;
             if (currentSystemMode === 'gps_heading') {
                 document.getElementById('live-azimuth').innerText = "...";
             }
             isLevel = false;
             btnCapture.classList.remove('ready-to-fire');
-            btnCapture.innerText = `Пройдите еще ${(3.0 - dist).toFixed(1)}м по линии...`;
+            btnCapture.innerText = `Пройдите еще ${(minBase - dist).toFixed(1)}м по линии (±${currentAccuracy}м)...`;
             btnCapture.disabled = true;
         }
         updateFsMapUI();
@@ -2373,55 +2512,51 @@
         arrowSouth.setAttribute("fill", "#FFFFFF");
         arrowSouth.setAttribute("filter", "drop-shadow(0 0 4px rgba(255,255,255,0.5))");
         svg.appendChild(arrowSouth);
+
+        // новый диск рисуется с нулевым поворотом — сбрасываем накопленный угол
+        delete dialState[targetSvgId];
     }
 
     function saveToLocalStorage() {
-        localStorage.setItem('lesovik_measurements', JSON.stringify(measurementsLog));
-        localStorage.setItem('lesovik_step_length', stepLength);
-        localStorage.setItem('lesovik_system_mode', currentSystemMode);
-        localStorage.setItem('lesovik_traverse_direction', currentTraverseDirection);
-        localStorage.setItem('lesovik_dist_method', globalDistanceMethod);
+        safeSet('lesovik_measurements', JSON.stringify(measurementsLog));
+        safeSet('lesovik_step_length', stepLength);
+        safeSet('lesovik_system_mode', currentSystemMode);
+        safeSet('lesovik_traverse_direction', currentTraverseDirection);
+        safeSet('lesovik_dist_method', globalDistanceMethod);
     }
 
     function loadFromLocalStorage() {
-        const savedLog = localStorage.getItem('lesovik_measurements');
-        const savedStep = localStorage.getItem('lesovik_step_length');
-        const savedMode = localStorage.getItem('lesovik_system_mode');
-        const savedDir = localStorage.getItem('lesovik_traverse_direction');
-        const savedDistMethod = localStorage.getItem('lesovik_dist_method');
+        const savedLog = safeJSON('lesovik_measurements', null);
+        const savedStep = safeGet('lesovik_step_length');
+        const savedMode = safeGet('lesovik_system_mode');
+        const savedDir = safeGet('lesovik_traverse_direction');
+        const savedDistMethod = safeGet('lesovik_dist_method');
         
         loadCalibrationOffset();
 
         if (savedDistMethod) {
             globalDistanceMethod = savedDistMethod;
-            const label = document.getElementById('current-dist-mode-label');
-            const stepBar = document.getElementById('step-settings-bar');
-            if (globalDistanceMethod === 'manual') {
-                label.innerText = "📏 Ручной ввод";
-                if (stepBar) stepBar.style.display = 'none';
-            } else if (globalDistanceMethod === 'steps') {
-                label.innerText = "👣 Шагомер";
-                if (stepBar) stepBar.style.display = 'flex';
-            } else if (globalDistanceMethod === 'gps') {
-                label.innerText = "📡 GPS-расчет";
-                if (stepBar) stepBar.style.display = 'none';
-            }
+            applyDistMethodLabel();
         }
 
         if (savedStep) {
-            stepLength = parseFloat(savedStep);
-            document.getElementById('step-length').value = stepLength;
+            const parsedStep = parseFloat(savedStep);
+            if (!isNaN(parsedStep) && parsedStep > 0) {
+                stepLength = parsedStep;
+                document.getElementById('step-length').value = stepLength;
+            }
         }
         if (savedMode) {
             currentSystemMode = savedMode;
             applyModeUI();
+            syncOffsetInputsToUI();
         }
         if (savedDir) {
             currentTraverseDirection = savedDir;
             document.getElementById('traverse-select-direction').value = currentTraverseDirection;
         }
-        if (savedLog) {
-            measurementsLog = JSON.parse(savedLog);
+        if (Array.isArray(savedLog)) {
+            measurementsLog = savedLog;
             renderLogTable();
             drawPolygon();
         }
@@ -2453,9 +2588,11 @@
             measurementsLog = [];
             baseAzimuth = null;
             gpsPoint1 = null;
+            calculatedGpsAzimuth = null;
             resetZeroDirection();
             renderLogTable();
             saveToLocalStorage();
+            if (currentSystemMode === 'gps_heading') processGpsHeadingMode();
             drawPolygon();
             updateFsMapUI();
         }
@@ -2512,6 +2649,7 @@
         const vDot = document.getElementById('v-dot-element');
         const gyroRing = document.getElementById('gyro-ring');
         const zoomPanel = document.getElementById('optic-zoom-panel');
+        const offsetWrapper = document.getElementById('calibration-offset-wrapper');
         
         const btnLockZero = document.getElementById('btn-lock-zero');
         const btnClearZero = document.getElementById('btn-clear-zero');
@@ -2531,6 +2669,7 @@
             vDot.style.display = 'block';
             gyroRing.style.display = 'block';
             zoomPanel.style.display = 'block';
+            if (offsetWrapper) offsetWrapper.style.display = '';
             btnLockZero.style.display = 'block';
             btnClearZero.style.display = 'block';
             btnGpsStart.style.display = 'none';
@@ -2549,6 +2688,7 @@
             vDot.style.display = 'none';
             gyroRing.style.display = 'none';
             zoomPanel.style.display = 'block';
+            if (offsetWrapper) offsetWrapper.style.display = '';
             btnLockZero.style.display = 'none';
             btnClearZero.style.display = 'none';
             btnGpsStart.style.display = 'none';
@@ -2569,6 +2709,7 @@
             vDot.style.display = 'block';
             gyroRing.style.display = 'none'; 
             zoomPanel.style.display = 'block';
+            if (offsetWrapper) offsetWrapper.style.display = 'none'; // GPS-азимут истинный, юстировка не нужна
             btnLockZero.style.display = 'none';
             btnClearZero.style.display = 'none';
             btnGpsStart.style.display = 'block';
@@ -2623,38 +2764,58 @@
         const body = document.documentElement;
         if (body.getAttribute('data-theme') === 'dark') {
             body.removeAttribute('data-theme');
+            safeSet('lesovik_theme', 'light');
         } else {
             body.setAttribute('data-theme', 'dark');
+            safeSet('lesovik_theme', 'dark');
         }
         drawPolygon();
     }
 
-    async function startCamera() {
+    // --- КАМЕРА (защита от гонок запуска и утечки потоков) ---
+    let cameraStarting = false;
+
+    function isStreamLive(stream) {
+        return !!stream && typeof stream.getVideoTracks === 'function' &&
+               stream.getVideoTracks().some(t => t.readyState === 'live');
+    }
+
+    async function startCamera(force) {
         const video = document.getElementById('video-preview');
+        if (!video || cameraStarting) return;
+
+        // Поток уже работает — повторный запуск не нужен
+        if (!force && isStreamLive(video.srcObject)) {
+            if (video.paused) video.play().catch(() => {});
+            return;
+        }
+
+        cameraStarting = true;
         try {
             if (video.srcObject) {
-                const tracks = video.srcObject.getTracks();
-                tracks.forEach(track => track.stop());
+                video.srcObject.getTracks().forEach(track => track.stop());
                 video.srcObject = null;
             }
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { ideal: "environment" } }, 
-                audio: false
-            });
+            let stream;
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+                    audio: false
+                });
+            } catch (err) {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            }
             video.srcObject = stream;
             video.play().catch(e => console.log("Камера готова к воспроизведению"));
-        } catch (err) {
-            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-                .then(stream => { 
-                    video.srcObject = stream; 
-                    video.play().catch(e => console.log(e));
-                })
-                .catch(e => console.error("Камера заблокирована", e));
+        } catch (e) {
+            console.error("Камера заблокирована", e);
+        } finally {
+            cameraStarting = false;
         }
     }
 
     function restartCameraManual() {
-        startCamera();
+        startCamera(true);
         const reloadBtn = document.querySelector('.btn-reload-camera-bar');
         if (reloadBtn) {
             const originalText = reloadBtn.innerHTML;
@@ -2687,17 +2848,39 @@
         return (Math.atan2(sSin, sCos) * 180 / Math.PI + 360) % 360;
     }
 
+    // Направление (азимут) по данным датчиков ориентации.
+    // • iOS: готовый webkitCompassHeading.
+    // • Телефон вертикально (визир камеры): азимут оси камеры (заднего торца) через матрицу поворота.
+    // • Телефон горизонтально (лимб): азимут верха телефона (360 − alpha).
+    function computeSensorHeading(event) {
+        if (event.webkitCompassHeading !== undefined && event.webkitCompassHeading !== null) {
+            return (event.webkitCompassHeading % 360 + 360) % 360;
+        }
+
+        const alpha = event.alpha || 0;
+        const beta = event.beta || 0;
+        const gamma = event.gamma || 0;
+
+        if (currentSystemMode !== 'theodolite' && Math.abs(beta) > 45) {
+            const d = Math.PI / 180;
+            const x = beta * d, y = gamma * d, z = alpha * d;
+            const cY = Math.cos(y), cZ = Math.cos(z);
+            const sX = Math.sin(x), sY = Math.sin(y), sZ = Math.sin(z);
+            const Vx = -cZ * sY - sZ * sX * cY;
+            const Vy = -sZ * sY + cZ * sX * cY;
+            return (Math.atan2(Vx, Vy) * 180 / Math.PI + 360) % 360;
+        }
+
+        return (360 - alpha + 360) % 360;
+    }
+
     function handleOrientation(event) {
         // Если активен внешний модуль — датчики смартфона игнорируются
         if (orientationSource === 'external') {
             return;
         }
 
-        let heading = event.webkitCompassHeading;
-        if (heading === undefined) {
-            heading = (360 - (event.alpha || 0)) % 360;
-        }
-        
+        let heading = computeSensorHeading(event);
         if (!heading) heading = 0;
         if (heading < 0) heading += 360;
         if (heading >= 360) heading -= 360;
@@ -2711,8 +2894,8 @@
             filteredCos = rawCos;
             isFilterInitialized = true;
         } else {
-            filteredSin = filteredSin + kalmanAlpha * (rawSin - filteredSin);
-            filteredCos = filteredCos + kalmanAlpha * (rawCos - filteredCos);
+            filteredSin = filteredSin + smoothAlpha * (rawSin - filteredSin);
+            filteredCos = filteredCos + smoothAlpha * (rawCos - filteredCos);
         }
 
         let smoothedHeading = (Math.atan2(filteredSin, filteredCos) * 180 / Math.PI + 360) % 360;
@@ -2773,7 +2956,36 @@
             document.getElementById('calib-bar').style.width = `${score}%`;
         }
 
-        updateCompassAndHorizonUI(sensorAzimuth, pitch, roll);
+        queueUiUpdate(sensorAzimuth, pitch, roll);
+    }
+
+    // Ограничение частоты перерисовки интерфейса до частоты кадров экрана
+    let pendingUi = null;
+    let uiRafScheduled = false;
+    function queueUiUpdate(az, pitch, roll) {
+        pendingUi = { az: az, pitch: pitch, roll: roll };
+        if (uiRafScheduled) return;
+        uiRafScheduled = true;
+        requestAnimationFrame(() => {
+            uiRafScheduled = false;
+            if (pendingUi) {
+                const u = pendingUi;
+                pendingUi = null;
+                updateCompassAndHorizonUI(u.az, u.pitch, u.roll);
+            }
+        });
+    }
+
+    // Поворот шкалы без «обратной раскрутки» при переходе 359° → 0°
+    const dialState = {};
+    function rotateDial(el, id, azimuth) {
+        if (!el) return;
+        const prev = dialState[id] !== undefined ? dialState[id] : 0;
+        const target = -azimuth;
+        const delta = (((target - prev) % 360) + 540) % 360 - 180;
+        const next = prev + delta;
+        dialState[id] = next;
+        el.style.transform = `rotate(${next}deg)`;
     }
 
     // Единая функция обновления интерфейса для внутренних и внешних датчиков
@@ -2786,8 +2998,10 @@
         if (currentSystemMode === 'magnetic') {
             document.getElementById('live-azimuth').innerText = `${currentAzimuth.toFixed(1)}°`;
             if (baseAzimuth !== null) {
-                let turnAngle = currentAzimuth - baseAzimuth;
-                if (turnAngle < 0) turnAngle += 360;
+                let turnAngle = (currentTraverseDirection === 'counter-clockwise')
+                    ? (baseAzimuth - currentAzimuth)
+                    : (currentAzimuth - baseAzimuth);
+                turnAngle = ((turnAngle % 360) + 360) % 360;
                 badge.innerText = `ПОВОРОТ: ${turnAngle.toFixed(1)}°`;
                 badge.style.display = 'block';
             } else {
@@ -2798,17 +3012,13 @@
             badge.style.display = 'none';
         }
 
-        const dialSvg = document.getElementById('compass-svg-canvas');
-        const fsDialSvg = document.getElementById('fs-compass-svg');
-        const fsMiniDial = document.getElementById('fs-mini-compass-svg');
-        
-        if (dialSvg) dialSvg.style.transform = `rotate(${-sensorAzimuth}deg)`;
-        if (fsDialSvg) fsDialSvg.style.transform = `rotate(${-sensorAzimuth}deg)`;
-        if (fsMiniDial) fsMiniDial.style.transform = `rotate(${-sensorAzimuth}deg)`;
+        rotateDial(document.getElementById('compass-svg-canvas'), 'compass-svg-canvas', sensorAzimuth);
+        rotateDial(document.getElementById('fs-compass-svg'), 'fs-compass-svg', sensorAzimuth);
+        rotateDial(document.getElementById('fs-mini-compass-svg'), 'fs-mini-compass-svg', sensorAzimuth);
 
         let dmsText = `АЗИМУТ: ${decimalAngleToDMS(sensorAzimuth)}`;
-        let coordsText = `${decimalToDMS(currentLat, true)} ${decimalToDMS(currentLng, false)} (${currentLat.toFixed(6)}, ${currentLng.toFixed(6)})`;
-        let altText = `Высота: ${currentAltitude} м (Точность: ±${currentAccuracy} м)`;
+        let coordsText = coordsFullText();
+        let altText = altitudeText();
 
         document.getElementById('dms-azimuth-text').innerText = dmsText;
         document.getElementById('dms-coords-text').innerText = coordsText;
@@ -2852,10 +3062,11 @@
         const btnCapture = document.getElementById('btn-capture');
         const btnFsCapture = document.getElementById('btn-fs-capture');
 
-        // --- УЛУЧШЕННЫЙ ПОЛЕВОЙ ДОПУСК ГОРИЗОНТА (±12°) И ВИБРО-ОТКЛИК ---
+        // --- ПОЛЕВОЙ ДОПУСК ГОРИЗОНТА (±12°) И ВИБРО-ОТКЛИК ---
         if (currentSystemMode === 'magnetic') {
-            const isPitchOk = Math.abs(pitch - 90) <= 12 || Math.abs(pitch - 0) <= 12 || Math.abs(pitch + 90) <= 12;
-            const isRollOk = Math.abs(roll) <= 12 || Math.abs(roll - 180) <= 12 || Math.abs(roll + 180) <= 12;
+            // Вертикальный визир: телефон стоймя (бета ≈ ±90°) и без крена
+            const isPitchOk = Math.abs(Math.abs(pitch) - 90) <= 12;
+            const isRollOk = Math.abs(roll) <= 12;
             
             if (isPitchOk && isRollOk) {
                 isLevel = true;
@@ -2949,10 +3160,13 @@
         if (globalDistanceMethod === 'steps' && measurementsLog.length > 0) {
             let lastIdx = measurementsLog.length - 1;
             measurementsLog[lastIdx].steps = (measurementsLog[lastIdx].steps || 0) + 1;
-            measurementsLog[lastIdx].distance = parseFloat((measurementsLog[lastIdx].steps * stepLength).toFixed(1));
+            measurementsLog[lastIdx].distance = round1(measurementsLog[lastIdx].steps * stepLength);
             
             let distDisplay = document.getElementById(`dist-${measurementsLog[lastIdx].id}`);
-            if (distDisplay) distDisplay.value = measurementsLog[lastIdx].distance;
+            if (distDisplay) {
+                distDisplay.value = measurementsLog[lastIdx].distance;
+                distDisplay.style.borderColor = '';
+            }
             
             saveToLocalStorage();
             drawPolygon();
@@ -2966,7 +3180,7 @@
             if (globalDistanceMethod === 'steps') {
                 measurementsLog.forEach(m => {
                     if (m.steps > 0) {
-                        m.distance = parseFloat((m.steps * stepLength).toFixed(1));
+                        m.distance = round1(m.steps * stepLength);
                     }
                 });
             }
@@ -2987,31 +3201,33 @@
         document.getElementById('angle-turn-badge').style.display = 'none';
     }
 
-    // --- ФИКСАЦИЯ ЗАМЕРА С УСРЕДНЕНИЕМ АЗИМУТА И ЦЕПНОЙ ПРИВЯЗКОЙ GPS ---
+    // --- ФИКСАЦИЯ ЗАМЕРА ---
+    // Строка журнала = линия, которая НАЧИНАЕТСЯ в точке (lat, lng) и идёт вперёд по азимуту на distance.
+    //  • Магнитный / Лимб: точка = место стоянки таксатора, азимут — на следующую веху.
+    //  • GPS-Курс: точка = Т-старт (gpsPoint1), азимут и длина — вектор до текущей позиции.
     function captureMeasurement() {
-        if (!isLevel && currentSystemMode !== 'gps_heading') return;
+        const isGpsMode = (currentSystemMode === 'gps_heading');
 
-        // Берём сглаженный усреднённый азимут из буфера
-        let valueToRecord = parseFloat(getSmoothedBufferAzimuth().toFixed(1));
-        let calculatedDist = 20.0;
-
-        // Если выбран режим расчета по спутнику
-        if (globalDistanceMethod === 'gps') {
-            if (measurementsLog.length === 0) {
-                calculatedDist = 0; // Первая точка — стартовая база
-            } else {
-                let prev = measurementsLog[measurementsLog.length - 1];
-                if (prev.lat && prev.lng && currentLat && currentLng) {
-                    calculatedDist = parseFloat(calculateDistance(prev.lat, prev.lng, currentLat, currentLng).toFixed(1));
-                }
-            }
-        } else if (globalDistanceMethod === 'steps') {
-            calculatedDist = 0;
+        if (isGpsMode) {
+            if (!gpsPoint1 || !isLevel || calculatedGpsAzimuth === null) return;
+        } else if (!isLevel) {
+            return;
         }
 
-        // Если замер шел в режиме GPS-Курса по двум точкам
-        if (currentSystemMode === 'gps_heading' && gpsPoint1) {
-            calculatedDist = parseFloat(calculateDistance(gpsPoint1.lat, gpsPoint1.lng, currentLat, currentLng).toFixed(1));
+        let valueToRecord = isGpsMode
+            ? round1(calculatedGpsAzimuth)             // истинный GPS-азимут
+            : round1(getSmoothedBufferAzimuth());      // усреднённый магнитный азимут
+
+        let calculatedDist = 0; // 0 = «длина не задана» (подсвечивается красным), а не выдуманные 20 м
+        let startPoint = null;
+
+        if (isGpsMode) {
+            calculatedDist = round1(calculateDistance(gpsPoint1.lat, gpsPoint1.lng, currentLat, currentLng));
+            startPoint = { lat: gpsPoint1.lat, lng: gpsPoint1.lng, alt: gpsPoint1.alt, acc: gpsPoint1.acc };
+        } else if (gpsFixed) {
+            startPoint = { lat: currentLat, lng: currentLng, alt: currentAltitude, acc: currentAccuracy };
+        } else if (globalDistanceMethod === 'gps') {
+            showToast("⚠️ Нет GPS-фиксации: метод «GPS-расчет» не сможет вычислить длину этой линии");
         }
 
         const newMeasurement = {
@@ -3021,16 +3237,21 @@
             mode: globalDistanceMethod,
             steps: 0,
             systemMode: currentSystemMode,
-            lat: currentLat,
-            lng: currentLng,
-            altitude: currentAltitude,
-            accuracy: currentAccuracy
+            lat: startPoint ? startPoint.lat : null,
+            lng: startPoint ? startPoint.lng : null,
+            altitude: startPoint ? startPoint.alt : null,
+            accuracy: startPoint ? startPoint.acc : null
         };
 
         measurementsLog.push(newMeasurement);
         
-        // В режиме GPS-курса цепной перенос: текущая точка становится стартом для следующего вектора
-        if (currentSystemMode === 'gps_heading') {
+        // Метод «GPS-расчет»: длина предыдущей линии = расстояние до этой точки
+        if (globalDistanceMethod === 'gps') {
+            recalculateDistancesByMethod();
+        }
+
+        // В режиме GPS-курса цепной перенос: текущая позиция становится стартом следующего вектора
+        if (isGpsMode) {
             gpsPoint1 = {
                 lat: currentLat,
                 lng: currentLng,
@@ -3067,6 +3288,8 @@
         let idx = measurementsLog.findIndex(m => m.id === id);
         if(idx !== -1) {
             measurementsLog[idx].distance = parseFloat(value) || 0;
+            const el = document.getElementById(`dist-${id}`);
+            if (el) el.style.borderColor = measurementsLog[idx].distance > 0 ? '' : 'var(--danger)';
             saveToLocalStorage();
             drawPolygon();
         }
@@ -3095,19 +3318,32 @@
         }
 
         tbody.innerHTML = "";
+        const lastIdx = measurementsLog.length - 1;
         measurementsLog.forEach((m, idx) => {
-            let dmsLat = m.lat ? decimalToDMS(m.lat, true) : "0° 00' 00\" с.ш.";
-            let dmsLng = m.lng ? decimalToDMS(m.lng, false) : "0° 00' 00\" в.д.";
-            let ddCoords = m.lat ? `(${m.lat.toFixed(6)}, ${m.lng.toFixed(6)})` : "(0.000000, 0.000000)";
-            let altVal = m.altitude ? `${m.altitude} м` : "150 м";
+            let coordsHTML;
+            if (hasCoords(m)) {
+                let dmsLat = decimalToDMS(m.lat, true);
+                let dmsLng = decimalToDMS(m.lng, false);
+                let ddCoords = `(${m.lat.toFixed(6)}, ${m.lng.toFixed(6)})`;
+                let altVal = (m.altitude !== null && m.altitude !== undefined) ? `${m.altitude} м` : 'н/д';
+                coordsHTML = `<b>DMS:</b> ${dmsLat} ${dmsLng}<br><b>DD:</b> ${ddCoords} (${altVal})`;
+            } else {
+                coordsHTML = `<span style="color:var(--danger); font-weight:bold;">нет GPS-координат</span>`;
+            }
+
+            const missingDist = !(m.distance > 0);
+            const redBorder = missingDist ? ' style="border-color:var(--danger);"' : '';
 
             let distDisplayHTML = '';
-            if (globalDistanceMethod === 'gps' && idx === 0) {
-                distDisplayHTML = `<span style="font-weight:bold; color:gray; font-size:13px;">— (Старт)</span>`;
+            if (globalDistanceMethod === 'gps') {
+                const isVector = (m.systemMode === 'gps_heading');
+                const tag = isVector ? '📡 вектор' : (idx === lastIdx ? '📡 замыкание на Т1' : '📡 до след. точки');
+                const ro = isVector ? '' : ' readonly';
+                distDisplayHTML = `<input type="number" id="dist-${m.id}" class="input-dist" value="${m.distance}" step="0.5"${ro}${redBorder} onfocus="this.select()" oninput="changeLineDistance(${m.id}, this.value)"><small style="font-size:9.5px; color:var(--success); font-weight:bold;">${tag}</small>`;
             } else if (globalDistanceMethod === 'steps') {
-                distDisplayHTML = `<input type="number" id="dist-${m.id}" class="input-dist" value="${m.distance}" step="0.5" onfocus="this.select()" oninput="changeLineDistance(${m.id}, this.value)"><small style="font-size:9.5px; color:var(--success); font-weight:bold;">👣 ${m.steps || 0}</small>`;
+                distDisplayHTML = `<input type="number" id="dist-${m.id}" class="input-dist" value="${m.distance}" step="0.5"${redBorder} onfocus="this.select()" oninput="changeLineDistance(${m.id}, this.value)"><small style="font-size:9.5px; color:var(--success); font-weight:bold;">👣 ${m.steps || 0}</small>`;
             } else {
-                distDisplayHTML = `<input type="number" id="dist-${m.id}" class="input-dist" value="${m.distance}" step="0.5" onfocus="this.select()" oninput="changeLineDistance(${m.id}, this.value)">`;
+                distDisplayHTML = `<input type="number" id="dist-${m.id}" class="input-dist" value="${m.distance}" step="0.5"${redBorder} onfocus="this.select()" oninput="changeLineDistance(${m.id}, this.value)">`;
             }
 
             tbody.innerHTML += `
@@ -3117,7 +3353,7 @@
                         <input type="number" class="input-dist" value="${m.azimuth}" step="0.1" style="color:var(--forest-green); font-weight:700;" onfocus="this.select()" oninput="changeLineAzimuth(${m.id}, this.value)">
                     </td>
                     <td>${distDisplayHTML}</td>
-                    <td><span style="font-size:9px; font-family:monospace; display:block; white-space:normal; word-break:break-all; line-height:1.2;"><b>DMS:</b> ${dmsLat} ${dmsLng}<br><b>DD:</b> ${ddCoords} (${altVal})</span></td>
+                    <td><span style="font-size:9px; font-family:monospace; display:block; white-space:normal; word-break:break-all; line-height:1.2;">${coordsHTML}</span></td>
                     <td>
                         <button class="btn-delete-row" onclick="deleteMeasurement(${m.id})">❌</button>
                     </td>
@@ -3126,203 +3362,237 @@
         });
     }
 
-    // --- ОТРЕНДЕРИВАНИЕ ПОЛИГОНА БЕЗ СКАЧКОВ И С ПРАВИЛЬНЫМ ЦЕНТРИРОВАНИЕМ ---
-    function drawPolygon() {
-        const canvases = [document.getElementById('polygon-canvas')];
-        if (isFsMapOpen) {
-            canvases.push(document.getElementById('fs-polygon-canvas'));
-        }
+    // --- ГЕОМЕТРИЯ ХОДА (точки + площадь по формуле Гаусса) ---
+    function computeTraverse() {
+        let points = [{ x: 0, y: 0 }];
+        let currentX = 0;
+        let currentY = 0;
 
-        canvases.forEach(canvas => {
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const width = canvas.width;
-            const height = canvas.height;
-            
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            ctx.fillStyle = isDark ? '#22302B' : '#FFFFFF';
-            ctx.fillRect(0, 0, width, height);
-
-            // Стороны света
-            ctx.fillStyle = isDark ? 'rgba(255,255,255,0.4)' : '#333333'; 
-            ctx.font = "bold 12px Inter, sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillText("С", width / 2, 18); 
-            ctx.fillText("Ю", width / 2, height - 8);
-            ctx.textAlign = "left";
-            ctx.fillText("З", 10, height / 2 + 4); 
-            ctx.textAlign = "right";
-            ctx.fillText("В", width - 10, height / 2 + 4);
-
-            // 1. Построение точек делянки
-            let points = [{ x: 0, y: 0 }];
-            let currentX = 0;
-            let currentY = 0;
-
-            measurementsLog.forEach((m) => {
-                let angleRad = (m.azimuth * Math.PI) / 180;
-                currentX += m.distance * Math.sin(angleRad);
-                currentY += m.distance * Math.cos(angleRad);
-                points.push({ x: currentX, y: currentY });
-            });
-
-            // 2. Расчет центра и масштаба СТРОГО по точкам полигона (БЕЗ шумящего GPS пользователя!)
-            let minX = Math.min(...points.map(p => p.x));
-            let maxX = Math.max(...points.map(p => p.x));
-            let minY = Math.min(...points.map(p => p.y));
-            let maxY = Math.max(...points.map(p => p.y));
-
-            let spanX = Math.max(maxX - minX, 10.0);
-            let spanY = Math.max(maxY - minY, 10.0);
-            let maxSpan = Math.max(spanX, spanY);
-
-            // Базовый масштаб с отступами по 50px с каждой стороны
-            let baseScale = (Math.min(width, height) - 100) / maxSpan;
-            let scale = baseScale * canvasZoomMultiplier;
-
-            let centerCenterX = (maxX + minX) / 2;
-            let centerCenterY = (maxY + minY) / 2;
-
-            function toPixel(pt) {
-                return {
-                    x: width / 2 + (pt.x - centerCenterX) * scale + panOffsetX,
-                    y: height / 2 - (pt.y - centerCenterY) * scale + panOffsetY
-                };
-            }
-
-            // Фоновая сетка
-            ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
-            ctx.lineWidth = 1;
-            for(let i = 0; i < width; i += 40) {
-                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke();
-            }
-            for(let i = 0; i < height; i += 40) {
-                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke();
-            }
-
-            // 3. Отрисовка внешних слоев KML/KMZ (если есть)
-            if (uploadedGisPolygons && uploadedGisPolygons.length > 0) {
-                ctx.setLineDash([5, 5]);
-                ctx.strokeStyle = "#FFA726";
-                ctx.lineWidth = 2;
-
-                const baseAnchor = uploadedGisPolygons[0][0];
-
-                uploadedGisPolygons.forEach(polygon => {
-                    ctx.beginPath();
-                    polygon.forEach((kPt, idx) => {
-                        let dX = calculateDistance(baseAnchor.lat, baseAnchor.lng, baseAnchor.lat, kPt.lng) * (kPt.lng >= baseAnchor.lng ? 1 : -1);
-                        let dY = calculateDistance(baseAnchor.lat, baseAnchor.lng, kPt.lat, baseAnchor.lng) * (kPt.lat >= baseAnchor.lat ? 1 : -1);
-                        let px = toPixel({ x: dX, y: dY });
-
-                        if (idx === 0) ctx.moveTo(px.x, px.y);
-                        else ctx.lineTo(px.x, px.y);
-                    });
-                    ctx.stroke();
-                });
-                ctx.setLineDash([]);
-            }
-
-            // 4. Отрисовка линий хода делянки
-            if (measurementsLog.length > 0) {
-                ctx.lineWidth = 2.5;
-                ctx.strokeStyle = isDark ? '#8FBC8F' : '#2D5A27';
-
-                for (let i = 0; i < points.length - 1; i++) {
-                    let p1 = toPixel(points[i]);
-                    let p2 = toPixel(points[i+1]);
-
-                    ctx.beginPath();
-                    ctx.moveTo(p1.x, p1.y);
-                    ctx.lineTo(p2.x, p2.y);
-                    ctx.stroke();
-
-                    let midX = (p1.x + p2.x) / 2;
-                    let midY = (p1.y + p2.y) / 2;
-                    
-                    ctx.font = "bold 10px Inter, sans-serif";
-                    ctx.fillStyle = isDark ? '#FFFFFF' : '#111111';
-                    ctx.textAlign = "center";
-                    ctx.fillText(`№${measurementsLog[i].id} (${measurementsLog[i].distance}м)`, midX, midY - 5);
-                }
-
-                // Вершины столбов
-                points.forEach((p, idx) => {
-                    let pix = toPixel(p);
-                    ctx.beginPath();
-                    ctx.arc(pix.x, pix.y, idx === 0 ? 5.5 : 4, 0, 2 * Math.PI);
-                    ctx.fillStyle = idx === 0 ? '#DC2626' : '#16A34A'; 
-                    ctx.fill();
-                    ctx.strokeStyle = '#FFFFFF';
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
-                });
-            }
-
-            // 5. Отрисовка маркера текущей позиции таксатора (зеленый треугольник направления)
-            if (gpsPoint1 || measurementsLog.length > 0) {
-                let lastIndex = measurementsLog.length - 1;
-                let startLat = gpsPoint1 ? gpsPoint1.lat : (lastIndex >= 0 && measurementsLog[lastIndex].lat ? measurementsLog[lastIndex].lat : currentLat);
-                let startLng = gpsPoint1 ? gpsPoint1.lng : (lastIndex >= 0 && measurementsLog[lastIndex].lng ? measurementsLog[lastIndex].lng : currentLng);
-                let lastPt = points[points.length - 1];
-
-                // Проекция смещения в метрах
-                let dY_meters = (currentLat - startLat) * 111139;
-                let dX_meters = (currentLng - startLng) * (111139 * Math.cos(startLat * Math.PI / 180));
-
-                let userDx = lastPt.x + dX_meters;
-                let userDy = lastPt.y + dY_meters;
-                let userPixel = toPixel({ x: userDx, y: userDy });
-
-                // Рисуем курсор только если он попадает в пределы холста
-                if (userPixel.x >= 0 && userPixel.x <= width && userPixel.y >= 0 && userPixel.y <= height) {
-                    ctx.save();
-                    ctx.translate(userPixel.x, userPixel.y);
-                    ctx.rotate((currentAzimuth * Math.PI) / 180);
-
-                    ctx.beginPath();
-                    ctx.moveTo(0, -12);
-                    ctx.lineTo(8, 9);
-                    ctx.lineTo(0, 5);
-                    ctx.lineTo(-8, 9);
-                    ctx.closePath();
-
-                    ctx.fillStyle = "#00FF66";
-                    ctx.fill();
-                    ctx.strokeStyle = "#000000";
-                    ctx.lineWidth = 1.5;
-                    ctx.stroke();
-                    ctx.restore();
-                }
-            }
-
-            // 6. Расчет площади по формуле Гаусса
-            let area = 0;
-            let j = points.length - 1;
-            for (let i = 0; i < points.length; i++) {
-                area += (points[j].x + points[i].x) * (points[j].y - points[i].y);
-                j = i;
-            }
-            area = Math.abs(area / 2);
-            let areaHa = area / 10000; 
-
-            document.getElementById('area-display').innerText = `Площадь: ${areaHa.toFixed(4)} га (${Math.round(area)} м²)`;
-            const fsMapArea = document.getElementById('fs-map-area');
-            if (fsMapArea) fsMapArea.innerText = `Площадь: ${areaHa.toFixed(4)} га (${Math.round(area)} м²)`;
-
-            if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
-                const activeProject = window.LesovikCore.getActiveProject();
-                if (activeProject && activeProject.plots && activeProject.plots.length > 0) {
-                    window.LesovikCore.updatePlotModuleData(activeProject.plots[0].id, 'busol', {
-                        area: parseFloat(areaHa.toFixed(4)),
-                        points: points,
-                        measurements: measurementsLog
-                    });
-                }
-            }
+        measurementsLog.forEach((m) => {
+            let angleRad = (m.azimuth * Math.PI) / 180;
+            currentX += m.distance * Math.sin(angleRad);
+            currentY += m.distance * Math.cos(angleRad);
+            points.push({ x: currentX, y: currentY });
         });
+
+        let area = 0;
+        let j = points.length - 1;
+        for (let i = 0; i < points.length; i++) {
+            area += (points[j].x + points[i].x) * (points[j].y - points[i].y);
+            j = i;
+        }
+        area = Math.abs(area / 2);
+
+        return { points: points, area: area };
     }
 
+    // Подгонка буфера canvas под реальный размер на экране и плотность пикселей (чёткость + точный сдвиг пальцем)
+    function syncCanvasSize(canvas) {
+        const dpr = window.devicePixelRatio || 1;
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        if (w <= 0 || h <= 0) return false;
+        const bw = Math.round(w * dpr);
+        const bh = Math.round(h * dpr);
+        if (canvas.width !== bw || canvas.height !== bh) {
+            canvas.width = bw;
+            canvas.height = bh;
+        }
+        return true;
+    }
+
+    function renderTraverseOnCanvas(canvas, trav) {
+        if (!syncCanvasSize(canvas)) return;
+
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        const points = trav.points;
+        
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        ctx.fillStyle = isDark ? '#22302B' : '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+
+        // Стороны света
+        ctx.fillStyle = isDark ? 'rgba(255,255,255,0.4)' : '#333333'; 
+        ctx.font = "bold 12px Inter, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("С", width / 2, 18); 
+        ctx.fillText("Ю", width / 2, height - 8);
+        ctx.textAlign = "left";
+        ctx.fillText("З", 10, height / 2 + 4); 
+        ctx.textAlign = "right";
+        ctx.fillText("В", width - 10, height / 2 + 4);
+
+        // Начало локальной системы координат (совпадает с первой точкой хода)
+        const traverseOrigin = getTraverseOrigin();
+        const gisOrigin = traverseOrigin || (uploadedGisPolygons.length > 0 ? uploadedGisPolygons[0][0] : null);
+
+        // Расчет центра и масштаба СТРОГО по точкам полигона (без шумящего GPS пользователя).
+        // Если ход ещё пуст, а слой ФГИС загружен — вписываем в экран слой.
+        let fitPts = points;
+        if (measurementsLog.length === 0 && uploadedGisPolygons.length > 0 && gisOrigin) {
+            fitPts = [];
+            uploadedGisPolygons.forEach(poly => poly.forEach(kPt => fitPts.push(latLngToLocal(gisOrigin, kPt.lat, kPt.lng))));
+            if (fitPts.length === 0) fitPts = points;
+        }
+
+        let minX = Math.min(...fitPts.map(p => p.x));
+        let maxX = Math.max(...fitPts.map(p => p.x));
+        let minY = Math.min(...fitPts.map(p => p.y));
+        let maxY = Math.max(...fitPts.map(p => p.y));
+
+        let spanX = Math.max(maxX - minX, 10.0);
+        let spanY = Math.max(maxY - minY, 10.0);
+        let maxSpan = Math.max(spanX, spanY);
+
+        // Базовый масштаб с отступами по 50px с каждой стороны
+        let baseScale = Math.max(10, Math.min(width, height) - 100) / maxSpan;
+        let scale = baseScale * canvasZoomMultiplier;
+
+        let centerCenterX = (maxX + minX) / 2;
+        let centerCenterY = (maxY + minY) / 2;
+
+        function toPixel(pt) {
+            return {
+                x: width / 2 + (pt.x - centerCenterX) * scale + panOffsetX,
+                y: height / 2 - (pt.y - centerCenterY) * scale + panOffsetY
+            };
+        }
+
+        // Фоновая сетка
+        ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
+        ctx.lineWidth = 1;
+        for(let i = 0; i < width; i += 40) {
+            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke();
+        }
+        for(let i = 0; i < height; i += 40) {
+            ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke();
+        }
+
+        // Отрисовка внешних слоев KML/KMZ/GeoJSON — привязаны к реальным координатам хода
+        if (uploadedGisPolygons && uploadedGisPolygons.length > 0 && gisOrigin) {
+            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle = "#FFA726";
+            ctx.fillStyle = "#FFA726";
+            ctx.lineWidth = 2;
+
+            uploadedGisPolygons.forEach(polygon => {
+                if (polygon.length === 1) {
+                    const px = toPixel(latLngToLocal(gisOrigin, polygon[0].lat, polygon[0].lng));
+                    ctx.beginPath();
+                    ctx.arc(px.x, px.y, 3.5, 0, 2 * Math.PI);
+                    ctx.fill();
+                    return;
+                }
+                ctx.beginPath();
+                polygon.forEach((kPt, idx) => {
+                    let px = toPixel(latLngToLocal(gisOrigin, kPt.lat, kPt.lng));
+                    if (idx === 0) ctx.moveTo(px.x, px.y);
+                    else ctx.lineTo(px.x, px.y);
+                });
+                ctx.stroke();
+            });
+            ctx.setLineDash([]);
+        }
+
+        // Отрисовка линий хода делянки
+        if (measurementsLog.length > 0) {
+            ctx.lineWidth = 2.5;
+            ctx.strokeStyle = isDark ? '#8FBC8F' : '#2D5A27';
+
+            for (let i = 0; i < points.length - 1; i++) {
+                let p1 = toPixel(points[i]);
+                let p2 = toPixel(points[i+1]);
+
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+
+                let midX = (p1.x + p2.x) / 2;
+                let midY = (p1.y + p2.y) / 2;
+                
+                ctx.font = "bold 10px Inter, sans-serif";
+                ctx.fillStyle = isDark ? '#FFFFFF' : '#111111';
+                ctx.textAlign = "center";
+                ctx.fillText(`№${measurementsLog[i].id} (${measurementsLog[i].distance}м)`, midX, midY - 5);
+            }
+
+            // Вершины столбов
+            points.forEach((p, idx) => {
+                let pix = toPixel(p);
+                ctx.beginPath();
+                ctx.arc(pix.x, pix.y, idx === 0 ? 5.5 : 4, 0, 2 * Math.PI);
+                ctx.fillStyle = idx === 0 ? '#DC2626' : '#16A34A'; 
+                ctx.fill();
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            });
+        }
+
+        // Маркер текущей позиции таксатора (по реальным GPS-координатам относительно начала хода)
+        if (gpsFixed && traverseOrigin) {
+            let userLocal = latLngToLocal(traverseOrigin, currentLat, currentLng);
+            let userPixel = toPixel(userLocal);
+
+            // Рисуем курсор только если он попадает в пределы холста
+            if (userPixel.x >= 0 && userPixel.x <= width && userPixel.y >= 0 && userPixel.y <= height) {
+                ctx.save();
+                ctx.translate(userPixel.x, userPixel.y);
+                ctx.rotate((currentAzimuth * Math.PI) / 180);
+
+                ctx.beginPath();
+                ctx.moveTo(0, -12);
+                ctx.lineTo(8, 9);
+                ctx.lineTo(0, 5);
+                ctx.lineTo(-8, 9);
+                ctx.closePath();
+
+                ctx.fillStyle = "#00FF66";
+                ctx.fill();
+                ctx.strokeStyle = "#000000";
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+    }
+
+    function drawPolygon() {
+        const trav = computeTraverse();
+
+        renderTraverseOnCanvas(document.getElementById('polygon-canvas'), trav);
+        if (isFsMapOpen) {
+            renderTraverseOnCanvas(document.getElementById('fs-polygon-canvas'), trav);
+        }
+
+        const area = trav.area;
+        const areaHa = area / 10000;
+        const incomplete = measurementsLog.some(m => !(m.distance > 0));
+        const warn = incomplete ? ' ⚠ есть линии без длины' : '';
+
+        document.getElementById('area-display').innerText = `Площадь: ${areaHa.toFixed(4)} га (${Math.round(area)} м²)${warn}`;
+        const fsMapArea = document.getElementById('fs-map-area');
+        if (fsMapArea) fsMapArea.innerText = `Площадь: ${areaHa.toFixed(4)} га (${Math.round(area)} м²)${warn}`;
+
+        // Синхронизация с ядром — один раз за перерисовку
+        if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
+            const activeProject = window.LesovikCore.getActiveProject();
+            if (activeProject && activeProject.plots && activeProject.plots.length > 0) {
+                window.LesovikCore.updatePlotModuleData(activeProject.plots[0].id, 'busol', {
+                    area: parseFloat(areaHa.toFixed(4)),
+                    points: trav.points,
+                    measurements: measurementsLog
+                });
+            }
+        }
+    }
+
+    // --- АРХИВ ---
     function saveCurrentToArchive() {
         if (window.LesovikCore && !window.LesovikCore.isPro()) {
             window.showProPromoModal("Сохранение проектов и делянок в архив доступно только в профессиональной версии БГ-ХНС PRO.");
@@ -3333,14 +3603,13 @@
         if (!nameInput) { showToast("Введите название делянки!"); return; }
         if (measurementsLog.length === 0) { showToast("Журнал пуст!"); return; }
         
-        let savedProjects = [];
-        const localData = localStorage.getItem('bg_hns_projects_archive');
-        if (localData) savedProjects = JSON.parse(localData);
+        let savedProjects = safeJSON('bg_hns_projects_archive', []);
+        if (!Array.isArray(savedProjects)) savedProjects = [];
         
         const projectSnapshot = {
             name: nameInput,
             timestamp: new Date().toLocaleString('ru-RU'),
-            log: measurementsLog,
+            log: JSON.parse(JSON.stringify(measurementsLog)),
             systemMode: currentSystemMode,
             traverseDirection: currentTraverseDirection,
             baseAzimuth: baseAzimuth,
@@ -3348,7 +3617,7 @@
         };
         
         savedProjects.push(projectSnapshot);
-        localStorage.setItem('bg_hns_projects_archive', JSON.stringify(savedProjects));
+        safeSet('bg_hns_projects_archive', JSON.stringify(savedProjects));
         showToast(`Проект "${nameInput}" сохранен в архив!`);
         updateArchiveSelect();
     }
@@ -3357,9 +3626,8 @@
         const select = document.getElementById('archive-select');
         select.innerHTML = '<option value="">-- Выберите из архива --</option>';
         
-        const localData = localStorage.getItem('bg_hns_projects_archive');
-        if (localData) {
-            const savedProjects = JSON.parse(localData);
+        const savedProjects = safeJSON('bg_hns_projects_archive', []);
+        if (Array.isArray(savedProjects)) {
             savedProjects.forEach((proj, index) => {
                 const option = document.createElement('option');
                 option.value = index;
@@ -3374,40 +3642,42 @@
         const index = select.value;
         if (index === "") { showToast("Выберите делянку!"); return; }
         
-        let savedProjects = JSON.parse(localStorage.getItem('bg_hns_projects_archive') || "[]");
-        if (confirm(`Удалить проект "${savedProjects[index].name}"?`)) {
+        let savedProjects = safeJSON('bg_hns_projects_archive', []);
+        if (!savedProjects[index]) { showToast("Проект не найден."); return; }
+        if (confirm(`Удалить проект "${savedProjects[index].name}" из архива?`)) {
             savedProjects.splice(index, 1);
-            localStorage.setItem('bg_hns_projects_archive', JSON.stringify(savedProjects));
+            safeSet('bg_hns_projects_archive', JSON.stringify(savedProjects));
             updateArchiveSelect();
-            clearLog();
-            showToast("Проект удален.");
+            // Текущий журнал съёмки не трогаем — удаляется только запись архива
+            showToast("Проект удален из архива.");
         }
     }
 
     function loadFromArchive(index) {
         if (index === "") return;
-        const localData = localStorage.getItem('bg_hns_projects_archive');
-        if (localData) {
-            const savedProjects = JSON.parse(localData);
-            const proj = savedProjects[index];
-            
-            measurementsLog = proj.log;
-            currentSystemMode = proj.systemMode || 'magnetic';
-            currentTraverseDirection = proj.traverseDirection || 'clockwise';
-            baseAzimuth = proj.baseAzimuth !== undefined ? proj.baseAzimuth : null;
-            globalDistanceMethod = proj.distMethod || 'manual';
-            
-            document.getElementById('project-name').value = proj.name;
-            document.getElementById('traverse-select-direction').value = currentTraverseDirection;
-            
-            setGlobalDistanceMethod(globalDistanceMethod);
-            applyModeUI();
-            syncOffsetInputsToUI();
-            renderLogTable();
-            saveToLocalStorage();
-            drawPolygon();
-            showToast(`Проект "${proj.name}" загружен.`);
-        }
+        const savedProjects = safeJSON('bg_hns_projects_archive', []);
+        const proj = savedProjects[index];
+        if (!proj) return;
+
+        measurementsLog = JSON.parse(JSON.stringify(proj.log || []));
+        currentSystemMode = proj.systemMode || 'magnetic';
+        currentTraverseDirection = proj.traverseDirection || 'clockwise';
+        baseAzimuth = proj.baseAzimuth !== undefined ? proj.baseAzimuth : null;
+        globalDistanceMethod = proj.distMethod || 'manual';
+        gpsPoint1 = null;
+        calculatedGpsAzimuth = null;
+        
+        document.getElementById('project-name').value = proj.name;
+        document.getElementById('traverse-select-direction').value = currentTraverseDirection;
+        document.getElementById('base-azimuth').innerText = baseAzimuth !== null ? `${Number(baseAzimuth).toFixed(1)}°` : 'НЕТ';
+        
+        setGlobalDistanceMethod(globalDistanceMethod);
+        applyModeUI();
+        syncOffsetInputsToUI();
+        renderLogTable();
+        saveToLocalStorage();
+        drawPolygon();
+        showToast(`Проект "${proj.name}" загружен.`);
     }
 
     function exportArchiveToCSV() {
@@ -3416,9 +3686,8 @@
             return;
         }
 
-        const localData = localStorage.getItem('bg_hns_projects_archive');
-        let dataToExport = [];
-        if (localData) dataToExport = JSON.parse(localData);
+        let dataToExport = safeJSON('bg_hns_projects_archive', []);
+        if (!Array.isArray(dataToExport)) dataToExport = [];
         
         if (dataToExport.length === 0 && measurementsLog.length > 0) {
             dataToExport.push({
@@ -3431,21 +3700,26 @@
         if (dataToExport.length === 0) { showToast("Архив пуст!"); return; }
         
         let csvContent = "\uFEFF"; 
-        csvContent += "Название делянки;Дата;Линия;Азимут;Длина (м);Широта DMS;Долгота DMS;Широта DD;Долгота DD;Высота (м)\n";
+        csvContent += "Название делянки;Дата;Линия;Азимут;Длина (м);Широта начала DMS;Долгота начала DMS;Широта начала DD;Долгота начала DD;Высота (м)\n";
         
         dataToExport.forEach(proj => {
-            proj.log.forEach(m => {
-                let dmsLat = m.lat ? decimalToDMS(m.lat, true) : "";
-                let dmsLng = m.lng ? decimalToDMS(m.lng, false) : "";
-                let ddLat = m.lat ? m.lat.toFixed(6) : "";
-                let ddLng = m.lng ? m.lng.toFixed(6) : "";
-                let altVal = m.altitude || 150;
-                csvContent += `"${proj.name}";"${proj.timestamp}";"№${m.id}";"${m.azimuth}";"${m.distance}";"${dmsLat}";"${dmsLng}";"${ddLat}";"${ddLng}";"${altVal}"\n`;
+            (proj.log || []).forEach(m => {
+                let ok = hasCoords(m);
+                let dmsLat = ok ? decimalToDMS(m.lat, true) : "";
+                let dmsLng = ok ? decimalToDMS(m.lng, false) : "";
+                let ddLat = ok ? m.lat.toFixed(6) : "";
+                let ddLng = ok ? m.lng.toFixed(6) : "";
+                let altVal = (m.altitude !== null && m.altitude !== undefined) ? m.altitude : "";
+                csvContent += [
+                    csvCell(proj.name), csvCell(proj.timestamp), csvCell(`№${m.id}`),
+                    csvCell(m.azimuth), csvCell(m.distance),
+                    csvCell(dmsLat), csvCell(dmsLng), csvCell(ddLat), csvCell(ddLng), csvCell(altVal)
+                ].join(';') + "\n";
             });
         });
 
-        const fileName = "Архив_полевых_съемок_БГ_ХНС_3_3.xls";
-        const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        const fileName = "Архив_полевых_съемок_БГ_ХНС_3_2.csv";
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
@@ -3463,29 +3737,37 @@
         }
 
         if (measurementsLog.length === 0) { showToast("Журнал пуст!"); return; }
-        let name = document.getElementById('project-name').value || "Делянка";
+
+        const origin = getTraverseOrigin();
+        if (!origin) {
+            showToast("❌ У первой точки нет GPS-координат — экспорт в KML невозможен");
+            return;
+        }
+
+        let rawName = document.getElementById('project-name').value || "Делянка";
+        let name = escapeXml(rawName);
+        let startAlt = (measurementsLog[0].altitude !== null && measurementsLog[0].altitude !== undefined) ? `${measurementsLog[0].altitude} м` : 'н/д';
         
         let kml = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n<name>${name}</name>\n`;
         
-        let startLat = measurementsLog[0].lat || currentLat;
-        let startLng = measurementsLog[0].lng || currentLng;
-        let lat = startLat; let lng = startLng;
+        let lat = origin.lat;
+        let lng = origin.lng;
         
         let polygonCoords = [];
         polygonCoords.push(`${lng.toFixed(6)},${lat.toFixed(6)},0`);
 
-        kml += `<Placemark>\n<name>Столб №1 (Старт)</name>\n<description>Координаты: ${decimalToDMS(lat, true)} ${decimalToDMS(lng, false)}\nВысота: ${currentAltitude} м</description>\n<Point><coordinates>${lng.toFixed(6)},${lat.toFixed(6)},0</coordinates></Point>\n</Placemark>\n`;
+        kml += `<Placemark>\n<name>Столб №1 (Старт)</name>\n<description>Координаты: ${escapeXml(decimalToDMS(lat, true) + ' ' + decimalToDMS(lng, false))}\nВысота: ${escapeXml(startAlt)}</description>\n<Point><coordinates>${lng.toFixed(6)},${lat.toFixed(6)},0</coordinates></Point>\n</Placemark>\n`;
 
         measurementsLog.forEach((m, idx) => {
             let angleRad = (m.azimuth * Math.PI) / 180;
             let dX = m.distance * Math.sin(angleRad); 
             let dY = m.distance * Math.cos(angleRad); 
-            lat += dY / 111111;
-            lng += dX / (111111 * Math.cos(lat * Math.PI / 180));
+            lat += dY / M_PER_DEG;
+            lng += dX / (M_PER_DEG * Math.cos(lat * Math.PI / 180));
             polygonCoords.push(`${lng.toFixed(6)},${lat.toFixed(6)},0`);
 
             let dirCard = getCardinalDirection(m.azimuth);
-            kml += `<Placemark>\n<name>Столб №${idx + 2}</name>\n<description>Линия №${m.id}\nАзимут: ${m.azimuth}° (${dirCard})\nДлина: ${m.distance} м\nКоординаты: ${decimalToDMS(lat, true)} ${decimalToDMS(lng, false)} (${lat.toFixed(6)}, ${lng.toFixed(6)})</description>\n<Point><coordinates>${lng.toFixed(6)},${lat.toFixed(6)},0</coordinates></Point>\n</Placemark>\n`;
+            kml += `<Placemark>\n<name>Столб №${idx + 2}</name>\n<description>Линия №${m.id}\nАзимут: ${m.azimuth}° (${dirCard})\nДлина: ${m.distance} м\nКоординаты: ${escapeXml(decimalToDMS(lat, true) + ' ' + decimalToDMS(lng, false))} (${lat.toFixed(6)}, ${lng.toFixed(6)})</description>\n<Point><coordinates>${lng.toFixed(6)},${lat.toFixed(6)},0</coordinates></Point>\n</Placemark>\n`;
         });
         
         if (polygonCoords.length > 0) polygonCoords.push(polygonCoords[0]);
@@ -3493,11 +3775,12 @@
         kml += `<Placemark>\n<name>${name} - Контур делянки</name>\n<Polygon>\n<outerBoundaryIs>\n<LinearRing>\n<coordinates>\n${polygonCoords.join("\n")}\n</coordinates>\n</LinearRing>\n</outerBoundaryIs>\n</Polygon>\n</Placemark>\n`;
         kml += `</Document>\n</kml>`;
 
+        const safeFile = rawName.replace(/[\\/:*?"<>|]+/g, '_');
         const blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", `${name}_контур_БГ_ХНС_3.3.kml`);
+        link.setAttribute("download", `${safeFile}_контур_БГ_ХНС_3.2.kml`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -3510,23 +3793,40 @@
         initCanvasDragControls();
         checkAutoConnectSerial(); // Автоматическое восстановление соединения при открытии
         
+        // Перерисовка чертежа при повороте/изменении размера окна
+        let resizeTimer = null;
+        const onResize = () => {
+            if (resizeTimer) clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(drawPolygon, 120);
+        };
+        window.addEventListener('resize', onResize);
+        window.addEventListener('orientationchange', onResize);
+
+        let sensorRequestBusy = false;
         const triggerSensorAccess = async () => {
+            if (sensorRequestBusy) return;
+            sensorRequestBusy = true;
             try {
-                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                let granted = true;
+                if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                     const [orientRes, motionRes] = await Promise.all([
                         DeviceOrientationEvent.requestPermission(),
-                        typeof DeviceMotionEvent.requestPermission === 'function' ? DeviceMotionEvent.requestPermission() : 'granted'
+                        (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function')
+                            ? DeviceMotionEvent.requestPermission() : 'granted'
                     ]);
-                    if (orientRes === 'granted' && motionRes === 'granted') {
-                        initOrientationSensors();
-                    }
-                } else {
+                    granted = (orientRes === 'granted' && motionRes === 'granted');
+                }
+                if (granted) {
                     initOrientationSensors();
+                    document.removeEventListener('click', triggerSensorAccess, true);
+                } else {
+                    showToast("⚠️ Доступ к датчикам не разрешён. Нажмите на экран ещё раз и подтвердите доступ.");
                 }
             } catch (e) {
                 console.error("Ошибка активации сенсоров:", e);
+                showToast("⚠️ Не удалось включить датчики. Нажмите на экран ещё раз.");
             }
-            document.removeEventListener('click', triggerSensorAccess, true);
+            sensorRequestBusy = false;
         };
 
         document.addEventListener('click', triggerSensorAccess, true);
@@ -3542,6 +3842,8 @@
                 }
             }
         }
+
+        drawPolygon();
     });
 </script>
 
