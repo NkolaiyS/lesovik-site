@@ -1,12 +1,13 @@
 /**
  * ============================================================================
- * SERVICE WORKER — ЕДИНЫЙ ОФФЛАЙН-КЕШ ЭКОСИСТЕМЫ «ЛЕСОВИК PRO» (v3.2.1)
+ * SERVICE WORKER — АВТОНОМНЫЙ ОФФЛАЙН-КЕШ «ЛЕСОВИК PRO» (v3.2.2)
  * (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
  * ============================================================================
  */
 
-const PRO_CACHE = 'busol-pro-v3.2.1';
+const PRO_CACHE = 'busol-pro-v3.2.2';
 
+// Базовые локальные ресурсы приложения
 const PRO_ASSETS = [
   '/',
   '/index.html',
@@ -20,29 +21,31 @@ const PRO_ASSETS = [
   '/tools.html',
   '/lesovik-core.js',
   '/logo.jpeg',
+  '/jszip.min.js',        // Локальный JSZip
+  '/xlsx.mini.min.js',    // Локальный SheetJS
   '/busol-pro.webmanifest',
   '/height.webmanifest',
   '/diameter.webmanifest',
   '/bitterlich.webmanifest',
   '/journal.webmanifest',
-  '/mdo.webmanifest',
-  'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.mini.min.js',
-  'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'
+  '/mdo.webmanifest'
 ];
 
-// 1. Поштучное отказоустойчивое кэширование
+// 1. Поштучная надежная предзагрузка в кэш
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(PRO_CACHE).then(async (cache) => {
-      console.log('[Lesovik PRO SW] Запуск надежного поштучного кэширования...');
+      console.log('[Lesovik PRO SW] Старт автономной фиксации файлов...');
       for (const asset of PRO_ASSETS) {
         try {
-          const response = await fetch(asset, { cache: 'no-cache' });
+          const response = await fetch(asset, { cache: 'reload' });
           if (response.ok) {
             await cache.put(asset, response);
+          } else {
+            console.warn(`[Lesovik PRO SW] Файл недоступен (код ${response.status}): ${asset}`);
           }
         } catch (err) {
-          console.warn(`[Lesovik PRO SW] Пропущен ресурс при кэшировании: ${asset}`, err);
+          console.warn(`[Lesovik PRO SW] Ошибка предзагрузки ресурса: ${asset}`, err);
         }
       }
     })
@@ -50,13 +53,13 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// 2. Активация и удаление старых версий кэша
+// 2. Активация и полная очистка устаревших версий
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter(key => key !== PRO_CACHE).map(key => {
-          console.log(`[Lesovik PRO SW] Удаление устаревшего кэша: ${key}`);
+        keys.filter((key) => key !== PRO_CACHE).map((key) => {
+          console.log(`[Lesovik PRO SW] Очистка старого кэша: ${key}`);
           return caches.delete(key);
         })
       );
@@ -65,16 +68,16 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Хелпер таймаута для плохой сети в лесу (2 секунды)
-function fetchWithTimeout(request, timeoutMs = 2000) {
+// Хелпер таймаута для нестабильной мобильной связи в лесу
+function fetchWithTimeout(request, timeoutMs = 1500) {
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Network timeout')), timeoutMs);
+    const timer = setTimeout(() => reject(new Error('Лесной таймаут сети')), timeoutMs);
     fetch(request).then(
-      response => {
+      (response) => {
         clearTimeout(timer);
         resolve(response);
       },
-      err => {
+      (err) => {
         clearTimeout(timer);
         reject(err);
       }
@@ -82,39 +85,74 @@ function fetchWithTimeout(request, timeoutMs = 2000) {
   });
 }
 
-// 3. Перехват запросов (Cache-First для стабильного офлайна)
+// 3. Интеллектуальный перехват запросов
 self.addEventListener('fetch', (event) => {
-  const url = event.request.url;
+  const req = event.request;
+  const url = new URL(req.url);
 
-  // Игнорируем сетевые метрики и рекламу
+  // Пропускаем мимо кэша стороннюю аналитику и рекламные трекеры
   if (
-    url.includes('mc.yandex.ru') ||
-    url.includes('google-analytics') ||
-    url.includes('yandex.ru/ads') ||
-    url.includes('an.yandex.ru') ||
-    url.includes('mail.ru')
+    url.hostname.includes('mc.yandex.ru') ||
+    url.hostname.includes('google-analytics') ||
+    url.hostname.includes('an.yandex.ru') ||
+    url.hostname.includes('mail.ru') ||
+    !url.protocol.startsWith('http')
   ) {
     return;
   }
 
+  // А. СТРАТЕГИЯ ДЛЯ HTML: Мгновенно из кэша, если оффлайн; иначе Network с таймаутом 1.5с
+  if (req.mode === 'navigate' || (req.headers.get('accept') && req.headers.get('accept').includes('text/html'))) {
+    event.respondWith((async () => {
+      // 1. Если телефон уже в режиме офлайна — отдаём кэш без секундных ожиданий
+      if (!navigator.onLine) {
+        const cached = await caches.match(req, { ignoreSearch: true });
+        if (cached) return cached;
+        return caches.match('/busol-pro.html', { ignoreSearch: true });
+      }
+
+      // 2. Если связь формально есть (в т.ч. «Е») — ждём сеть максимум 1.5 сек
+      try {
+        const networkResponse = await fetchWithTimeout(req, 1500);
+        if (networkResponse && networkResponse.status === 200) {
+          const copy = networkResponse.clone();
+          caches.open(PRO_CACHE).then((cache) => cache.put(req, copy));
+        }
+        return networkResponse;
+      } catch (err) {
+        // Связь оборвалась или зависла — мгновенный откат на кэш
+        const cached = await caches.match(req, { ignoreSearch: true });
+        if (cached) return cached;
+        return caches.match('/busol-pro.html', { ignoreSearch: true });
+      }
+    })());
+    return;
+  }
+
+  // Б. СТРАТЕГИЯ ДЛЯ СТАТИКИ (JS, CSS, манифесты, иконки): Cache-First
   event.respondWith(
-    caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
+    caches.match(req, { ignoreSearch: true }).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse;
       }
 
-      return fetchWithTimeout(event.request, 2000).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200 && event.request.method === 'GET') {
-          const responseClone = networkResponse.clone();
-          caches.open(PRO_CACHE).then((cache) => cache.put(event.request, responseClone));
-        }
-        return networkResponse;
-      }).catch(() => {
-        // Если сети нет, а запрашивается HTML-страница — возвращаем Буссоль PRO
-        if (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html')) {
-          return caches.match('/busol-pro.html', { ignoreSearch: true });
-        }
-      });
+      return fetchWithTimeout(req, 2000)
+        .then((networkResponse) => {
+          // Кэшируем на лету только успешные ответы собственного домена
+          if (
+            networkResponse &&
+            networkResponse.status === 200 &&
+            req.method === 'GET' &&
+            url.origin === self.location.origin
+          ) {
+            const copy = networkResponse.clone();
+            caches.open(PRO_CACHE).then((cache) => cache.put(req, copy));
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return new Response('', { status: 408, statusText: 'Offline target not found' });
+        });
     })
   );
 });
