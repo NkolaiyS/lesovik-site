@@ -35,6 +35,7 @@
         "HNS-GTST-KSRJIE": new Date(2026, 8, 15), // Игорь на 7 дней до 15 сентября
         "HNS-GGQK-8JRTNF": new Date(2026, 8, 17), // Игорь на 7 дней до 17 сентября
         "HNS-JS0F-VWF0YV": new Date(2026, 8, 21), // Вячеслав Мусакаев на 7 дней до 21 сентября
+        "HNS-8FQB-0X58G5": new Date(2099, 11, 31),   // Хонор А30 галакси бессрочно
     };
 
     function generateWebDeviceId() {
