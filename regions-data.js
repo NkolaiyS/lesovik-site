@@ -28,7 +28,7 @@ window.LESOVIK_FED_DISTRICTS = [
             { code: "udmurtia", name: "Удмуртская Республика", file: "udm-data.js", active: true },
             { code: "mariel", name: "Республика Марий Эл", file: "mari-data.js", active: true },
             { code: "mordovia", name: "Республика Мордовия", file: "mordovia-data.js", active: true },
-            { code: "chuvashia", name: "Чувашская Республика", file: "chuvashia-data.js", active: false },
+            { code: "chuvashia", name: "Чувашская Республика", file: "chuvashia-data.js", active: true },
             { code: "nizhny_novgorod", name: "Нижегородская область", file: "nnov-data.js", active: false },
             { code: "orenburg", name: "Оренбургская область", file: "orenburg-data.js", active: false },
             { code: "penza", name: "Пензенская область", file: "penza-data.js", active: false },
