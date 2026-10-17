@@ -1662,6 +1662,9 @@
         await connectBluetoothModule();
     }
 
+    const BLE_UART_SERVICE = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+    const BLE_UART_TX_CHAR = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+
     async function connectBluetoothModule() {
         if (bleConnecting) return;
         if (bleConnected) {
@@ -1677,11 +1680,10 @@
         updateHardwareButtonsUI();
         let device = null;
         try {
-            showToast("🔍 Выберите 'BG-HNS Module' в списке...");
-            
-            // acceptAllDevices: true отменяет капризные фильтры Android-браузера
+            showToast("🔍 Поиск модуля...");
+
             device = await navigator.bluetooth.requestDevice({
-                acceptAllDevices: true,
+                filters: [{ name: 'BG-HNS Module' }],
                 optionalServices: [BLE_UART_SERVICE]
             });
             bleDevice = device;
@@ -1717,10 +1719,10 @@
             showToast("⚡ Модуль успешно подключен по Bluetooth!");
             refreshOrientationSource('ble');
         } catch (err) {
-            console.warn("Отмена или ошибка Bluetooth:", err);
+            console.error("Bluetooth error:", err);
             showToast(err && err.name === 'NotFoundError'
                 ? "❌ Устройство не выбрано"
-                : "❌ Ошибка соединения по Bluetooth");
+                : "❌ Ошибка: " + (err.message || "соединение прервано"));
             await disconnectBluetoothModule(true);
         } finally {
             bleConnecting = false;
