@@ -114,6 +114,7 @@
 
         .btn-hardware-module {
             flex: 1;
+            min-width: 0;
             background: rgba(45, 90, 39, 0.06);
             border: 1px solid var(--forest-green);
             color: var(--forest-green);
@@ -155,6 +156,11 @@
             background: var(--success);
             border-color: var(--success);
             color: #FFFFFF;
+        }
+
+        .btn-hardware-module.unsupported { opacity: 0.7; border-style: dashed; }
+        @media (max-width: 380px) {
+            .btn-hardware-module { font-size: 10.5px; padding: 6px 4px; gap: 3px; }
         }
 
         .btn-hw-help {
@@ -750,7 +756,8 @@
             </div>
         </div>
         <div class="header-bottom-row">
-            <button id="btn-hardware-module" class="btn-hardware-module" onclick="toggleHardwareModule()">📡 Точный модуль: ПОДКЛЮЧИТЬ</button>
+            <button id="btn-hardware-usb" class="btn-hardware-module" onclick="toggleUsbModule()" title="Подключить внешний модуль по кабелю USB-OTG">🔌 USB: ВЫКЛ</button>
+            <button id="btn-hardware-ble" class="btn-hardware-module" onclick="toggleBluetoothModule()" title="Подключить внешний модуль по Bluetooth">📶 Bluetooth: ВЫКЛ</button>
             <button class="btn-hw-help" onclick="openPopup('hw-info-popup', event)" title="Справка по внешнему модулю">?</button>
         </div>
     </header>
@@ -762,9 +769,10 @@
             <h3>Внешний геодезический модуль</h3>
             <ul class="instruction-steps">
                 <li><strong>Назначение:</strong> Подключение внешнего блока абсолютной ориентации (BNO055) и лазерного дальномера для таксации в зонах с магнитными аномалиями.</li>
-                <li><strong>Способы подключения:</strong>
-                    <br>• <strong>Bluetooth (Без проводов):</strong> Работает на всех устройствах "из коробки" без скрытых настроек браузера.
-                    <br>• <strong>USB-OTG (По кабелю):</strong> Если Bluetooth не поддерживается браузером, система автоматически попробует соединиться по проводу (Web Serial API).
+                <li><strong>Способы подключения (две независимые кнопки):</strong>
+                    <br>• <strong>🔌 USB (левая):</strong> по кабелю USB-OTG (Web Serial API, Chrome / Яндекс). При повторных подключениях модуль подхватывается автоматически.
+                    <br>• <strong>📶 Bluetooth (правая):</strong> без проводов (Web Bluetooth, Chrome / Яндекс / Edge). На iPhone в Safari Web Bluetooth, как правило, недоступен.
+                    <br>Кнопки не зависят друг от друга: подключение, ошибка или обрыв одного канала не влияют на другой. Если подключены оба, азимут берётся с канала, подключённого первым, а данные дальномера принимаются с любого.
                 </li>
                 <li><strong>Питание:</strong> Вы можете прикрепить модуль на корпус смартфона и запитать его коротким шнуром от порта телефона.</li>
             </ul>
@@ -916,7 +924,7 @@
                 <li><strong>📡 GPS-Курс (По 2 точкам):</strong> Нажмите «📍 Старт точки», пройдите по визиру от 6 до 15 метров и нажмите «🏁 Зафиксировать вектор». Точки связываются непрерывной цепочкой (Т1 ➔ Т2 ➔ Т3).</li>
                 <li><strong>📡 GPS-расчет расстояний:</strong> При выбранном методе длина линии вычисляется со спутника как расстояние до следующей точки (последняя линия — до Т1).</li>
                 <li><strong>📂 Загрузка KML / KMZ / GeoJSON:</strong> Загружайте файлы квартальных сеток и выделов из ФГИС ЛК прямо на чертёж без подключения к интернету.</li>
-                <li><strong>🔌 Внешний модуль:</strong> Нажмите «ПОДКЛЮЧИТЬ» для связи с прецизионным датчиком по Bluetooth или кабелю.</li>
+                <li><strong>🔌 Внешний модуль:</strong> Нажмите «🔌 USB» (кабель) или «📶 Bluetooth» (без проводов) для связи с прецизионным датчиком. Кнопки работают независимо.</li>
             </ol>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closeInstruction()">Понятно, к замеру</button>
         </div>
@@ -1299,6 +1307,12 @@
     let bleCharacteristic = null;
     let externalModuleLastDistance = null;
 
+    // Состояние двух независимых каналов внешнего модуля
+    let usbConnected = false, usbConnecting = false, usbDisconnecting = false;
+    let bleConnected = false, bleConnecting = false;
+    let activeOrientationChannel = null; // 'usb' | 'ble' — канал, с которого идёт азимут
+    let bleOnNotify = null, bleOnDisconnected = null, bleLineBuffer = '';
+
     // --- ПЕРЕМЕННЫЕ СГЛАЖИВАНИЯ АЗИМУТА (экспоненциальный фильтр по sin/cos) И БУФЕР УСРЕДНЕНИЯ ---
     let filteredSin = 0;
     let filteredCos = 0;
@@ -1423,157 +1437,160 @@
         return null;
     }
 
-    // --- ЛОГИКА ПОДКЛЮЧЕНИЯ И АВТОПОДХВАТА ВНЕШНЕГО МОДУЛЯ (Bluetooth + USB) ---
-    async function toggleHardwareModule() {
-        const btn = document.getElementById('btn-hardware-module');
+    // --- ВНЕШНИЙ МОДУЛЬ: ДВА НЕЗАВИСИМЫХ КАНАЛА (USB-OTG и Bluetooth) ---
+    // Каждая кнопка управляет только своим каналом: подключение, ошибка или обрыв одного не затрагивают другой.
+    // Общее одно: азимут берётся с одного «ведущего» канала (кто подключился первым), чтобы потоки не смешивались.
+    // Данные дальномера принимаются с любого подключённого канала.
+    const BLE_DEVICE_NAME = 'BG-HNS Module';
+    const BLE_UART_SERVICE = '6e400001-b5a3-f393-e0a9-e50e24dcca9e'; // Nordic UART Service
+    const BLE_UART_TX_CHAR = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 
-        // Отключение, если уже подключено
-        if (orientationSource === 'external') {
-            if (bleDevice && bleDevice.gatt.connected) {
-                bleDevice.gatt.disconnect();
-            }
-            await disconnectHardwareModule();
-            return;
+    function channelTitle(ch) { return ch === 'usb' ? 'USB' : 'Bluetooth'; }
+
+    // Выбор ведущего канала для азимута; orientationSource остаётся флагом «phone / external» для остального кода
+    function refreshOrientationSource(preferred) {
+        const was = activeOrientationChannel;
+        if (activeOrientationChannel === 'usb' && !usbConnected) activeOrientationChannel = null;
+        if (activeOrientationChannel === 'ble' && !bleConnected) activeOrientationChannel = null;
+
+        if (!activeOrientationChannel) {
+            if (preferred === 'usb' && usbConnected) activeOrientationChannel = 'usb';
+            else if (preferred === 'ble' && bleConnected) activeOrientationChannel = 'ble';
+            else if (usbConnected) activeOrientationChannel = 'usb';
+            else if (bleConnected) activeOrientationChannel = 'ble';
         }
 
-        // 1. Приоритетная попытка подключения по Bluetooth (Android / iOS / PC)
-        if (navigator.bluetooth) {
-            try {
-                showToast("🔍 Поиск модуля БГ-ХНС по Bluetooth...");
-                bleDevice = await navigator.bluetooth.requestDevice({
-                    filters: [{ name: 'BG-HNS Module' }],
-                    optionalServices: ['6e400001-b5a3-f393-e0a9-e50e24dcca9e'] // Nordic UART Service
-                });
-
-                bleDevice.addEventListener('gattserverdisconnected', () => {
-                    showToast("⚠️ Bluetooth соединение разорвано");
-                    disconnectHardwareModule();
-                });
-
-                const server = await bleDevice.gatt.connect();
-                const service = await server.getPrimaryService('6e400001-b5a3-f393-e0a9-e50e24dcca9e');
-                bleCharacteristic = await service.getCharacteristic('6e400003-b5a3-f393-e0a9-e50e24dcca9e');
-
-                await bleCharacteristic.startNotifications();
-                let textDecoder = new TextDecoder();
-                let bleBuffer = "";
-
-                bleCharacteristic.addEventListener('characteristicvaluechanged', (event) => {
-                    let chunk = textDecoder.decode(event.target.value);
-                    bleBuffer += chunk;
-                    let lines = bleBuffer.split('\n');
-                    bleBuffer = lines.pop(); // Оставляем незавершенную строку в буфере
-
-                    for (let line of lines) {
-                        if (line.trim().length > 0) {
-                            parseHardwareTelemetry(line.trim());
-                        }
-                    }
-                });
-
-                orientationSource = 'external';
-                updateHardwareButtonUI(true);
-                showToast("⚡ Модуль подключен по Bluetooth!");
-                return; // Успех по BT, USB не трогаем
-            } catch (err) {
-                console.warn("Отмена или ошибка Bluetooth:", err);
-                // Если отменили или ошибка - продолжаем, попробуем USB
-            }
+        if (activeOrientationChannel !== was) {
+            isFilterInitialized = false;   // фильтр азимута стартует заново для нового источника
+            azimuthRingBuffer = [];
         }
-
-        // 2. Если Bluetooth недоступен или не выбран — пробуем USB (Web Serial)
-        if ('serial' in navigator) {
-            await requestConnectHardwareModule();
-            return;
-        }
-
-        showToast("❌ Bluetooth или USB-OTG недоступны в этом браузере.");
+        orientationSource = activeOrientationChannel ? 'external' : 'phone';
+        updateHardwareButtonsUI();
     }
 
-    async function requestConnectHardwareModule() {
+    // Что происходит с азимутом после отключения канала — для тоста
+    function sourceTail() {
+        return activeOrientationChannel
+            ? ` Азимут идёт с ${channelTitle(activeOrientationChannel)}-модуля.`
+            : ' Переход на встроенные датчики смартфона.';
+    }
+
+    function updateHardwareButtonsUI() {
+        const setBtn = (id, channel, connected, busy, supported, labelOff, labelOn, hintOff, hintOn) => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            btn.classList.toggle('connected', connected);
+            btn.classList.toggle('unsupported', !supported && !connected);
+            if (busy) btn.innerHTML = '⏳ ' + channelTitle(channel) + '…';
+            else btn.innerHTML = connected ? labelOn : labelOff;
+            btn.title = connected
+                ? hintOn + (activeOrientationChannel === channel ? ' (с него идёт азимут)' : '')
+                : hintOff;
+        };
+        setBtn('btn-hardware-usb', 'usb', usbConnected, usbConnecting, 'serial' in navigator,
+            '🔌 USB: ВЫКЛ', '⚡ USB: ВКЛ',
+            'Подключить внешний модуль по кабелю USB-OTG', 'USB-модуль подключен. Нажмите, чтобы отключить');
+        setBtn('btn-hardware-ble', 'ble', bleConnected, bleConnecting, !!navigator.bluetooth,
+            '📶 Bluetooth: ВЫКЛ', '⚡ Bluetooth: ВКЛ',
+            'Подключить внешний модуль по Bluetooth', 'Bluetooth-модуль подключен. Нажмите, чтобы отключить');
+    }
+
+    // ===================== USB (Web Serial) =====================
+    async function toggleUsbModule() {
+        if (usbConnecting) return;
+        if (usbConnected) {
+            await disconnectUsbModule();
+            return;
+        }
+        if (!('serial' in navigator)) {
+            showToast("ℹ️ USB-OTG (Web Serial) не поддерживается этим браузером. Нужен Chrome / Яндекс на Android или ПК. Можно использовать Bluetooth.");
+            return;
+        }
+        await requestConnectUsbModule();
+    }
+
+    async function requestConnectUsbModule() {
+        usbConnecting = true;
+        updateHardwareButtonsUI();
         try {
             const port = await navigator.serial.requestPort();
-            await connectHardwarePort(port);
+            await connectUsbPort(port);
         } catch (err) {
-            console.error("Выбор порта USB отменен:", err);
-            showToast("❌ Модуль не подключен или выбор отменен");
-            await disconnectHardwareModule();
+            console.warn("Выбор порта USB отменен:", err);
+            showToast("❌ USB-модуль не подключен или выбор отменен");
+        } finally {
+            usbConnecting = false;
+            updateHardwareButtonsUI();
         }
     }
 
-    async function connectHardwarePort(port) {
+    // Подключение уже известного порта (автоподхват при открытии страницы / при втыкании кабеля)
+    async function autoConnectUsbPort(port) {
+        if (usbConnected || usbConnecting) return;
+        usbConnecting = true;
+        updateHardwareButtonsUI();
         try {
-            if (hardwareSerialPort && hardwareSerialPort.readable) {
-                await disconnectHardwareModule();
-            }
+            await connectUsbPort(port);
+        } finally {
+            usbConnecting = false;
+            updateHardwareButtonsUI();
+        }
+    }
 
+    async function connectUsbPort(port) {
+        if (usbConnected) await disconnectUsbModule(true);
+        try {
             hardwareSerialPort = port;
-            await hardwareSerialPort.open({ baudRate: 115200 });
+            await port.open({ baudRate: 115200 });
 
-            orientationSource = 'external';
-            updateHardwareButtonUI(true);
-            showToast("⚡ Точный модуль подключен по кабелю (USB)!");
-
+            usbConnected = true;
             hardwareKeepReading = true;
+            showToast("⚡ Точный модуль подключен по кабелю (USB)!");
+            refreshOrientationSource('usb');
             readSerialDataLoop();
         } catch (err) {
             console.error("Ошибка открытия порта USB:", err);
             showToast("❌ Ошибка соединения с портом USB");
-            await disconnectHardwareModule();
+            await disconnectUsbModule(true);
         }
     }
 
-    async function disconnectHardwareModule() {
+    async function disconnectUsbModule(silent) {
+        if (usbDisconnecting) return;
+        if (!usbConnected && !hardwareSerialPort) return;
+        usbDisconnecting = true;
         hardwareKeepReading = false;
         try {
             if (hardwareReader) {
                 await hardwareReader.cancel();
-                hardwareReader = null;
             }
             if (hardwareReadableStreamClosed) {
                 await hardwareReadableStreamClosed.catch(() => {});
-                hardwareReadableStreamClosed = null;
             }
             if (hardwareSerialPort) {
                 await hardwareSerialPort.close();
-                hardwareSerialPort = null;
-            }
-            if (bleDevice && bleDevice.gatt && bleDevice.gatt.connected) {
-                bleDevice.gatt.disconnect();
-                bleDevice = null;
-                bleCharacteristic = null;
             }
         } catch (e) {
-            console.warn("Ошибка при закрытии порта:", e);
+            console.warn("Ошибка при закрытии порта USB:", e);
         }
+        hardwareReader = null;
+        hardwareReadableStreamClosed = null;
+        hardwareSerialPort = null;
+        usbConnected = false;
+        usbDisconnecting = false;
 
-        orientationSource = 'phone';
-        isFilterInitialized = false;
-        updateHardwareButtonUI(false);
-        showToast("🔌 Переход на встроенные датчики смартфона");
-    }
-
-    function updateHardwareButtonUI(connected) {
-        const btn = document.getElementById('btn-hardware-module');
-        if (!btn) return;
-        if (connected) {
-            btn.classList.add('connected');
-            btn.innerHTML = '⚡ Точный модуль: ВКЛ';
-        } else {
-            btn.classList.remove('connected');
-            btn.innerHTML = '📡 Точный модуль: ПОДКЛЮЧИТЬ';
-        }
+        refreshOrientationSource();
+        if (!silent) showToast("🔌 USB-модуль отключен." + sourceTail());
     }
 
     async function checkAutoConnectSerial() {
-        // Если уже сидим на BLE, не перебиваем сериал портом
-        if (orientationSource === 'external') return; 
+        if (usbConnected || usbConnecting) return;
         if (!('serial' in navigator)) return;
         try {
             const ports = await navigator.serial.getPorts();
             if (ports && ports.length > 0) {
                 console.log("Найден ранее авторизованный USB-порт, подключаемся...");
-                await connectHardwarePort(ports[0]);
+                await autoConnectUsbPort(ports[0]);
             }
         } catch (e) {
             console.warn("Ошибка автоподключения USB:", e);
@@ -1583,29 +1600,30 @@
     if ('serial' in navigator) {
         // Автоматический подхват при физическом подключении кабеля
         navigator.serial.addEventListener('connect', async (event) => {
-            if (orientationSource === 'external') return;
+            if (usbConnected || usbConnecting) return;
             showToast("⚡ Обнаружен USB модуль! Автоподключение...");
-            await connectHardwarePort(event.target);
+            await autoConnectUsbPort(event.target);
         });
 
-        // Бесшовный сброс при отключении кабеля
+        // Сброс только USB-канала при отключении кабеля (Bluetooth не затрагивается)
         navigator.serial.addEventListener('disconnect', (event) => {
-            if (orientationSource === 'external' && hardwareSerialPort) {
-                showToast("⚠️ Кабель USB отсоединен!");
-                disconnectHardwareModule();
+            if (usbConnected && event.target === hardwareSerialPort) {
+                disconnectUsbModule(true).then(() => showToast("⚠️ Кабель USB отсоединен!" + sourceTail()));
             }
         });
     }
 
     async function readSerialDataLoop() {
-        let textDecoder = new TextDecoderStream();
-        hardwareReadableStreamClosed = hardwareSerialPort.readable.pipeTo(textDecoder.writable);
-        hardwareReader = textDecoder.readable.getReader();
+        const port = hardwareSerialPort;
+        const textDecoder = new TextDecoderStream();
+        hardwareReadableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+        const reader = textDecoder.readable.getReader();
+        hardwareReader = reader;
 
         let partialChunk = '';
         try {
             while (hardwareKeepReading) {
-                const { value, done } = await hardwareReader.read();
+                const { value, done } = await reader.read();
                 if (done) break;
                 if (value) {
                     partialChunk += value;
@@ -1615,7 +1633,7 @@
                     for (let line of lines) {
                         let cleanLine = line.trim();
                         if (cleanLine.length > 0) {
-                            parseHardwareTelemetry(cleanLine);
+                            parseHardwareTelemetry(cleanLine, 'usb');
                         }
                     }
                 }
@@ -1623,13 +1641,130 @@
         } catch (err) {
             console.warn("Поток USB завершен или прерван:", err);
         } finally {
-            if (orientationSource === 'external' && hardwareSerialPort) {
-                disconnectHardwareModule();
+            // Поток оборвался сам (не по нажатию кнопки) — закрываем только USB-канал
+            if (usbConnected && !usbDisconnecting && hardwareReader === reader) {
+                disconnectUsbModule(true).then(() => showToast("⚠️ USB-поток прерван." + sourceTail()));
             }
         }
     }
 
-    function parseHardwareTelemetry(telemetryString) {
+    // ===================== Bluetooth (Web Bluetooth) =====================
+    async function toggleBluetoothModule() {
+        if (bleConnecting) return;
+        if (bleConnected) {
+            await disconnectBluetoothModule();
+            return;
+        }
+        if (!navigator.bluetooth) {
+            showToast("ℹ️ Bluetooth (Web Bluetooth) недоступен в этом браузере. Нужен Chrome / Яндекс / Edge на Android или ПК. Можно использовать USB.");
+            return;
+        }
+        await connectBluetoothModule();
+    }
+
+    async function connectBluetoothModule() {
+        bleConnecting = true;
+        updateHardwareButtonsUI();
+        let device = null;
+        try {
+            showToast("🔍 Поиск модуля БГ-ХНС по Bluetooth...");
+            device = await navigator.bluetooth.requestDevice({
+    acceptAllDevices: true,
+    optionalServices: [BLE_UART_SERVICE]
+});
+            bleDevice = device;
+
+            bleOnDisconnected = () => {
+                // Реагируем только на неожиданный обрыв текущего устройства
+                if (bleDevice !== device || !bleConnected) return;
+                disconnectBluetoothModule(true).then(() => showToast("⚠️ Bluetooth соединение разорвано." + sourceTail()));
+            };
+            device.addEventListener('gattserverdisconnected', bleOnDisconnected);
+
+            const server = await device.gatt.connect();
+            const service = await server.getPrimaryService(BLE_UART_SERVICE);
+            const characteristic = await service.getCharacteristic(BLE_UART_TX_CHAR);
+            bleCharacteristic = characteristic;
+
+            const textDecoder = new TextDecoder();
+            bleLineBuffer = '';
+            bleOnNotify = (event) => {
+                bleLineBuffer += textDecoder.decode(event.target.value, { stream: true });
+                let lines = bleLineBuffer.split('\n');
+                bleLineBuffer = lines.pop(); // Оставляем незавершенную строку в буфере
+
+                for (let line of lines) {
+                    if (line.trim().length > 0) {
+                        parseHardwareTelemetry(line.trim(), 'ble');
+                    }
+                }
+            };
+            characteristic.addEventListener('characteristicvaluechanged', bleOnNotify);
+            await characteristic.startNotifications();
+
+            bleConnected = true;
+            showToast("⚡ Модуль подключен по Bluetooth!");
+            refreshOrientationSource('ble');
+        } catch (err) {
+            console.warn("Отмена или ошибка Bluetooth:", err);
+            showToast(err && err.name === 'NotFoundError'
+                ? "❌ Bluetooth: модуль не выбран"
+                : "❌ Ошибка соединения по Bluetooth");
+            await disconnectBluetoothModule(true);
+        } finally {
+            bleConnecting = false;
+            updateHardwareButtonsUI();
+        }
+    }
+
+    async function disconnectBluetoothModule(silent) {
+        const device = bleDevice;
+        const characteristic = bleCharacteristic;
+        const notifyHandler = bleOnNotify;
+        const dropHandler = bleOnDisconnected;
+
+        // Сначала сбрасываем состояние, чтобы событие gattserverdisconnected не сработало повторно
+        bleDevice = null;
+        bleCharacteristic = null;
+        bleOnNotify = null;
+        bleOnDisconnected = null;
+        bleLineBuffer = '';
+        const wasConnected = bleConnected;
+        bleConnected = false;
+
+        try {
+            if (characteristic) {
+                if (notifyHandler) characteristic.removeEventListener('characteristicvaluechanged', notifyHandler);
+                try { await characteristic.stopNotifications(); } catch (e) {}
+            }
+            if (device) {
+                if (dropHandler) device.removeEventListener('gattserverdisconnected', dropHandler);
+                if (device.gatt && device.gatt.connected) device.gatt.disconnect();
+            }
+        } catch (e) {
+            console.warn("Ошибка при закрытии Bluetooth:", e);
+        }
+
+        refreshOrientationSource();
+        if (!silent && wasConnected) showToast("📶 Bluetooth-модуль отключен." + sourceTail());
+    }
+
+    // --- Совместимость со старыми вызовами (одна общая кнопка) ---
+    async function disconnectHardwareModule() {
+        await Promise.all([disconnectUsbModule(), disconnectBluetoothModule()]);
+    }
+
+    async function toggleHardwareModule() {
+        if (usbConnected || bleConnected) {
+            await disconnectHardwareModule();
+        } else if (navigator.bluetooth) {
+            await toggleBluetoothModule();
+        } else {
+            await toggleUsbModule();
+        }
+    }
+
+    function parseHardwareTelemetry(telemetryString, channel) {
         let rawTokens = telemetryString.split(';');
         let packet = {};
 
@@ -1650,7 +1785,9 @@
         let parsedDist = packet['DIST'] !== undefined ? packet['DIST'] : packet['DISTANCE'];
 
         // 1. Азимут и углы наклона внешнего сенсора
-        if (parsedAz !== undefined && orientationSource === 'external') {
+        // Азимут принимается только с ведущего канала (чтобы USB и Bluetooth не смешивались)
+        const isOrientationChannel = channel ? (channel === activeOrientationChannel) : (orientationSource === 'external');
+        if (parsedAz !== undefined && isOrientationChannel) {
             let heading = (parsedAz % 360 + 360) % 360;
             let pitch = parsedPitch !== undefined ? parsedPitch : 0;
             let roll = parsedRoll !== undefined ? parsedRoll : 0;
@@ -1720,15 +1857,23 @@
 
     window.LesovikExternalModule = {
         protocolVersion: "1.0",
-        connect: function () {
-            toggleHardwareModule();
+        // type: 'usb' | 'ble'; без аргумента — Bluetooth (если доступен), иначе USB
+        connect: function (type) {
+            if (type === 'usb') { if (!usbConnected) toggleUsbModule(); }
+            else if (type === 'ble') { if (!bleConnected) toggleBluetoothModule(); }
+            else if (!usbConnected && !bleConnected) toggleHardwareModule();
             return true;
         },
-        disconnect: function () {
-            disconnectHardwareModule();
+        // без аргумента отключаются оба канала
+        disconnect: function (type) {
+            if (type === 'usb') disconnectUsbModule();
+            else if (type === 'ble') disconnectBluetoothModule();
+            else disconnectHardwareModule();
         },
-        isConnected: function () {
-            return orientationSource === 'external';
+        isConnected: function (type) {
+            if (type === 'usb') return usbConnected;
+            if (type === 'ble') return bleConnected;
+            return usbConnected || bleConnected;
         }
     };
 
@@ -3716,7 +3861,6 @@
             savedProjects.splice(index, 1);
             safeSet('bg_hns_projects_archive', JSON.stringify(savedProjects));
             updateArchiveSelect();
-            clearLog();
             showToast("Проект удален из архива.");
         }
     }
@@ -3859,6 +4003,7 @@
         startCamera();
         initGPS(); 
         initCanvasDragControls();
+        updateHardwareButtonsUI(); // Состояние двух кнопок (USB / Bluetooth)
         checkAutoConnectSerial(); // Автоматическое восстановление соединения USB
         
         // Перерисовка чертежа при повороте/изменении размера окна
