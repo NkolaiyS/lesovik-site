@@ -1663,19 +1663,30 @@
     }
 
     async function connectBluetoothModule() {
+        if (bleConnecting) return;
+        if (bleConnected) {
+            await disconnectBluetoothModule();
+            return;
+        }
+        if (!navigator.bluetooth) {
+            showToast("ℹ️ Bluetooth недоступен в этом браузере.");
+            return;
+        }
+
         bleConnecting = true;
         updateHardwareButtonsUI();
         let device = null;
         try {
-            showToast("🔍 Поиск модуля БГ-ХНС по Bluetooth...");
+            showToast("🔍 Выберите 'BG-HNS Module' в списке...");
+            
+            // acceptAllDevices: true отменяет капризные фильтры Android-браузера
             device = await navigator.bluetooth.requestDevice({
-    acceptAllDevices: true,
-    optionalServices: [BLE_UART_SERVICE]
-});
+                acceptAllDevices: true,
+                optionalServices: [BLE_UART_SERVICE]
+            });
             bleDevice = device;
 
             bleOnDisconnected = () => {
-                // Реагируем только на неожиданный обрыв текущего устройства
                 if (bleDevice !== device || !bleConnected) return;
                 disconnectBluetoothModule(true).then(() => showToast("⚠️ Bluetooth соединение разорвано." + sourceTail()));
             };
@@ -1691,7 +1702,7 @@
             bleOnNotify = (event) => {
                 bleLineBuffer += textDecoder.decode(event.target.value, { stream: true });
                 let lines = bleLineBuffer.split('\n');
-                bleLineBuffer = lines.pop(); // Оставляем незавершенную строку в буфере
+                bleLineBuffer = lines.pop();
 
                 for (let line of lines) {
                     if (line.trim().length > 0) {
@@ -1703,18 +1714,19 @@
             await characteristic.startNotifications();
 
             bleConnected = true;
-            showToast("⚡ Модуль подключен по Bluetooth!");
+            showToast("⚡ Модуль успешно подключен по Bluetooth!");
             refreshOrientationSource('ble');
         } catch (err) {
             console.warn("Отмена или ошибка Bluetooth:", err);
             showToast(err && err.name === 'NotFoundError'
-                ? "❌ Bluetooth: модуль не выбран"
+                ? "❌ Устройство не выбрано"
                 : "❌ Ошибка соединения по Bluetooth");
             await disconnectBluetoothModule(true);
         } finally {
             bleConnecting = false;
             updateHardwareButtonsUI();
         }
+    }
     }
 
     async function disconnectBluetoothModule(silent) {
