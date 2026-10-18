@@ -112,6 +112,20 @@
             width: 100%;
         }
 
+        /* Строка диагностики внешнего модуля (видна только при подключении) */
+        .hw-debug-line {
+            display: none;
+            font-family: monospace;
+            font-size: 10px;
+            line-height: 1.25;
+            color: var(--text-graphite);
+            opacity: 0.85;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+
         .btn-hardware-module {
             flex: 1;
             min-width: 0;
@@ -760,6 +774,8 @@
             <button id="btn-hardware-ble" class="btn-hardware-module" onclick="toggleBluetoothModule()" title="Подключить внешний модуль по Bluetooth">📶 Bluetooth: ВЫКЛ</button>
             <button class="btn-hw-help" onclick="openPopup('hw-info-popup', event)" title="Справка по внешнему модулю">?</button>
         </div>
+        <!-- Диагностика внешнего модуля: сколько пакетов дошло и какой последний -->
+        <div id="hw-debug" class="hw-debug-line"></div>
     </header>
 
     <!-- ПОПАП СПРАВКИ ПО ВНЕШНЕМУ МОДУЛЮ -->
@@ -770,10 +786,11 @@
             <ul class="instruction-steps">
                 <li><strong>Назначение:</strong> Подключение внешнего блока абсолютной ориентации (BNO055) и лазерного дальномера для таксации в зонах с магнитными аномалиями.</li>
                 <li><strong>Способы подключения (две независимые кнопки):</strong>
-                    <br>• <strong>🔌 USB (левая):</strong> по кабелю USB-OTG (Web Serial API, Chrome / Яндекс). При повторных подключениях модуль подхватывается автоматически.
+                    <br>• <strong>🔌 USB (левая):</strong> по кабелю USB-OTG (Web Serial API, Chrome / Яндекс). При повторных подключениях модуль подхватывается автоматически. Если модуль в списке не нашёлся, нажмите кнопку ещё раз — откроется полный список портов.
                     <br>• <strong>📶 Bluetooth (правая):</strong> без проводов (Web Bluetooth, Chrome / Яндекс / Edge). На iPhone в Safari Web Bluetooth, как правило, недоступен.
                     <br>Кнопки не зависят друг от друга: подключение, ошибка или обрыв одного канала не влияют на другой. Если подключены оба, азимут берётся с канала, подключённого первым, а данные дальномера принимаются с любого.
                 </li>
+                <li><strong>Строка диагностики:</strong> под кнопками при подключении показывается число принятых пакетов и последний пакет. Если число растёт — данные идут; если стоит на нуле — проблема в связи или прошивке.</li>
                 <li><strong>Питание:</strong> Вы можете прикрепить модуль на корпус смартфона и запитать его коротким шнуром от порта телефона.</li>
             </ul>
             <button class="btn-action btn-set-zero" style="width: 100%;" onclick="closePopup('hw-info-popup')">Понятно</button>
@@ -1313,6 +1330,42 @@
     let activeOrientationChannel = null; // 'usb' | 'ble' — канал, с которого идёт азимут
     let bleOnNotify = null, bleOnDisconnected = null, bleLineBuffer = '';
 
+    // Если выбор USB-порта с фильтром ничего не нашёл — следующее нажатие покажет все порты
+    let usbShowAllPorts = false;
+
+    // Диагностика каналов: raw — сколько кусков данных пришло, n — сколько разобрано строк, last — последняя строка
+    const hwStats = {
+        usb: { raw: 0, n: 0, last: '' },
+        ble: { raw: 0, n: 0, last: '' }
+    };
+    let hwDebugTimer = null;
+
+    function resetHwStats(ch) {
+        hwStats[ch].raw = 0;
+        hwStats[ch].n = 0;
+        hwStats[ch].last = '';
+    }
+
+    function scheduleHwDebug() {
+        if (hwDebugTimer) return;
+        hwDebugTimer = setTimeout(() => { hwDebugTimer = null; renderHwDebug(); }, 250);
+    }
+
+    function renderHwDebug() {
+        const el = document.getElementById('hw-debug');
+        if (!el) return;
+        const parts = [];
+        if (usbConnected) parts.push(`USB: ${hwStats.usb.n} пак. (сырых ${hwStats.usb.raw}) ${hwStats.usb.last}`);
+        if (bleConnected) parts.push(`BLE: ${hwStats.ble.n} пак. (сырых ${hwStats.ble.raw}) ${hwStats.ble.last}`);
+        if (parts.length === 0) {
+            el.style.display = 'none';
+            el.innerText = '';
+        } else {
+            el.style.display = 'block';
+            el.innerText = parts.join('  |  ');
+        }
+    }
+
     // --- ПЕРЕМЕННЫЕ СГЛАЖИВАНИЯ АЗИМУТА (экспоненциальный фильтр по sin/cos) И БУФЕР УСРЕДНЕНИЯ ---
     let filteredSin = 0;
     let filteredCos = 0;
@@ -1493,6 +1546,7 @@
         setBtn('btn-hardware-ble', 'ble', bleConnected, bleConnecting, !!navigator.bluetooth,
             '📶 Bluetooth: ВЫКЛ', '⚡ Bluetooth: ВКЛ',
             'Подключить внешний модуль по Bluetooth', 'Bluetooth-модуль подключен. Нажмите, чтобы отключить');
+        renderHwDebug();
     }
 
     // ===================== USB (Web Serial) =====================
@@ -1513,18 +1567,31 @@
         usbConnecting = true;
         updateHardwareButtonsUI();
         try {
-            // Фильтр отсекает Bluetooth-аудио и ищет физический USB чип платы
-            const port = await navigator.serial.requestPort({
+            // Сначала — только платы с известными USB-чипами (отсекает Bluetooth-аудио, хоко в35 и т.п.).
+            // Если список пуст, следующее нажатие откроет полный список портов.
+            const options = usbShowAllPorts ? {} : {
                 filters: [
                     { usbVendorId: 0x303a }, // ESP32-C3 встроенный USB JTAG/Serial
                     { usbVendorId: 0x10c4 }, // Silicon Labs CP210x
                     { usbVendorId: 0x1a86 }  // CH340
                 ]
-            });
+            };
+            const port = await navigator.serial.requestPort(options);
+            usbShowAllPorts = false;
             await connectUsbPort(port);
         } catch (err) {
-            console.warn("Выбор порта USB отменен:", err);
-            showToast("❌ USB-модуль не подключен или выбор отменен");
+            console.warn("Выбор порта USB отменен или список пуст:", err);
+            if (err && err.name === 'NotFoundError') {
+                if (!usbShowAllPorts) {
+                    usbShowAllPorts = true;
+                    showToast("❌ Модуль не найден или выбор отменён. Нажмите «USB» ещё раз — покажу все порты.");
+                } else {
+                    usbShowAllPorts = false;
+                    showToast("❌ USB-модуль не выбран");
+                }
+            } else {
+                showToast("❌ Ошибка USB: " + ((err && err.message) || "не удалось выбрать порт"));
+            }
         } finally {
             usbConnecting = false;
             updateHardwareButtonsUI();
@@ -1550,6 +1617,7 @@
             hardwareSerialPort = port;
             await port.open({ baudRate: 115200 });
 
+            resetHwStats('usb');
             usbConnected = true;
             hardwareKeepReading = true;
             showToast("⚡ Точный модуль подключен по кабелю (USB)!");
@@ -1633,6 +1701,7 @@
                 const { value, done } = await reader.read();
                 if (done) break;
                 if (value) {
+                    hwStats.usb.raw++;
                     partialChunk += value;
                     let lines = partialChunk.split('\n');
                     partialChunk = lines.pop();
@@ -1643,6 +1712,7 @@
                             parseHardwareTelemetry(cleanLine, 'usb');
                         }
                     }
+                    scheduleHwDebug();
                 }
             }
         } catch (err) {
@@ -1705,16 +1775,22 @@
 
             const textDecoder = new TextDecoder();
             bleLineBuffer = '';
+            resetHwStats('ble');
             bleOnNotify = (event) => {
+                hwStats.ble.raw++;
                 bleLineBuffer += textDecoder.decode(event.target.value, { stream: true });
                 let lines = bleLineBuffer.split('\n');
                 bleLineBuffer = lines.pop();
+
+                // Если разделитель строк потерялся и буфер разросся — сбрасываем, чтобы не копить мусор
+                if (bleLineBuffer.length > 200) bleLineBuffer = '';
 
                 for (let line of lines) {
                     if (line.trim().length > 0) {
                         parseHardwareTelemetry(line.trim(), 'ble');
                     }
                 }
+                scheduleHwDebug();
             };
             characteristic.addEventListener('characteristicvaluechanged', bleOnNotify);
             await characteristic.startNotifications();
@@ -1783,6 +1859,12 @@
 
     function parseHardwareTelemetry(telemetryString, channel) {
         let parsedAz, parsedPitch, parsedRoll, parsedDist;
+
+        // Диагностика: считаем разобранные строки и запоминаем последнюю
+        if (channel && hwStats[channel]) {
+            hwStats[channel].n++;
+            hwStats[channel].last = telemetryString.length > 40 ? telemetryString.slice(0, 40) : telemetryString;
+        }
 
         // ВАРИАНТ 1: Короткий Bluetooth-пакет без букв (например: "123.4,1.2,-0.4")
         if (telemetryString.indexOf(',') !== -1 && telemetryString.indexOf('=') === -1) {
