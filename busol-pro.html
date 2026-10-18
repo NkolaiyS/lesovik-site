@@ -1513,7 +1513,14 @@
         usbConnecting = true;
         updateHardwareButtonsUI();
         try {
-            const port = await navigator.serial.requestPort();
+            // Фильтр отсекает Bluetooth-аудио и ищет физический USB чип платы
+            const port = await navigator.serial.requestPort({
+                filters: [
+                    { usbVendorId: 0x303a }, // ESP32-C3 встроенный USB JTAG/Serial
+                    { usbVendorId: 0x10c4 }, // Silicon Labs CP210x
+                    { usbVendorId: 0x1a86 }  // CH340
+                ]
+            });
             await connectUsbPort(port);
         } catch (err) {
             console.warn("Выбор порта USB отменен:", err);
@@ -1846,29 +1853,10 @@
     }
 
     function applyExternalOrientationData(heading, pitch, roll) {
-        let rad = (heading * Math.PI) / 180;
-        let rawSin = Math.sin(rad);
-        let rawCos = Math.cos(rad);
-
-        // Уменьшено сглаживание для внешнего модуля (быстрый отклик)
-        if (!isFilterInitialized) {
-            filteredSin = rawSin;
-            filteredCos = rawCos;
-            isFilterInitialized = true;
-        } else {
-            filteredSin = filteredSin + 0.8 * (rawSin - filteredSin);
-            filteredCos = filteredCos + 0.8 * (rawCos - filteredCos);
-        }
-
-        let smoothedHeading = (Math.atan2(filteredSin, filteredCos) * 180 / Math.PI + 360) % 360;
         let activeOffset = getCurrentOffsetDecimal();
-        let sensorAzimuth = (smoothedHeading + activeOffset + 360) % 360;
+        let sensorAzimuth = (heading + activeOffset + 360) % 360;
 
-        azimuthRingBuffer.push(sensorAzimuth);
-        if (azimuthRingBuffer.length > AZIMUTH_SMOOTH_BUFFER_SIZE) {
-            azimuthRingBuffer.shift();
-        }
-
+        // Прямой вывод без накопления буфера и фильтров
         if (currentSystemMode !== 'gps_heading') {
             currentAzimuth = sensorAzimuth;
         }
