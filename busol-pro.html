@@ -1775,37 +1775,48 @@
     }
 
     function parseHardwareTelemetry(telemetryString, channel) {
-        let rawTokens = telemetryString.split(';');
-        let packet = {};
+        let parsedAz, parsedPitch, parsedRoll, parsedDist;
 
-        for (let token of rawTokens) {
-            let parts = token.split('=');
-            if (parts.length === 2) {
-                let key = parts[0].trim().toUpperCase();
-                let val = parseFloat(parts[1].trim());
-                if (!isNaN(val)) {
-                    packet[key] = val;
+        // ВАРИАНТ 1: Короткий Bluetooth-пакет без букв (например: "123.4,1.2,-0.4")
+        if (telemetryString.indexOf(',') !== -1 && telemetryString.indexOf('=') === -1) {
+            let parts = telemetryString.split(',');
+            if (parts.length >= 3) {
+                parsedAz = parseFloat(parts[0]);
+                parsedPitch = parseFloat(parts[1]);
+                parsedRoll = parseFloat(parts[2]);
+            }
+        } 
+        // ВАРИАНТ 2: Стандартный подробный формат для USB на ПК ("AZ=123.4;PITCH=1.2;ROLL=-0.4")
+        else {
+            let rawTokens = telemetryString.split(';');
+            let packet = {};
+            for (let token of rawTokens) {
+                let parts = token.split('=');
+                if (parts.length === 2) {
+                    let key = parts[0].trim().toUpperCase();
+                    let val = parseFloat(parts[1].trim());
+                    if (!isNaN(val)) {
+                        packet[key] = val;
+                    }
                 }
             }
+            parsedAz = packet['AZ'] !== undefined ? packet['AZ'] : packet['HEADING'];
+            parsedPitch = packet['PITCH'] !== undefined ? packet['PITCH'] : packet['X'];
+            parsedRoll = packet['ROLL'] !== undefined ? packet['ROLL'] : packet['Y'];
+            parsedDist = packet['DIST'] !== undefined ? packet['DIST'] : packet['DISTANCE'];
         }
 
-        let parsedAz = packet['AZ'] !== undefined ? packet['AZ'] : packet['HEADING'];
-        let parsedPitch = packet['PITCH'] !== undefined ? packet['PITCH'] : packet['X'];
-        let parsedRoll = packet['ROLL'] !== undefined ? packet['ROLL'] : packet['Y'];
-        let parsedDist = packet['DIST'] !== undefined ? packet['DIST'] : packet['DISTANCE'];
-
-        // 1. Азимут и углы наклона внешнего сенсора
-        // Азимут принимается только с ведущего канала (чтобы USB и Bluetooth не смешивались)
+        // 1. Передача азимута и углов наклона в математическую модель компаса
         const isOrientationChannel = channel ? (channel === activeOrientationChannel) : (orientationSource === 'external');
-        if (parsedAz !== undefined && isOrientationChannel) {
+        if (parsedAz !== undefined && !isNaN(parsedAz) && isOrientationChannel) {
             let heading = (parsedAz % 360 + 360) % 360;
-            let pitch = parsedPitch !== undefined ? parsedPitch : 0;
-            let roll = parsedRoll !== undefined ? parsedRoll : 0;
+            let pitch = (parsedPitch !== undefined && !isNaN(parsedPitch)) ? parsedPitch : 0;
+            let roll = (parsedRoll !== undefined && !isNaN(parsedRoll)) ? parsedRoll : 0;
 
             applyExternalOrientationData(heading, pitch, roll);
         }
 
-        // 2. Данные дальномера
+        // 2. Данные дальномера (если переданы)
         if (parsedDist !== undefined && parsedDist > 0) {
             applyLaserDistanceTelemetry(parsedDist);
         }
