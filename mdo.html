@@ -420,19 +420,19 @@
             width: 100%; padding: 0; margin: 0;
         }
         .gost-org-title { text-align: center; font-size: 9pt; font-weight: bold; text-transform: uppercase; margin-bottom: 1pt; }
-        .doc-header-title { text-align: center; font-size: 12.5pt; font-weight: bold; margin-bottom: 1pt; text-transform: uppercase; }
-        .doc-header-sub { text-align: center; font-size: 8.5pt; font-style: italic; margin-bottom: 4pt; color: #222; }
+        .doc-header-title { text-align: center; font-size: 12pt; font-weight: bold; margin-bottom: 1pt; text-transform: uppercase; }
+        .doc-header-sub { text-align: center; font-size: 8pt; font-style: italic; margin-bottom: 4pt; color: #222; }
         
         .doc-passport-box {
-            width: 100%; border: 1.2px solid #000; padding: 3pt 5pt; font-size: 8pt; margin-bottom: 5pt;
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 2pt; background: #FFF;
+            width: 100%; border: 1px solid #000; padding: 3pt 5pt; font-size: 7.5pt; margin-bottom: 4pt;
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 2pt; background: #FFF;
         }
-        .doc-print-table { width: 100%; border-collapse: collapse; font-size: 7.5pt; margin-bottom: 6pt; page-break-inside: avoid; }
-        .doc-print-table th, .doc-print-table td { border: 1px solid #000; padding: 2pt 3pt; text-align: left; }
-        .doc-print-table th { background: #EAEAEA; text-align: center; font-weight: bold; font-size: 7.5pt; }
+        .doc-print-table { width: 100%; border-collapse: collapse; font-size: 7pt; margin-bottom: 4pt; page-break-inside: avoid; }
+        .doc-print-table th, .doc-print-table td { border: 1px solid #000; padding: 2pt 2.5pt; text-align: center; }
+        .doc-print-table th { background: #EAEAEA; font-weight: bold; }
         
         .doc-signatures-box {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 15pt; font-size: 8.5pt; margin-top: 8pt; padding-top: 4pt; border-top: 1px solid #000; page-break-inside: avoid;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15pt; font-size: 8pt; margin-top: 6pt; padding-top: 3pt; border-top: 1px solid #000; page-break-inside: avoid;
         }
 
         @page { margin: 6mm; size: A4 landscape; }
@@ -440,6 +440,7 @@
             body { background: #FFFFFF !important; color: #000000 !important; padding: 0 !important; margin: 0 !important; }
             .header, .main-container, footer, #offline-blocker-screen, #lesovik-bottom-nav-bar, .flyout-backdrop, .norm-modal-backdrop { display: none !important; }
             #printable-mdo-sheet { display: block !important; width: 100% !important; height: 100% !important; overflow: hidden !important; }
+            .doc-print-table th { background: #EAEAEA !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
 </head>
@@ -460,27 +461,24 @@
     <!-- 1. КАРТОЧКА УПРАВЛЕНИЯ ПАСПОРТОМ И АРХИВОМ -->
     <div class="content-card">
         <h2 style="font-size: 17px; color: var(--primary-forest); margin-top: 0; margin-bottom: 4px; font-weight: 700;">
-            Паспорт делянки, реквизиты составителей и архив (МДО PRO)
+            Паспорт лесосеки, модельные деревья, подрост и архив (МДО PRO)
         </h2>
         <div class="page-subtitle" style="margin-bottom: 12px;">
-            Реквизиты объекта, должности и ФИО исполнителей под официальную подпись на бланке.
+            Официальные реквизиты отвода, таксационные параметры насаждения и подписи на бланке.
         </div>
 
-        <!-- ИНФОРМАЦИОННАЯ ПЛАШКА ОБ ОБНОВЛЕНИИ -->
         <div class="update-badge-banner">
             <span style="font-size: 18px;">⚙️</span>
             <div style="font-size: 12px; color: var(--text-main); line-height: 1.4;">
-                <b>Модульная архитектура регионов активна:</b> перечетные сетки и ставки подгружаются автоматически. Доступен свободный ручной ввод участкового лесничества и корректировка нормативных сеток.
+                <b>Региональные базы данных активны:</b> выбор лесничества и расчет кубатуры выполняются строго по утвержденным региональным нормативам с поддержкой шкалы диаметров до 72 см.
             </div>
         </div>
 
         <div class="passport-grid">
             <div class="form-group" style="grid-column: span 2;">
-                <label>Поиск и выбор субъекта РФ (по округам):</label>
-                <input type="text" id="mdo-region-search" class="region-search-input" placeholder="🔍 Введите название региона для быстрого поиска..." oninput="filterRegions(this.value)">
-                <select id="mdo-region" onchange="handleRegionSelectChange(this.value)">
-                    <!-- Наполняется с группировкой по округам -->
-                </select>
+                <label>Поиск и выбор субъекта РФ:</label>
+                <input type="text" id="mdo-region-search" class="region-search-input" placeholder="🔍 Введите название региона..." oninput="filterRegions(this.value)">
+                <select id="mdo-region" onchange="handleRegionSelectChange(this.value)"></select>
             </div>
             <div class="form-group">
                 <label>Лесничество:</label>
@@ -493,9 +491,8 @@
                 <select id="mdo-uch-lesnichestvo-select" onchange="handleUchChange(this.value)">
                     <option value="">-- Выберите лесничество --</option>
                 </select>
-                <!-- Текстовое поле для свободного ввода -->
-                <input type="text" id="mdo-uch-manual-input" placeholder="Введите наименование участкового лесничества..." style="display: none; margin-top: 5px;" oninput="handleManualUchInput(this.value)">
-                <input type="hidden" id="mdo-lesnichestvo" value="Важгортское уч. лесничество">
+                <input type="text" id="mdo-uch-manual-input" placeholder="Введите участковое лесничество..." style="display: none; margin-top: 5px;" oninput="handleManualUchInput(this.value)">
+                <input type="hidden" id="mdo-lesnichestvo" value="">
             </div>
             <div class="form-group">
                 <label>№ Квартала:</label>
@@ -503,19 +500,43 @@
             </div>
             <div class="form-group">
                 <label>№ Делянки:</label>
-                <input type="text" id="mdo-delyanka" value="12" onchange="syncPassportToCore()" onfocus="this.select()">
+                <input type="text" id="mdo-delyanka" value="1" onchange="syncPassportToCore()" onfocus="this.select()">
             </div>
             <div class="form-group">
                 <label>№ Выдела:</label>
                 <input type="text" id="mdo-vydel" value="1" onchange="syncPassportToCore()" onfocus="this.select()">
             </div>
             <div class="form-group">
-                <label>Вид мероприятия:</label>
+                <label>Вид рубки:</label>
                 <input type="text" id="mdo-target" value="Сплошная рубка" onchange="syncPassportToCore()" onfocus="this.select()">
             </div>
         </div>
 
-        <!-- ОКНА ДЛЯ ВВОДА ДОЛЖНОСТЕЙ И ФИО СОСТАВИТЕЛЕЙ -->
+        <!-- РЕКВИЗИТЫ НАСАЖДЕНИЯ, МОДЕЛЬНЫЕ ДЕРЕВЬЯ И ПОДРОСТ -->
+        <div class="passport-grid" style="border-top: 1px dashed var(--border-light); padding-top: 10px;">
+            <div class="form-group">
+                <label>Категория защиты:</label>
+                <input type="text" id="mdo-protect-cat" value="Защитные леса" onchange="syncPassportToCore()" onfocus="this.select()">
+            </div>
+            <div class="form-group">
+                <label>Способ очистки лесосеки:</label>
+                <input type="text" id="mdo-cleanup" value="Сбор порубочных остатков в валы" onchange="syncPassportToCore()" onfocus="this.select()">
+            </div>
+            <div class="form-group">
+                <label>Способ восстановления леса:</label>
+                <input type="text" id="mdo-restoration" value="Естественное возобновление" onchange="syncPassportToCore()" onfocus="this.select()">
+            </div>
+            <div class="form-group">
+                <label>Модельные деревья (шт / хар-ка):</label>
+                <input type="text" id="mdo-model-trees" value="5 шт. (средняя ступень)" onchange="syncPassportToCore()" onfocus="this.select()">
+            </div>
+            <div class="form-group">
+                <label>Учет жизнеспособного подроста:</label>
+                <input type="text" id="mdo-podrost" value="Имеется (еловый 2.3 тыс. шт/га)" onchange="syncPassportToCore()" onfocus="this.select()">
+            </div>
+        </div>
+
+        <!-- ДОЛЖНОСТИ И ФИО ПОДПИСАНТОВ -->
         <div class="passport-grid" style="border-top: 1px dashed var(--border-light); padding-top: 10px;">
             <div class="form-group">
                 <label>Должность составителя:</label>
@@ -537,7 +558,7 @@
 
         <div class="archive-scroll-container">
             <div class="archive-inner-flex">
-                <input type="text" id="mdo-archive-name" placeholder="Название объекта..." value="Кв. 312, Выд. 1, Дел. 12" style="width: 180px; padding: 7px 10px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 12px; font-weight: 600; background: var(--input-bg); color: var(--text-main);" onfocus="this.select()">
+                <input type="text" id="mdo-archive-name" placeholder="Название объекта..." value="Кв. 312, Выд. 1, Дел. 1" style="width: 180px; padding: 7px 10px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 12px; font-weight: 600; background: var(--input-bg); color: var(--text-main);" onfocus="this.select()">
                 <button class="btn-action-main" onclick="saveMDOToArchive()">💾 Сохранить в архив</button>
                 <select id="mdo-archive-select" onchange="loadMDOFromArchive(this.value)" style="padding: 7px; border-radius: 6px; border: 1px solid var(--border-light); font-size: 12px; background: var(--input-bg); color: var(--text-main); font-weight: 600; min-width: 180px;">
                     <option value="">-- Выберите из архива --</option>
@@ -552,7 +573,7 @@
         <a href="index.html" class="btn-back">← На главную</a>
         
         <h1 class="page-title">Инженерный таксационный калькулятор МДО</h1>
-        <p class="page-subtitle">Материально-денежная оценка выдела по ступеням толщины с разделением на <b>деловые, полуделовые и дрова</b>. Разряды высот, региональные прейскуранты и точный расчет кубатуры.</p>
+        <p class="page-subtitle">Материально-денежная оценка выдела по ступеням толщины до 72 см с разделением на <b>деловые, полуделовые и дрова</b>.</p>
 
         <div class="grid-inputs">
             <div class="form-group">
@@ -592,7 +613,6 @@
         <!-- 1. МАТРИЧНЫЙ РЕЖИМ -->
         <div id="view-matrix-container">
             
-            <!-- ПАНЕЛЬ УПРАВЛЕНИЯ СТАВКАМИ ПЛАТЫ В МАТРИЧНОМ РЕЖИМЕ -->
             <div class="matrix-rates-panel" id="matrix-rates-panel-el">
                 <div class="matrix-rates-panel-header">
                     <span>💰 Ставки платы за древесину (руб./м³) по добавленным породам:</span>
@@ -638,16 +658,15 @@
                 <tbody id="mdo-tbody"></tbody>
             </table>
 
-            <!-- КНОПКИ ЭКСПОРТА И ПЕЧАТИ В 1 КЛИК -->
             <div class="mdo-export-bar">
-                <button class="btn-mdo-export btn-exp-pdf" onclick="printOfficialMDO()">📄 Бланк МДО в PDF (Альбомный А4)</button>
+                <button class="btn-mdo-export btn-exp-pdf" onclick="printOfficialMDO()">📄 Бланк МДО в PDF (Таблица ГОСТ)</button>
                 <button class="btn-mdo-export btn-exp-xls" onclick="exportMDOToXLSX()">📊 Выгрузить в Excel (.xlsx)</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ВСПЛЫВАЮЩИЙ МИКРО-ПУЛЬТ ДЛЯ МАТРИЧНОГО ВВОДА С ТОЧНЫМИ КНОПКАМИ + И - -->
+<!-- ВСПЛЫВАЮЩИЙ МИКРО-ПУЛЬТ ДЛЯ МАТРИЧНОГО ВВОДА -->
 <div class="flyout-backdrop" id="flyoutModal" onclick="closeFlyout(event)">
     <div class="flyout-box" onclick="event.stopPropagation()">
         <div class="flyout-header">
@@ -655,7 +674,6 @@
             <span id="flyoutTotalCount" style="font-size:12px; font-weight:800; color:var(--text-main);">0 шт</span>
         </div>
         
-        <!-- КАТЕГОРИЯ: ДЕЛОВЫЕ -->
         <div class="flyout-cat-control-row">
             <div class="fly-cat-label">
                 <span style="color:var(--success);">🟢 Деловые</span>
@@ -665,7 +683,6 @@
             <button class="btn-step-action btn-step-add" onclick="stepCategoryModify('del', 1)">+</button>
         </div>
 
-        <!-- КАТЕГОРИЯ: ПОЛУДЕЛОВЫЕ -->
         <div class="flyout-cat-control-row">
             <div class="fly-cat-label">
                 <span style="color:var(--poludel);">🟠 Полуделовые</span>
@@ -675,7 +692,6 @@
             <button class="btn-step-action btn-step-add" onclick="stepCategoryModify('polu', 1)">+</button>
         </div>
 
-        <!-- КАТЕГОРИЯ: ДРОВА -->
         <div class="flyout-cat-control-row">
             <div class="fly-cat-label">
                 <span style="color:var(--drova);">🟤 Дрова / Техсырье</span>
@@ -698,7 +714,7 @@
             <span style="font-size:11px; color:var(--text-muted);">Ручная правка</span>
         </div>
         <div style="font-size:11px; color:var(--text-muted); line-height:1.3;">
-            Вы можете изменить нормативный объем ствола (м³) и процентный выход сортиментов для конкретной породы и диаметра.
+            Измените нормативный объем ствола (м³) и процентный выход сортиментов для конкретной ступени.
         </div>
         
         <div class="form-group">
@@ -736,54 +752,33 @@
     </div>
 </div>
 
-<!-- 3. ОФИЦИАЛЬНЫЙ АЛЬБОМНЫЙ БЛАНК А4 СТРОГО ПО ГОСТУ НА 1 СТРАНИЦУ -->
+<!-- 3. ОФИЦИАЛЬНЫЙ АЛЬБОМНЫЙ ПЕЧАТНЫЙ БЛАНК А4 С ТОЧНОЙ СЕТКОЙ КАК У ЛЕСНИКОВ -->
 <div id="printable-mdo-sheet"></div>
 
 <script>
-    // БАЗОВЫЕ ОБЪЕМНЫЕ ТАБЛИЦЫ СТВОЛОВ В КОРЕ (м3) ПО РАЗРЯДАМ ВЫСОТ РОСЛЕСХОЗА
+    // Базовые таблицы Рослесхоза для резерва
     const treeVolumeTable = {
-        "Ia": { 8: 0.045, 12: 0.120, 16: 0.160, 20: 0.310, 24: 0.520, 28: 0.790, 32: 1.110, 36: 1.490, 40: 1.910, 44: 2.380, 48: 2.900 },
-        "I":  { 8: 0.040, 12: 0.105, 16: 0.140, 20: 0.280, 24: 0.470, 28: 0.710, 32: 1.000, 36: 1.340, 40: 1.720, 44: 2.140, 48: 2.610 },
-        "II": { 8: 0.035, 12: 0.095, 16: 0.120, 20: 0.240, 24: 0.410, 28: 0.620, 32: 0.880, 36: 1.180, 40: 1.520, 44: 1.900, 48: 2.310 },
-        "III":{ 8: 0.030, 12: 0.085, 16: 0.100, 20: 0.210, 24: 0.350, 28: 0.530, 32: 0.760, 36: 1.020, 40: 1.310, 44: 1.640, 48: 2.010 },
-        "IV": { 8: 0.026, 12: 0.075, 16: 0.090, 20: 0.170, 24: 0.290, 28: 0.450, 32: 0.630, 36: 0.850, 40: 1.100, 44: 1.380, 48: 1.690 },
-        "V":  { 8: 0.022, 12: 0.065, 16: 0.070, 20: 0.140, 24: 0.230, 28: 0.350, 32: 0.500, 36: 0.680, 40: 0.880, 44: 1.100, 48: 1.350 }
+        "Ia": { 8: 0.045, 12: 0.120, 16: 0.160, 20: 0.310, 24: 0.520, 28: 0.790, 32: 1.110, 36: 1.490, 40: 1.910, 44: 2.380, 48: 2.900, 52: 3.450, 56: 4.050, 60: 4.700, 64: 5.400, 68: 6.150, 72: 6.950 },
+        "I":  { 8: 0.040, 12: 0.105, 16: 0.140, 20: 0.280, 24: 0.470, 28: 0.710, 32: 1.000, 36: 1.340, 40: 1.720, 44: 2.140, 48: 2.610, 52: 3.120, 56: 3.680, 60: 4.280, 64: 4.930, 68: 5.620, 72: 6.360 },
+        "II": { 8: 0.035, 12: 0.095, 16: 0.120, 20: 0.240, 24: 0.410, 28: 0.620, 32: 0.880, 36: 1.180, 40: 1.520, 44: 1.900, 48: 2.310, 52: 2.770, 56: 3.270, 60: 3.810, 64: 4.390, 68: 5.010, 72: 5.670 },
+        "III":{ 8: 0.030, 12: 0.085, 16: 0.100, 20: 0.210, 24: 0.350, 28: 0.530, 32: 0.760, 36: 1.020, 40: 1.310, 44: 1.640, 48: 2.010, 52: 2.410, 56: 2.850, 60: 3.330, 64: 3.850, 68: 4.410, 72: 5.010 },
+        "IV": { 8: 0.026, 12: 0.075, 16: 0.090, 20: 0.170, 24: 0.290, 28: 0.450, 32: 0.630, 36: 0.850, 40: 1.100, 44: 1.380, 48: 1.690, 52: 2.030, 56: 2.410, 60: 2.820, 64: 3.260, 68: 3.740, 72: 4.250 },
+        "V":  { 8: 0.022, 12: 0.065, 16: 0.070, 20: 0.140, 24: 0.230, 28: 0.350, 32: 0.500, 36: 0.680, 40: 0.880, 44: 1.100, 48: 1.350, 52: 1.630, 56: 1.940, 60: 2.280, 64: 2.650, 68: 3.050, 72: 3.480 }
     };
 
-    // РЕГИОНАЛЬНЫЕ ТОВАРНЫЕ ТАБЛИЦЫ СОРТИМЕНТНОГО ВЫХОДА И ДЕФЕКТНОСТИ
     const regionalSortTables = {
-        komi: {
-            coniferous: { "Ia": [0.40, 0.48, 0.12], "I": [0.35, 0.50, 0.15], "II": [0.25, 0.55, 0.20], "III": [0.15, 0.55, 0.30], "IV": [0.10, 0.50, 0.40], "V": [0.02, 0.43, 0.55] },
-            deciduous:  { "Ia": [0.20, 0.52, 0.28], "I": [0.15, 0.50, 0.35], "II": [0.10, 0.50, 0.40], "III": [0.05, 0.45, 0.50], "IV": [0.02, 0.40, 0.58], "V": [0.00, 0.30, 0.70] },
-            defectFactor: { osina: 0.22, bereza: 0.12 }
-        },
-        kostroma: {
-            coniferous: { "Ia": [0.43, 0.45, 0.12], "I": [0.38, 0.48, 0.14], "II": [0.28, 0.52, 0.20], "III": [0.18, 0.52, 0.30], "IV": [0.12, 0.48, 0.40], "V": [0.05, 0.45, 0.50] },
-            deciduous:  { "Ia": [0.24, 0.53, 0.23], "I": [0.20, 0.52, 0.28], "II": [0.12, 0.53, 0.35], "III": [0.05, 0.50, 0.45], "IV": [0.02, 0.43, 0.55], "V": [0.00, 0.35, 0.65] },
-            defectFactor: { osina: 0.18, bereza: 0.08 }
-        },
-        arkhangelsk: {
-            coniferous: { "Ia": [0.36, 0.50, 0.14], "I": [0.32, 0.52, 0.16], "II": [0.22, 0.56, 0.22], "III": [0.12, 0.54, 0.34], "IV": [0.08, 0.48, 0.44], "V": [0.01, 0.40, 0.59] },
-            deciduous:  { "Ia": [0.16, 0.50, 0.34], "I": [0.12, 0.48, 0.40], "II": [0.08, 0.46, 0.46], "III": [0.02, 0.43, 0.55], "IV": [0.00, 0.38, 0.62], "V": [0.00, 0.25, 0.75] },
-            defectFactor: { osina: 0.26, bereza: 0.15 }
-        },
-        vologda: {
-            coniferous: { "Ia": [0.45, 0.43, 0.12], "I": [0.40, 0.46, 0.14], "II": [0.30, 0.50, 0.20], "III": [0.20, 0.50, 0.30], "IV": [0.14, 0.46, 0.40], "V": [0.06, 0.44, 0.50] },
-            deciduous:  { "Ia": [0.26, 0.52, 0.22], "I": [0.22, 0.53, 0.25], "II": [0.14, 0.54, 0.32], "III": [0.06, 0.50, 0.44], "IV": [0.03, 0.42, 0.55], "V": [0.00, 0.36, 0.64] },
-            defectFactor: { osina: 0.16, bereza: 0.07 }
-        },
-        siberia: {
-            coniferous: { "Ia": [0.46, 0.42, 0.12], "I": [0.42, 0.44, 0.14], "II": [0.32, 0.48, 0.20], "III": [0.22, 0.48, 0.30], "IV": [0.15, 0.45, 0.40], "V": [0.06, 0.40, 0.54] },
-            deciduous:  { "Ia": [0.22, 0.52, 0.26], "I": [0.18, 0.50, 0.32], "II": [0.10, 0.50, 0.40], "III": [0.04, 0.46, 0.50], "IV": [0.01, 0.40, 0.59], "V": [0.00, 0.30, 0.70] },
-            defectFactor: { osina: 0.20, bereza: 0.10 }
-        }
+        komi: { defectFactor: { osina: 0.22, bereza: 0.12 } },
+        kostroma: { defectFactor: { osina: 0.18, bereza: 0.08 } },
+        arkhangelsk: { defectFactor: { osina: 0.26, bereza: 0.15 } },
+        vologda: { defectFactor: { osina: 0.16, bereza: 0.07 } },
+        siberia: { defectFactor: { osina: 0.20, bereza: 0.10 } }
     };
 
-    // ГЛОБАЛЬНЫЕ СЛОВАРИ ПОЛЬЗОВАТЕЛЬСКИХ КОРРЕКТИРОВОК НОРМАТИВОВ
     window.CUSTOM_VOLUMES = {};
     window.CUSTOM_COMMODITY = {};
 
-    const diameters = [8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48];
+    // Расширенная шкала диаметров до 72 см
+    const diameters = [8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72];
     const addedSpeciesCodes = new Set();
     let currentInputMode = 'matrix';
     let currentTallyDelta = 1;
@@ -797,7 +792,6 @@
         }
     }
 
-    // --- ДИНАМИЧЕСКИЙ ЗАГРУЗЧИК РЕГИОНОВ И ОКРУГОВ ИЗ ВНЕШНЕГО ФАЙЛА ---
     function populateRegionDropdown(filterText = '') {
         const sel = document.getElementById('mdo-region');
         if (!sel) return;
@@ -872,7 +866,6 @@
         document.head.appendChild(s);
     }
 
-    // ИНИЦИАЛИЗАЦИЯ И СВЯЗКА ЛЕСНИЧЕСТВ И УЧАСТКОВЫХ ЛЕСНИЧЕСТВ
     function initForestrySelector() {
         const regCode = document.getElementById('mdo-region').value;
         const lesSelect = document.getElementById('mdo-lesnichestvo-select');
@@ -882,12 +875,8 @@
         uchSelect.innerHTML = '<option value="">-- Сначала выберите лесничество --</option>';
 
         let forestryList = null;
-        if (regCode === 'komi' && window.KOMI_FORESTRY_DATA) forestryList = window.KOMI_FORESTRY_DATA;
-        else if (regCode === 'kirov' && window.KIROV_FORESTRY_DATA) forestryList = window.KIROV_FORESTRY_DATA;
-        else {
-            const dynamicKey = `${regCode.toUpperCase()}_FORESTRY_DATA`;
-            if (window[dynamicKey]) forestryList = window[dynamicKey];
-        }
+        const dynamicKey = `${regCode.toUpperCase()}_FORESTRY_DATA`;
+        if (window[dynamicKey]) forestryList = window[dynamicKey];
 
         if (forestryList && Array.isArray(forestryList)) {
             forestryList.forEach(item => {
@@ -921,12 +910,8 @@
         }
 
         let forestryList = null;
-        if (regCode === 'komi' && window.KOMI_FORESTRY_DATA) forestryList = window.KOMI_FORESTRY_DATA;
-        else if (regCode === 'kirov' && window.KIROV_FORESTRY_DATA) forestryList = window.KIROV_FORESTRY_DATA;
-        else {
-            const dynamicKey = `${regCode.toUpperCase()}_FORESTRY_DATA`;
-            if (window[dynamicKey]) forestryList = window[dynamicKey];
-        }
+        const dynamicKey = `${regCode.toUpperCase()}_FORESTRY_DATA`;
+        if (window[dynamicKey]) forestryList = window[dynamicKey];
 
         if (forestryList) {
             const row = forestryList.find(x => x[0] === val);
@@ -940,7 +925,6 @@
             }
         }
 
-        // Пункт ручного ввода
         const manualOpt = document.createElement('option');
         manualOpt.value = "__MANUAL__";
         manualOpt.innerText = "✍️ Ввести вручную (свой вариант)...";
@@ -1136,7 +1120,6 @@
         autoRecalcIfActive();
     }
 
-    // --- ДВУСТОРОННЯЯ СИНХРОНИЗАЦИЯ СТАВОК (СЕТКА <-> КАРТОЧКА) ---
     function syncRateFromMatrix(rawCode, rateKey, val) {
         const block = document.getElementById(`block-${rawCode}`);
         if (!block) return;
@@ -1270,7 +1253,6 @@
         table.innerHTML = `<thead>${thead}</thead><tbody>${tbody}</tbody>`;
     }
 
-    // МИКРО-ПУЛЬТ ДЛЯ МАТРИЧНОГО ВВОДА С РАЗДЕЛЬНЫМИ КНОПКАМИ + И -
     function openFlyout(rawCode, d) {
         activeFlyoutTarget = { rawCode, d };
         const block = document.getElementById(`block-${rawCode}`);
@@ -1320,7 +1302,6 @@
         }
     }
 
-    // --- РУЧНАЯ КОРРЕКТИРОВКА НОРМАТИВНЫХ СЕТОК (ОБЪЕМЫ И СОРТИМЕНТЫ) ---
     function openNormEditorFromFlyout() {
         document.getElementById('flyoutModal').style.display = 'none';
         const { rawCode, d } = activeFlyoutTarget;
@@ -1334,11 +1315,9 @@
         
         document.getElementById('normModalTitle').innerText = `Норматив: ${rawCode} • ${d} см (Разряд ${hSelector})`;
         
-        // Получаем текущий объем ствола
         const curVol = calculateStemVolume(rawCode, hSelector, d);
         document.getElementById('norm-inp-vol').value = curVol.toFixed(3);
 
-        // Получаем текущие проценты выхода
         const curSort = getCommodityPercentages(rawCode, hSelector, d);
         document.getElementById('norm-inp-large').value = curSort.large;
         document.getElementById('norm-inp-medium').value = curSort.medium;
@@ -1402,9 +1381,7 @@
         autoRecalcIfActive();
     }
 
-    // ПОЛУЧЕНИЕ ПРОЦЕНТОВ ВЫХОДА СОРТИМЕНТОВ
     function getCommodityPercentages(rawCode, hSelector, dia) {
-        // 1. Приоритет: пользовательская правка
         if (window.CUSTOM_COMMODITY[rawCode]?.[dia]) {
             return window.CUSTOM_COMMODITY[rawCode][dia];
         }
@@ -1413,7 +1390,6 @@
         const dynamicCommodityKey = `COMMODITY_${selectedRegion.toUpperCase()}`;
         const regionalCommodityTable = window[dynamicCommodityKey] || null;
 
-        // 2. Официальная региональная товарная сетка
         if (regionalCommodityTable && regionalCommodityTable[rawCode] && regionalCommodityTable[rawCode][dia]) {
             const hNumMap = { "Ia": 1, "I": 1, "II": 2, "III": 3, "IV": 4, "V": 5 };
             const rankNum = hNumMap[hSelector] || 2;
@@ -1421,7 +1397,6 @@
             if (rData) return rData;
         }
 
-        // 3. Резервная сетка Анучина
         if (dia >= 26) {
             const pLarge = (hSelector === 'Ia' || hSelector === 'I') ? 70 : 60;
             return { large: pLarge, medium: 18, small: 2, fire: 14, waste: 6 };
@@ -1433,30 +1408,17 @@
         }
     }
 
-    // УНИВЕРСАЛЬНЫЙ РАСЧЕТ КУБАТУРЫ ОДНОГО СТВОЛА
     function calculateStemVolume(rawCode, hSelector, dia) {
         const hNumMap = { "Ia": 1, "I": 1, "II": 2, "III": 3, "IV": 4, "V": 5 };
         const hRankNum = hNumMap[hSelector] || 2;
 
-        // 1. Приоритет: пользовательская правка
         if (window.CUSTOM_VOLUMES[rawCode]?.[hRankNum]?.[dia] !== undefined) {
             return window.CUSTOM_VOLUMES[rawCode][hRankNum][dia];
         }
 
-        // 2. Региональная таблица объема стволов
         const regCode = document.getElementById('mdo-region').value;
-        let regionalVolumeTable = null;
-        if (regCode === 'komi' && window.VOLUMES_KOMI) regionalVolumeTable = window.VOLUMES_KOMI;
-        else if (regCode === 'kirov' && window.VOLUMES_KIROV) regionalVolumeTable = window.VOLUMES_KIROV;
-        else if (regCode === 'arkhangelsk' && window.VOLUMES_ARKHANGELSK) regionalVolumeTable = window.VOLUMES_ARKHANGELSK;
-        else if (regCode === 'krasnoyarsk' && window.VOLUMES_KRASNOYARSK) regionalVolumeTable = window.VOLUMES_KRASNOYARSK;
-        else if (regCode === 'irkutsk' && window.VOLUMES_IRKUTSK) regionalVolumeTable = window.VOLUMES_IRKUTSK;
-        else if (regCode === 'karelia' && window.VOLUMES_KARELIA) regionalVolumeTable = window.VOLUMES_KARELIA;
-        else if (regCode === 'vologda' && window.VOLUMES_VOLOGDA) regionalVolumeTable = window.VOLUMES_VOLOGDA;
-        else {
-            const dynamicKey = `VOLUMES_${regCode.toUpperCase()}`;
-            if (window[dynamicKey]) regionalVolumeTable = window[dynamicKey];
-        }
+        const dynamicKey = `VOLUMES_${regCode.toUpperCase()}`;
+        const regionalVolumeTable = window[dynamicKey] || null;
 
         if (regionalVolumeTable && regionalVolumeTable[rawCode] && regionalVolumeTable[rawCode][hRankNum]) {
             if (regionalVolumeTable[rawCode][hRankNum][dia]) {
@@ -1464,7 +1426,6 @@
             }
         }
         
-        // 3. Таблица Рослесхоза
         if (treeVolumeTable[hSelector] && treeVolumeTable[hSelector][dia]) {
             return treeVolumeTable[hSelector][dia];
         }
@@ -1508,7 +1469,7 @@
             firewood: 0, waste: 0, totalVol: 0, totalCash: 0
         };
 
-        const regionTable = regionalSortTables[selectedRegion] || regionalSortTables['komi'];
+        const regionTable = regionalSortTables[selectedRegion] || { defectFactor: { osina: 0.20, bereza: 0.10 } };
         let speciesVolumesReport = [];
         let grandTotalSampleVolume = 0;
 
@@ -1574,6 +1535,11 @@
         speciesVolumesReport.forEach(species => {
             let spLarge = 0, spMedium = 0, spSmall = 0, spFire = 0, spWaste = 0;
             let spDelStemsVol = 0, spPoluStemsVol = 0, spDrovaStemsVol = 0;
+            let stepsDetail = {};
+
+            diameters.forEach(dia => {
+                stepsDetail[dia] = { del: 0, polu: 0, drova: 0, large: 0, medium: 0, small: 0, fire: 0, waste: 0, total: 0 };
+            });
 
             for (let diaStr in species.spStepsData) {
                 let dia = parseInt(diaStr, 10);
@@ -1587,7 +1553,6 @@
                 spPoluStemsVol += stepPoluVol;
                 spDrovaStemsVol += stepDrovaVol;
 
-                // Получаем процентный расклад (с учетом ручных правок)
                 const cNorms = getCommodityPercentages(species.rawCode, species.hSelector, dia);
                 let pLarge = cNorms.large;
                 let pMedium = cNorms.medium;
@@ -1595,7 +1560,6 @@
                 let pFire = cNorms.fire;
                 let pWaste = cNorms.waste;
 
-                // Учет дефектности осины/березы, если нет жесткой пользовательской сетки
                 if (!window.CUSTOM_COMMODITY[species.rawCode]?.[dia] && (species.rawCode === 'Б' || species.rawCode === 'Ос')) {
                     let defect = (species.rawCode === 'Ос') ? regionTable.defectFactor.osina : regionTable.defectFactor.bereza;
                     let shift = (pLarge + pMedium + pSmall) * defect;
@@ -1622,6 +1586,19 @@
                 vW += stepDrovaVol * 0.15;
 
                 spLarge += vL; spMedium += vM; spSmall += vS; spFire += vF; spWaste += vW;
+
+                stepsDetail[dia] = {
+                    delCount: st.cDel,
+                    drovCount: st.cDrova + st.cPolu,
+                    totalCount: st.cDel + st.cPolu + st.cDrova,
+                    large: vL,
+                    medium: vM,
+                    small: vS,
+                    delTotal: vL + vM + vS,
+                    fire: vF,
+                    waste: vW,
+                    total: vL + vM + vS + vF + vW
+                };
             }
 
             const spTotalVol = (species.spSampleVolume) * scaleFactor;
@@ -1649,7 +1626,8 @@
                 drovaStemsVol: spDrovaStemsVol,
                 large: spLarge, medium: spMedium, small: spSmall,
                 firewood: spFire, waste: spWaste,
-                prLarge: species.prLarge, prMedium: species.prMedium, prSmall: species.prSmall, prFirewood: species.prFirewood
+                prLarge: species.prLarge, prMedium: species.prMedium, prSmall: species.prSmall, prFirewood: species.prFirewood,
+                stepsDetail: stepsDetail
             });
 
             tbody.innerHTML += `
@@ -1659,39 +1637,19 @@
                     <td><b>${spTotalVol.toFixed(2)} м³</b></td>
                     <td><b>${spTotalCash.toFixed(2)} руб.</b></td>
                 </tr>
-                <tr style="background:rgba(22, 163, 74, 0.05);">
-                    <td>&nbsp;&nbsp;🟢 <b>Деловые стволы в перечете:</b> ${spDelStemsVol.toFixed(2)} м³ | 🟠 <b>Полуделовые:</b> ${spPoluStemsVol.toFixed(2)} м³ | 🟤 <b>Дровяные:</b> ${spDrovaStemsVol.toFixed(2)} м³</td>
-                    <td colspan="3" style="font-size:11px; color:gray;">(Полевое распределение по категориям годности ствола)</td>
-                </tr>
-                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Крупная деловая древесина (Ø от 26 см) [Ставка: ${species.prLarge} руб]</td><td>${((spLarge/spTotalVol)*100).toFixed(1)}%</td><td>${spLarge.toFixed(2)} м³</td><td>${cashL.toFixed(2)} руб.</td></tr>
-                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Средняя деловая древесина (Ø 14 - 24 см) [Ставка: ${species.prMedium} руб]</td><td>${((spMedium/spTotalVol)*100).toFixed(1)}%</td><td>${spMedium.toFixed(2)} м³</td><td>${cashM.toFixed(2)} руб.</td></tr>
-                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Мелкая деловая древесина (Ø 8 - 12 см) [Ставка: ${species.prSmall} руб]</td><td>${((spSmall/spTotalVol)*100).toFixed(1)}%</td><td>${spSmall.toFixed(2)} м³</td><td>${cashS.toFixed(2)} руб.</td></tr>
-                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Дрова топливные и техсырье (в т.ч. полудел и дрова) [Ставка: ${species.prFirewood} руб]</td><td>${((spFire/spTotalVol)*100).toFixed(1)}%</td><td>${spFire.toFixed(2)} м³</td><td>${cashF.toFixed(2)} руб.</td></tr>
-                <tr style="color: gray;"><td>&nbsp;&nbsp;&nbsp;&nbsp;• Неликвидные отходы лесозаготовок (кора, вершинки, сучья)</td><td>${((spWaste/spTotalVol)*100).toFixed(1)}%</td><td>${spWaste.toFixed(2)} м³</td><td>0.00 руб.</td></tr>
+                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Крупная деловая (Ø от 26 см) [Ставка: ${species.prLarge} руб]</td><td>${((spLarge/spTotalVol)*100).toFixed(1)}%</td><td>${spLarge.toFixed(2)} м³</td><td>${cashL.toFixed(2)} руб.</td></tr>
+                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Средняя деловая (Ø 14 - 24 см) [Ставка: ${species.prMedium} руб]</td><td>${((spMedium/spTotalVol)*100).toFixed(1)}%</td><td>${spMedium.toFixed(2)} м³</td><td>${cashM.toFixed(2)} руб.</td></tr>
+                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Мелкая деловая (Ø 8 - 12 см) [Ставка: ${species.prSmall} руб]</td><td>${((spSmall/spTotalVol)*100).toFixed(1)}%</td><td>${spSmall.toFixed(2)} м³</td><td>${cashS.toFixed(2)} руб.</td></tr>
+                <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;• Дрова топливные и техсырье [Ставка: ${species.prFirewood} руб]</td><td>${((spFire/spTotalVol)*100).toFixed(1)}%</td><td>${spFire.toFixed(2)} м³</td><td>${cashF.toFixed(2)} руб.</td></tr>
             `;
         });
 
         tbody.innerHTML += `
-            <tr class="row-total-group"><td colspan="4">📊 СВОДНЫЙ БАЛАНС МДО ЛЕСОСЕКИ (МАСШТАБ: ${sampleSpace} га ИЗ ${totalSpace} га)</td></tr>
-            <tr class="row-total-group"><td colspan="4">ФОРМУЛА СОСТАВА НАСАЖДЕНИЯ: <span style="color:var(--primary-forest); font-weight:900;">${compositionFormulaStr}</span></td></tr>
-            <tr><td><b>ИТОГО ДЕЛОВАЯ ЧИСТАЯ (Крупная + Средняя + Мелкая):</b></td><td>-</td><td><b>${(summary.large + summary.medium + summary.small).toFixed(2)} м³</b></td><td>[${summary.large.toFixed(1)} / ${summary.medium.toFixed(1)} / ${summary.small.toFixed(1)}] м³</td></tr>
-            <tr style="color:var(--poludel);"><td><b>СТВОЛОВАЯ МАССА ПОЛУДЕЛОВЫХ ДЕРЕВЬЕВ:</b></td><td>-</td><td><b>${summary.poluTotal.toFixed(2)} м³</b></td><td>(50% деловая / 50% дрова)</td></tr>
-            <tr style="color:var(--drova);"><td><b>ИТОГО ДРОВА И ТЕХНИЧЕСКОЕ СЫРЬЕ:</b></td><td>-</td><td><b>${summary.firewood.toFixed(2)} м³</b></td><td>-</td></tr>
-            <tr style="color:gray;"><td><b>ОТХОДЫ ЛЕСОЗАГОТОВОК (Сучья, хвоя, кора):</b></td><td>-</td><td><b>${summary.waste.toFixed(2)} м³</b></td><td>-</td></tr>
-            <tr class="row-grand-final">
-                <td>ИТОГО СТОИМОСТЬ И ЗАПАС НА ${totalSpace} га:</td>
-                <td>100%</td>
-                <td>${summary.totalVol.toFixed(2)} м³</td>
-                <td>${summary.totalCash.toLocaleString('ru-RU', {minimumFractionDigits: 2, maximumFractionDigits: 2})} руб.</td>
-            </tr>
+            <tr class="row-total-group"><td colspan="4">📊 ИТОГО ПО ВЫДЕЛУ (НА ${totalSpace} га): ЗАПАС ${summary.totalVol.toFixed(2)} м³, СТОИМОСТЬ ${summary.totalCash.toLocaleString('ru-RU', {minimumFractionDigits: 2})} РУБ.</td></tr>
         `;
 
         wrapper.style.display = 'block';
         isMdoAlreadyCalculated = true;
-
-        wrapper.style.transition = 'box-shadow 0.25s ease';
-        wrapper.style.boxShadow = '0 0 15px rgba(22, 163, 74, 0.4)';
-        setTimeout(() => { wrapper.style.boxShadow = 'none'; }, 300);
 
         if (!isSilent) {
             wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1705,6 +1663,11 @@
                 delyanka: document.getElementById('mdo-delyanka').value,
                 vydel: document.getElementById('mdo-vydel').value,
                 target: document.getElementById('mdo-target').value,
+                protectCat: document.getElementById('mdo-protect-cat').value,
+                cleanup: document.getElementById('mdo-cleanup').value,
+                restoration: document.getElementById('mdo-restoration').value,
+                modelTrees: document.getElementById('mdo-model-trees').value,
+                podrost: document.getElementById('mdo-podrost').value,
                 totalSpace: totalSpace,
                 sampleSpace: sampleSpace,
                 composition: compositionFormulaStr,
@@ -1718,7 +1681,7 @@
         };
     }
 
-    // 1. ОФИЦИАЛЬНАЯ ПЕЧАТЬ В АЛЬБОМНЫЙ PDF А4 ПОД ПОДПИСИ
+    // ОФИЦИАЛЬНАЯ ПЕЧАТЬ В АЛЬБОМНЫЙ PDF В ТОЧНОМ СООТВЕТСТВИИ С ТРЕБОВАНИЯМИ ЛЕСНИКОВ
     function printOfficialMDO() {
         if (!lastMdoCalculatedData) {
             runMDO();
@@ -1727,66 +1690,143 @@
 
         const p = lastMdoCalculatedData.passport;
         const s = lastMdoCalculatedData.summary;
-        const dateStr = new Date().toLocaleDateString('ru-RU');
 
-        let rowsHtml = '';
+        let speciesTablesHtml = '';
+
         lastMdoCalculatedData.speciesDetailed.forEach(item => {
-            rowsHtml += `
-                <tr>
-                    <td><b>${item.species}</b> (Разряд ${item.hSelector})</td>
-                    <td style="text-align:center;">${(item.large + item.medium + item.small).toFixed(1)}</td>
-                    <td style="text-align:center;">${item.poluStemsVol.toFixed(1)}</td>
-                    <td style="text-align:center;">${item.firewood.toFixed(1)}</td>
-                    <td style="text-align:center;">${item.waste.toFixed(1)}</td>
-                    <td style="text-align:center;"><b>${item.totalVol.toFixed(1)}</b></td>
-                    <td style="text-align:right;"><b>${item.totalCash.toLocaleString('ru-RU', {minimumFractionDigits: 2})}</b></td>
-                </tr>
+            let stepRowsHtml = '';
+            let sumDelCount = 0, sumDrovCount = 0, sumTotalCount = 0;
+            let sumLarge = 0, sumMedium = 0, sumSmall = 0, sumDelTot = 0, sumFire = 0, sumWaste = 0, sumAllVol = 0;
+
+            diameters.forEach(d => {
+                const st = item.stepsDetail[d] || { delCount: 0, drovCount: 0, totalCount: 0, large: 0, medium: 0, small: 0, delTotal: 0, fire: 0, waste: 0, total: 0 };
+                if (st.totalCount > 0) {
+                    sumDelCount += st.delCount;
+                    sumDrovCount += st.drovCount;
+                    sumTotalCount += st.totalCount;
+                    sumLarge += st.large;
+                    sumMedium += st.medium;
+                    sumSmall += st.small;
+                    sumDelTot += st.delTotal;
+                    sumFire += st.fire;
+                    sumWaste += st.waste;
+                    sumAllVol += st.total;
+
+                    stepRowsHtml += `
+                        <tr>
+                            <td><b>${d}</b></td>
+                            <td>${st.delCount}</td>
+                            <td>${st.drovCount}</td>
+                            <td>${st.totalCount}</td>
+                            <td>${st.large > 0 ? st.large.toFixed(2) : '0,00'}</td>
+                            <td>${st.medium > 0 ? st.medium.toFixed(2) : '0,00'}</td>
+                            <td>${st.small > 0 ? st.small.toFixed(2) : '0,00'}</td>
+                            <td><b>${st.delTotal > 0 ? st.delTotal.toFixed(2) : '0,00'}</b></td>
+                            <td>${st.fire > 0 ? st.fire.toFixed(2) : '0,00'}</td>
+                            <td>${st.waste > 0 ? st.waste.toFixed(2) : '0,00'}</td>
+                            <td><b>${st.total > 0 ? st.total.toFixed(2) : '0,00'}</b></td>
+                        </tr>
+                    `;
+                }
+            });
+
+            // На лесосеке (на общую площадь)
+            const ratio = p.totalSpace / p.sampleSpace;
+            const lesLarge = sumLarge * ratio;
+            const lesMedium = sumMedium * ratio;
+            const lesSmall = sumSmall * ratio;
+            const lesDelTot = sumDelTot * ratio;
+            const lesFire = sumFire * ratio;
+            const lesWaste = sumWaste * ratio;
+            const lesAllVol = sumAllVol * ratio;
+
+            const cost1m3 = item.prLarge; // условно базовая ставка крупной
+            const totalCost = lesAllVol * cost1m3;
+
+            speciesTablesHtml += `
+                <div style="margin-bottom: 8pt; page-break-inside: avoid;">
+                    <div style="font-size: 8pt; font-weight: bold; margin-bottom: 2pt;">Порода: ${item.species} | Разряд высот: ${item.hSelector}</div>
+                    <table class="doc-print-table">
+                        <thead>
+                            <tr>
+                                <th rowspan="2" style="width:30px;">Ступень толщины, см</th>
+                                <th colspan="3">Число деревьев на площади перечета</th>
+                                <th colspan="7">Объем стволов, м³</th>
+                            </tr>
+                            <tr>
+                                <th>деловых</th>
+                                <th>дровяных</th>
+                                <th>итого</th>
+                                <th>крупная</th>
+                                <th>средняя</th>
+                                <th>мелкая</th>
+                                <th>итого делов.</th>
+                                <th>дрова топл.</th>
+                                <th>отходы</th>
+                                <th>всего</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${stepRowsHtml}
+                            <tr style="background:#EAEAEA; font-weight:bold;">
+                                <td>ИТОГО:</td>
+                                <td>${sumDelCount}</td>
+                                <td>${sumDrovCount}</td>
+                                <td>${sumTotalCount}</td>
+                                <td>${sumLarge.toFixed(2)}</td>
+                                <td>${sumMedium.toFixed(2)}</td>
+                                <td>${sumSmall.toFixed(2)}</td>
+                                <td>${sumDelTot.toFixed(2)}</td>
+                                <td>${sumFire.toFixed(2)}</td>
+                                <td>${sumWaste.toFixed(2)}</td>
+                                <td>${sumAllVol.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" style="text-align:left; font-weight:bold;">На лесосеке (${p.totalSpace} га):</td>
+                                <td>${lesLarge.toFixed(2)}</td>
+                                <td>${lesMedium.toFixed(2)}</td>
+                                <td>${lesSmall.toFixed(2)}</td>
+                                <td><b>${lesDelTot.toFixed(2)}</b></td>
+                                <td>${lesFire.toFixed(2)}</td>
+                                <td>${lesWaste.toFixed(2)}</td>
+                                <td><b>${lesAllVol.toFixed(2)}</b></td>
+                            </tr>
+                            <tr>
+                                <td colspan="10" style="text-align:left;">Таксовая стоимость 1 м³ (руб.):</td>
+                                <td style="text-align:right;">${cost1m3.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="10" style="text-align:left; font-weight:bold;">Сумма по ставке (руб.):</td>
+                                <td style="text-align:right; font-weight:bold;">${totalCost.toLocaleString('ru-RU', {minimumFractionDigits: 2})}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             `;
         });
 
         const sheetContainer = document.getElementById('printable-mdo-sheet');
         sheetContainer.innerHTML = `
-            <div class="gost-org-title">МИНИСТЕРСТВО ПРИРОДНЫХ РЕСУРСОВ И ЭКОЛОГИИ РОССИЙСКОЙ ФЕДЕРАЦИИ</div>
-            <div class="doc-header-title">ВЕДОМОСТЬ МАТЕРИАЛЬНО-ДЕНЕЖНОЙ ОЦЕНКИ ЛЕСОСЕКИ (МДО)</div>
-            <div class="doc-header-sub">Приложение к акту отвода и таксации лесосеки по нормативам Рослесхоза РФ (Форма МДО-1)</div>
-
+            <div class="doc-header-title" style="font-size:10pt; margin-bottom:4pt;">ВЕДОМОСТЬ МДО ЛЕСОСЕКИ ПРИ СПЛОШНОМ, ЛЕНТОЧНОМ ПЕРЕЧЕТЕ И ПО МАТЕРИАЛАМ КРУГОВЫХ ПЛОЩАДОК</div>
+            
             <div class="doc-passport-box">
                 <div><b>Лесничество:</b> ${p.lesnichestvo}</div>
                 <div><b>Квартал:</b> ${p.kvartal} | <b>Выдел:</b> ${p.vydel} | <b>Делянка:</b> ${p.delyanka}</div>
-                <div><b>Вид рубки:</b> ${p.target}</div>
-                <div><b>Площадь делянки:</b> ${p.totalSpace} га (Перечет: ${p.sampleSpace} га)</div>
-                <div><b>Формула состава:</b> <b>${p.composition}</b></div>
-                <div><b>Дата составления:</b> ${dateStr}</div>
+                <div><b>Вид рубки:</b> ${p.target} | <b>Эксплуатационная площадь:</b> ${p.totalSpace} га</div>
+                <div><b>Категория защиты:</b> ${p.protectCat}</div>
+                <div><b>Способ очистки:</b> ${p.cleanup}</div>
+                <div><b>Способ восстановления:</b> ${p.restoration}</div>
+                <div><b>Модельные деревья:</b> ${p.modelTrees}</div>
+                <div><b>Подрост:</b> ${p.podrost}</div>
             </div>
 
-            <table class="doc-print-table">
-                <thead>
-                    <tr>
-                        <th rowspan="2">Порода / Разряд высот</th>
-                        <th colspan="3">Объемы по категориям древесины (м³)</th>
-                        <th rowspan="2">Отходы (м³)</th>
-                        <th rowspan="2">Всего объем (м³)</th>
-                        <th rowspan="2">Сумма платы (руб.)</th>
-                    </tr>
-                    <tr>
-                        <th>Деловая ликвидная</th>
-                        <th>Полуделовая масса</th>
-                        <th>Дрова и техсырье</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${rowsHtml}
-                    <tr style="background:#F0F0F0; font-weight:bold;">
-                        <td>ИТОГО ПО ВЫДЕЛУ:</td>
-                        <td style="text-align:center;">${(s.large + s.medium + s.small).toFixed(1)}</td>
-                        <td style="text-align:center;">${s.poluTotal.toFixed(1)}</td>
-                        <td style="text-align:center;">${s.firewood.toFixed(1)}</td>
-                        <td style="text-align:center;">${s.waste.toFixed(1)}</td>
-                        <td style="text-align:center;">${s.totalVol.toFixed(1)}</td>
-                        <td style="text-align:right;">${s.totalCash.toLocaleString('ru-RU', {minimumFractionDigits: 2})} руб.</td>
-                    </tr>
-                </tbody>
-            </table>
+            ${speciesTablesHtml}
+
+            <div style="display:flex; justify-content:flex-end; font-size:8pt; font-weight:bold; margin-top:5pt;">
+                <div style="border:1px solid #000; padding:3px 10px; background:#F0F0F0;">
+                    ИТОГО СУММА К УПЛАТЕ: ${s.totalCash.toLocaleString('ru-RU', {minimumFractionDigits: 2})} руб.
+                </div>
+            </div>
 
             <div class="doc-signatures-box">
                 <div><b>Составил:</b> ${p.posAuthor} ______________ / ${p.fioAuthor} /</div>
@@ -1797,7 +1837,6 @@
         window.print();
     }
 
-    // 2. ВЫГРУЗКА В EXCEL (.XLSX)
     function exportMDOToXLSX() {
         if (!lastMdoCalculatedData) {
             runMDO();
@@ -1814,49 +1853,32 @@
 
         let rows = [];
         rows.push(["ВЕДОМОСТЬ МАТЕРИАЛЬНО-ДЕНЕЖНОЙ ОЦЕНКИ ЛЕСОСЕКИ (МДО)"]);
-        rows.push(["Сформировано в цифровом комплексе «Лесовик ПРО» (Разбивка: Деловые, Полуделовые, Дрова)"]);
-        rows.push([]);
         rows.push(["Лесничество:", p.lesnichestvo, "Квартал:", p.kvartal, "Делянка:", p.delyanka, "Выдел:", p.vydel]);
-        rows.push(["Вид рубки:", p.target, "Площадь лесосеки (га):", p.totalSpace, "Площадь перечета (га):", p.sampleSpace]);
-        rows.push(["Формула состава:", p.composition, "Дата:", new Date().toLocaleDateString('ru-RU')]);
+        rows.push(["Площадь (га):", p.totalSpace, "Вид рубки:", p.target]);
         rows.push([]);
 
         rows.push([
-            "Порода", "Разряд", "Деловая ликвидная (м³)", "Полуделовая масса (м³)", 
-            "Крупная (м³)", "Средняя (м³)", "Мелкая (м³)", "Дрова ликвидные (м³)", 
-            "Отходы (м³)", "Итого объем (м³)", "Сумма платы (руб.)"
+            "Порода", "Разряд", "Деловая (м³)", "Дрова (м³)", "Отходы (м³)", "Итого объем (м³)", "Сумма платы (руб.)"
         ]);
 
         lastMdoCalculatedData.speciesDetailed.forEach(item => {
             rows.push([
                 item.species, item.hSelector, 
                 parseFloat((item.large + item.medium + item.small).toFixed(2)),
-                parseFloat(item.poluStemsVol.toFixed(2)),
-                parseFloat(item.large.toFixed(2)), parseFloat(item.medium.toFixed(2)), 
-                parseFloat(item.small.toFixed(2)), parseFloat(item.firewood.toFixed(2)), 
-                parseFloat(item.waste.toFixed(2)), parseFloat(item.totalVol.toFixed(2)), 
+                parseFloat(item.firewood.toFixed(2)),
+                parseFloat(item.waste.toFixed(2)),
+                parseFloat(item.totalVol.toFixed(2)),
                 parseFloat(item.totalCash.toFixed(2))
             ]);
         });
 
         rows.push([]);
-        rows.push([
-            "ИТОГО ПО ВЫДЕЛУ:", "-", 
-            parseFloat((s.large + s.medium + s.small).toFixed(2)),
-            parseFloat(s.poluTotal.toFixed(2)),
-            parseFloat(s.large.toFixed(2)), parseFloat(s.medium.toFixed(2)), 
-            parseFloat(s.small.toFixed(2)), parseFloat(s.firewood.toFixed(2)), 
-            parseFloat(s.waste.toFixed(2)), parseFloat(s.totalVol.toFixed(2)), 
-            parseFloat(s.totalCash.toFixed(2))
-        ]);
-
-        rows.push([]);
-        rows.push(["Составил:", p.posAuthor, p.fioAuthor, "", "Проверил:", p.posChecker, p.fioChecker]);
+        rows.push(["ИТОГО ПО ВЫДЕЛУ:", "-", "", "", "", parseFloat(s.totalVol.toFixed(2)), parseFloat(s.totalCash.toFixed(2))]);
 
         const worksheet = XLSX.utils.aoa_to_sheet(rows);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Ведомость МДО");
-        XLSX.writeFile(workbook, `МДО_Кв${p.kvartal}_Выд${p.vydel}_Дел${p.delyanka}.xlsx`);
+        XLSX.writeFile(workbook, `МДО_Кв${p.kvartal}_Выд${p.vydel}.xlsx`);
     }
 
     function getMDODataSnapshot() {
@@ -1889,6 +1911,11 @@
                 delyanka: document.getElementById('mdo-delyanka').value,
                 vydel: document.getElementById('mdo-vydel').value,
                 target: document.getElementById('mdo-target').value,
+                protectCat: document.getElementById('mdo-protect-cat').value,
+                cleanup: document.getElementById('mdo-cleanup').value,
+                restoration: document.getElementById('mdo-restoration').value,
+                modelTrees: document.getElementById('mdo-model-trees').value,
+                podrost: document.getElementById('mdo-podrost').value,
                 posAuthor: document.getElementById('mdo-pos-author').value,
                 fioAuthor: document.getElementById('mdo-fio-author').value,
                 posChecker: document.getElementById('mdo-pos-checker').value,
@@ -1943,6 +1970,11 @@
             document.getElementById('mdo-delyanka').value = item.passport.delyanka || '';
             document.getElementById('mdo-vydel').value = item.passport.vydel || '1';
             document.getElementById('mdo-target').value = item.passport.target || '';
+            document.getElementById('mdo-protect-cat').value = item.passport.protectCat || 'Защитные леса';
+            document.getElementById('mdo-cleanup').value = item.passport.cleanup || '';
+            document.getElementById('mdo-restoration').value = item.passport.restoration || '';
+            document.getElementById('mdo-model-trees').value = item.passport.modelTrees || '';
+            document.getElementById('mdo-podrost').value = item.passport.podrost || '';
             
             document.getElementById('mdo-pos-author').value = item.passport.posAuthor || 'Инженер-таксатор';
             document.getElementById('mdo-fio-author').value = item.passport.fioAuthor || 'Худяков Н.С.';
@@ -2035,7 +2067,6 @@
         
         updateMDOArchiveSelect();
 
-        // Автозагрузка данных из системного ядра LesovikCore
         if (window.LesovikCore && window.LesovikCore.isSystemMode()) {
             const activeProj = window.LesovikCore.getActiveProject();
             if (activeProj) {
@@ -2055,10 +2086,9 @@
     });
 </script>
 
-<!-- ПОДКЛЮЧЕНИЕ ЕДИНОГО МОДУЛЯ СИНХРОНИЗАЦИИ, ЛИЦЕНЗИЙ И PWA-НАВИГАЦИИ -->
+<!-- ПОДКЛЮЧЕНИЕ ЕДИНОГО МОДУЛЯ СИНХРОНИЗАЦИИ И НАВИГАЦИИ -->
 <script src="lesovik-core.js"></script>
 
-<!-- Единый изолированный Service Worker PRO для всего тайга-комплекса -->
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
