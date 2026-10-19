@@ -1681,7 +1681,7 @@
         };
     }
 
-    // ОФИЦИАЛЬНАЯ ПЕЧАТЬ В АЛЬБОМНЫЙ PDF В ТОЧНОМ СООТВЕТСТВИИ С ТРЕБОВАНИЯМИ ЛЕСНИКОВ
+    // 1. ОФИЦИАЛЬНАЯ ПЕЧАТЬ В АЛЬБОМНЫЙ PDF В ТОЧНОМ СООТВЕТСТВИИ С ТРЕБОВАНИЯМИ ЛЕСНИКОВ (С УЧЕТОМ ПОЛУДЕЛОВЫХ)
     function printOfficialMDO() {
         if (!lastMdoCalculatedData) {
             runMDO();
@@ -1696,51 +1696,66 @@
         lastMdoCalculatedData.speciesDetailed.forEach(item => {
             let stepRowsHtml = '';
             let sumDelCount = 0, sumDrovCount = 0, sumTotalCount = 0;
-            let sumLarge = 0, sumMedium = 0, sumSmall = 0, sumDelTot = 0, sumFire = 0, sumWaste = 0, sumAllVol = 0;
+            let sumLarge = 0, sumMedium = 0, sumSmall = 0, sumDelTot = 0, sumPolu = 0, sumFire = 0, sumWaste = 0, sumAllVol = 0;
 
             diameters.forEach(d => {
                 const st = item.stepsDetail[d] || { delCount: 0, drovCount: 0, totalCount: 0, large: 0, medium: 0, small: 0, delTotal: 0, fire: 0, waste: 0, total: 0 };
+                
+                // Получаем количество полуделовых стволов из шага
+                let block = document.getElementById(`block-${item.species}`);
+                let cPoluStems = 0;
+                if (block) {
+                    const inpP = block.querySelector(`.inp-cat-polu[data-diameter="${d}"]`);
+                    cPoluStems = parseInt(inpP ? inpP.value : 0, 10) || 0;
+                }
+
                 if (st.totalCount > 0) {
+                    let vSingle = calculateStemVolume(item.species, item.hSelector, d);
+                    let stepPoluVol = cPoluStems * vSingle * (p.totalSpace / p.sampleSpace);
+
                     sumDelCount += st.delCount;
-                    sumDrovCount += st.drovCount;
-                    sumTotalCount += st.totalCount;
+                    sumDrovCount += st.drovCount + cPoluStems;
+                    sumTotalCount += st.totalCount + cPoluStems;
+                    
                     sumLarge += st.large;
                     sumMedium += st.medium;
                     sumSmall += st.small;
                     sumDelTot += st.delTotal;
+                    sumPolu += stepPoluVol;
                     sumFire += st.fire;
                     sumWaste += st.waste;
-                    sumAllVol += st.total;
+                    sumAllVol += st.total + stepPoluVol;
 
                     stepRowsHtml += `
                         <tr>
                             <td><b>${d}</b></td>
                             <td>${st.delCount}</td>
-                            <td>${st.drovCount}</td>
-                            <td>${st.totalCount}</td>
+                            <td>${st.drovCount + cPoluStems}</td>
+                            <td>${st.totalCount + cPoluStems}</td>
                             <td>${st.large > 0 ? st.large.toFixed(2) : '0,00'}</td>
                             <td>${st.medium > 0 ? st.medium.toFixed(2) : '0,00'}</td>
                             <td>${st.small > 0 ? st.small.toFixed(2) : '0,00'}</td>
                             <td><b>${st.delTotal > 0 ? st.delTotal.toFixed(2) : '0,00'}</b></td>
+                            <td style="color:var(--poludel); font-weight:bold;">${stepPoluVol > 0 ? stepPoluVol.toFixed(2) : '0,00'}</td>
                             <td>${st.fire > 0 ? st.fire.toFixed(2) : '0,00'}</td>
                             <td>${st.waste > 0 ? st.waste.toFixed(2) : '0,00'}</td>
-                            <td><b>${st.total > 0 ? st.total.toFixed(2) : '0,00'}</b></td>
+                            <td><b>${(st.total + stepPoluVol).toFixed(2)}</b></td>
                         </tr>
                     `;
                 }
             });
 
-            // На лесосеке (на общую площадь)
             const ratio = p.totalSpace / p.sampleSpace;
             const lesLarge = sumLarge * ratio;
             const lesMedium = sumMedium * ratio;
             const lesSmall = sumSmall * ratio;
             const lesDelTot = sumDelTot * ratio;
+            const lesPolu = sumPolu; // уже масштабировано на лесосеку внутри шага
             const lesFire = sumFire * ratio;
             const lesWaste = sumWaste * ratio;
-            const lesAllVol = sumAllVol * ratio;
+            const lesAllVol = sumAllVol;
 
-            const cost1m3 = item.prLarge; // условно базовая ставка крупной
+            const cost1m3 = item.prLarge; 
             const totalCost = lesAllVol * cost1m3;
 
             speciesTablesHtml += `
@@ -1749,18 +1764,19 @@
                     <table class="doc-print-table">
                         <thead>
                             <tr>
-                                <th rowspan="2" style="width:30px;">Ступень толщины, см</th>
-                                <th colspan="3">Число деревьев на площади перечета</th>
-                                <th colspan="7">Объем стволов, м³</th>
+                                <th rowspan="2" style="width:25px;">Диам, см</th>
+                                <th colspan="3">Число деревьев (шт)</th>
+                                <th colspan="8">Объем стволов по категориям (м³)</th>
                             </tr>
                             <tr>
-                                <th>деловых</th>
-                                <th>дровяных</th>
+                                <th>делов.</th>
+                                <th>дров./полуд.</th>
                                 <th>итого</th>
                                 <th>крупная</th>
                                 <th>средняя</th>
                                 <th>мелкая</th>
                                 <th>итого делов.</th>
+                                <th style="color:var(--poludel);">полуделовая</th>
                                 <th>дрова топл.</th>
                                 <th>отходы</th>
                                 <th>всего</th>
@@ -1777,6 +1793,7 @@
                                 <td>${sumMedium.toFixed(2)}</td>
                                 <td>${sumSmall.toFixed(2)}</td>
                                 <td>${sumDelTot.toFixed(2)}</td>
+                                <td style="color:var(--poludel);">${sumPolu.toFixed(2)}</td>
                                 <td>${sumFire.toFixed(2)}</td>
                                 <td>${sumWaste.toFixed(2)}</td>
                                 <td>${sumAllVol.toFixed(2)}</td>
@@ -1787,16 +1804,17 @@
                                 <td>${lesMedium.toFixed(2)}</td>
                                 <td>${lesSmall.toFixed(2)}</td>
                                 <td><b>${lesDelTot.toFixed(2)}</b></td>
+                                <td style="color:var(--poludel); font-weight:bold;">${lesPolu.toFixed(2)}</td>
                                 <td>${lesFire.toFixed(2)}</td>
                                 <td>${lesWaste.toFixed(2)}</td>
                                 <td><b>${lesAllVol.toFixed(2)}</b></td>
                             </tr>
                             <tr>
-                                <td colspan="10" style="text-align:left;">Таксовая стоимость 1 м³ (руб.):</td>
+                                <td colspan="11" style="text-align:left;">Таксовая стоимость 1 м³ (руб.):</td>
                                 <td style="text-align:right;">${cost1m3.toFixed(2)}</td>
                             </tr>
                             <tr>
-                                <td colspan="10" style="text-align:left; font-weight:bold;">Сумма по ставке (руб.):</td>
+                                <td colspan="11" style="text-align:left; font-weight:bold;">Сумма по ставке (руб.):</td>
                                 <td style="text-align:right; font-weight:bold;">${totalCost.toLocaleString('ru-RU', {minimumFractionDigits: 2})}</td>
                             </tr>
                         </tbody>
@@ -1836,7 +1854,6 @@
 
         window.print();
     }
-
     function exportMDOToXLSX() {
         if (!lastMdoCalculatedData) {
             runMDO();
