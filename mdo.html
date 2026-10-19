@@ -309,7 +309,8 @@
         /* КАРТОЧКА СТУПЕНИ */
         .steps-cards-deck { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
         .step-cat-card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; padding: 8px; }
-        .step-cat-header { font-size: 12px; font-weight: 800; color: var(--primary-forest); text-align: center; border-bottom: 1px solid var(--border-light); padding-bottom: 4px; margin-bottom: 6px; }
+        .step-cat-header { font-size: 12px; font-weight: 800; color: var(--primary-forest); text-align: center; border-bottom: 1px solid var(--border-light); padding-bottom: 4px; margin-bottom: 6px; cursor: pointer; }
+        .step-cat-header:hover { text-decoration: underline; }
         .step-cat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 11px; font-weight: 600; }
         .step-cat-row label { font-size: 10.5px; margin: 0; font-weight: 700; }
         .step-cat-row input { width: 55px; text-align: center; padding: 3px; font-size: 11px; font-weight: 700; border: 1px solid var(--border-light); border-radius: 4px; background: var(--input-bg); color: var(--text-main); }
@@ -398,6 +399,20 @@
         .btn-step-add { background: var(--primary-forest); color: #fff; }
         .btn-step-sub { background: rgba(194, 65, 12, 0.12); color: var(--fire-accent); border-color: var(--fire-accent); }
 
+        /* МОДАЛЬНЫЙ ДИАЛОГ РУЧНОЙ КОРРЕКТИРОВКИ НОРМАТИВОВ СТУПЕНИ */
+        .norm-modal-backdrop {
+            position: fixed; inset: 0; z-index: 5500; background: rgba(0,0,0,0.5); display: none;
+            align-items: center; justify-content: center; padding: 15px;
+        }
+        .norm-modal-box {
+            background: var(--bg-card); border: 2px solid var(--primary-forest); border-radius: 12px;
+            padding: 16px; width: 100%; max-width: 440px; box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .norm-grid-fields {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+        }
+
         /* ОФИЦИАЛЬНЫЙ АЛЬБОМНЫЙ ПЕЧАТНЫЙ БЛАНК А4 СТРОГО ПО ГОСТУ НА 1 СТРАНИЦУ */
         #printable-mdo-sheet {
             display: none; background: #FFFFFF; color: #000000;
@@ -423,7 +438,7 @@
         @page { margin: 6mm; size: A4 landscape; }
         @media print {
             body { background: #FFFFFF !important; color: #000000 !important; padding: 0 !important; margin: 0 !important; }
-            .header, .main-container, footer, #offline-blocker-screen, #lesovik-bottom-nav-bar, .flyout-backdrop { display: none !important; }
+            .header, .main-container, footer, #offline-blocker-screen, #lesovik-bottom-nav-bar, .flyout-backdrop, .norm-modal-backdrop { display: none !important; }
             #printable-mdo-sheet { display: block !important; width: 100% !important; height: 100% !important; overflow: hidden !important; }
         }
     </style>
@@ -455,7 +470,7 @@
         <div class="update-badge-banner">
             <span style="font-size: 18px;">⚙️</span>
             <div style="font-size: 12px; color: var(--text-main); line-height: 1.4;">
-                <b>Модульная архитектура регионов активна:</b> перечетные сетки и ставки подгружаются автоматически. При отсутствии отдельной базы региона действует универсальная таежная модель.
+                <b>Модульная архитектура регионов активна:</b> перечетные сетки и ставки подгружаются автоматически. Доступен свободный ручной ввод участкового лесничества и корректировка нормативных сеток.
             </div>
         </div>
 
@@ -478,6 +493,8 @@
                 <select id="mdo-uch-lesnichestvo-select" onchange="handleUchChange(this.value)">
                     <option value="">-- Выберите лесничество --</option>
                 </select>
+                <!-- Текстовое поле для свободного ввода -->
+                <input type="text" id="mdo-uch-manual-input" placeholder="Введите наименование участкового лесничества..." style="display: none; margin-top: 5px;" oninput="handleManualUchInput(this.value)">
                 <input type="hidden" id="mdo-lesnichestvo" value="Важгортское уч. лесничество">
             </div>
             <div class="form-group">
@@ -593,7 +610,7 @@
                 </div>
             </div>
             <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">
-                💡 <b>Быстрый ввод:</b> Нажмите на ячейку ступени, чтобы открыть пульт с раздельными кнопками управления категориями.
+                💡 <b>Быстрый ввод:</b> Нажмите на ячейку ступени для ввода деревьев. Кликните по шапке ступени (см) для ручной правки объема и выхода сортиментов.
             </div>
             <div class="matrix-table-wrapper">
                 <table class="matrix-table" id="matrix-table-el"></table>
@@ -668,7 +685,54 @@
             <button class="btn-step-action btn-step-add" onclick="stepCategoryModify('drova', 1)">+</button>
         </div>
 
-        <button class="btn-action-main" style="width:100%; margin-top:4px;" onclick="document.getElementById('flyoutModal').style.display='none'">Готово ✓</button>
+        <button class="btn-action-main" style="background:var(--accent-gold); width:100%; margin-top:2px;" onclick="openNormEditorFromFlyout()">⚙️ Скорректировать норматив ступени (м³ и %)</button>
+        <button class="btn-action-main" style="width:100%;" onclick="document.getElementById('flyoutModal').style.display='none'">Готово ✓</button>
+    </div>
+</div>
+
+<!-- МОДАЛЬНЫЙ ДИАЛОГ РУЧНОЙ КОРРЕКТИРОВКИ НОРМАТИВОВ СТУПЕНИ -->
+<div class="norm-modal-backdrop" id="normModal" onclick="closeNormModal(event)">
+    <div class="norm-modal-box" onclick="event.stopPropagation()">
+        <div class="flyout-header">
+            <b id="normModalTitle" style="color:var(--primary-forest); font-size:13px;">Редактор нормативов</b>
+            <span style="font-size:11px; color:var(--text-muted);">Ручная правка</span>
+        </div>
+        <div style="font-size:11px; color:var(--text-muted); line-height:1.3;">
+            Вы можете изменить нормативный объем ствола (м³) и процентный выход сортиментов для конкретной породы и диаметра.
+        </div>
+        
+        <div class="form-group">
+            <label>Объем одного ствола в коре (м³):</label>
+            <input type="number" id="norm-inp-vol" step="0.001" min="0" onfocus="this.select()">
+        </div>
+
+        <div class="norm-grid-fields">
+            <div class="form-group">
+                <label>Крупная деловая (%):</label>
+                <input type="number" id="norm-inp-large" min="0" max="100" onfocus="this.select()">
+            </div>
+            <div class="form-group">
+                <label>Средняя деловая (%):</label>
+                <input type="number" id="norm-inp-medium" min="0" max="100" onfocus="this.select()">
+            </div>
+            <div class="form-group">
+                <label>Мелкая деловая (%):</label>
+                <input type="number" id="norm-inp-small" min="0" max="100" onfocus="this.select()">
+            </div>
+            <div class="form-group">
+                <label>Дрова / Техсырье (%):</label>
+                <input type="number" id="norm-inp-fire" min="0" max="100" onfocus="this.select()">
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+                <label>Отходы лесозаготовок (%):</label>
+                <input type="number" id="norm-inp-waste" min="0" max="100" onfocus="this.select()">
+            </div>
+        </div>
+
+        <div style="display:flex; gap:6px; margin-top:4px;">
+            <button class="btn-action-main" style="flex:1;" onclick="saveCustomNorms()">Применить ✓</button>
+            <button class="btn-action-main" style="background:var(--fire-accent);" onclick="resetCustomNorms()">Сбросить норматив</button>
+        </div>
     </div>
 </div>
 
@@ -715,6 +779,10 @@
         }
     };
 
+    // ГЛОБАЛЬНЫЕ СЛОВАРИ ПОЛЬЗОВАТЕЛЬСКИХ КОРРЕКТИРОВОК НОРМАТИВОВ
+    window.CUSTOM_VOLUMES = {};
+    window.CUSTOM_COMMODITY = {};
+
     const diameters = [8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48];
     const addedSpeciesCodes = new Set();
     let currentInputMode = 'matrix';
@@ -736,9 +804,7 @@
         const prevVal = sel.value || 'komi';
         sel.innerHTML = '';
 
-        // Берем готовый полный классификатор РФ из regions-data.js
         const districts = window.LESOVIK_FED_DISTRICTS || [];
-
         const cleanFilter = filterText.trim().toLowerCase();
         let totalMatches = 0;
 
@@ -841,7 +907,13 @@
     function handleForestryChange(val) {
         const regCode = document.getElementById('mdo-region').value;
         const uchSelect = document.getElementById('mdo-uch-lesnichestvo-select');
+        const manualInput = document.getElementById('mdo-uch-manual-input');
+        
         uchSelect.innerHTML = '<option value="">-- Выберите участковое лесничество --</option>';
+        if (manualInput) {
+            manualInput.style.display = 'none';
+            manualInput.value = '';
+        }
 
         if (!val) {
             document.getElementById('mdo-lesnichestvo').value = '';
@@ -865,22 +937,50 @@
                     opt.innerText = `${uchName} уч. лесничество`;
                     uchSelect.appendChild(opt);
                 });
-                
-                if (uchSelect.options.length > 1) {
-                    uchSelect.selectedIndex = 1;
-                    document.getElementById('mdo-lesnichestvo').value = `${val} лесничество, ${uchSelect.value}`;
-                } else {
-                    document.getElementById('mdo-lesnichestvo').value = `${val} лесничество`;
-                }
-                syncPassportToCore();
-                autoRecalcIfActive();
             }
         }
+
+        // Пункт ручного ввода
+        const manualOpt = document.createElement('option');
+        manualOpt.value = "__MANUAL__";
+        manualOpt.innerText = "✍️ Ввести вручную (свой вариант)...";
+        manualOpt.style.fontWeight = "bold";
+        manualOpt.style.color = "var(--primary-forest)";
+        uchSelect.appendChild(manualOpt);
+
+        if (uchSelect.options.length > 2) {
+            uchSelect.selectedIndex = 1;
+            document.getElementById('mdo-lesnichestvo').value = `${val} лесничество, ${uchSelect.value}`;
+        } else {
+            document.getElementById('mdo-lesnichestvo').value = `${val} лесничество`;
+        }
+        syncPassportToCore();
+        autoRecalcIfActive();
     }
 
     function handleUchChange(val) {
         const lesVal = document.getElementById('mdo-lesnichestvo-select').value;
-        document.getElementById('mdo-lesnichestvo').value = lesVal ? `${lesVal} лесничество, ${val}` : val;
+        const manualInput = document.getElementById('mdo-uch-manual-input');
+
+        if (val === "__MANUAL__") {
+            if (manualInput) {
+                manualInput.style.display = 'block';
+                manualInput.focus();
+                const manualVal = manualInput.value.trim();
+                document.getElementById('mdo-lesnichestvo').value = lesVal ? (manualVal ? `${lesVal} лесничество, ${manualVal}` : `${lesVal} лесничество`) : manualVal;
+            }
+        } else {
+            if (manualInput) manualInput.style.display = 'none';
+            document.getElementById('mdo-lesnichestvo').value = lesVal ? `${lesVal} лесничество, ${val}` : val;
+        }
+        syncPassportToCore();
+        autoRecalcIfActive();
+    }
+
+    function handleManualUchInput(val) {
+        const lesVal = document.getElementById('mdo-lesnichestvo-select').value;
+        const cleanVal = val.trim();
+        document.getElementById('mdo-lesnichestvo').value = lesVal ? (cleanVal ? `${lesVal} лесничество, ${cleanVal}` : `${lesVal} лесничество`) : cleanVal;
         syncPassportToCore();
         autoRecalcIfActive();
     }
@@ -995,7 +1095,7 @@
 
             blockHtml += `
                 <div class="step-cat-card" data-diameter="${d}">
-                    <div class="step-cat-header">${d} см</div>
+                    <div class="step-cat-header" title="Кликните для редактирования норматива" onclick="openNormEditor('${rawCode}', ${d})">⚙️ ${d} см</div>
                     <div class="step-cat-row">
                         <label style="color:var(--success);">Деловые:</label>
                         <input type="number" class="inp-cat-del" data-diameter="${d}" value="${defDel}" min="0" oninput="renderMatrixGrid(); autoRecalcIfActive();" onfocus="this.select()">
@@ -1114,7 +1214,7 @@
             return;
         }
 
-        let thead = `<tr><th>Порода</th><th>Разряд</th>` + diameters.map(d => `<th>${d}</th>`).join('') + `<th>Итого</th><th class="no-print">Удал.</th></tr>`;
+        let thead = `<tr><th>Порода</th><th>Разряд</th>` + diameters.map(d => `<th style="cursor:pointer;" title="Кликните для редактирования норматива">${d}</th>`).join('') + `<th>Итого</th><th class="no-print">Удал.</th></tr>`;
         let tbody = '';
 
         blocks.forEach(block => {
@@ -1199,7 +1299,6 @@
         }
     }
 
-    // ТОЧНОЕ ИЗМЕНЕНИЕ: УБАВЛЯЕТ ИЛИ ПРИБАВЛЯЕТ ТОЛЬКО ВЫБРАННУЮ КАТЕГОРИЮ
     function stepCategoryModify(cat, delta) {
         const { rawCode, d } = activeFlyoutTarget;
         if (!rawCode || !d) return;
@@ -1221,12 +1320,131 @@
         }
     }
 
-    // УНИВЕРСАЛЬНЫЙ РАСЧЕТ КУБАТУРЫ ОДНОГО СТВОЛА
-    function calculateStemVolume(rawCode, hSelector, dia) {
-        const regCode = document.getElementById('mdo-region').value;
+    // --- РУЧНАЯ КОРРЕКТИРОВКА НОРМАТИВНЫХ СЕТОК (ОБЪЕМЫ И СОРТИМЕНТЫ) ---
+    function openNormEditorFromFlyout() {
+        document.getElementById('flyoutModal').style.display = 'none';
+        const { rawCode, d } = activeFlyoutTarget;
+        openNormEditor(rawCode, d);
+    }
+
+    function openNormEditor(rawCode, d) {
+        activeFlyoutTarget = { rawCode, d };
+        const block = document.getElementById(`block-${rawCode}`);
+        const hSelector = block ? block.querySelector('.species-h-select').value : 'II';
+        
+        document.getElementById('normModalTitle').innerText = `Норматив: ${rawCode} • ${d} см (Разряд ${hSelector})`;
+        
+        // Получаем текущий объем ствола
+        const curVol = calculateStemVolume(rawCode, hSelector, d);
+        document.getElementById('norm-inp-vol').value = curVol.toFixed(3);
+
+        // Получаем текущие проценты выхода
+        const curSort = getCommodityPercentages(rawCode, hSelector, d);
+        document.getElementById('norm-inp-large').value = curSort.large;
+        document.getElementById('norm-inp-medium').value = curSort.medium;
+        document.getElementById('norm-inp-small').value = curSort.small;
+        document.getElementById('norm-inp-fire').value = curSort.fire;
+        document.getElementById('norm-inp-waste').value = curSort.waste;
+
+        document.getElementById('normModal').style.display = 'flex';
+    }
+
+    function closeNormModal(e) {
+        if (e.target.id === 'normModal') {
+            document.getElementById('normModal').style.display = 'none';
+        }
+    }
+
+    function saveCustomNorms() {
+        const { rawCode, d } = activeFlyoutTarget;
+        const block = document.getElementById(`block-${rawCode}`);
+        const hSelector = block ? block.querySelector('.species-h-select').value : 'II';
         const hNumMap = { "Ia": 1, "I": 1, "II": 2, "III": 3, "IV": 4, "V": 5 };
         const hRankNum = hNumMap[hSelector] || 2;
 
+        const vol = parseFloat(document.getElementById('norm-inp-vol').value);
+        const l = parseFloat(document.getElementById('norm-inp-large').value) || 0;
+        const m = parseFloat(document.getElementById('norm-inp-medium').value) || 0;
+        const s = parseFloat(document.getElementById('norm-inp-small').value) || 0;
+        const f = parseFloat(document.getElementById('norm-inp-fire').value) || 0;
+        const w = parseFloat(document.getElementById('norm-inp-waste').value) || 0;
+
+        if (!isNaN(vol) && vol > 0) {
+            window.CUSTOM_VOLUMES[rawCode] = window.CUSTOM_VOLUMES[rawCode] || {};
+            window.CUSTOM_VOLUMES[rawCode][hRankNum] = window.CUSTOM_VOLUMES[rawCode][hRankNum] || {};
+            window.CUSTOM_VOLUMES[rawCode][hRankNum][d] = vol;
+        }
+
+        window.CUSTOM_COMMODITY[rawCode] = window.CUSTOM_COMMODITY[rawCode] || {};
+        window.CUSTOM_COMMODITY[rawCode][d] = { large: l, medium: m, small: s, fire: f, waste: w };
+
+        document.getElementById('normModal').style.display = 'none';
+        alert(`Нормативы для породы ${rawCode} (Ø ${d} см) успешно обновлены!`);
+        autoRecalcIfActive();
+    }
+
+    function resetCustomNorms() {
+        const { rawCode, d } = activeFlyoutTarget;
+        const block = document.getElementById(`block-${rawCode}`);
+        const hSelector = block ? block.querySelector('.species-h-select').value : 'II';
+        const hNumMap = { "Ia": 1, "I": 1, "II": 2, "III": 3, "IV": 4, "V": 5 };
+        const hRankNum = hNumMap[hSelector] || 2;
+
+        if (window.CUSTOM_VOLUMES[rawCode]?.[hRankNum]?.[d] !== undefined) {
+            delete window.CUSTOM_VOLUMES[rawCode][hRankNum][d];
+        }
+        if (window.CUSTOM_COMMODITY[rawCode]?.[d] !== undefined) {
+            delete window.CUSTOM_COMMODITY[rawCode][d];
+        }
+
+        document.getElementById('normModal').style.display = 'none';
+        alert(`Норматив для породы ${rawCode} (Ø ${d} см) сброшен к официальному значению региона.`);
+        autoRecalcIfActive();
+    }
+
+    // ПОЛУЧЕНИЕ ПРОЦЕНТОВ ВЫХОДА СОРТИМЕНТОВ
+    function getCommodityPercentages(rawCode, hSelector, dia) {
+        // 1. Приоритет: пользовательская правка
+        if (window.CUSTOM_COMMODITY[rawCode]?.[dia]) {
+            return window.CUSTOM_COMMODITY[rawCode][dia];
+        }
+
+        const selectedRegion = document.getElementById('mdo-region').value;
+        const dynamicCommodityKey = `COMMODITY_${selectedRegion.toUpperCase()}`;
+        const regionalCommodityTable = window[dynamicCommodityKey] || null;
+
+        // 2. Официальная региональная товарная сетка
+        if (regionalCommodityTable && regionalCommodityTable[rawCode] && regionalCommodityTable[rawCode][dia]) {
+            const hNumMap = { "Ia": 1, "I": 1, "II": 2, "III": 3, "IV": 4, "V": 5 };
+            const rankNum = hNumMap[hSelector] || 2;
+            const rData = regionalCommodityTable[rawCode][dia][rankNum] || regionalCommodityTable[rawCode][dia][1];
+            if (rData) return rData;
+        }
+
+        // 3. Резервная сетка Анучина
+        if (dia >= 26) {
+            const pLarge = (hSelector === 'Ia' || hSelector === 'I') ? 70 : 60;
+            return { large: pLarge, medium: 18, small: 2, fire: 14, waste: 6 };
+        } else if (dia >= 14 && dia <= 24) {
+            const pMedium = (hSelector === 'Ia' || hSelector === 'I') ? 55 : 45;
+            return { large: 0, medium: pMedium, small: 25, fire: 14, waste: 6 };
+        } else {
+            return { large: 0, medium: 0, small: 60, fire: 24, waste: 16 };
+        }
+    }
+
+    // УНИВЕРСАЛЬНЫЙ РАСЧЕТ КУБАТУРЫ ОДНОГО СТВОЛА
+    function calculateStemVolume(rawCode, hSelector, dia) {
+        const hNumMap = { "Ia": 1, "I": 1, "II": 2, "III": 3, "IV": 4, "V": 5 };
+        const hRankNum = hNumMap[hSelector] || 2;
+
+        // 1. Приоритет: пользовательская правка
+        if (window.CUSTOM_VOLUMES[rawCode]?.[hRankNum]?.[dia] !== undefined) {
+            return window.CUSTOM_VOLUMES[rawCode][hRankNum][dia];
+        }
+
+        // 2. Региональная таблица объема стволов
+        const regCode = document.getElementById('mdo-region').value;
         let regionalVolumeTable = null;
         if (regCode === 'komi' && window.VOLUMES_KOMI) regionalVolumeTable = window.VOLUMES_KOMI;
         else if (regCode === 'kirov' && window.VOLUMES_KIROV) regionalVolumeTable = window.VOLUMES_KIROV;
@@ -1246,6 +1464,7 @@
             }
         }
         
+        // 3. Таблица Рослесхоза
         if (treeVolumeTable[hSelector] && treeVolumeTable[hSelector][dia]) {
             return treeVolumeTable[hSelector][dia];
         }
@@ -1292,10 +1511,6 @@
         const regionTable = regionalSortTables[selectedRegion] || regionalSortTables['komi'];
         let speciesVolumesReport = [];
         let grandTotalSampleVolume = 0;
-
-        // Проверяем наличие отдельной товарной таблицы региона
-        const dynamicCommodityKey = `COMMODITY_${selectedRegion.toUpperCase()}`;
-        const regionalCommodityTable = window[dynamicCommodityKey] || null;
 
         blocks.forEach(block => {
             const rawCode = block.getAttribute('data-rawcode');
@@ -1356,7 +1571,6 @@
 
         let speciesDetailedRows = [];
 
-        blocks.forEach(block => {}); // noop
         speciesVolumesReport.forEach(species => {
             let spLarge = 0, spMedium = 0, spSmall = 0, spFire = 0, spWaste = 0;
             let spDelStemsVol = 0, spPoluStemsVol = 0, spDrovaStemsVol = 0;
@@ -1373,31 +1587,16 @@
                 spPoluStemsVol += stepPoluVol;
                 spDrovaStemsVol += stepDrovaVol;
 
-                let pLarge = 0, pMedium = 0, pSmall = 0, pFire = 0, pWaste = 6;
+                // Получаем процентный расклад (с учетом ручных правок)
+                const cNorms = getCommodityPercentages(species.rawCode, species.hSelector, dia);
+                let pLarge = cNorms.large;
+                let pMedium = cNorms.medium;
+                let pSmall = cNorms.small;
+                let pFire = cNorms.fire;
+                let pWaste = cNorms.waste;
 
-                // 1. Проверяем точный товарный выход для региона
-                if (regionalCommodityTable && regionalCommodityTable[species.rawCode] && regionalCommodityTable[species.rawCode][dia]) {
-                    const hNumMap = { "Ia": 1, "I": 1, "II": 2, "III": 3, "IV": 4, "V": 5 };
-                    const rankNum = hNumMap[species.hSelector] || 2;
-                    const rData = regionalCommodityTable[species.rawCode][dia][rankNum] || regionalCommodityTable[species.rawCode][dia][1];
-                    if (rData) {
-                        pLarge = rData.large; pMedium = rData.medium; pSmall = rData.small; pFire = rData.fire; pWaste = rData.waste;
-                    }
-                } else {
-                    // 2. Резервная сетка Анучина
-                    if (dia >= 26) {
-                        pLarge = (species.hSelector === 'Ia' || species.hSelector === 'I') ? 70 : 60;
-                        pMedium = 18; pSmall = 2; pFire = 14;
-                    } else if (dia >= 14 && dia <= 24) {
-                        pLarge = 0;
-                        pMedium = (species.hSelector === 'Ia' || species.hSelector === 'I') ? 55 : 45;
-                        pSmall = 25; pFire = 14;
-                    } else {
-                        pLarge = 0; pMedium = 0; pSmall = 60; pFire = 24;
-                    }
-                }
-
-                if (species.rawCode === 'Б' || species.rawCode === 'Ос') {
+                // Учет дефектности осины/березы, если нет жесткой пользовательской сетки
+                if (!window.CUSTOM_COMMODITY[species.rawCode]?.[dia] && (species.rawCode === 'Б' || species.rawCode === 'Ос')) {
                     let defect = (species.rawCode === 'Ос') ? regionTable.defectFactor.osina : regionTable.defectFactor.bereza;
                     let shift = (pLarge + pMedium + pSmall) * defect;
                     pFire += shift;
@@ -1699,6 +1898,8 @@
                 region: document.getElementById('mdo-region').value
             },
             speciesData: speciesData,
+            customVolumes: window.CUSTOM_VOLUMES,
+            customCommodity: window.CUSTOM_COMMODITY,
             timestamp: new Date().toLocaleString('ru-RU')
         };
     }
@@ -1752,6 +1953,9 @@
             document.getElementById('mdo-sample-space').value = item.passport.sampleSpace || '2.0';
             document.getElementById('mdo-region').value = item.passport.region || 'komi';
             document.getElementById('mdo-archive-name').value = item.name;
+
+            window.CUSTOM_VOLUMES = item.customVolumes || {};
+            window.CUSTOM_COMMODITY = item.customCommodity || {};
 
             document.getElementById('peruchet-dynamic-container').innerHTML = '';
             addedSpeciesCodes.clear();
