@@ -1340,6 +1340,34 @@
     };
     let hwDebugTimer = null;
 
+    // Калибровка внешнего модуля BNO055: 0..3 по каждому датчику
+    const moduleCal = { s: null, g: null, a: null, m: null, t: 0 };
+    function moduleCalText() {
+        if (moduleCal.m === null) return '';
+        return `Калибр. S${moduleCal.s}/G${moduleCal.g}/A${moduleCal.a}/M${moduleCal.m}`;
+    }
+    function setModuleCal(s_, g_, a_, m_) {
+        moduleCal.s = s_; moduleCal.g = g_; moduleCal.a = a_; moduleCal.m = m_;
+        moduleCal.t = Date.now();
+        scheduleHwDebug();
+        updateModuleCalibUI();
+    }
+    function updateModuleCalibUI() {
+        const popup = document.getElementById('calibration-popup');
+        if (!popup || popup.style.display !== 'flex' || orientationSource !== 'external') return;
+        if (moduleCal.m === null) {
+            document.getElementById('calib-status').innerText = 'Жду данные калибровки от модуля...';
+            return;
+        }
+        const total = moduleCal.s + moduleCal.g + moduleCal.a + moduleCal.m;
+        document.getElementById('calib-bar').style.width = Math.round(total / 12 * 100) + '%';
+        const done = (total === 12);
+        const el = document.getElementById('calib-status');
+        el.innerText = `Модуль: система ${moduleCal.s}/3, гироскоп ${moduleCal.g}/3, акселерометр ${moduleCal.a}/3, магнитометр ${moduleCal.m}/3` +
+            (done ? ' — ✔️ откалиброван, профиль сохранён в модуле' : ' — вращайте модуль «восьмёркой» и ставьте на 2–3 с в разные положения');
+        el.style.color = done ? 'var(--success)' : 'var(--text-graphite)';
+    }
+
     function resetHwStats(ch) {
         hwStats[ch].raw = 0;
         hwStats[ch].n = 0;
@@ -1357,6 +1385,8 @@
         const parts = [];
         if (usbConnected) parts.push(`USB: ${hwStats.usb.n} пак. (сырых ${hwStats.usb.raw}) ${hwStats.usb.last}`);
         if (bleConnected) parts.push(`BLE: ${hwStats.ble.n} пак. (сырых ${hwStats.ble.raw}) ${hwStats.ble.last}`);
+        const calTxt = moduleCalText();
+        if (calTxt && parts.length) parts.push(calTxt);
         if (parts.length === 0) {
             el.style.display = 'none';
             el.innerText = '';
@@ -1866,6 +1896,13 @@
             hwStats[channel].last = telemetryString.length > 40 ? telemetryString.slice(0, 40) : telemetryString;
         }
 
+        // Служебная строка калибровки модуля по BLE: "K,sys,gyro,accel,mag"
+        if (telemetryString.charAt(0) === 'K' && telemetryString.charAt(1) === ',') {
+            const k = telemetryString.split(',').slice(1).map(Number);
+            if (k.length >= 4 && k.every(v => !isNaN(v))) setModuleCal(k[0], k[1], k[2], k[3]);
+            return;
+        }
+
         // ВАРИАНТ 1: Короткий Bluetooth-пакет без букв (например: "123.4,1.2,-0.4")
         if (telemetryString.indexOf(',') !== -1 && telemetryString.indexOf('=') === -1) {
             let parts = telemetryString.split(',');
@@ -1893,6 +1930,11 @@
             parsedPitch = packet['PITCH'] !== undefined ? packet['PITCH'] : packet['X'];
             parsedRoll = packet['ROLL'] !== undefined ? packet['ROLL'] : packet['Y'];
             parsedDist = packet['DIST'] !== undefined ? packet['DIST'] : packet['DISTANCE'];
+            if (packet['CS'] !== undefined && packet['CG'] !== undefined && packet['CA'] !== undefined && packet['CAL'] !== undefined) {
+                if (!channel || channel === activeOrientationChannel) {
+                    setModuleCal(packet['CS'], packet['CG'], packet['CA'], packet['CAL']);
+                }
+            }
         }
 
         // 1. Передача азимута и углов наклона в математическую модель компаса
@@ -2908,6 +2950,11 @@
     function openCalibration() {
         document.getElementById('calibration-popup').style.display = 'flex';
         resetCalibUI();
+        if (orientationSource === 'external') {
+            document.getElementById('btn-start-calib').innerText = 'Калибровка идёт автоматически';
+            document.getElementById('btn-start-calib').disabled = true;
+            updateModuleCalibUI();
+        }
     }
 
     function closeCalibration() {
@@ -3026,6 +3073,7 @@
     }
 
     function startLiveCalibration() {
+        if (orientationSource === 'external') { updateModuleCalibUI(); return; }
         resetCalibUI();
         isCalibrating = true;
         document.getElementById('btn-start-calib').disabled = true;
