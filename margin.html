@@ -1,0 +1,362 @@
+<!-- 
+  (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
+  Свидетельство ИНН: 111801576622.
+  Программное обеспечение: «Калькулятор экономики и маржинальности лесозаготовок (Лесовик ПРО)»
+-->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Оценка делянки до торгов: себестоимость, маржа и предельная ставка | Лесовик ПРО</title>
+    <meta name="description" content="Инженерный калькулятор оценки делянки до аукциона. Расчет себестоимости, логистики, дорог, лесовосстановления и моделирование рисков методом Монте-Карло онлайн.">
+    <meta name="keywords" content="оценка делянки до торгов, маржа лесозаготовки, предельная ставка лесосека, калькулятор себестоимости леса, монте карло лесозаготовка, лесовик про">
+    <link rel="canonical" href="https://lesovik-pro.ru/margin.html">
+    <link rel="icon" type="image/jpeg" href="logo.jpeg">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --bg-paper: #F9FBF9;
+            --text-graphite: #333333;
+            --forest-green: #2D5A27;
+            --forest-light: #8FBC8F;
+            --border-color: #E0E0E0;
+            --card-bg: #FFFFFF;
+            --glass-bg: rgba(249, 251, 249, 0.85);
+            --footer-bg: #2C3531;
+            --danger: #DC2626;
+            --success: #16A34A;
+            --warning-alert: #F59E0B;
+            --input-bg: #f5f8f4;
+        }
+
+        [data-theme="dark"] {
+            --bg-paper: #1A2421;
+            --text-graphite: #F9FBF9;
+            --forest-green: #8FBC8F;
+            --forest-light: #2D5A27;
+            --border-color: #3A4F46;
+            --card-bg: #22302B;
+            --glass-bg: rgba(26, 36, 33, 0.85);
+            --footer-bg: #111815;
+            --input-bg: #212d1e;
+        }
+
+        html, body {
+            margin: 0; padding: 0;
+            width: 100%; max-width: 100vw;
+            overflow-x: hidden;
+            background-color: var(--bg-paper); color: var(--text-graphite);
+            font-family: 'Inter', sans-serif; line-height: 1.6;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        *, *:before, *:after { box-sizing: inherit; }
+
+        .glass-header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 20px; background: var(--glass-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-container { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        .header-logo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--forest-green); }
+        .glass-header h1 { font-family: 'Merriweather', serif; color: var(--forest-green); margin: 0; font-size: 16px; }
+
+        .tester-badge {
+            background: var(--warning-alert); color: #111;
+            font-size: 10px; font-weight: 800; padding: 2px 6px;
+            border-radius: 4px; text-transform: uppercase; margin-left: 6px;
+        }
+
+        .header-right { display: flex; align-items: center; gap: 8px; }
+        .btn-back { display: inline-flex; align-items: center; gap: 6px; background: transparent; color: var(--forest-green); border: 1px solid var(--forest-green); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; transition: 0.2s; font-size: 12px; }
+        .btn-back:hover { background: var(--forest-green); color: var(--bg-paper); }
+        .theme-toggle { background: transparent; border: 1px solid var(--forest-green); color: var(--forest-green); padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; min-height: 34px; }
+
+        .container { max-width: 1000px; width: 100%; margin: 75px auto 30px; padding: 0 15px; box-sizing: border-box; }
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 4px 4px 0px rgba(0,0,0,0.02); }
+        .card h2 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 18px; margin-bottom: 5px; }
+        .subtitle { font-size: 12px; color: var(--text-graphite); opacity: 0.7; margin-bottom: 15px; }
+
+        .grid-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--forest-green); }
+        .form-group input, .form-group select { padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--input-bg); color: var(--text-graphite); font-family: inherit; font-size: 13px; font-weight: 600; outline: none; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--forest-green); background: var(--card-bg); }
+
+        .btn-calc { background: var(--forest-green); color: #FFF; border: none; padding: 13px; width: 100%; border-radius: 8px; font-weight: 800; font-size: 13px; text-transform: uppercase; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        .btn-calc:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .results-box { margin-top: 20px; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; display: none; }
+        .results-box h3 { font-family: 'Merriweather', serif; color: var(--forest-green); margin-top: 0; font-size: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        
+        .result-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12.5px; }
+        .result-table th, .result-table td { padding: 7px 10px; border-bottom: 1px solid var(--border-color); text-align: left; }
+        .result-table th { font-weight: 700; color: var(--forest-green); text-transform: uppercase; font-size: 10.5px; }
+        .result-table td.num { text-align: right; font-family: monospace; font-weight: bold; }
+
+        .highlight-card { background: rgba(45, 90, 39, 0.08); border: 1.5px dashed var(--forest-green); border-radius: 8px; padding: 12px; margin-top: 15px; font-size: 13px; line-height: 1.5; }
+        
+        footer { background-color: var(--footer-bg); color: #E0E0E0; padding: 30px 15px 20px; margin-top: auto; font-size: 13px; }
+        .footer-content { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 30px; margin-bottom: 20px; }
+        .footer-bottom { text-align: center; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.05); font-size: 11px; opacity: 0.6; }
+    </style>
+</head>
+<body>
+
+    <header class="glass-header">
+        <a href="index.html" class="logo-container">
+            <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
+            <h1>Лесовик <span class="tester-badge">МАРЖА ПРО</span></h1>
+        </a>
+        <div class="header-right">
+            <a href="index.html" class="btn-back">← Главная</a>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тема</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <h2>Экономический калькулятор лесозаготовки</h2>
+            <div class="subtitle">Оценка делянки до торгов: расчет себестоимости, логистики, рисков (Монте-Карло) и предельной ставки платы.</div>
+
+            <div class="grid-inputs">
+                <div class="form-group">
+                    <label>Площадь делянки (га):</label>
+                    <input type="number" id="inp-area" value="40.0" step="0.5" onfocus="this.select()">
+                </div>
+                <div class="form-group">
+                    <label>Ликвидный запас (м³/га):</label>
+                    <input type="number" id="inp-stock" value="180.0" step="1" onfocus="this.select()">
+                </div>
+                <div class="form-group">
+                    <label>Доля вырубаемого запаса:</label>
+                    <input type="number" id="inp-cut" value="0.85" step="0.05" min="0.1" max="1.0" onfocus="this.select()">
+                </div>
+                <div class="form-group">
+                    <label>Плечо вывозки (км):</label>
+                    <input type="number" id="inp-km" value="65.0" step="1" onfocus="this.select()">
+                </div>
+                <div class="form-group">
+                    <label>Сезон заготовки:</label>
+                    <select id="inp-season">
+                        <option value="зима" selected>Зима (зимник дешевле)</option>
+                        <option value="лето">Лето</option>
+                        <option value="распутица">Распутица (тяжелые условия)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Рельеф местности:</label>
+                    <select id="inp-terrain">
+                        <option value="равнинный">Равнинный</option>
+                        <option value="холмистый" selected>Холмистый</option>
+                        <option value="горный/болотистый">Горный / Болотистый</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Качество дорог вывозки:</label>
+                    <select id="inp-road">
+                        <option value="хорошая">Хорошая</option>
+                        <option value="смешанная" selected>Смешанная</option>
+                        <option value="плохая">Плохая</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Строительство усов/дорог (км):</label>
+                    <input type="number" id="inp-newroad" value="1.2" step="0.1" onfocus="this.select()">
+                </div>
+                <div class="form-group">
+                    <label>Ваша ставка платы (руб/м³):</label>
+                    <input type="number" id="inp-bid" value="500.0" step="10" onfocus="this.select()">
+                </div>
+                <div class="form-group">
+                    <label>Целевая маржа (%):</label>
+                    <input type="number" id="inp-margin" value="12" step="1" onfocus="this.select()">
+                </div>
+            </div>
+
+            <button class="btn-calc" onclick="calculateMargin()">📊 Рассчитать экономику делянки</button>
+
+            <div id="results-box" class="results-box">
+                <h3>Финансово-экономический отчет</h3>
+                <div id="summary-metrics" style="font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--forest-green);"></div>
+                
+                <table class="result-table">
+                    <thead>
+                        <tr>
+                            <th>Статья расходов / доходов</th>
+                            <th style="text-align:right;">Всего, руб.</th>
+                            <th style="text-align:right;">руб / м³</th>
+                        </tr>
+                    </thead>
+                    <tbody id="result-tbody"></tbody>
+                </table>
+
+                <div id="monte-carlo-block" class="highlight-card"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div>
+                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 15px; margin-bottom: 6px;">Лесовик ПРО • Маржа</div>
+                <div style="font-size: 11.5px; opacity: 0.8;">Профессиональный расчет экономики лесозаготовки и предельных ставок на аукционах.</div>
+            </div>
+            <div>
+                <div style="font-weight: 600; margin-bottom: 4px;">ИП Худяков Николай Сергеевич</div>
+                <div style="font-size: 11px; opacity: 0.7;">ИНН: 111801576622 | Сыктывкар</div>
+            </div>
+        </div>
+        <div class="footer-bottom">&copy; 2026 Лесовик Про. Все права защищены.</div>
+    </footer>
+
+<script>
+    function toggleTheme() {
+        const body = document.documentElement;
+        if (body.getAttribute('data-theme') === 'dark') {
+            body.removeAttribute('data-theme');
+        } else {
+            body.setAttribute('data-theme', 'dark');
+        }
+    }
+
+    function rub(val) {
+        return Math.round(val).toLocaleString('ru-RU');
+    }
+
+    function calculateMargin() {
+        // Считываем параметры
+        const area = parseFloat(document.getElementById('inp-area').value) || 40;
+        const stock = parseFloat(document.getElementById('inp-stock').value) || 180;
+        const cutShare = parseFloat(document.getElementById('inp-cut').value) || 0.85;
+        const haulKm = parseFloat(document.getElementById('inp-km').value) || 65;
+        const season = document.getElementById('inp-season').value;
+        const terrain = document.getElementById('inp-terrain').value;
+        const haulRoad = document.getElementById('inp-road').value;
+        const newRoadKm = parseFloat(document.getElementById('inp-newroad').value) || 1.2;
+        const userBidM3 = parseFloat(document.getElementById('inp-bid').value) || 500;
+        const targetMarginPct = (parseFloat(document.getElementById('inp-margin').value) || 12) / 100;
+
+        const volume = area * stock * cutShare;
+
+        // Нормативы и коэффициенты (демонстрационные)
+        const rates = {
+            logging: 600, skidding: 400, loading: 100,
+            haulM3Km: 7, roadKm: 550000, reforestHa: 18000,
+            overhead: 0.08, tax: 0.06
+        };
+
+        const terrainCoef = { "равнинный": 1.0, "холмистый": 1.2, "горный/болотистый": 1.5 }[terrain] || 1.2;
+        const seasonCoef = {
+            "зима":      { work: 1.00, haul: 1.00, road: 0.6 },
+            "лето":      { work: 1.10, haul: 1.20, road: 1.0 },
+            "распутица": { work: 1.35, haul: 1.70, road: 1.6 }
+        }[season] || { work: 1.00, haul: 1.00, road: 0.6 };
+        
+        const roadCoef = { "хорошая": 0.9, "смешанная": 1.0, "плохая": 1.25 }[haulRoad] || 1.0;
+
+        // Сортиментный состав и цены (франко-потребитель)
+        const assortments = [
+            { name: "Пиловочник", share: 0.50, price: 5500 },
+            { name: "Балансы / целлюлоза", share: 0.25, price: 2000 },
+            { name: "Дровяная", share: 0.15, price: 800 },
+            { name: "Отходы / не реализуется", share: 0.10, price: 0 }
+        ];
+
+        let totalRevenue = sumAssortmentsRevenue(volume, assortments, 1.0, 0);
+
+        // Расходные статьи
+        const costLoggingSkid = (rates.logging + rates.skidding) * terrainCoef * seasonCoef.work * volume;
+        const costLoading = rates.loading * volume;
+        const costHaul = rates.haulM3Km * haulKm * roadCoef * seasonCoef.haul * volume;
+        const costRoads = rates.roadKm * newRoadKm * seasonCoef.road;
+        const costReforest = rates.reforestHa * area;
+
+        const directCosts = costLoggingSkid + costLoading + costHaul + costRoads + costReforest;
+        const overheadAndTax = (rates.overhead + rates.tax) * totalRevenue;
+        const totalBidSum = userBidM3 * volume;
+
+        const netProfit = totalRevenue - directCosts - overheadAndTax - totalBidSum;
+        const actualMargin = totalRevenue > 0 ? netProfit / totalRevenue : 0;
+
+        // Предельная ставка при целевой марже
+        const maxAllowedBid = totalRevenue * (1 - rates.overhead - rates.tax - targetMarginPct) - directCosts;
+        const maxBidM3 = volume > 0 ? maxAllowedBid / volume : 0;
+
+        // Монте-Карло симуляция (5000 итераций)
+        let mcResults = [];
+        for (let i = 0; i < 5000; i++) {
+            let pk = Math.max(0.5, randomGauss(1.0, 0.12));
+            let ck = Math.max(0.5, randomGauss(1.0, 0.08));
+            let rev = sumAssortmentsRevenue(volume, assortments, pk, 0);
+            let dc = (costLoggingSkid + costLoading + costHaul + costRoads + costReforest) * ck;
+            let zeroBidLimit = rev * (1 - rates.overhead - rates.tax) - dc;
+            mcResults.push(zeroBidLimit / volume);
+        }
+        mcResults.sort((a, b) => a - b);
+        let p10 = mcResults[Math.floor(0.10 * mcResults.length)];
+        let p50 = mcResults[Math.floor(0.50 * mcResults.length)];
+        let p90 = mcResults[Math.floor(0.90 * mcResults.length)];
+        
+        let lossCount = mcResults.filter(x => x < userBidM3).length;
+        let lossProbability = (lossCount / mcResults.length) * 100;
+
+        // Отрисовка результатов
+        document.getElementById('summary-metrics').innerHTML = `
+            Общий объем заготовки: <b>${Math.round(volume).toLocaleString('ru-RU')} м³</b> | 
+            Выручка: <b>${rub(totalRevenue)} руб.</b> | 
+            Чистая прибыль: <b style="color:${netProfit >= 0 ? 'var(--success)' : 'var(--danger)'};">${rub(netProfit)} руб. (${(actualMargin*100).toFixed(1)}%)</b>
+        `;
+
+        const tbody = document.getElementById('result-tbody');
+        tbody.innerHTML = `
+            <tr><td><b>Ожидаемая выручка от реализации</b></td><td class="num" style="color:var(--success);">${rub(totalRevenue)}</td><td class="num">${rub(totalRevenue/volume)}</td></tr>
+            <tr><td>Валка и трелёвка</td><td class="num">${rub(-costLoggingSkid)}</td><td class="num">${rub(-costLoggingSkid/volume)}</td></tr>
+            <tr><td>Погрузка древесины</td><td class="num">${rub(-costLoading)}</td><td class="num">${rub(-costLoading/volume)}</td></tr>
+            <tr><td>Вывозка (${haulKm} км)</td><td class="num">${rub(-costHaul)}</td><td class="num">${rub(-costHaul/volume)}</td></tr>
+            <tr><td>Строительство усов (${newRoadKm} км)</td><td class="num">${rub(-costRoads)}</td><td class="num">${rub(-costRoads/volume)}</td></tr>
+            <tr><td>Лесовосстановление</td><td class="num">${rub(-costReforest)}</td><td class="num">${rub(-costReforest/volume)}</td></tr>
+            <tr><td>Накладные расходы и налоги (14%)</td><td class="num">${rub(-overheadAndTax)}</td><td class="num">${rub(-overheadAndTax/volume)}</td></tr>
+            <tr><td>Плата за древесину по вашей ставке (${userBidM3} руб/м³)</td><td class="num">${rub(-totalBidSum)}</td><td class="num">${userBidM3}</td></tr>
+            <tr style="font-weight:bold; background:rgba(45,90,39,0.05);"><td>ИТОГОВАЯ ПРИБЫЛЬ</td><td class="num" style="color:${netProfit >= 0 ? 'var(--success)' : 'var(--danger)'};">${rub(netProfit)}</td><td class="num">${rub(netProfit/volume)}</td></tr>
+        `;
+
+        document.getElementById('monte-carlo-block').innerHTML = `
+            <b>🎯 Анализ рисков и аукционная стратегия:</b><br>
+            • <b>Предельная ставка</b> при вашей целевой марже ${targetMarginPct*100}% составляет: <b style="color:var(--forest-green);">${rub(maxBidM3)} руб/м³</b><br>
+            • <b>Ставка безубыточности (Монте-Карло, P50 / P90):</b> ${rub(p50)} / ${rub(p10)} руб/м³<br>
+            • <b>Вероятность уйти в убыток</b> при выбранной ставке ${userBidM3} руб/м³: <b style="color:${lossProbability > 20 ? 'var(--danger)' : 'var(--success)'};">${lossProbability.toFixed(0)}%</b>
+        `;
+
+        document.getElementById('results-box').style.display = 'block';
+        document.getElementById('results-box').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function sumAssortmentsRevenue(vol, assortments, priceK, shift) {
+        let shares = assortments.map(a => a.share);
+        shares[0] += Math.max(-shares[0], Math.min(shares[2], shift));
+        shares[2] -= Math.max(-shares[0], Math.min(shares[2], shift));
+        let perM3 = 0;
+        for(let i=0; i<assortments.length; i++) {
+            perM3 += shares[i] * assortments[i].price * priceK;
+        }
+        return perM3 * vol;
+    }
+
+    function randomGauss(mean, sd) {
+        let u = 0, v = 0;
+        while(u === 0) u = Math.random();
+        while(v === 0) v = Math.random();
+        let num = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        return mean + sd * num;
+    }
+</script>
+</body>
+</html>
