@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Калькулятор экономики и маржинальности лесозаготовок МДО PRO (Лесовик ПРО)»
+  Программное обеспечение: «Калькулятор экономики и сводная ведомость лесозаготовок МДО PRO (Лесовик ПРО)» (Версия 4.1)
 -->
 <!DOCTYPE html>
 <html lang="ru">
@@ -26,9 +26,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-    <title>Оценка делянки до торгов: себестоимость, маржа и предельная ставка лесосеки | Лесовик ПРО</title>
-    <meta name="description" content="Инженерный калькулятор оценки делянки до аукциона. Расчет себестоимости, логистики, дорог, лесовосстановления и моделирование рисков методом Монте-Карло с вашими ставками.">
-    <meta name="keywords" content="оценка делянки до торгов, маржа лесозаготовки, предельная ставка лесосека, калькулятор себестоимости леса, монте карло лесозаготовка, ставки платы лесосека, лесовик про">
+    <title>Сводная ведомость и оценка делянок до торгов: бизнес-план лесозаготовки | Лесовик ПРО</title>
+    <meta name="description" content="Инженерный калькулятор и сводная ведомость пакета лесосек для лесозаготовителей. Расчет себестоимости по блокам, агрегация по нескольким делянкам, экспорт бизнес-плана.">
+    <meta name="keywords" content="сводная ведомость делянок, оценка делянки до торгов, маржа лесозаготовки, предельная ставка лесосека, бизнес план лесозаготовки, пакет лесосек, лесовик про">
     <link rel="canonical" href="https://lesovik-pro.ru/margin.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
 
@@ -51,6 +51,7 @@
             --success: #16A34A;
             --danger: #DC2626;
             --input-bg: #f5f8f4;
+            --block-bg: rgba(45, 90, 39, 0.03);
         }
 
         [data-theme="dark"] {
@@ -63,6 +64,7 @@
             --glass-bg: rgba(26, 36, 33, 0.88);
             --footer-bg: #111815;
             --input-bg: #212d1e;
+            --block-bg: rgba(143, 188, 143, 0.04);
         }
 
         *, *:before, *:after { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
@@ -109,7 +111,7 @@
             display: grid;
             grid-template-columns: repeat(6, 1fr);
             gap: 16px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             width: 100%;
         }
 
@@ -132,34 +134,64 @@
         .bento-card h3 {
             font-family: 'Merriweather', serif;
             color: var(--forest-green);
-            font-size: 16.5px;
+            font-size: 15.5px;
             margin-top: 0;
             margin-bottom: 12px;
-            border-bottom: 1px solid var(--border-light);
+            border-bottom: 1px solid var(--border-color);
             padding-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .form-group { margin-bottom: 12px; width: 100%; }
-        .form-group label { display: block; font-size: 11px; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; color: var(--forest-green); }
+        .sub-block {
+            background: var(--block-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        .sub-block-title {
+            font-size: 11.5px;
+            font-weight: 800;
+            color: var(--forest-green);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group { margin-bottom: 10px; width: 100%; }
+        .form-group label { display: block; font-size: 11px; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; color: var(--text-graphite); opacity: 0.9; }
         .form-group input, .form-group select {
-            width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px;
+            width: 100%; padding: 9px 11px; border: 1px solid var(--border-color); border-radius: 6px;
             background-color: var(--input-bg); color: var(--text-graphite);
-            font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+            font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 600;
         }
         .form-group input:focus, .form-group select:focus { border-color: var(--accent-orange); outline: none; background: var(--card-bg); }
+
+        .archive-bar {
+            display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+            background: var(--input-bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .btn-action { background-color: var(--forest-green); color: #FFF; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 700; font-size: 12px; text-transform: uppercase; cursor: pointer; }
+        .btn-action:hover { opacity: 0.9; }
+        .btn-danger { background-color: var(--danger); }
+        .btn-portfolio { background-color: var(--accent-orange); }
 
         .btn-calc {
             background-color: var(--forest-green); color: #FFF; border: none; padding: 14px;
             width: 100%; border-radius: 8px; cursor: pointer; font-weight: 800; text-transform: uppercase;
-            font-size: 13px; letter-spacing: 0.5px; margin-top: 15px; box-shadow: 0 4px 15px rgba(45, 90, 39, 0.2);
+            font-size: 13px; letter-spacing: 0.5px; margin-top: 10px; box-shadow: 0 4px 15px rgba(45, 90, 39, 0.2);
         }
         .btn-calc:hover { opacity: 0.92; transform: translateY(-1px); }
 
         .results-box { margin-top: 20px; display: none; }
         .table-responsive-wrapper { width: 100%; overflow-x: auto; margin-top: 15px; border-radius: 8px; border: 1px solid var(--border-color); }
-        .result-table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); min-width: 600px; font-size: 12.5px; }
-        .result-table th, .result-table td { padding: 9px 12px; border-bottom: 1px solid var(--border-color); text-align: left; }
-        .result-table th { background-color: rgba(45, 90, 39, 0.08); color: var(--forest-green); font-weight: 700; text-transform: uppercase; font-size: 10.5px; }
+        .result-table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); min-width: 650px; font-size: 12px; }
+        .result-table th, .result-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-color); text-align: left; }
+        .result-table th { background-color: rgba(45, 90, 39, 0.08); color: var(--forest-green); font-weight: 700; text-transform: uppercase; font-size: 10px; }
         .result-table td.num { text-align: right; font-family: monospace; font-weight: 700; }
 
         .monte-carlo-panel {
@@ -173,15 +205,34 @@
         }
         .monte-carlo-panel h4 { color: var(--accent-orange); font-family: 'Merriweather', serif; margin-top: 0; margin-bottom: 8px; }
 
-        .vk-ad-container { margin: 30px 0; text-align: center; }
+        /* СВОДНАЯ ВЕДОМОСТЬ ПОРТФЕЛЯ ДЕЛЯНОК */
+        .portfolio-box {
+            background: var(--card-bg);
+            border: 2px solid var(--accent-orange);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+            display: none;
+            box-shadow: 0 4px 15px rgba(230, 126, 34, 0.1);
+        }
 
-        footer { background-color: var(--footer-bg); color: #E0E0E0; padding: 30px 16px 20px; margin-top: auto; font-size: 13px; width: 100%; }
-        .footer-content { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 24px; margin-bottom: 24px; }
-        @media (min-width: 768px) { .footer-content { grid-template-columns: repeat(3, 1fr); } }
-        .footer-logo { fill: #E0E0E0; width: 24px; height: 24px; margin-bottom: 8px; }
-        .footer-column h4 { font-family: 'Merriweather', serif; color: #E0E0E0; font-size: 15px; margin-bottom: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 6px; }
-        .footer-column a { color: #8FBC8F; text-decoration: none; display: block; margin-bottom: 8px; }
-        .footer-bottom { text-align: center; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.05); font-size: 11px; opacity: 0.6; }
+        /* АККУРАТНЫЙ СКРОЛЛ-КОНТЕЙНЕР ЛЕНТЫ РСЯ */
+        .rsya-scroll-card {
+            background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+            padding: 16px; margin: 25px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.03); display: flex; flex-direction: column;
+        }
+        .rsya-scroll-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .rsya-scroll-title { font-family: 'Merriweather', serif; font-size: 14px; font-weight: 700; color: var(--forest-green); }
+        .yandex-rtb-feed-scrollbox { max-height: 380px; overflow-y: auto; overflow-x: hidden; border-radius: 8px; border: 1px dashed var(--border-color); background: var(--bg-paper); padding: 10px; }
+
+        /* ОФИЦИАЛЬНЫЙ ПЕЧАТНЫЙ ДОКУМЕНТ ДЛЯ БИЗНЕС-ПЛАНА */
+        #printable-business-plan { display: none; background: #FFF; color: #000; font-family: 'Times New Roman', serif; padding: 20mm; font-size: 11pt; line-height: 1.3; }
+        @media print {
+            body { background: #FFF !important; color: #000 !important; }
+            .glass-header, .container, footer, .rsya-scroll-card { display: none !important; }
+            #printable-business-plan { display: block !important; width: 100% !important; }
+        }
 
         @media (max-width: 850px) {
             .bento-card { grid-column: span 6 !important; }
@@ -193,7 +244,7 @@
     <header class="glass-header">
         <a href="index.html" class="logo-container">
             <img src="logo.jpeg" alt="Лесовик" class="header-logo" onerror="this.style.display='none'">
-            <h1>Лесовик ПРО • Маржа</h1>
+            <h1>Лесовик ПРО • Экономика и Сводка</h1>
         </a>
         <div class="header-right">
             <a href="index.html" class="btn-back">← На главную</a>
@@ -203,131 +254,142 @@
 
     <main class="container">
 
-        <h2 class="section-title">Калькулятор экономики лесозаготовки и аукционов</h2>
+        <h2 class="section-title">Калькулятор экономики делянки и сводная ведомость пакета</h2>
+
+        <!-- ПАСПОРТ ПРОЕКТА И АРХИВ -->
+        <div class="archive-bar">
+            <div class="form-group" style="flex: 2; min-width: 200px; margin:0;">
+                <label>Название делянки / лота:</label>
+                <input type="text" id="proj-title" value="Делянка №1 (Кв. 312, Выд. 1)" onfocus="this.select()">
+            </div>
+            <div style="display:flex; gap:6px; align-items:flex-end; margin-top:auto;">
+                <button class="btn-action" onclick="saveProjectToArchive()">💾 Сохранить</button>
+                <select id="archive-select" onchange="loadProjectFromArchive(this.value)" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-graphite); font-weight:600; font-size:12px;">
+                    <option value="">-- Загрузить из архива --</option>
+                </select>
+                <button class="btn-action btn-danger" onclick="deleteProjectFromArchive()">🗑️</button>
+            </div>
+        </div>
         
         <div class="bento-grid">
             
-            <!-- КАРТОЧКА 1: ПАРАМЕТРЫ ДЕЛЯНКИ -->
+            <!-- БЛОК 1: ПАСПОРТ И ТАКСАЦИЯ -->
             <div class="bento-card">
-                <h3>🌲 1. Таксационные параметры делянки</h3>
-                <div class="form-group">
-                    <label>Площадь делянки (га):</label>
-                    <input type="number" id="inp-area" value="40.0" step="0.5" onfocus="this.select()">
+                <h3>🌲 1. Паспорт и таксация делянки</h3>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div class="form-group">
+                        <label>Регион РФ:</label>
+                        <select id="pass-region">
+                            <option value="komi">Республика Коми</option>
+                            <option value="mordovia">Республика Мордовия</option>
+                            <option value="kirov">Кировская область</option>
+                            <option value="arkhangelsk">Архангельская область</option>
+                            <option value="siberia">Сибирский регион</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Лесничество:</label>
+                        <input type="text" id="pass-les" value="Прилузское" onfocus="this.select()">
+                    </div>
+                    <div class="form-group">
+                        <label>Участковое лесничество:</label>
+                        <input type="text" id="pass-uch" value="Чекшинское" onfocus="this.select()">
+                    </div>
+                    <div class="form-group">
+                        <label>Квартал / Выдел / Дел:</label>
+                        <input type="text" id="pass-kv-vyd" value="Кв. 312, В. 1, Д. 12" onfocus="this.select()">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Ликвидный запас (м³/га):</label>
-                    <input type="number" id="inp-stock" value="180.0" step="1" onfocus="this.select()">
-                </div>
-                <div class="form-group">
-                    <label>Доля вырубаемого запаса:</label>
-                    <input type="number" id="inp-cut" value="0.85" step="0.05" min="0.1" max="1.0" onfocus="this.select()">
-                </div>
-                <div class="form-group">
-                    <label>Плечо вывозки до завода (км):</label>
-                    <input type="number" id="inp-km" value="65.0" step="1" onfocus="this.select()">
-                </div>
-                <div class="form-group">
-                    <label>Строительство усов/дорог (км):</label>
-                    <input type="number" id="inp-newroad" value="1.2" step="0.1" onfocus="this.select()">
-                </div>
-                <div class="form-group">
-                    <label>Сезон заготовки:</label>
-                    <select id="inp-season">
-                        <option value="зима" selected>Зима (зимник дешевле)</option>
-                        <option value="лето">Лето</option>
-                        <option value="распутица">Распутица (тяжелые условия)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Рельеф местности:</label>
-                    <select id="inp-terrain">
-                        <option value="равнинный">Равнинный</option>
-                        <option value="холмистый" selected>Холмистый</option>
-                        <option value="горный/болотистый">Горный / Болотистый</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Качество дорог вывозки:</label>
-                    <select id="inp-road">
-                        <option value="хорошая">Хорошая</option>
-                        <option value="смешанная" selected>Смешанная</option>
-                        <option value="плохая">Плохая</option>
-                    </select>
+
+                <div class="sub-block" style="margin-top: 10px;">
+                    <div class="sub-block-title">Параметры и логистика</div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div class="form-group"><label>Площадь (га):</label><input type="number" id="inp-area" value="40.0" step="0.5" onfocus="this.select()"></div>
+                        <div class="form-group"><label>Запас (м³/га):</label><input type="number" id="inp-stock" value="180.0" step="1" onfocus="this.select()"></div>
+                        <div class="form-group"><label>Доля вырубки:</label><input type="number" id="inp-cut" value="0.85" step="0.05" onfocus="this.select()"></div>
+                        <div class="form-group"><label>Плечо вывозки (км):</label><input type="number" id="inp-km" value="65.0" step="1" onfocus="this.select()"></div>
+                    </div>
+                    <div class="form-group"><label>Новые дороги / усы (км):</label><input type="number" id="inp-newroad" value="1.2" step="0.1" onfocus="this.select()"></div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                        <div class="form-group"><label>Сезон:</label><select id="inp-season"><option value="зима" selected>Зима</option><option value="лето">Лето</option><option value="распутица">Распутица</option></select></div>
+                        <div class="form-group"><label>Рельеф:</label><select id="inp-terrain"><option value="равнинный">Равнина</option><option value="холмистый" selected>Холмы</option><option value="горный/болотистый">Болото</option></select></div>
+                        <div class="form-group"><label>Дороги:</label><select id="inp-road"><option value="хорошая">Хорошие</option><option value="смешанная" selected>Смесь</option><option value="плохая">Плохие</option></select></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- КАРТОЧКА 2: ВАШИ ЛИЧНЫЕ СТАВКИ И ЦЕНЫ -->
+            <!-- БЛОК 2: ДЕТАЛИЗИРОВАННЫЕ РАСХОДЫ ПО БЛОКАМ -->
             <div class="bento-card">
-                <h3>💰 2. Ваши личные ставки и цены (руб.)</h3>
-                <div class="form-group">
-                    <label>Валка и раскряжёвка (руб/м³):</label>
-                    <input type="number" id="rate-logging" value="600" step="10" onfocus="this.select()">
+                <h3>⚙️ 2. Детализированные расходы (руб.)</h3>
+                
+                <div class="sub-block">
+                    <div class="sub-block-title">Блок А: Лесосечные работы</div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                        <div class="form-group"><label>Валка (м³):</label><input type="number" id="r-logging" value="350" step="10" onfocus="this.select()"></div>
+                        <div class="form-group"><label>Трелёвка (м³):</label><input type="number" id="r-skidding" value="450" step="10" onfocus="this.select()"></div>
+                        <div class="form-group"><label>Погрузка (м³):</label><input type="number" id="r-loading" value="100" step="10" onfocus="this.select()"></div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Трелёвка / форвардер (руб/м³):</label>
-                    <input type="number" id="rate-skidding" value="400" step="10" onfocus="this.select()">
+
+                <div class="sub-block">
+                    <div class="sub-block-title">Блок Б: Лесохозяйственные и дорожные работы</div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                        <div class="form-group"><label>Очистка делянки (га):</label><input type="number" id="r-cleaning" value="3500" step="100" onfocus="this.select()"></div>
+                        <div class="form-group"><label>Культивация почвы (га):</label><input type="number" id="r-cultivation" value="5000" step="100" onfocus="this.select()"></div>
+                        <div class="form-group"><label>Лесопосадки (га):</label><input type="number" id="r-planting" value="12000" step="500" onfocus="this.select()"></div>
+                        <div class="form-group"><label>Отсыпка дорог (км):</label><input type="number" id="r-road-km" value="550000" step="10000" onfocus="this.select()"></div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Погрузка на лесовоз (руб/м³):</label>
-                    <input type="number" id="rate-loading" value="100" step="10" onfocus="this.select()">
-                </div>
-                <div class="form-group">
-                    <label>Вывозка за (1 м³ · 1 км):</label>
-                    <input type="number" id="rate-haul-km" value="7.0" step="0.5" onfocus="this.select()">
-                </div>
-                <div class="form-group">
-                    <label>Строительство дорог / усов (руб/км):</label>
-                    <input type="number" id="rate-road-km" value="550000" step="10000" onfocus="this.select()">
-                </div>
-                <div class="form-group">
-                    <label>Лесовосстановление (руб/га):</label>
-                    <input type="number" id="rate-reforest" value="18000" step="1000" onfocus="this.select()">
-                </div>
-                <div class="form-group">
-                    <label>Ваша ставка платы на торгах (руб/м³):</label>
-                    <input type="number" id="inp-bid" value="500.0" step="10" onfocus="this.select()">
-                </div>
-                <div class="form-group">
-                    <label>Целевая маржа бизнеса (%):</label>
-                    <input type="number" id="inp-margin" value="12" step="1" onfocus="this.select()">
+
+                <div class="sub-block">
+                    <div class="sub-block-title">Блок В: Накладные, топливо, ЗП, риски</div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                        <div class="form-group"><label>Вывозка (м³·км):</label><input type="number" id="r-haul-km" value="7.0" step="0.5" onfocus="this.select()"></div>
+                        <div class="form-group"><label>Вахта / База (мес):</label><input type="number" id="r-camp" value="150000" step="10000" onfocus="this.select()"></div>
+                        <div class="form-group"><label>Амортизация (%):</label><input type="number" id="r-depr" value="5.0" step="0.5" onfocus="this.select()"></div>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                        <div class="form-group"><label>Штрафы / РИСКИ (%):</label><input type="number" id="r-fines" value="3.0" step="0.5" onfocus="this.select()"></div>
+                        <div class="form-group"><label>Ставка на торгах (м³):</label><input type="number" id="inp-bid" value="500" step="10" onfocus="this.select()"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- КАРТОЧКА 3: ЦЕНЫ СОРТИМЕНТОВ ФРАНКО-ПОТРЕБИТЕЛЬ -->
+            <!-- БЛОК 3: ЦЕНЫ РЕАЛИЗАЦИИ СОРТИМЕНТОВ -->
             <div class="bento-card full-width highlight-bento">
-                <h3>🪵 3. Цены реализации сортиментов франко-потребитель (завод / лесопилка)</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
-                    <div class="form-group">
-                        <label>Пиловочник (цена руб/м³):</label>
-                        <input type="number" id="price-sawlog" value="5500" step="100" onfocus="this.select()">
-                    </div>
-                    <div class="form-group">
-                        <label>Балансы / техсырье (руб/м³):</label>
-                        <input type="number" id="price-pulp" value="2000" step="100" onfocus="this.select()">
-                    </div>
-                    <div class="form-group">
-                        <label>Дровяная древесина (руб/м³):</label>
-                        <input type="number" id="price-firewood" value="800" step="50" onfocus="this.select()">
-                    </div>
+                <h3>🪵 3. Цены реализации сортиментов франко-потребитель и целевая маржа</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                    <div class="form-group"><label>Пиловочник (руб/м³):</label><input type="number" id="price-sawlog" value="5500" step="100" onfocus="this.select()"></div>
+                    <div class="form-group"><label>Балансы / техсырье (руб/м³):</label><input type="number" id="price-pulp" value="2000" step="100" onfocus="this.select()"></div>
+                    <div class="form-group"><label>Дровяная древесина (руб/м³):</label><input type="number" id="price-firewood" value="800" step="50" onfocus="this.select()"></div>
+                    <div class="form-group"><label>Целевая маржа бизнеса (%):</label><input type="number" id="inp-margin" value="15" step="1" onfocus="this.select()"></div>
                 </div>
 
-                <button class="btn-calc" onclick="calculateMargin()">📊 Выполнить полный расчет маржи и рисков</button>
+                <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px; margin-top:10px;">
+                    <button class="btn-calc" onclick="calculateMargin()" style="margin-top:0;">📊 Рассчитать экономику делянки</button>
+                    <button class="btn-action btn-portfolio" onclick="addCurrentToPortfolio()" style="margin-top:0; font-weight:800; font-size:12.5px;">➕ В сводный портфель</button>
+                </div>
             </div>
 
         </div>
 
-        <!-- РЕЗУЛЬТАТЫ РАСЧЕТА -->
-        <div id="results-box" class="results-box bento-card full-width" style="display:none; border: 2px solid var(--forest-green);">
-            <h3 style="color:var(--forest-green); font-family:'Merriweather',serif; margin-top:0;">📋 Финансовый отчет и аукционная оценка делянки</h3>
+        <!-- РЕЗУЛЬТАТЫ РАСЧЕТА ТЕКУЩЕЙ ДЕЛЯНКИ -->
+        <div id="results-box" class="results-box bento-card full-width" style="border: 2px solid var(--forest-green);">
+            <h3 style="color:var(--forest-green); font-family:'Merriweather',serif; margin-top:0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <span>📋 Финансовый отчет по выбранной делянке</span>
+                <button class="btn-action" style="background:#1E3A1A;" onclick="printBusinessPlanReport()">🖨️ Печать отчета (Бизнес-план)</button>
+            </h3>
+            
             <div id="summary-metrics" style="font-size: 13.5px; font-weight: 700; margin-bottom: 12px; color: var(--forest-green);"></div>
             
             <div class="table-responsive-wrapper">
                 <table class="result-table">
                     <thead>
                         <tr>
-                            <th>Статья доходов и расходов</th>
+                            <th>Статья доходов и детализированных расходов</th>
                             <th style="text-align:right;">Всего, руб.</th>
                             <th style="text-align:right;">руб / м³</th>
+                            <th style="text-align:right;">% от выручки</th>
                         </tr>
                     </thead>
                     <tbody id="result-tbody"></tbody>
@@ -337,29 +399,68 @@
             <div id="monte-carlo-panel" class="monte-carlo-panel"></div>
         </div>
 
-        <!-- РЕКЛАМА РСЯ -->
-        <div class="vk-ad-container">
-            <div id="yandex_rtb_R-A-19250236-5"></div>
-            <script>
-            window.yaContextCb.push(() => {
-                Ya.Context.AdvManager.render({
-                    "blockId": "R-A-19250236-5",
-                    "renderTo": "yandex_rtb_R-A-19250236-5",
-                    "type": "feed"
+        <!-- СВОДНАЯ ВЕДОМОСТЬ ПОРТФЕЛЯ ДЕЛЯНОК (ПАНИРУЕМЫЙ ЛОТ) -->
+        <div id="portfolio-container" class="portfolio-box">
+            <h3 style="color:var(--accent-orange); font-family:'Merriweather',serif; margin-top:0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <span>📁 Сводная ведомость портфеля делянок (Пакет лотов / Аукцион)</span>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn-action btn-danger" style="padding:6px 10px; font-size:11px;" onclick="clearPortfolio()">Очистить портфель</button>
+                    <button class="btn-action btn-portfolio" style="padding:6px 10px; font-size:11px;" onclick="printPortfolioSummaryReport()">🖨️ Печать сводной ведомости</button>
+                </div>
+            </h3>
+            <div class="table-responsive-wrapper" style="margin-top:10px;">
+                <table class="result-table">
+                    <thead>
+                        <tr>
+                            <th>№ / Лот</th>
+                            <th>Делянка / Квартал</th>
+                            <th style="text-align:right;">Площадь, га</th>
+                            <th style="text-align:right;">Запас, м³</th>
+                            <th style="text-align:right;">Выручка, руб.</th>
+                            <th style="text-align:right;">Затраты, руб.</th>
+                            <th style="text-align:right;">Прибыль, руб.</th>
+                            <th style="text-align:right;">Маржа</th>
+                            <th style="text-align:center;">Уд.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="portfolio-tbody"></tbody>
+                </table>
+            </div>
+            <div id="portfolio-totals" style="margin-top:12px; font-weight:800; font-size:13px; color:var(--text-graphite);"></div>
+        </div>
+
+        <!-- РЕКЛАМА РСЯ (АККУРАТНЫЙ СКРОЛЛ) -->
+        <div class="rsya-scroll-card">
+            <div class="rsya-scroll-header">
+                <span class="rsya-scroll-title">📢 Партнёрские предложения и рекомендации</span>
+                <span style="font-size:11px; opacity:0.6; font-weight:600;">Листайте блок ↕</span>
+            </div>
+            <div class="yandex-rtb-feed-scrollbox">
+                <div id="yandex_rtb_R-A-19250236-5"></div>
+                <script>
+                window.yaContextCb.push(() => {
+                    Ya.Context.AdvManager.render({
+                        "blockId": "R-A-19250236-5",
+                        "renderTo": "yandex_rtb_R-A-19250236-5",
+                        "type": "feed"
+                    })
                 })
-            })
-            </script>
+                </script>
+            </div>
         </div>
 
         <!-- SEO БЛОК ДЛЯ ИИ И ПОИСКОВИКОВ -->
         <section style="margin-top: 30px; padding-top: 20px; border-top: 2px solid var(--border-color); opacity: 0.9;">
-            <h2 style="font-family:'Merriweather',serif; color:var(--forest-green); font-size:16px; margin-bottom:8px;">Методика расчета предельной ставки и маржинальности лесозаготовок</h2>
+            <h2 style="font-family:'Merriweather',serif; color:var(--forest-green); font-size:16px; margin-bottom:8px;">Методика расчета сводной ведомости пакета лесосек</h2>
             <p style="font-size:12.5px; line-height:1.5; margin-bottom:10px;">
-                Калькулятор предназначен для предварительной оценки рентабельности лесосек перед участием в лесных аукционах и торгах. Моделирование методом Монте-Карло позволяет оценить вероятность кассовых разрывов и убытков с учетом колебания рыночных цен и транспортных издержек.
+                Инструмент консолидирует финансовые потоки по нескольким делянкам в единый баланс лесозаготовительного предприятия. Моделирование учитывает распределение затрат по блокам (лесосека, лесовосстановление, инфраструктура дорог, фонд оплаты труда и риски) с расчетом средневзвешенной маржинальности портфеля.
             </p>
         </section>
 
     </main>
+
+    <!-- ПЕЧАТНЫЙ ДОКУМЕНТ ДЛЯ БИЗНЕС-ПЛАНА -->
+    <div id="printable-business-plan"></div>
 
     <footer>
         <div class="footer-content">
@@ -368,7 +469,7 @@
                     <path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/>
                     <rect x="10.5" y="20" width="3" height="4"/>
                 </svg>
-                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 15px;">Лесовик ПРО • Маржа</div>
+                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 15px;">Лесовик ПРО • Экономика</div>
                 <div style="font-size: 11.5px; margin-top: 4px; opacity: 0.8;">Профессиональный инструмент анализа лесозаготовки.</div>
             </div>
             <div class="footer-column">
@@ -390,6 +491,9 @@
     </footer>
 
 <script>
+    let lastCalculatedReport = null;
+    let portfolioDeks = JSON.parse(localStorage.getItem('lesovik_portfolio_deks') || '[]');
+
     function toggleTheme() {
         const body = document.documentElement;
         if (body.getAttribute('data-theme') === 'dark') {
@@ -400,8 +504,6 @@
             localStorage.setItem('theme', 'dark');
         }
     }
-
-    // Восстановление темы при загрузке
     if (localStorage.getItem('theme') === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
     }
@@ -410,8 +512,13 @@
         return Math.round(val).toLocaleString('ru-RU');
     }
 
-    function calculateMargin() {
-        // Таксация
+    function performCoreCalculation() {
+        const projTitle = document.getElementById('proj-title').value;
+        const region = document.getElementById('pass-region').value;
+        const les = document.getElementById('pass-les').value;
+        const uch = document.getElementById('pass-uch').value;
+        const kvVyd = document.getElementById('pass-kv-vyd').value;
+
         const area = parseFloat(document.getElementById('inp-area').value) || 40;
         const stock = parseFloat(document.getElementById('inp-stock').value) || 180;
         const cutShare = parseFloat(document.getElementById('inp-cut').value) || 0.85;
@@ -421,18 +528,23 @@
         const haulRoad = document.getElementById('inp-road').value;
         const newRoadKm = parseFloat(document.getElementById('inp-newroad').value) || 1.2;
 
-        // Личные ставки пользователя
-        const userRateLogging = parseFloat(document.getElementById('rate-logging').value) || 600;
-        const userRateSkidding = parseFloat(document.getElementById('rate-skidding').value) || 400;
-        const userRateLoading = parseFloat(document.getElementById('rate-loading').value) || 100;
-        const userRateHaulKm = parseFloat(document.getElementById('rate-haul-km').value) || 7.0;
-        const userRateRoadKm = parseFloat(document.getElementById('rate-road-km').value) || 550000;
-        const userRateReforest = parseFloat(document.getElementById('rate-reforest').value) || 18000;
+        const rLogging = parseFloat(document.getElementById('r-logging').value) || 350;
+        const rSkidding = parseFloat(document.getElementById('r-skidding').value) || 450;
+        const rLoading = parseFloat(document.getElementById('r-loading').value) || 100;
         
-        const userBidM3 = parseFloat(document.getElementById('inp-bid').value) || 500;
-        const targetMarginPct = (parseFloat(document.getElementById('inp-margin').value) || 12) / 100;
+        const rCleaning = parseFloat(document.getElementById('r-cleaning').value) || 3500;
+        const rCultivation = parseFloat(document.getElementById('r-cultivation').value) || 5000;
+        const rPlanting = parseFloat(document.getElementById('r-planting').value) || 12000;
+        const rRoadKm = parseFloat(document.getElementById('r-road-km').value) || 550000;
 
-        // Цены сортиментов
+        const rHaulKm = parseFloat(document.getElementById('r-haul-km').value) || 7.0;
+        const rCamp = parseFloat(document.getElementById('r-camp').value) || 150000;
+        const rDeprPct = (parseFloat(document.getElementById('r-depr').value) || 5.0) / 100;
+        const rFinesPct = (parseFloat(document.getElementById('r-fines').value) || 3.0) / 100;
+
+        const userBidM3 = parseFloat(document.getElementById('inp-bid').value) || 500;
+        const targetMarginPct = (parseFloat(document.getElementById('inp-margin').value) || 15) / 100;
+
         const priceSawlog = parseFloat(document.getElementById('price-sawlog').value) || 5500;
         const pricePulp = parseFloat(document.getElementById('price-pulp').value) || 2000;
         const priceFirewood = parseFloat(document.getElementById('price-firewood').value) || 800;
@@ -455,72 +567,113 @@
             { name: "Отходы / не реализуется", share: 0.10, price: 0 }
         ];
 
-        let totalRevenue = sumAssortmentsRevenue(volume, assortments, 1.0);
+        let totalRevenue = sumAssortmentsRevenue(volume, assortments);
 
-        // Статьи расходов по вашим ставкам
-        const costLoggingSkid = (userRateLogging + userRateSkidding) * terrainCoef * seasonCoef.work * volume;
-        const costLoading = userRateLoading * volume;
-        const costHaul = userRateHaulKm * haulKm * roadCoef * seasonCoef.haul * volume;
-        const costRoads = userRateRoadKm * newRoadKm * seasonCoef.road;
-        const costReforest = userRateReforest * area;
+        const costLogging = rLogging * volume * terrainCoef * seasonCoef.work;
+        const costSkidding = rSkidding * volume * terrainCoef * seasonCoef.work;
+        const costLoading = rLoading * volume;
+        
+        const costCleaning = rCleaning * area;
+        const costCultivation = rCultivation * area;
+        const costPlanting = rPlanting * area;
+        const costRoads = rRoadKm * newRoadKm * seasonCoef.road;
 
-        const overheadRate = 0.08;
+        const costHaul = rHaulKm * haulKm * roadCoef * seasonCoef.haul * volume;
+        const costCamp = rCamp;
+        
         const taxRate = 0.06;
+        const costTax = taxRate * totalRevenue;
+        const costDepr = rDeprPct * totalRevenue;
+        const costFines = rFinesPct * totalRevenue;
 
-        const directCosts = costLoggingSkid + costLoading + costHaul + costRoads + costReforest;
-        const overheadAndTax = (overheadRate + taxRate) * totalRevenue;
         const totalBidSum = userBidM3 * volume;
 
-        const netProfit = totalRevenue - directCosts - overheadAndTax - totalBidSum;
+        const directCosts = costLogging + costSkidding + costLoading + costCleaning + costCultivation + costPlanting + costRoads + costHaul + costCamp;
+        const totalExpenses = directCosts + costTax + costDepr + costFines + totalBidSum;
+        const netProfit = totalRevenue - totalExpenses;
         const actualMargin = totalRevenue > 0 ? netProfit / totalRevenue : 0;
 
-        // Предельная ставка при целевой марже
-        const maxAllowedBid = totalRevenue * (1 - overheadRate - taxRate - targetMarginPct) - directCosts;
+        const otherFixed = directCosts + costTax + costDepr + costFines;
+        const maxAllowedBid = totalRevenue * (1 - targetMarginPct) - otherFixed;
         const maxBidM3 = volume > 0 ? maxAllowedBid / volume : 0;
 
-        // Монте-Карло симуляция (5000 итераций)
+        // Монте-Карло симуляция
         let mcResults = [];
         for (let i = 0; i < 5000; i++) {
             let pk = Math.max(0.5, randomGauss(1.0, 0.12));
             let ck = Math.max(0.5, randomGauss(1.0, 0.08));
-            let rev = sumAssortmentsRevenue(volume, assortments, pk);
-            let dc = directCosts * ck;
-            let zeroBidLimit = rev * (1 - overheadRate - taxRate) - dc;
-            mcResults.push(zeroBidLimit / volume);
+            let rev = sumAssortmentsRevenue(volume, assortments) * pk;
+            let exp = (directCosts + costTax + costDepr + costFines) * ck;
+            mcResults.push((rev - exp) / volume);
         }
         mcResults.sort((a, b) => a - b);
         let p10 = mcResults[Math.floor(0.10 * mcResults.length)];
         let p50 = mcResults[Math.floor(0.50 * mcResults.length)];
-        let p90 = mcResults[Math.floor(0.90 * mcResults.length)];
         
         let lossCount = mcResults.filter(x => x < userBidM3).length;
         let lossProbability = (lossCount / mcResults.length) * 100;
 
-        // Вывод результатов
+        return {
+            projTitle, region, les, uch, kvVyd, area, stock, volume, haulKm, newRoadKm,
+            totalRevenue, directCosts, totalExpenses, netProfit, actualMargin, maxBidM3, userBidM3,
+            p50, p10, lossProbability,
+            rows: [
+                { name: "1. Выручка от реализации сортиментов", val: totalRevenue, m3: totalRevenue/volume },
+                { name: "2. Валка древесины", val: -costLogging, m3: -costLogging/volume },
+                { name: "3. Трелёвка / форвардер", val: -costSkidding, m3: -costSkidding/volume },
+                { name: "4. Погрузка на лесовоз", val: -costLoading, m3: -costLoading/volume },
+                { name: "5. Очистка делянки", val: -costCleaning, m3: -costCleaning/volume },
+                { name: "6. Культивация почвы", val: -costCultivation, m3: -costCultivation/volume },
+                { name: "7. Лесопосадки / восстановление", val: -costPlanting, m3: -costPlanting/volume },
+                { name: "8. Строительство и отсыпка дорог", val: -costRoads, m3: -costRoads/volume },
+                { name: "9. Транспортная вывозка (" + haulKm + " км)", val: -costHaul, m3: -costHaul/volume },
+                { name: "10. Вахта / содержание базы", val: -costCamp, m3: -costCamp/volume },
+                { name: "11. Налоги (6%)", val: -costTax, m3: -costTax/volume },
+                { name: "12. Амортизация техники", val: -costDepr, m3: -costDepr/volume },
+                { name: "13. Штрафы и резерв рисков", val: -costFines, m3: -costFines/volume },
+                { name: "14. Плата за древесину на торгах (" + userBidM3 + " руб/м³)", val: -totalBidSum, m3: -userBidM3 },
+            ]
+        };
+    }
+
+    function calculateMargin() {
+        lastCalculatedReport = performCoreCalculation();
+        const r = lastCalculatedReport;
+
         document.getElementById('summary-metrics').innerHTML = `
-            Объем заготовки: ${Math.round(volume).toLocaleString('ru-RU')} м³ &nbsp;|&nbsp; 
-            Выручка: ${rub(totalRevenue)} руб. &nbsp;|&nbsp; 
-            Прибыль: <span style="color:${netProfit >= 0 ? 'var(--success)' : 'var(--danger)'};">${rub(netProfit)} руб. (${(actualMargin*100).toFixed(1)}%)</span>
+            Объем заготовки: ${Math.round(r.volume).toLocaleString('ru-RU')} м³ &nbsp;|&nbsp; 
+            Выручка: ${rub(r.totalRevenue)} руб. &nbsp;|&nbsp; 
+            Чистая прибыль: <span style="color:${r.netProfit >= 0 ? 'var(--success)' : 'var(--danger)'};">${rub(r.netProfit)} руб. (${(r.actualMargin*100).toFixed(1)}%)</span>
         `;
 
         const tbody = document.getElementById('result-tbody');
-        tbody.innerHTML = `
-            <tr><td><b>Ожидаемая выручка от реализации</b></td><td class="num" style="color:var(--success);">${rub(totalRevenue)}</td><td class="num">${rub(totalRevenue/volume)}</td></tr>
-            <tr><td>Валка и трелёвка (ваши ставки)</td><td class="num">${rub(-costLoggingSkid)}</td><td class="num">${rub(-costLoggingSkid/volume)}</td></tr>
-            <tr><td>Погрузка древесины</td><td class="num">${rub(-costLoading)}</td><td class="num">${rub(-costLoading/volume)}</td></tr>
-            <tr><td>Вывозка (${haulKm} км)</td><td class="num">${rub(-costHaul)}</td><td class="num">${rub(-costHaul/volume)}</td></tr>
-            <tr><td>Строительство усов (${newRoadKm} км)</td><td class="num">${rub(-costRoads)}</td><td class="num">${rub(-costRoads/volume)}</td></tr>
-            <tr><td>Лесовосстановление</td><td class="num">${rub(-costReforest)}</td><td class="num">${rub(-costReforest/volume)}</td></tr>
-            <tr><td>Накладные расходы и налоги (14%)</td><td class="num">${rub(-overheadAndTax)}</td><td class="num">${rub(-overheadAndTax/volume)}</td></tr>
-            <tr><td>Плата за древесину по вашей ставке (${userBidM3} руб/м³)</td><td class="num">${rub(-totalBidSum)}</td><td class="num">${userBidM3}</td></tr>
-            <tr style="font-weight:bold; background:rgba(45,90,39,0.06);"><td>ИТОГОВАЯ ЧИСТАЯ ПРИБЫЛЬ</td><td class="num" style="color:${netProfit >= 0 ? 'var(--success)' : 'var(--danger)'};">${rub(netProfit)}</td><td class="num">${rub(netProfit/volume)}</td></tr>
+        tbody.innerHTML = '';
+        r.rows.forEach((row, idx) => {
+            let pct = r.totalRevenue > 0 ? (Math.abs(row.val) / r.totalRevenue * 100).toFixed(1) + '%' : '0%';
+            if (idx === 0) pct = '100.0%';
+            tbody.innerHTML += `
+                <tr>
+                    <td>${row.name}</td>
+                    <td class="num" style="color:${row.val < 0 ? 'inherit' : 'var(--success)'};">${rub(row.val)}</td>
+                    <td class="num">${rub(row.m3)}</td>
+                    <td class="num">${pct}</td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML += `
+            <tr style="font-weight:bold; background:rgba(45,90,39,0.06);">
+                <td>ИТОГОВАЯ ЧИСТАЯ ПРИБЫЛЬ ПРОЕКТА</td>
+                <td class="num" style="color:${r.netProfit >= 0 ? 'var(--success)' : 'var(--danger)'};">${rub(r.netProfit)}</td>
+                <td class="num">${rub(r.netProfit/r.volume)}</td>
+                <td class="num" style="color:${r.netProfit >= 0 ? 'var(--success)' : 'var(--danger)'};">${(r.actualMargin*100).toFixed(1)}%</td>
+            </tr>
         `;
 
         document.getElementById('monte-carlo-panel').innerHTML = `
             <h4>🎯 Аукционный анализ и оценка рисков (Монте-Карло):</h4>
-            • <b>Предельная ставка платы</b> при вашей целевой марже ${targetMarginPct*100}% составляет: <b style="color:var(--forest-green); font-size:14px;">${rub(maxBidM3)} руб/м³</b><br>
-            • <b>Ставка безубыточности (P50 / P90):</b> ${rub(p50)} / ${rub(p10)} руб/м³<br>
-            • <b>Вероятность уйти в убыток</b> при вашей ставке ${userBidM3} руб/м³: <b style="color:${lossProbability > 20 ? 'var(--danger)' : 'var(--success)'};">${lossProbability.toFixed(0)}%</b>
+            • <b>Предельная ставка платы</b> при вашей целевой марже составляет: <b style="color:var(--forest-green); font-size:14px;">${rub(r.maxBidM3)} руб/м³</b><br>
+            • <b>Ставка безубыточности (P50 / P10):</b> ${rub(r.p50)} / ${rub(r.p10)} руб/м³<br>
+            • <b>Вероятность уйти в убыток</b> при вашей ставке: <b style="color:${r.lossProbability > 20 ? 'var(--danger)' : 'var(--success)'};">${r.lossProbability.toFixed(0)}%</b>
         `;
 
         const resBox = document.getElementById('results-box');
@@ -528,10 +681,79 @@
         resBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    function sumAssortmentsRevenue(vol, assortments, priceK) {
+    // --- ФУНКЦИИ СВОДНОГО ПОРТФЕЛЯ ДЕЛЯНОК ---
+    function addCurrentToPortfolio() {
+        const currentRes = performCoreCalculation();
+        portfolioDeks.push(currentRes);
+        localStorage.setItem('lesovik_portfolio_deks', JSON.stringify(portfolioDeks));
+        renderPortfolioTable();
+        alert(`Делянка "${currentRes.projTitle}" успешно добавлена в сводный портфель!`);
+    }
+
+    function renderPortfolioTable() {
+        const box = document.getElementById('portfolio-container');
+        const tbody = document.getElementById('portfolio-tbody');
+        const totalsDiv = document.getElementById('portfolio-totals');
+
+        if (portfolioDeks.length === 0) {
+            box.style.display = 'none';
+            return;
+        }
+
+        tbody.innerHTML = '';
+        let sumArea = 0, sumVol = 0, sumRev = 0, sumExp = 0, sumProf = 0;
+
+        portfolioDeks.forEach((d, idx) => {
+            sumArea += d.area;
+            sumVol += d.volume;
+            sumRev += d.totalRevenue;
+            let totalExp = d.totalExpenses;
+            sumExp += totalExp;
+            sumProf += d.netProfit;
+            let margin = d.totalRevenue > 0 ? (d.netProfit / d.totalRevenue * 100).toFixed(1) + '%' : '0%';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>№${idx + 1}</b></td>
+                    <td>${d.projTitle} (${d.kvVyd})</td>
+                    <td class="num">${d.area.toFixed(1)} га</td>
+                    <td class="num">${Math.round(d.volume).toLocaleString('ru-RU')} м³</td>
+                    <td class="num" style="color:var(--success);">${rub(d.totalRevenue)}</td>
+                    <td class="num">${rub(totalExp)}</td>
+                    <td class="num" style="color:${d.netProfit >= 0 ? 'var(--success)' : 'var(--danger)'};">${rub(d.netProfit)}</td>
+                    <td class="num">${margin}</td>
+                    <td style="text-align:center;"><button class="btn-action btn-danger" style="padding:2px 6px; font-size:10px;" onclick="removePortfolioItem(${idx})">✕</button></td>
+                </tr>
+            `;
+        });
+
+        let avgPortfolioMargin = sumRev > 0 ? (sumProf / sumRev * 100).toFixed(1) + '%' : '0%';
+        totalsDiv.innerHTML = `
+            ВСЕГО ПО ПОРТФЕЛЮ (${portfolioDeks.length} дел.): Площадь: ${sumArea.toFixed(1)} га | Запас: ${Math.round(sumVol).toLocaleString('ru-RU')} м³ | Выручка: ${rub(sumRev)} руб. | Прибыль: ${rub(sumProf)} руб. (${avgPortfolioMargin})
+        `;
+
+        box.style.display = 'block';
+        box.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+
+    function removePortfolioItem(idx) {
+        portfolioDeks.splice(idx, 1);
+        localStorage.setItem('lesovik_portfolio_deks', JSON.stringify(portfolioDeks));
+        renderPortfolioTable();
+    }
+
+    function clearPortfolio() {
+        if (confirm("Очистить всю сводную ведомость портфеля?")) {
+            portfolioDeks = [];
+            localStorage.removeItem('lesovik_portfolio_deks');
+            renderPortfolioTable();
+        }
+    }
+
+    function sumAssortmentsRevenue(vol, assortments) {
         let perM3 = 0;
         for(let i=0; i<assortments.length; i++) {
-            perM3 += assortments[i].share * assortments[i].price * priceK;
+            perM3 += assortments[i].share * assortments[i].price;
         }
         return perM3 * vol;
     }
@@ -543,6 +765,275 @@
         let num = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
         return mean + sd * num;
     }
+
+    // --- УПРАВЛЕНИЕ АРХИВОМ ОДИНОЧНЫХ ПРОЕКТОВ ---
+    function saveProjectToArchive() {
+        const title = document.getElementById('proj-title').value.trim();
+        if (!title) { alert("Введите название проекта!"); return; }
+
+        const snapshot = {
+            title,
+            timestamp: new Date().toLocaleString('ru-RU'),
+            pass: {
+                region: document.getElementById('pass-region').value,
+                les: document.getElementById('pass-les').value,
+                uch: document.getElementById('pass-uch').value,
+                kvVyd: document.getElementById('pass-kv-vyd').value
+            },
+            inputs: {
+                area: document.getElementById('inp-area').value,
+                stock: document.getElementById('inp-stock').value,
+                cut: document.getElementById('inp-cut').value,
+                km: document.getElementById('inp-km').value,
+                newroad: document.getElementById('inp-newroad').value,
+                season: document.getElementById('inp-season').value,
+                terrain: document.getElementById('inp-terrain').value,
+                road: document.getElementById('inp-road').value,
+                rLogging: document.getElementById('r-logging').value,
+                rSkidding: document.getElementById('r-skidding').value,
+                rLoading: document.getElementById('r-loading').value,
+                rCleaning: document.getElementById('r-cleaning').value,
+                rCultivation: document.getElementById('r-cultivation').value,
+                rPlanting: document.getElementById('r-planting').value,
+                rRoadKm: document.getElementById('r-road-km').value,
+                rHaulKm: document.getElementById('r-haul-km').value,
+                rCamp: document.getElementById('r-camp').value,
+                rDepr: document.getElementById('r-depr').value,
+                rFines: document.getElementById('r-fines').value,
+                bid: document.getElementById('inp-bid').value,
+                margin: document.getElementById('inp-margin').value,
+                sawlog: document.getElementById('price-sawlog').value,
+                pulp: document.getElementById('price-pulp').value,
+                firewood: document.getElementById('price-firewood').value
+            }
+        };
+
+        let archive = JSON.parse(localStorage.getItem('lesovik_margin_archive') || '[]');
+        archive.push(snapshot);
+        localStorage.setItem('lesovik_margin_archive', JSON.stringify(archive));
+        alert(`Проект "${title}" успешно сохранен в архив!`);
+        updateArchiveSelect();
+    }
+
+    function updateArchiveSelect() {
+        const select = document.getElementById('archive-select');
+        select.innerHTML = '<option value="">-- Загрузить из архива --</option>';
+        const archive = JSON.parse(localStorage.getItem('lesovik_margin_archive') || '[]');
+        archive.forEach((item, idx) => {
+            const opt = document.createElement('option');
+            opt.value = idx;
+            opt.innerText = `${item.title} (${item.timestamp})`;
+            select.appendChild(opt);
+        });
+    }
+
+    function loadProjectFromArchive(idx) {
+        if (idx === "") return;
+        const archive = JSON.parse(localStorage.getItem('lesovik_margin_archive') || '[]');
+        const item = archive[idx];
+        if (!item) return;
+
+        document.getElementById('proj-title').value = item.title;
+        document.getElementById('pass-region').value = item.pass.region;
+        document.getElementById('pass-les').value = item.pass.les;
+        document.getElementById('pass-uch').value = item.pass.uch;
+        document.getElementById('pass-kv-vyd').value = item.pass.kvVyd;
+
+        for (let key in item.inputs) {
+            let elId = '';
+            if (key === 'sawlog') elId = 'price-sawlog';
+            else if (key === 'pulp') elId = 'price-pulp';
+            else if (key === 'firewood') elId = 'price-firewood';
+            else if (key === 'rLogging') elId = 'r-logging';
+            else if (key === 'rSkidding') elId = 'r-skidding';
+            else if (key === 'rLoading') elId = 'r-loading';
+            else if (key === 'rCleaning') elId = 'r-cleaning';
+            else if (key === 'rCultivation') elId = 'r-cultivation';
+            else if (key === 'rPlanting') elId = 'r-planting';
+            else if (key === 'rRoadKm') elId = 'r-road-km';
+            else if (key === 'rHaulKm') elId = 'r-haul-km';
+            else if (key === 'rCamp') elId = 'r-camp';
+            else if (key === 'rDepr') elId = 'r-depr';
+            else if (key === 'rFines') elId = 'r-fines';
+            else if (key === 'bid') elId = 'inp-bid';
+            else if (key === 'margin') elId = 'inp-margin';
+            else elId = 'inp-' + key;
+
+            const el = document.getElementById(elId);
+            if (el) el.value = item.inputs[key];
+        }
+
+        alert(`Проект "${item.title}" загружен.`);
+        calculateMargin();
+    }
+
+    function deleteProjectFromArchive() {
+        const select = document.getElementById('archive-select');
+        const idx = select.value;
+        if (idx === "") { alert("Выберите проект для удаления!"); return; }
+        let archive = JSON.parse(localStorage.getItem('lesovik_margin_archive') || '[]');
+        if (confirm(`Удалить проект "${archive[idx].title}"?`)) {
+            archive.splice(idx, 1);
+            localStorage.setItem('lesovik_margin_archive', JSON.stringify(archive));
+            updateArchiveSelect();
+            alert("Удалено.");
+        }
+    }
+
+    // --- ПЕЧАТЬ ОТЧЕТА ДЛЯ БИЗНЕС-ПЛАНА ---
+    function printBusinessPlanReport() {
+        if (!lastCalculatedReport) {
+            calculateMargin();
+            if (!lastCalculatedReport) return;
+        }
+        const r = lastCalculatedReport;
+        const dateStr = new Date().toLocaleDateString('ru-RU');
+
+        let rowsHtml = '';
+        r.rows.forEach(row => {
+            rowsHtml += `
+                <tr>
+                    <td style="border:1px solid #000; padding:4px 6px;">${row.name}</td>
+                    <td style="border:1px solid #000; padding:4px 6px; text-align:right; font-family:monospace;">${rub(row.val)}</td>
+                    <td style="border:1px solid #000; padding:4px 6px; text-align:right; font-family:monospace;">${rub(row.m3)}</td>
+                </tr>
+            `;
+        });
+
+        const printSheet = document.getElementById('printable-business-plan');
+        printSheet.innerHTML = `
+            <div style="text-align:center; font-size:10pt; font-weight:bold; text-transform:uppercase; margin-bottom:4px;">ЭКОНОМИЧЕСКОЕ ОБОСНОВАНИЕ И БИЗНЕС-ПЛАН ЛЕСОЗАГОТОВКИ</div>
+            <div style="text-align:center; font-size:12pt; font-weight:bold; margin-bottom:12px;">Объект: ${r.projTitle}</div>
+            
+            <table style="width:100%; border:1px solid #000; border-collapse:collapse; font-size:9pt; margin-bottom:12px;">
+                <tr>
+                    <td style="border:1px solid #000; padding:4px 6px;"><b>Лесничество:</b> ${r.les} (${r.uch})</td>
+                    <td style="border:1px solid #000; padding:4px 6px;"><b>Квартал/Выдел:</b> ${r.kvVyd}</td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid #000; padding:4px 6px;"><b>Общая заготовка:</b> ${Math.round(r.volume).toLocaleString('ru-RU')} м³</td>
+                    <td style="border:1px solid #000; padding:4px 6px;"><b>Плечо вывозки:</b> ${r.haulKm} км</td>
+                </tr>
+            </table>
+
+            <table style="width:100%; border-collapse:collapse; font-size:9pt; margin-bottom:15px;">
+                <thead>
+                    <tr style="background:#EAEAEA;">
+                        <th style="border:1px solid #000; padding:5px; text-align:left;">Статья затрат / доходов</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:right;">Сумма, руб.</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:right;">руб / м³</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rowsHtml}
+                    <tr style="font-weight:bold; background:#F2F2F2;">
+                        <td style="border:1px solid #000; padding:5px;">ЧИСТАЯ ПРИБЫЛЬ ПРОЕКТА</td>
+                        <td style="border:1px solid #000; padding:5px; text-align:right; font-family:monospace;">${rub(r.netProfit)}</td>
+                        <td style="border:1px solid #000; padding:5px; text-align:right; font-family:monospace;">${rub(r.netProfit/r.volume)}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="font-size:9pt; line-height:1.4; border-top:1px solid #000; padding-top:8px;">
+                <b>Аукционные выводы:</b><br>
+                • Предельная ставка платы при целевой марже: <b>${rub(r.maxBidM3)} руб/м³</b><br>
+                • Расчетная рентабельность проекта: <b>${(r.actualMargin*100).toFixed(1)}%</b><br>
+                • Дата формирования расчета: ${dateStr} | Сформировано в программном комплексе «Лесовик ПРО»
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:30px; font-size:10pt;">
+                <div>Инициатор проекта: _______________ / Худяков Н.С. /</div>
+                <div>М.П.</div>
+            </div>
+        `;
+
+        window.print();
+    }
+
+    // --- ПЕЧАТЬ СВОДНОЙ ВЕДОМОСТИ ПОРТФЕЛЯ ---
+    function printPortfolioSummaryReport() {
+        if (portfolioDeks.length === 0) { alert("Портфель делянок пуст!"); return; }
+        const dateStr = new Date().toLocaleDateString('ru-RU');
+
+        let sumArea = 0, sumVol = 0, sumRev = 0, sumExp = 0, sumProf = 0;
+        let rows = '';
+
+        portfolioDeks.forEach((d, idx) => {
+            sumArea += d.area;
+            sumVol += d.volume;
+            sumRev += d.totalRevenue;
+            let totalExp = d.totalExpenses;
+            sumExp += totalExp;
+            sumProf += d.netProfit;
+            let margin = d.totalRevenue > 0 ? (d.netProfit / d.totalRevenue * 100).toFixed(1) + '%' : '0%';
+
+            rows += `
+                <tr>
+                    <td style="border:1px solid #000; padding:4px;">${idx + 1}</td>
+                    <td style="border:1px solid #000; padding:4px;">${d.projTitle} (${d.kvVyd})</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${d.area.toFixed(1)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${Math.round(d.volume).toLocaleString('ru-RU')}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right; font-family:monospace;">${rub(d.totalRevenue)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right; font-family:monospace;">${rub(totalExp)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right; font-family:monospace;">${rub(d.netProfit)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${margin}</td>
+                </tr>
+            `;
+        });
+
+        let avgMargin = sumRev > 0 ? (sumProf / sumRev * 100).toFixed(1) + '%' : '0%';
+        const printSheet = document.getElementById('printable-business-plan');
+        printSheet.innerHTML = `
+            <div style="text-align:center; font-size:11pt; font-weight:bold; text-transform:uppercase; margin-bottom:4px;">СВОДНАЯ ВЕДОМОСТЬ ПАКЕТА ЛЕСОСЕК (АУКЦИОННЫЙ ЛОТ)</div>
+            <div style="text-align:center; font-size:9pt; font-style:italic; margin-bottom:12px;">Консолидированный план лесозаготовительного предприятия по портфелю делянок</div>
+
+            <table style="width:100%; border-collapse:collapse; font-size:8.5pt; margin-bottom:15px;">
+                <thead>
+                    <tr style="background:#EAEAEA;">
+                        <th style="border:1px solid #000; padding:4px;">№</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:left;">Объект / Квартал</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:right;">Площадь, га</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:right;">Запас, м³</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:right;">Выручка, руб.</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:right;">Затраты, руб.</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:right;">Прибыль, руб.</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:right;">Маржа</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                    <tr style="font-weight:bold; background:#F2F2F2;">
+                        <td colspan="2" style="border:1px solid #000; padding:5px;">ИТОГО ПО ВСЕМУ ПАКЕТУ (${portfolioDeks.length} ДЕЛ.):</td>
+                        <td style="border:1px solid #000; padding:5px; text-align:right;">${sumArea.toFixed(1)}</td>
+                        <td style="border:1px solid #000; padding:5px; text-align:right;">${Math.round(sumVol).toLocaleString('ru-RU')}</td>
+                        <td style="border:1px solid #000; padding:5px; text-align:right; font-family:monospace;">${rub(sumRev)}</td>
+                        <td style="border:1px solid #000; padding:5px; text-align:right; font-family:monospace;">${rub(sumExp)}</td>
+                        <td style="border:1px solid #000; padding:5px; text-align:right; font-family:monospace;">${rub(sumProf)}</td>
+                        <td style="border:1px solid #000; padding:5px; text-align:right;">${avgMargin}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="font-size:9pt; line-height:1.4; border-top:1px solid #000; padding-top:8px;">
+                <b>Сводные выводы по лоту:</b><br>
+                • Совокупный объем заготовки: <b>${Math.round(sumVol).toLocaleString('ru-RU')} м³</b><br>
+                • Общая рентабельность портфеля: <b>${avgMargin}</b><br>
+                • Дата формирования ведомости: ${dateStr} | Комплекс «Лесовик ПРО»
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:30px; font-size:10pt;">
+                <div>Руководитель лесозаготовок: _______________ / Худяков Н.С. /</div>
+                <div>М.П.</div>
+            </div>
+        `;
+
+        window.print();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateArchiveSelect();
+        renderPortfolioTable();
+    });
 </script>
 </body>
 </html>
