@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Калькулятор экономики и сводная ведомость лесозаготовок МДО PRO (Лесовик ПРО)» (Версия 4.1)
+  Программное обеспечение: «Калькулятор экономики, сводная ведомость и гибкие статьи МДО PRO (Лесовик ПРО)» (Версия 4.3)
 -->
 <!DOCTYPE html>
 <html lang="ru">
@@ -26,9 +26,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-    <title>Сводная ведомость и оценка делянок до торгов: бизнес-план лесозаготовки | Лесовик ПРО</title>
-    <meta name="description" content="Инженерный калькулятор и сводная ведомость пакета лесосек для лесозаготовителей. Расчет себестоимости по блокам, агрегация по нескольким делянкам, экспорт бизнес-плана.">
-    <meta name="keywords" content="сводная ведомость делянок, оценка делянки до торгов, маржа лесозаготовки, предельная ставка лесосека, бизнес план лесозаготовки, пакет лесосек, лесовик про">
+    <title>Сводная ведомость, произвольные статьи и оценка делянок до торгов | Лесовик ПРО</title>
+    <meta name="description" content="Инженерный калькулятор с возможностью добавления произвольных статей расходов и доходов. Сводная ведомость пакета лесосек, экспорт бизнес-плана.">
+    <meta name="keywords" content="сводная ведомость делянок, оценка делянки до торгов, маржа лесозаготовки, предельная ставка лесосека, бизнес план лесозаготовки, произвольные расходы, лесовик про">
     <link rel="canonical" href="https://lesovik-pro.ru/margin.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
 
@@ -106,7 +106,6 @@
             display: inline-block; font-weight: 700;
         }
 
-        /* BENTO СЕТКА */
         .bento-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
@@ -180,6 +179,10 @@
         .btn-danger { background-color: var(--danger); }
         .btn-portfolio { background-color: var(--accent-orange); }
 
+        .custom-row-item {
+            display: grid; grid-template-columns: 2fr 1fr 1fr 34px; gap: 6px; align-items: center; margin-bottom: 6px;
+        }
+
         .btn-calc {
             background-color: var(--forest-green); color: #FFF; border: none; padding: 14px;
             width: 100%; border-radius: 8px; cursor: pointer; font-weight: 800; text-transform: uppercase;
@@ -205,7 +208,6 @@
         }
         .monte-carlo-panel h4 { color: var(--accent-orange); font-family: 'Merriweather', serif; margin-top: 0; margin-bottom: 8px; }
 
-        /* СВОДНАЯ ВЕДОМОСТЬ ПОРТФЕЛЯ ДЕЛЯНОК */
         .portfolio-box {
             background: var(--card-bg);
             border: 2px solid var(--accent-orange);
@@ -217,7 +219,6 @@
             box-shadow: 0 4px 15px rgba(230, 126, 34, 0.1);
         }
 
-        /* АККУРАТНЫЙ СКРОЛЛ-КОНТЕЙНЕР ЛЕНТЫ РСЯ */
         .rsya-scroll-card {
             background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
             padding: 16px; margin: 25px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.03); display: flex; flex-direction: column;
@@ -226,7 +227,6 @@
         .rsya-scroll-title { font-family: 'Merriweather', serif; font-size: 14px; font-weight: 700; color: var(--forest-green); }
         .yandex-rtb-feed-scrollbox { max-height: 380px; overflow-y: auto; overflow-x: hidden; border-radius: 8px; border: 1px dashed var(--border-color); background: var(--bg-paper); padding: 10px; }
 
-        /* ОФИЦИАЛЬНЫЙ ПЕЧАТНЫЙ ДОКУМЕНТ ДЛЯ БИЗНЕС-ПЛАНА */
         #printable-business-plan { display: none; background: #FFF; color: #000; font-family: 'Times New Roman', serif; padding: 20mm; font-size: 11pt; line-height: 1.3; }
         @media print {
             body { background: #FFF !important; color: #000 !important; }
@@ -301,7 +301,16 @@
                     </div>
                 </div>
 
-                <div class="sub-block" style="margin-top: 10px;">
+                <!-- ПОЛЕ АВТОРА / ДОЛЖНОСТИ ДЛЯ ОТЧЕТА -->
+                <div class="sub-block" style="margin-top: 10px; background: rgba(230, 126, 34, 0.05); border-color: var(--accent-orange);">
+                    <div class="sub-block-title" style="color: var(--accent-orange);">Ответственное лицо (для подписи)</div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div class="form-group"><label>Должность:</label><input type="text" id="pass-pos" value="Инженер-таксатор" onfocus="this.select()"></div>
+                        <div class="form-group"><label>ФИО:</label><input type="text" id="pass-fio" value="Иванов И.И." onfocus="this.select()"></div>
+                    </div>
+                </div>
+
+                <div class="sub-block">
                     <div class="sub-block-title">Параметры и логистика</div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                         <div class="form-group"><label>Площадь (га):</label><input type="number" id="inp-area" value="40.0" step="0.5" onfocus="this.select()"></div>
@@ -318,7 +327,7 @@
                 </div>
             </div>
 
-            <!-- БЛОК 2: ДЕТАЛИЗИРОВАННЫЕ РАСХОДЫ ПО БЛОКАМ -->
+            <!-- БЛОК 2: ДЕТАЛИЗИРОВАННЫЕ РАСХОДЫ ПО БЛОКАМ + ПРОИЗВОЛЬНЫЕ ПОЛЯ -->
             <div class="bento-card">
                 <h3>⚙️ 2. Детализированные расходы (руб.)</h3>
                 
@@ -352,6 +361,15 @@
                         <div class="form-group"><label>Штрафы / РИСКИ (%):</label><input type="number" id="r-fines" value="3.0" step="0.5" onfocus="this.select()"></div>
                         <div class="form-group"><label>Ставка на торгах (м³):</label><input type="number" id="inp-bid" value="500" step="10" onfocus="this.select()"></div>
                     </div>
+                </div>
+
+                <!-- ПРОИЗВОЛЬНЫЕ СТАТЬИ ПОЛЬЗОВАТЕЛЯ -->
+                <div class="sub-block" style="border-style: dashed;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <div class="sub-block-title" style="margin:0;">➕ Произвольные статьи (доп. затраты / доходы)</div>
+                        <button class="btn-action" style="padding:4px 8px; font-size:10.5px;" onclick="addCustomRow()">Добавить строку</button>
+                    </div>
+                    <div id="custom-rows-container"></div>
                 </div>
             </div>
 
@@ -465,24 +483,19 @@
     <footer>
         <div class="footer-content">
             <div class="footer-column">
-                <svg class="footer-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L1 21H23L12 2ZM12 6.88L18.17 17.5H5.83L12 6.88Z"/>
-                    <rect x="10.5" y="20" width="3" height="4"/>
-                </svg>
-                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 15px;">Лесовик ПРО • Экономика</div>
-                <div style="font-size: 11.5px; margin-top: 4px; opacity: 0.8;">Профессиональный инструмент анализа лесозаготовки.</div>
+                <div style="font-weight: 600; font-family: 'Merriweather', serif; font-size: 15px; margin-bottom: 6px;">Лесовик ПРО • Экономика</div>
+                <div style="font-size: 11.5px; opacity: 0.8;">Профессиональный инструмент анализа лесозаготовки.</div>
             </div>
             <div class="footer-column">
                 <h4>Экосистема Лесовик</h4>
-                <a href="mdo.html">Ведомость МДО лесосек</a>
-                <a href="busol-pro.html">Электронная буссоль PRO</a>
-                <a href="skid-calc.html">Технологическая карта и волоки</a>
+                <a href="mdo.html" style="color: #8FBC8F; text-decoration: none;">Ведомость МДО лесосек</a>
+                <a href="busol-pro.html" style="color: #8FBC8F; text-decoration: none;">Электронная буссоль PRO</a>
             </div>
             <div class="footer-column">
-                <h4>Контакты и реквизиты</h4>
+                <h4>Контакты разработчика</h4>
                 <div style="font-weight: 600;">ИП Худяков Николай Сергеевич</div>
                 <div style="font-size: 11px; opacity: 0.7; margin-bottom: 6px;">ИНН: 111801576622 | Сыктывкар</div>
-                <a href="mailto:folgoal@gmail.com">✉️ folgoal@gmail.com</a>
+                <a href="mailto:folgoal@gmail.com" style="color: #8FBC8F; text-decoration: none;">✉️ folgoal@gmail.com</a>
             </div>
         </div>
         <div class="footer-bottom">
@@ -512,12 +525,34 @@
         return Math.round(val).toLocaleString('ru-RU');
     }
 
+    // --- УПРАВЛЕНИЕ ПРОИЗВОЛЬНЫМИ СТАТЬЯМИ ---
+    function addCustomRow(name = '', type = 'expense', amount = '') {
+        const container = document.getElementById('custom-rows-container');
+        const rowId = 'custom-row-' + Date.now() + Math.random().toString(36).substring(2, 5);
+        
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'custom-row-item';
+        rowDiv.id = rowId;
+        rowDiv.innerHTML = `
+            <input type="text" class="cf-name" placeholder="Название статьи..." value="${name}" onfocus="this.select()">
+            <select class="cf-type">
+                <option value="expense" ${type==='expense'?'selected':''}>Расход</option>
+                <option value="income" ${type==='income'?'selected':''}>Доход</option>
+            </select>
+            <input type="number" class="cf-val" placeholder="Сумма (руб)" value="${amount}" step="100" onfocus="this.select()">
+            <button class="btn-action btn-danger" style="padding:4px;" onclick="document.getElementById('${rowId}').remove()">✕</button>
+        `;
+        container.appendChild(rowDiv);
+    }
+
     function performCoreCalculation() {
         const projTitle = document.getElementById('proj-title').value;
         const region = document.getElementById('pass-region').value;
         const les = document.getElementById('pass-les').value;
         const uch = document.getElementById('pass-uch').value;
         const kvVyd = document.getElementById('pass-kv-vyd').value;
+        const passPos = document.getElementById('pass-pos').value;
+        const passFio = document.getElementById('pass-fio').value;
 
         const area = parseFloat(document.getElementById('inp-area').value) || 40;
         const stock = parseFloat(document.getElementById('inp-stock').value) || 180;
@@ -588,7 +623,48 @@
 
         const totalBidSum = userBidM3 * volume;
 
-        const directCosts = costLogging + costSkidding + costLoading + costCleaning + costCultivation + costPlanting + costRoads + costHaul + costCamp;
+        let reportRows = [
+            { name: "1. Выручка от реализации сортиментов", val: totalRevenue, m3: totalRevenue/volume },
+            { name: "2. Валка древесины", val: -costLogging, m3: -costLogging/volume },
+            { name: "3. Трелёвка / форвардер", val: -costSkidding, m3: -costSkidding/volume },
+            { name: "4. Погрузка на лесовоз", val: -costLoading, m3: -costLoading/volume },
+            { name: "5. Очистка делянки", val: -costCleaning, m3: -costCleaning/volume },
+            { name: "6. Культивация почвы", val: -costCultivation, m3: -costCultivation/volume },
+            { name: "7. Лесопосадки / восстановление", val: -costPlanting, m3: -costPlanting/volume },
+            { name: "8. Строительство и отсыпка дорог", val: -costRoads, m3: -costRoads/volume },
+            { name: "9. Транспортная вывозка (" + haulKm + " км)", val: -costHaul, m3: -costHaul/volume },
+            { name: "10. Вахта / содержание базы", val: -costCamp, m3: -costCamp/volume },
+            { name: "11. Налоги (6%)", val: -costTax, m3: -costTax/volume },
+            { name: "12. Амортизация техники", val: -costDepr, m3: -costDepr/volume },
+            { name: "13. Штрафы и резерв рисков", val: -costFines, m3: -costFines/volume },
+            { name: "14. Плата за древесину на торгах (" + userBidM3 + " руб/м³)", val: -totalBidSum, m3: -userBidM3 },
+        ];
+
+        let customExpensesSum = 0;
+        let customIncomesSum = 0;
+        let customDataSnapshot = [];
+
+        const customItemsNodes = document.querySelectorAll('.custom-row-item');
+        customItemsNodes.forEach(item => {
+            const name = item.querySelector('.cf-name').value.trim() || 'Произвольная статья';
+            const type = item.querySelector('.cf-type').value;
+            const val = parseFloat(item.querySelector('.cf-val').value) || 0;
+
+            customDataSnapshot.push({ name, type, val });
+
+            if (val > 0) {
+                if (type === 'expense') {
+                    customExpensesSum += val;
+                    reportRows.push({ name: `• [Доп] ${name}`, val: -val, m3: -val/volume });
+                } else {
+                    customIncomesSum += val;
+                    reportRows.push({ name: `• [Доп] ${name}`, val: val, m3: val/volume });
+                    totalRevenue += val;
+                }
+            }
+        });
+
+        const directCosts = costLogging + costSkidding + costLoading + costCleaning + costCultivation + costPlanting + costRoads + costHaul + costCamp + customExpensesSum;
         const totalExpenses = directCosts + costTax + costDepr + costFines + totalBidSum;
         const netProfit = totalRevenue - totalExpenses;
         const actualMargin = totalRevenue > 0 ? netProfit / totalRevenue : 0;
@@ -597,12 +673,11 @@
         const maxAllowedBid = totalRevenue * (1 - targetMarginPct) - otherFixed;
         const maxBidM3 = volume > 0 ? maxAllowedBid / volume : 0;
 
-        // Монте-Карло симуляция
         let mcResults = [];
         for (let i = 0; i < 5000; i++) {
             let pk = Math.max(0.5, randomGauss(1.0, 0.12));
             let ck = Math.max(0.5, randomGauss(1.0, 0.08));
-            let rev = sumAssortmentsRevenue(volume, assortments) * pk;
+            let rev = sumAssortmentsRevenue(volume, assortments) * pk + customIncomesSum;
             let exp = (directCosts + costTax + costDepr + costFines) * ck;
             mcResults.push((rev - exp) / volume);
         }
@@ -614,25 +689,10 @@
         let lossProbability = (lossCount / mcResults.length) * 100;
 
         return {
-            projTitle, region, les, uch, kvVyd, area, stock, volume, haulKm, newRoadKm,
+            projTitle, region, les, uch, kvVyd, passPos, passFio, area, stock, volume, haulKm, newRoadKm,
             totalRevenue, directCosts, totalExpenses, netProfit, actualMargin, maxBidM3, userBidM3,
-            p50, p10, lossProbability,
-            rows: [
-                { name: "1. Выручка от реализации сортиментов", val: totalRevenue, m3: totalRevenue/volume },
-                { name: "2. Валка древесины", val: -costLogging, m3: -costLogging/volume },
-                { name: "3. Трелёвка / форвардер", val: -costSkidding, m3: -costSkidding/volume },
-                { name: "4. Погрузка на лесовоз", val: -costLoading, m3: -costLoading/volume },
-                { name: "5. Очистка делянки", val: -costCleaning, m3: -costCleaning/volume },
-                { name: "6. Культивация почвы", val: -costCultivation, m3: -costCultivation/volume },
-                { name: "7. Лесопосадки / восстановление", val: -costPlanting, m3: -costPlanting/volume },
-                { name: "8. Строительство и отсыпка дорог", val: -costRoads, m3: -costRoads/volume },
-                { name: "9. Транспортная вывозка (" + haulKm + " км)", val: -costHaul, m3: -costHaul/volume },
-                { name: "10. Вахта / содержание базы", val: -costCamp, m3: -costCamp/volume },
-                { name: "11. Налоги (6%)", val: -costTax, m3: -costTax/volume },
-                { name: "12. Амортизация техники", val: -costDepr, m3: -costDepr/volume },
-                { name: "13. Штрафы и резерв рисков", val: -costFines, m3: -costFines/volume },
-                { name: "14. Плата за древесину на торгах (" + userBidM3 + " руб/м³)", val: -totalBidSum, m3: -userBidM3 },
-            ]
+            p50, p10, lossProbability, customDataSnapshot,
+            rows: reportRows
         };
     }
 
@@ -771,6 +831,15 @@
         const title = document.getElementById('proj-title').value.trim();
         if (!title) { alert("Введите название проекта!"); return; }
 
+        let customItemsSnap = [];
+        document.querySelectorAll('.custom-row-item').forEach(el => {
+            customItemsSnap.push({
+                name: el.querySelector('.cf-name').value,
+                type: el.querySelector('.cf-type').value,
+                val: el.querySelector('.cf-val').value
+            });
+        });
+
         const snapshot = {
             title,
             timestamp: new Date().toLocaleString('ru-RU'),
@@ -778,7 +847,9 @@
                 region: document.getElementById('pass-region').value,
                 les: document.getElementById('pass-les').value,
                 uch: document.getElementById('pass-uch').value,
-                kvVyd: document.getElementById('pass-kv-vyd').value
+                kvVyd: document.getElementById('pass-kv-vyd').value,
+                pos: document.getElementById('pass-pos').value,
+                fio: document.getElementById('pass-fio').value
             },
             inputs: {
                 area: document.getElementById('inp-area').value,
@@ -805,7 +876,8 @@
                 sawlog: document.getElementById('price-sawlog').value,
                 pulp: document.getElementById('price-pulp').value,
                 firewood: document.getElementById('price-firewood').value
-            }
+            },
+            customRows: customItemsSnap
         };
 
         let archive = JSON.parse(localStorage.getItem('lesovik_margin_archive') || '[]');
@@ -838,6 +910,8 @@
         document.getElementById('pass-les').value = item.pass.les;
         document.getElementById('pass-uch').value = item.pass.uch;
         document.getElementById('pass-kv-vyd').value = item.pass.kvVyd;
+        if(item.pass.pos) document.getElementById('pass-pos').value = item.pass.pos;
+        if(item.pass.fio) document.getElementById('pass-fio').value = item.pass.fio;
 
         for (let key in item.inputs) {
             let elId = '';
@@ -861,6 +935,14 @@
 
             const el = document.getElementById(elId);
             if (el) el.value = item.inputs[key];
+        }
+
+        const container = document.getElementById('custom-rows-container');
+        container.innerHTML = '';
+        if (item.customRows && Array.isArray(item.customRows)) {
+            item.customRows.forEach(cr => {
+                addCustomRow(cr.name, cr.type, cr.val);
+            });
         }
 
         alert(`Проект "${item.title}" загружен.`);
@@ -942,7 +1024,7 @@
             </div>
 
             <div style="display:flex; justify-content:space-between; margin-top:30px; font-size:10pt;">
-                <div>Инициатор проекта: _______________ / Худяков Н.С. /</div>
+                <div>Составил: ${r.passPos} ______________ / ${r.passFio} /</div>
                 <div>М.П.</div>
             </div>
         `;
