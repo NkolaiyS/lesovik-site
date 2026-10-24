@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Инвестиционный терминал лесозаготовок и оценки пакета делянок МДО PRO (Лесовик ПРО)» (Версия 5.0 Enterprise)
+  Программное обеспечение: «Инвестиционный терминал лесозаготовки и календарного планирования МДО PRO (Лесовик ПРО)» (Версия 6.0 Enterprise)
 -->
 <!DOCTYPE html>
 <html lang="ru">
@@ -26,9 +26,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-    <title>Инвестиционный терминал лесозаготовки: Cash Flow, налоги, лизинг, сводная ведомость | Лесовик ПРО</title>
-    <meta name="description" content="Профессиональный финансово-инвестиционный калькулятор лесозаготовительного предприятия. Расчет кассовых разрывов, лизинга техники, налоговых режимов и портфеля делянок.">
-    <meta name="keywords" content="инвестиционный терминал лесозаготовки, кассовый разрыв лесосека, лизинг харвестера, налоги лесозаготовка осно усн, сводная ведомость делянок, лесовик про">
+    <title>Инвестиционный терминал лесозаготовки: календарь периодов, Cash Flow, сводная ведомость | Лесовик ПРО</title>
+    <meta name="description" content="Профессиональный финансово-инвестиционный калькулятор лесозаготовительного предприятия. Расчет кассовых разрывов, сезонных периодов, лизинга техники и портфеля делянок.">
+    <meta name="keywords" content="инвестиционный терминал лесозаготовки, календарь периодов заготовки, кассовый разрыв лесосека, лизинг харвестера, сводная ведомость делянок, лесовик про">
     <link rel="canonical" href="https://lesovik-pro.ru/margin.html">
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
 
@@ -257,6 +257,51 @@
             #printable-business-plan { display: block !important; width: 100% !important; }
         }
 
+        /* --- ИСПРАВЛЕННЫЙ АДАПТИВНЫЙ ПОДВАЛ БЕЗ ПЕРЕКОСОВ --- */
+        footer {
+            background-color: var(--footer-bg);
+            color: #E0E0E0;
+            padding: 40px 20px 20px;
+            margin-top: auto;
+            font-size: 13px;
+            border-top: 1px solid var(--border-color);
+            width: 100%;
+        }
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 30px;
+            margin-bottom: 25px;
+        }
+        .footer-column h4 {
+            font-family: 'Merriweather', serif;
+            color: #FFF;
+            font-size: 14.5px;
+            margin-top: 0;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            padding-bottom: 6px;
+        }
+        .footer-column a {
+            color: #8FBC8F;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 6px;
+        }
+        .footer-column a:hover {
+            text-decoration: underline;
+            color: #FFF;
+        }
+        .footer-bottom {
+            text-align: center;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 11.5px;
+            opacity: 0.7;
+        }
+
         @media (max-width: 850px) {
             .bento-card { grid-column: span 6 !important; }
         }
@@ -296,9 +341,9 @@
         
         <div class="bento-grid">
             
-            <!-- БЛОК 1: ПАСПОРТ, ТАКСАЦИЯ И CASH FLOW -->
+            <!-- БЛОК 1: ПАСПОРТ, ТАКСАЦИЯ И КАЛЕНДАРЬ ПЕРИОДОВ -->
             <div class="bento-card">
-                <h3>🌲 1. Таксация, логистика и Cash Flow</h3>
+                <h3>🌲 1. Таксация, грунты и календарь периодов</h3>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                     <div class="form-group">
                         <label>Регион РФ:</label>
@@ -333,7 +378,7 @@
                 </div>
 
                 <div class="sub-block">
-                    <div class="sub-block-title">Параметры делянки и риски</div>
+                    <div class="sub-block-title">Параметры делянки и грунтовые условия</div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                         <div class="form-group"><label>Площадь (га):</label><input type="number" id="inp-area" value="40.0" step="0.5" onfocus="this.select()"></div>
                         <div class="form-group"><label>Запас (м³/га):</label><input type="number" id="inp-stock" value="180.0" step="1" onfocus="this.select()"></div>
@@ -344,10 +389,33 @@
                         <div class="form-group"><label>Плечо вывозки (км):</label><input type="number" id="inp-km" value="65.0" step="1" onfocus="this.select()"></div>
                         <div class="form-group"><label>Новые дороги (км):</label><input type="number" id="inp-newroad" value="1.2" step="0.1" onfocus="this.select()"></div>
                     </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div class="form-group">
+                            <label>Рельеф местности:</label>
+                            <select id="inp-terrain">
+                                <option value="равнинный">Равнина</option>
+                                <option value="холмистый" selected>Холмы</option>
+                                <option value="горный">Горный / Пересеченный</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Несущая способность грунта:</label>
+                            <select id="inp-soil">
+                                <option value="dry">Сухие песчаные / суглинки</option>
+                                <option value="wet" selected>Сырые минеральные почвы</option>
+                                <option value="bog">Заболоченные участки (торф)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- КАЛЕНДАРЬ ПЕРИОДОВ РАЗРАБОТКИ -->
+                <div class="sub-block" style="background: rgba(45, 90, 39, 0.05); border-color: var(--forest-green);">
+                    <div class="sub-block-title" style="color: var(--forest-green);">📅 Календарное распределение объемов по периодам (%)</div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
-                        <div class="form-group"><label>Сезон:</label><select id="inp-season"><option value="зима" selected>Зима</option><option value="лето">Лето</option><option value="распутица">Распутица</option></select></div>
-                        <div class="form-group"><label>Рельеф:</label><select id="inp-terrain"><option value="равнинный">Равнина</option><option value="холмистый" selected>Холмы</option><option value="горный/болотистый">Болото</option></select></div>
-                        <div class="form-group"><label>Дороги:</label><select id="inp-road"><option value="хорошая">Хорошие</option><option value="смешанная" selected>Смесь</option><option value="плохая">Плохие</option></select></div>
+                        <div class="form-group"><label>Осень / Заезд (%):</label><input type="number" id="per-autumn" value="10" step="5" onfocus="this.select()"></div>
+                        <div class="form-group"><label>Зима / Основной (%):</label><input type="number" id="per-winter" value="70" step="5" onfocus="this.select()"></div>
+                        <div class="form-group"><label>Весна / Распутица (%):</label><input type="number" id="per-spring" value="20" step="5" onfocus="this.select()"></div>
                     </div>
                 </div>
 
@@ -427,7 +495,7 @@
                 <!-- ПРОИЗВОЛЬНЫЕ СТАТЬИ ПОЛЬЗОВАТЕЛЯ -->
                 <div class="sub-block" style="border-style: dashed;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <div class="sub-block-title" style="margin:0;">➕ Произвольные статьи (доп. затраты / доходы)</div>
+                        <div class="sub-block-title" style="margin:0;">➕ Произвольные статьи (затраты / доходы)</div>
                         <button class="btn-action" style="padding:4px 8px; font-size:10.5px;" onclick="addCustomRow()">Добавить строку</button>
                     </div>
                     <div id="custom-rows-container"></div>
@@ -551,14 +619,15 @@
             </div>
             <div class="footer-column">
                 <h4>Экосистема Лесовик</h4>
-                <a href="mdo.html" style="color: #8FBC8F; text-decoration: none; display:block; margin-bottom:6px;">Ведомость МДО лесосек</a>
-                <a href="busol-pro.html" style="color: #8FBC8F; text-decoration: none; display:block; margin-bottom:6px;">Электронная буссоль PRO</a>
+                <a href="mdo.html">Ведомость МДО лесосек</a>
+                <a href="busol-pro.html">Электронная буссоль PRO</a>
+                <a href="margin.html">Калькулятор маржи и портфеля</a>
             </div>
             <div class="footer-column">
                 <h4>Контакты разработчика</h4>
                 <div style="font-weight: 600;">ИП Худяков Николай Сергеевич</div>
                 <div style="font-size: 11px; opacity: 0.7; margin-bottom: 6px;">ИНН: 111801576622 | Сыктывкар</div>
-                <a href="mailto:folgoal@gmail.com" style="color: #8FBC8F; text-decoration: none;">✉️ folgoal@gmail.com</a>
+                <a href="mailto:folgoal@gmail.com">✉️ folgoal@gmail.com</a>
             </div>
         </div>
         <div class="footer-bottom">
@@ -639,8 +708,14 @@
         const haulKm = parseFloat(document.getElementById('inp-km').value) || 65;
         const season = document.getElementById('inp-season').value;
         const terrain = document.getElementById('inp-terrain').value;
+        const soil = document.getElementById('inp-soil').value;
         const haulRoad = document.getElementById('inp-road').value;
         const newRoadKm = parseFloat(document.getElementById('inp-newroad').value) || 1.2;
+
+        // Календарь периодов (%)
+        const pAutumn = (parseFloat(document.getElementById('per-autumn').value) || 10) / 100;
+        const pWinter = (parseFloat(document.getElementById('per-winter').value) || 70) / 100;
+        const pSpring = (parseFloat(document.getElementById('per-spring').value) || 20) / 100;
 
         // Cash Flow параметры
         const cfDeposit = parseFloat(document.getElementById('cf-deposit').value) || 150000;
@@ -651,7 +726,9 @@
         const techMode = document.getElementById('mode-tech').value;
         let costLogging = 0, costSkidding = 0, costLoading = 0;
 
-        const terrainCoef = { "равнинный": 1.0, "холмистый": 1.2, "горный/болотистый": 1.5 }[terrain] || 1.2;
+        const terrainCoef = { "равнинный": 1.0, "холмистый": 1.2, "горный": 1.4 }[terrain] || 1.2;
+        const soilCoef = { "dry": 1.0, "wet": 1.25, "bog": 1.5 }[soil] || 1.25;
+        
         const seasonCoef = {
             "зима":      { work: 1.00, haul: 1.00, road: 0.6 },
             "лето":      { work: 1.10, haul: 1.20, road: 1.0 },
@@ -660,15 +737,17 @@
         
         const roadCoef = { "хорошая": 0.9, "смешанная": 1.0, "плохая": 1.25 }[haulRoad] || 1.0;
 
-        // С учетом погрешности таксации (недобора)
         const realVolume = area * stock * cutShare * (1 - stockError);
 
         if (techMode === 'contract') {
             const rLogging = parseFloat(document.getElementById('r-logging').value) || 350;
             const rSkidding = parseFloat(document.getElementById('r-skidding').value) || 450;
             const rLoading = parseFloat(document.getElementById('r-loading').value) || 100;
-            costLogging = rLogging * realVolume * terrainCoef * seasonCoef.work;
-            costSkidding = rSkidding * realVolume * terrainCoef * seasonCoef.work;
+            
+            // Учет сезонных периодов и грунтовых условий
+            let weightedWorkCoef = (pAutumn * 1.2 + pWinter * 0.95 + pSpring * 1.35) * terrainCoef * soilCoef;
+            costLogging = rLogging * realVolume * weightedWorkCoef;
+            costSkidding = rSkidding * realVolume * weightedWorkCoef;
             costLoading = rLoading * realVolume;
         } else {
             const ownSalaries = parseFloat(document.getElementById('own-salaries').value) || 280;
@@ -676,10 +755,11 @@
             const ownParts = parseFloat(document.getElementById('own-parts').value) || 150;
             const ownLeasing = parseFloat(document.getElementById('own-leasing').value) || 350000;
             
-            const totalOwnVar = (ownSalaries + ownFuel + ownParts) * realVolume * terrainCoef * seasonCoef.work;
+            let weightedWorkCoef = (pAutumn * 1.2 + pWinter * 0.95 + pSpring * 1.35) * terrainCoef * soilCoef;
+            const totalOwnVar = (ownSalaries + ownFuel + ownParts) * realVolume * weightedWorkCoef;
             costLogging = totalOwnVar * 0.4;
             costSkidding = totalOwnVar * 0.5;
-            costLoading = totalOwnVar * 0.1 + (ownLeasing * 3); // Условно за 3 месяца работы
+            costLoading = totalOwnVar * 0.1 + (ownLeasing * 3);
         }
         
         const rSurvey = parseFloat(document.getElementById('r-survey').value) || 45000;
@@ -709,7 +789,6 @@
 
         let totalRevenue = sumAssortmentsRevenue(realVolume, assortments);
 
-        // Проценты по кредиту на оборотку за период отсрочки (условно 3 месяца)
         const creditInterest = cfCredit * (cfCreditRate / 12) * (cfDelay / 30);
 
         const taxMode = document.getElementById('tax-mode').value;
@@ -722,7 +801,6 @@
             let taxableBase = totalRevenue - directCostsBase;
             taxAmount = taxableBase > 0 ? taxableBase * 0.15 : 0;
         } else {
-            // ОСНО: НДС 20% + Налог на прибыль 25%
             let vatSum = totalRevenue * 0.20;
             let profitBase = totalRevenue - directCostsBase;
             taxAmount = vatSum + (profitBase > 0 ? profitBase * 0.25 : 0);
@@ -745,7 +823,7 @@
             { name: "10. Строительство и отсыпка дорог", val: -costRoads, m3: -costRoads/realVolume },
             { name: "11. Транспортная вывозка (" + haulKm + " км)", val: -costHaul, m3: -costHaul/realVolume },
             { name: "12. Проценты по кредиту (Cash Flow)", val: -creditInterest, m3: -creditInterest/realVolume },
-            { name: "13. Налоги (${taxMode})", val: -taxAmount, m3: -taxAmount/realVolume },
+            { name: "13. Налоги (" + taxMode + ")", val: -taxAmount, m3: -taxAmount/realVolume },
             { name: "14. Плата за древесину на торгах (" + userBidM3 + " руб/м³)", val: -totalBidSum, m3: -userBidM3 },
         ];
 
@@ -783,7 +861,6 @@
         const netProfit = totalRevenue - totalExpenses;
         const actualMargin = totalRevenue > 0 ? netProfit / totalRevenue : 0;
 
-        // Пиковая потребность в деньгах до первой выручки (Cash Flow Peak)
         const peakCashNeed = cfDeposit + directCosts * 0.4;
 
         const maxAllowedBid = totalRevenue * (1 - targetMarginPct) - (directCosts + taxAmount);
@@ -979,7 +1056,11 @@
                 newroad: document.getElementById('inp-newroad').value,
                 season: document.getElementById('inp-season').value,
                 terrain: document.getElementById('inp-terrain').value,
+                soil: document.getElementById('inp-soil').value,
                 road: document.getElementById('inp-road').value,
+                perAutumn: document.getElementById('per-autumn').value,
+                perWinter: document.getElementById('per-winter').value,
+                perSpring: document.getElementById('per-spring').value,
                 cfDeposit: document.getElementById('cf-deposit').value,
                 cfDelay: document.getElementById('cf-delay').value,
                 cfCredit: document.getElementById('cf-credit').value,
@@ -1048,7 +1129,7 @@
             else if (key === 'firewood') elId = 'price-firewood';
             else if (key === 'bid') elId = 'inp-bid';
             else if (key === 'margin') elId = 'inp-margin';
-            else if (key.startsWith('inp-') || key.startsWith('pass-') || key.startsWith('r-') || key.startsWith('cf-') || key.startsWith('own-') || key === 'tax-mode' || key === 'mode-tech') elId = key;
+            else if (key.startsWith('inp-') || key.startsWith('pass-') || key.startsWith('r-') || key.startsWith('cf-') || key.startsWith('own-') || key.startsWith('per-') || key === 'tax-mode' || key === 'mode-tech') elId = key;
             else elId = 'inp-' + key;
 
             const el = document.getElementById(elId);
