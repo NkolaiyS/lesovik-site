@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Инвестиционный терминал лесозаготовки и календарного планирования МДО PRO (Лесовик ПРО)» (Версия 6.1 Clean Enterprise)
+  Программное обеспечение: «Инвестиционный терминал лесозаготовки и календарного планирования МДО PRO (Лесовик ПРО)» (Версия 6.3 Final Fix)
 -->
 <!DOCTYPE html>
 <html lang="ru">
@@ -257,7 +257,7 @@
             #printable-business-plan { display: block !important; width: 100% !important; }
         }
 
-        /* --- ИСПРАВЛЕННЫЙ АДАПТИВНЫЙ ПОДВАЛ БЕЗ ПЕРЕКОСОВ --- */
+        /* --- АДАПТИВНЫЙ ПОДВАЛ --- */
         footer {
             background-color: var(--footer-bg);
             color: #E0E0E0;
@@ -341,7 +341,7 @@
         
         <div class="bento-grid">
             
-            <!-- БЛОК 1: ПАСПОРТ, ТАКСАЦИЯ И КАЛЕНДАРЬ ПЕРИОДОВ -->
+            <!-- БЛОК 1: ПАСПОРТ, ТАКСАЦИЯ И СЕЗОН -->
             <div class="bento-card">
                 <h3>🌲 1. Таксация, грунты и календарь периодов</h3>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
@@ -389,21 +389,29 @@
                         <div class="form-group"><label>Плечо вывозки (км):</label><input type="number" id="inp-km" value="65.0" step="1" onfocus="this.select()"></div>
                         <div class="form-group"><label>Новые дороги (км):</label><input type="number" id="inp-newroad" value="1.2" step="0.1" onfocus="this.select()"></div>
                     </div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                        <div class="form-group">
+                            <label>Сезон заготовки:</label>
+                            <select id="inp-season">
+                                <option value="зима" selected>Зима (мороз)</option>
+                                <option value="лето">Лето</option>
+                                <option value="распутица">Распутица</option>
+                            </select>
+                        </div>
                         <div class="form-group">
                             <label>Рельеф местности:</label>
                             <select id="inp-terrain">
                                 <option value="равнинный">Равнина</option>
                                 <option value="холмистый" selected>Холмы</option>
-                                <option value="горный">Горный / Пересеченный</option>
+                                <option value="горный">Горный</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Несущая способность грунта:</label>
+                            <label>Несущая способность:</label>
                             <select id="inp-soil">
-                                <option value="dry">Сухие песчаные / суглинки</option>
-                                <option value="wet" selected>Сырые минеральные почвы</option>
-                                <option value="bog">Заболоченные участки (торф)</option>
+                                <option value="dry">Сухие</option>
+                                <option value="wet" selected>Сырые</option>
+                                <option value="bog">Болото</option>
                             </select>
                         </div>
                     </div>
@@ -658,16 +666,19 @@
     }
 
     function toggleTechMode(mode) {
-        if (mode === 'contract') {
-            document.getElementById('block-contract').style.display = 'block';
-            document.getElementById('block-own').style.display = 'none';
-        } else {
-            document.getElementById('block-contract').style.display = 'none';
-            document.getElementById('block-own').style.display = 'block';
+        const cBlock = document.getElementById('block-contract');
+        const oBlock = document.getElementById('block-own');
+        if (cBlock && oBlock) {
+            if (mode === 'contract') {
+                cBlock.style.display = 'block';
+                oBlock.style.display = 'none';
+            } else {
+                cBlock.style.display = 'none';
+                oBlock.style.display = 'block';
+            }
         }
     }
 
-    // --- УПРАВЛЕНИЕ ПРОИЗВОЛЬНЫМИ СТАТЬЯМИ ---
     function addCustomRow(name = '', type = 'expense', unit = 'rub', amount = '') {
         const container = document.getElementById('custom-rows-container');
         if (!container) return;
@@ -694,13 +705,12 @@
     }
 
     function performCoreCalculation() {
-        const projTitle = document.getElementById('proj-title').value;
-        const region = document.getElementById('pass-region').value;
-        const les = document.getElementById('pass-les').value;
-        const uch = document.getElementById('pass-uch').value;
-        const kvVyd = document.getElementById('pass-kv-vyd').value;
-        const passPos = document.getElementById('pass-pos').value;
-        const passFio = document.getElementById('pass-fio').value;
+        const projTitle = document.getElementById('proj-title') ? document.getElementById('proj-title').value : 'Аукционный лот';
+        const les = document.getElementById('pass-les') ? document.getElementById('pass-les').value : '';
+        const uch = document.getElementById('pass-uch') ? document.getElementById('pass-uch').value : '';
+        const kvVyd = document.getElementById('pass-kv-vyd') ? document.getElementById('pass-kv-vyd').value : '';
+        const passPos = document.getElementById('pass-pos') ? document.getElementById('pass-pos').value : '';
+        const passFio = document.getElementById('pass-fio') ? document.getElementById('pass-fio').value : '';
 
         const area = parseFloat(document.getElementById('inp-area').value) || 40;
         const stock = parseFloat(document.getElementById('inp-stock').value) || 180;
@@ -786,9 +796,7 @@
         ];
 
         let totalRevenue = sumAssortmentsRevenue(realVolume, assortments);
-
         const creditInterest = cfCredit * (cfCreditRate / 12) * (cfDelay / 30);
-
         const taxMode = document.getElementById('tax-mode').value;
         let taxAmount = 0;
         let directCostsBase = costLogging + costSkidding + costLoading + costSurvey + costCleaning + costCultivation + costPlanting + costRoads + costHaul + cfDeposit + creditInterest;
@@ -831,10 +839,17 @@
 
         const customItemsNodes = document.querySelectorAll('.custom-row-item');
         customItemsNodes.forEach(item => {
-            const name = item.querySelector('.cf-name').value.trim() || 'Произвольная статья';
-            const type = item.querySelector('.cf-type').value;
-            const unit = item.querySelector('.cf-unit').value;
-            const rawVal = parseFloat(item.querySelector('.cf-val').value) || 0;
+            const nameEl = item.querySelector('.cf-name');
+            const typeEl = item.querySelector('.cf-type');
+            const unitEl = item.querySelector('.cf-unit');
+            const valEl = item.querySelector('.cf-val');
+
+            if (!nameEl || !typeEl || !unitEl || !valEl) return;
+
+            const name = nameEl.value.trim() || 'Произвольная статья';
+            const type = typeEl.value;
+            const unit = unitEl.value;
+            const rawVal = parseFloat(valEl.value) || 0;
 
             customDataSnapshot.push({ name, type, unit, val: rawVal });
 
@@ -858,7 +873,6 @@
         const totalExpenses = directCosts + taxAmount + totalBidSum;
         const netProfit = totalRevenue - totalExpenses;
         const actualMargin = totalRevenue > 0 ? netProfit / totalRevenue : 0;
-
         const peakCashNeed = cfDeposit + directCosts * 0.4;
 
         const maxAllowedBid = totalRevenue * (1 - targetMarginPct) - (directCosts + taxAmount);
@@ -888,53 +902,67 @@
     }
 
     function calculateMargin() {
-        lastCalculatedReport = performCoreCalculation();
-        const r = lastCalculatedReport;
+        try {
+            lastCalculatedReport = performCoreCalculation();
+            const r = lastCalculatedReport;
 
-        document.getElementById('summary-metrics').innerHTML = `
-            Заготовка (с учетом недобора): ${Math.round(r.volume).toLocaleString('ru-RU')} м³ &nbsp;|&nbsp; 
-            Выручка: ${rub(r.totalRevenue)} руб. &nbsp;|&nbsp; 
-            Пик потребности в cash flow: <span style="color:var(--accent-orange);">${rub(r.peakCashNeed)} руб.</span> &nbsp;|&nbsp;
-            Чистая прибыль: <span style="color:${r.netProfit >= 0 ? 'var(--success)' : 'var(--danger)'};">${rub(r.netProfit)} руб. (${(r.actualMargin*100).toFixed(1)}%)</span>
-        `;
+            const summaryEl = document.getElementById('summary-metrics');
+            if (summaryEl) {
+                summaryEl.innerHTML = `
+                    Заготовка (с учетом недобора): ${Math.round(r.volume).toLocaleString('ru-RU')} м³ &nbsp;|&nbsp; 
+                    Выручка: ${rub(r.totalRevenue)} руб. &nbsp;|&nbsp; 
+                    Пик потребности в cash flow: <span style="color:var(--accent-orange);">${rub(r.peakCashNeed)} руб.</span> &nbsp;|&nbsp;
+                    Чистая прибыль: <span style="color:${r.netProfit >= 0 ? 'var(--success)' : 'var(--danger)'};">${rub(r.netProfit)} руб. (${(r.actualMargin*100).toFixed(1)}%)</span>
+                `;
+            }
 
-        const tbody = document.getElementById('result-tbody');
-        tbody.innerHTML = '';
-        r.rows.forEach((row, idx) => {
-            let pct = r.totalRevenue > 0 ? (Math.abs(row.val) / r.totalRevenue * 100).toFixed(1) + '%' : '0%';
-            if (idx === 0) pct = '100.0%';
-            tbody.innerHTML += `
-                <tr>
-                    <td>${row.name}</td>
-                    <td class="num" style="color:${row.val < 0 ? 'inherit' : 'var(--success)'};">${rub(row.val)}</td>
-                    <td class="num">${rub(row.m3)}</td>
-                    <td class="num">${pct}</td>
-                </tr>
-            `;
-        });
-        tbody.innerHTML += `
-            <tr style="font-weight:bold; background:rgba(45,90,39,0.06);">
-                <td>ИТОГОВАЯ ЧИСТАЯ ПРИБЫЛЬ ПРОЕКТА</td>
-                <td class="num" style="color:${r.netProfit >= 0 ? 'var(--success)' : 'var(--danger)'};">${rub(r.netProfit)}</td>
-                <td class="num">${rub(r.netProfit/r.volume)}</td>
-                <td class="num" style="color:${r.netProfit >= 0 ? 'var(--success)' : 'var(--danger)'};">${(r.actualMargin*100).toFixed(1)}%</td>
-            </tr>
-        `;
+            const tbody = document.getElementById('result-tbody');
+            if (tbody) {
+                tbody.innerHTML = '';
+                r.rows.forEach((row, idx) => {
+                    let pct = r.totalRevenue > 0 ? (Math.abs(row.val) / r.totalRevenue * 100).toFixed(1) + '%' : '0%';
+                    if (idx === 0) pct = '100.0%';
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${row.name}</td>
+                            <td class="num" style="color:${row.val < 0 ? 'inherit' : 'var(--success)'};">${rub(row.val)}</td>
+                            <td class="num">${rub(row.m3)}</td>
+                            <td class="num">${pct}</td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML += `
+                    <tr style="font-weight:bold; background:rgba(45,90,39,0.06);">
+                        <td>ИТОГОВАЯ ЧИСТАЯ ПРИБЫЛЬ ПРОЕКТА</td>
+                        <td class="num" style="color:${r.netProfit >= 0 ? 'var(--success)' : 'var(--danger)'};">${rub(r.netProfit)}</td>
+                        <td class="num">${rub(r.netProfit/r.volume)}</td>
+                        <td class="num" style="color:${r.netProfit >= 0 ? 'var(--success)' : 'var(--danger)'};">${(r.actualMargin*100).toFixed(1)}%</td>
+                    </tr>
+                `;
+            }
 
-        document.getElementById('monte-carlo-panel').innerHTML = `
-            <h4>🎯 Инвестиционный анализ и Cash Flow риски:</h4>
-            • <b>Пиковая потребность в оборотных средствах (до первой выручки):</b> <b style="color:var(--accent-orange);">${rub(r.peakCashNeed)} руб.</b><br>
-            • <b>Предельная ставка платы</b> при вашей целевой марже: <b style="color:var(--forest-green); font-size:14px;">${rub(r.maxBidM3)} руб/м³</b><br>
-            • <b>Ставка безубыточности (P50 / P10):</b> ${rub(r.p50)} / ${rub(r.p10)} руб/м³<br>
-            • <b>Вероятность убытка</b> при вашей ставке: <b style="color:${r.lossProbability > 20 ? 'var(--danger)' : 'var(--success)'};">${r.lossProbability.toFixed(0)}%</b>
-        `;
+            const mcPanel = document.getElementById('monte-carlo-panel');
+            if (mcPanel) {
+                mcPanel.innerHTML = `
+                    <h4>🎯 Инвестиционный анализ и Cash Flow риски:</h4>
+                    • <b>Пиковая потребность в оборотных средствах (до первой выручки):</b> <b style="color:var(--accent-orange);">${rub(r.peakCashNeed)} руб.</b><br>
+                    • <b>Предельная ставка платы</b> при вашей целевой марже: <b style="color:var(--forest-green); font-size:14px;">${rub(r.maxBidM3)} руб/м³</b><br>
+                    • <b>Ставка безубыточности (P50 / P10):</b> ${rub(r.p50)} / ${rub(r.p10)} руб/м³<br>
+                    • <b>Вероятность убытка</b> при вашей ставке: <b style="color:${r.lossProbability > 20 ? 'var(--danger)' : 'var(--success)'};">${r.lossProbability.toFixed(0)}%</b>
+                `;
+            }
 
-        const resBox = document.getElementById('results-box');
-        resBox.style.display = 'block';
-        resBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const resBox = document.getElementById('results-box');
+            if (resBox) {
+                resBox.style.display = 'block';
+                resBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        } catch (err) {
+            console.error("Ошибка в расчете:", err);
+            alert("Произошла ошибка при выполнении расчета. Проверьте правильность введенных чисел.");
+        }
     }
 
-    // --- ФУНКЦИИ СВОДНОГО ПОРТФЕЛЯ ДЕЛЯНОК ---
     function addCurrentToPortfolio() {
         const currentRes = performCoreCalculation();
         portfolioDeks.push(currentRes);
@@ -948,8 +976,8 @@
         const tbody = document.getElementById('portfolio-tbody');
         const totalsDiv = document.getElementById('portfolio-totals');
 
-        if (portfolioDeks.length === 0) {
-            box.style.display = 'none';
+        if (!box || !tbody || portfolioDeks.length === 0) {
+            if (box) box.style.display = 'none';
             return;
         }
 
@@ -981,9 +1009,11 @@
         });
 
         let avgPortfolioMargin = sumRev > 0 ? (sumProf / sumRev * 100).toFixed(1) + '%' : '0%';
-        totalsDiv.innerHTML = `
-            ВСЕГО ПО ПОРТФЕЛЮ (${portfolioDeks.length} лот.): Площадь: ${sumArea.toFixed(1)} га | Запас: ${Math.round(sumVol).toLocaleString('ru-RU')} м³ | Выручка: ${rub(sumRev)} руб. | Прибыль: ${rub(sumProf)} руб. (${avgPortfolioMargin})
-        `;
+        if (totalsDiv) {
+            totalsDiv.innerHTML = `
+                ВСЕГО ПО ПОРТФЕЛЮ (${portfolioDeks.length} лот.): Площадь: ${sumArea.toFixed(1)} га | Запас: ${Math.round(sumVol).toLocaleString('ru-RU')} м³ | Выручка: ${rub(sumRev)} руб. | Прибыль: ${rub(sumProf)} руб. (${avgPortfolioMargin})
+            `;
+        }
 
         box.style.display = 'block';
         box.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -1019,9 +1049,9 @@
         return mean + sd * num;
     }
 
-    // --- УПРАВЛЕНИЕ АРХИВОМ ОДИНОЧНЫХ ПРОЕКТОВ ---
     function saveProjectToArchive() {
-        const title = document.getElementById('proj-title').value.trim();
+        const titleInput = document.getElementById('proj-title');
+        const title = titleInput ? titleInput.value.trim() : 'Проект';
         if (!title) { alert("Введите название проекта!"); return; }
 
         let customItemsSnap = [];
@@ -1153,6 +1183,7 @@
 
     function deleteProjectFromArchive() {
         const select = document.getElementById('archive-select');
+        if (!select) return;
         const idx = select.value;
         if (idx === "") { alert("Выберите проект для удаления!"); return; }
         let archive = JSON.parse(localStorage.getItem('lesovik_margin_archive') || '[]');
@@ -1164,7 +1195,6 @@
         }
     }
 
-    // --- ПЕЧАТЬ ОТЧЕТА ДЛЯ БИЗНЕС-ПЛАНА ---
     function printBusinessPlanReport() {
         if (!lastCalculatedReport) {
             calculateMargin();
@@ -1236,7 +1266,6 @@
         window.print();
     }
 
-    // --- ПЕЧАТЬ СВОДНОЙ ВЕДОМОСТИ ПОРТФЕЛЯ ---
     function printPortfolioSummaryReport() {
         if (portfolioDeks.length === 0) { alert("Портфель делянок пуст!"); return; }
         const dateStr = new Date().toLocaleDateString('ru-RU');
