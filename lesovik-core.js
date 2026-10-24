@@ -22,7 +22,7 @@
         "HNS-3K0F-5IHF3A": new Date(2099, 11, 31), // Бессрочно (Android Николай)
         "HNS-3SBX-TQMJO7": new Date(2026, 11, 31), // До 31 декабря 2026 (Ноутбук)
         "HNS-MINCIFRA-TEST": new Date(2099, 11, 31), // Доступ экспертов Минцифры
-        "HNS-HS86-KK7HRA": new Date(2099, 11, 31),  // Андрей (Редми)
+        "HNS-7ZYW-BETOA2": new Date(2099, 11, 31),  // Андрей (Редми)
         "HNS-RFS7-RYJB5K": new Date(2099, 11, 31), // Андрей (Хуавей)
         "HNS-4L1E-25O9U6": new Date(2099, 11, 31),   // Хонор 7 бессрочно Яндекс
         "HNS-SKEC-SMPDCH": new Date(2099, 11, 31),   // Хонор 7 бессрочно Гугл
