@@ -1,7 +1,7 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
   Свидетельство ИНН: 111801576622.
-  Программное обеспечение: «Инвестиционный терминал лесозаготовки и календарного планирования МДО PRO (Лесовик ПРО)» (Версия 6.3 Final Fix)
+  Программное обеспечение: «Инвестиционный терминал лесозаготовки и календарного планирования МДО PRO (Лесовик ПРО)» (Версия 6.4 Stable Enterprise)
 -->
 <!DOCTYPE html>
 <html lang="ru">
@@ -257,7 +257,7 @@
             #printable-business-plan { display: block !important; width: 100% !important; }
         }
 
-        /* --- АДАПТИВНЫЙ ПОДВАЛ --- */
+        /* --- ИСПРАВЛЕННЫЙ АДАПТИВНЫЙ ПОДВАЛ БЕЗ ПЕРЕКОСОВ --- */
         footer {
             background-color: var(--footer-bg);
             color: #E0E0E0;
@@ -389,15 +389,25 @@
                         <div class="form-group"><label>Плечо вывозки (км):</label><input type="number" id="inp-km" value="65.0" step="1" onfocus="this.select()"></div>
                         <div class="form-group"><label>Новые дороги (км):</label><input type="number" id="inp-newroad" value="1.2" step="0.1" onfocus="this.select()"></div>
                     </div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                         <div class="form-group">
                             <label>Сезон заготовки:</label>
                             <select id="inp-season">
-                                <option value="зима" selected>Зима (мороз)</option>
+                                <option value="зима" selected>Зима (мороз/зимник)</option>
                                 <option value="лето">Лето</option>
                                 <option value="распутица">Распутица</option>
                             </select>
                         </div>
+                        <div class="form-group">
+                            <label>Качество дорог:</label>
+                            <select id="inp-road">
+                                <option value="хорошая">Хорошая</option>
+                                <option value="смешанная" selected>Смешанная</option>
+                                <option value="плохая">Плохая</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                         <div class="form-group">
                             <label>Рельеф местности:</label>
                             <select id="inp-terrain">
@@ -407,7 +417,7 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Несущая способность:</label>
+                            <label>Несущая способность грунта:</label>
                             <select id="inp-soil">
                                 <option value="dry">Сухие</option>
                                 <option value="wet" selected>Сырые</option>
@@ -647,6 +657,17 @@
     let lastCalculatedReport = null;
     let portfolioDeks = JSON.parse(localStorage.getItem('lesovik_portfolio_deks') || '[]');
 
+    function getVal(id, fallback = '') {
+        const el = document.getElementById(id);
+        return el ? el.value : fallback;
+    }
+
+    function getNum(id, fallback = 0) {
+        const el = document.getElementById(id);
+        const val = el ? parseFloat(el.value) : NaN;
+        return isNaN(val) ? fallback : val;
+    }
+
     function toggleTheme() {
         const body = document.documentElement;
         if (body.getAttribute('data-theme') === 'dark') {
@@ -705,34 +726,35 @@
     }
 
     function performCoreCalculation() {
-        const projTitle = document.getElementById('proj-title') ? document.getElementById('proj-title').value : 'Аукционный лот';
-        const les = document.getElementById('pass-les') ? document.getElementById('pass-les').value : '';
-        const uch = document.getElementById('pass-uch') ? document.getElementById('pass-uch').value : '';
-        const kvVyd = document.getElementById('pass-kv-vyd') ? document.getElementById('pass-kv-vyd').value : '';
-        const passPos = document.getElementById('pass-pos') ? document.getElementById('pass-pos').value : '';
-        const passFio = document.getElementById('pass-fio') ? document.getElementById('pass-fio').value : '';
+        const projTitle = getVal('proj-title', 'Аукционный лот');
+        const region = getVal('pass-region', 'komi');
+        const les = getVal('pass-les', '');
+        const uch = getVal('pass-uch', '');
+        const kvVyd = getVal('pass-kv-vyd', '');
+        const passPos = getVal('pass-pos', '');
+        const passFio = getVal('pass-fio', '');
 
-        const area = parseFloat(document.getElementById('inp-area').value) || 40;
-        const stock = parseFloat(document.getElementById('inp-stock').value) || 180;
-        const cutShare = parseFloat(document.getElementById('inp-cut').value) || 0.85;
-        const stockError = (parseFloat(document.getElementById('inp-stock-error').value) || 5.0) / 100;
-        const haulKm = parseFloat(document.getElementById('inp-km').value) || 65;
-        const season = document.getElementById('inp-season').value;
-        const terrain = document.getElementById('inp-terrain').value;
-        const soil = document.getElementById('inp-soil').value;
-        const haulRoad = document.getElementById('inp-road').value;
-        const newRoadKm = parseFloat(document.getElementById('inp-newroad').value) || 1.2;
+        const area = getNum('inp-area', 40.0);
+        const stock = getNum('inp-stock', 180.0);
+        const cutShare = getNum('inp-cut', 0.85);
+        const stockError = getNum('inp-stock-error', 5.0) / 100;
+        const haulKm = getNum('inp-km', 65.0);
+        const season = getVal('inp-season', 'зима');
+        const haulRoad = getVal('inp-road', 'смешанная');
+        const terrain = getVal('inp-terrain', 'холмистый');
+        const soil = getVal('inp-soil', 'wet');
+        const newRoadKm = getNum('inp-newroad', 1.2);
 
-        const pAutumn = (parseFloat(document.getElementById('per-autumn').value) || 10) / 100;
-        const pWinter = (parseFloat(document.getElementById('per-winter').value) || 70) / 100;
-        const pSpring = (parseFloat(document.getElementById('per-spring').value) || 20) / 100;
+        const pAutumn = getNum('per-autumn', 10) / 100;
+        const pWinter = getNum('per-winter', 70) / 100;
+        const pSpring = getNum('per-spring', 20) / 100;
 
-        const cfDeposit = parseFloat(document.getElementById('cf-deposit').value) || 150000;
-        const cfDelay = parseFloat(document.getElementById('cf-delay').value) || 45;
-        const cfCredit = parseFloat(document.getElementById('cf-credit').value) || 1000000;
-        const cfCreditRate = (parseFloat(document.getElementById('cf-credit-rate').value) || 22.0) / 100;
+        const cfDeposit = getNum('cf-deposit', 150000);
+        const cfDelay = getNum('cf-delay', 45);
+        const cfCredit = getNum('cf-credit', 1000000);
+        const cfCreditRate = getNum('cf-credit-rate', 22.0) / 100;
 
-        const techMode = document.getElementById('mode-tech').value;
+        const techMode = getVal('mode-tech', 'contract');
         let costLogging = 0, costSkidding = 0, costLoading = 0;
 
         const terrainCoef = { "равнинный": 1.0, "холмистый": 1.2, "горный": 1.4 }[terrain] || 1.2;
@@ -749,19 +771,19 @@
         const realVolume = area * stock * cutShare * (1 - stockError);
 
         if (techMode === 'contract') {
-            const rLogging = parseFloat(document.getElementById('r-logging').value) || 350;
-            const rSkidding = parseFloat(document.getElementById('r-skidding').value) || 450;
-            const rLoading = parseFloat(document.getElementById('r-loading').value) || 100;
+            const rLogging = getNum('r-logging', 350);
+            const rSkidding = getNum('r-skidding', 450);
+            const rLoading = getNum('r-loading', 100);
             
             let weightedWorkCoef = (pAutumn * 1.2 + pWinter * 0.95 + pSpring * 1.35) * terrainCoef * soilCoef;
             costLogging = rLogging * realVolume * weightedWorkCoef;
             costSkidding = rSkidding * realVolume * weightedWorkCoef;
             costLoading = rLoading * realVolume;
         } else {
-            const ownSalaries = parseFloat(document.getElementById('own-salaries').value) || 280;
-            const ownFuel = parseFloat(document.getElementById('own-fuel').value) || 190;
-            const ownParts = parseFloat(document.getElementById('own-parts').value) || 150;
-            const ownLeasing = parseFloat(document.getElementById('own-leasing').value) || 350000;
+            const ownSalaries = getNum('own-salaries', 280);
+            const ownFuel = getNum('own-fuel', 190);
+            const ownParts = getNum('own-parts', 150);
+            const ownLeasing = getNum('own-leasing', 350000);
             
             let weightedWorkCoef = (pAutumn * 1.2 + pWinter * 0.95 + pSpring * 1.35) * terrainCoef * soilCoef;
             const totalOwnVar = (ownSalaries + ownFuel + ownParts) * realVolume * weightedWorkCoef;
@@ -770,12 +792,12 @@
             costLoading = totalOwnVar * 0.1 + (ownLeasing * 3);
         }
         
-        const rSurvey = parseFloat(document.getElementById('r-survey').value) || 45000;
-        const rCleaning = parseFloat(document.getElementById('r-cleaning').value) || 3500;
-        const rCultivation = parseFloat(document.getElementById('r-cultivation').value) || 5000;
-        const rPlanting = parseFloat(document.getElementById('r-planting').value) || 12000;
-        const rRoadKm = parseFloat(document.getElementById('r-road-km').value) || 550000;
-        const rHaulKm = parseFloat(document.getElementById('r-haul-km').value) || 7.0;
+        const rSurvey = getNum('r-survey', 45000);
+        const rCleaning = getNum('r-cleaning', 3500);
+        const rCultivation = getNum('r-cultivation', 5000);
+        const rPlanting = getNum('r-planting', 12000);
+        const rRoadKm = getNum('r-road-km', 550000);
+        const rHaulKm = getNum('r-haul-km', 7.0);
 
         const costSurvey = rSurvey;
         const costCleaning = rCleaning * area;
@@ -784,9 +806,9 @@
         const costRoads = rRoadKm * newRoadKm * seasonCoef.road;
         const costHaul = rHaulKm * haulKm * roadCoef * seasonCoef.haul * realVolume;
 
-        const priceSawlog = parseFloat(document.getElementById('price-sawlog').value) || 5500;
-        const pricePulp = parseFloat(document.getElementById('price-pulp').value) || 2000;
-        const priceFirewood = parseFloat(document.getElementById('price-firewood').value) || 800;
+        const priceSawlog = getNum('price-sawlog', 5500);
+        const pricePulp = getNum('price-pulp', 2000);
+        const priceFirewood = getNum('price-firewood', 800);
 
         const assortments = [
             { name: "Пиловочник", share: 0.50, price: priceSawlog },
@@ -797,7 +819,7 @@
 
         let totalRevenue = sumAssortmentsRevenue(realVolume, assortments);
         const creditInterest = cfCredit * (cfCreditRate / 12) * (cfDelay / 30);
-        const taxMode = document.getElementById('tax-mode').value;
+        const taxMode = getVal('tax-mode', 'usn6');
         let taxAmount = 0;
         let directCostsBase = costLogging + costSkidding + costLoading + costSurvey + costCleaning + costCultivation + costPlanting + costRoads + costHaul + cfDeposit + creditInterest;
 
@@ -812,8 +834,8 @@
             taxAmount = vatSum + (profitBase > 0 ? profitBase * 0.25 : 0);
         }
 
-        const userBidM3 = parseFloat(document.getElementById('inp-bid').value) || 500;
-        const targetMarginPct = (parseFloat(document.getElementById('inp-margin').value) || 15) / 100;
+        const userBidM3 = getNum('inp-bid', 500);
+        const targetMarginPct = getNum('inp-margin', 15) / 100;
         const totalBidSum = userBidM3 * realVolume;
 
         let reportRows = [
@@ -959,7 +981,7 @@
             }
         } catch (err) {
             console.error("Ошибка в расчете:", err);
-            alert("Произошла ошибка при выполнении расчета. Проверьте правильность введенных чисел.");
+            alert("Произошла ошибка при выполнении расчета: " + err.message);
         }
     }
 
@@ -1068,51 +1090,51 @@
             title,
             timestamp: new Date().toLocaleString('ru-RU'),
             pass: {
-                region: document.getElementById('pass-region').value,
-                les: document.getElementById('pass-les').value,
-                uch: document.getElementById('pass-uch').value,
-                kvVyd: document.getElementById('pass-kv-vyd').value,
-                pos: document.getElementById('pass-pos').value,
-                fio: document.getElementById('pass-fio').value
+                region: getVal('pass-region'),
+                les: getVal('pass-les'),
+                uch: getVal('pass-uch'),
+                kvVyd: getVal('pass-kv-vyd'),
+                pos: getVal('pass-pos'),
+                fio: getVal('pass-fio')
             },
             inputs: {
-                area: document.getElementById('inp-area').value,
-                stock: document.getElementById('inp-stock').value,
-                cut: document.getElementById('inp-cut').value,
-                stockError: document.getElementById('inp-stock-error').value,
-                km: document.getElementById('inp-km').value,
-                newroad: document.getElementById('inp-newroad').value,
-                season: document.getElementById('inp-season').value,
-                terrain: document.getElementById('inp-terrain').value,
-                soil: document.getElementById('inp-soil').value,
-                road: document.getElementById('inp-road').value,
-                perAutumn: document.getElementById('per-autumn').value,
-                perWinter: document.getElementById('per-winter').value,
-                perSpring: document.getElementById('per-spring').value,
-                cfDeposit: document.getElementById('cf-deposit').value,
-                cfDelay: document.getElementById('cf-delay').value,
-                cfCredit: document.getElementById('cf-credit').value,
-                cfCreditRate: document.getElementById('cf-credit-rate').value,
-                modeTech: document.getElementById('mode-tech').value,
-                rLogging: document.getElementById('r-logging').value,
-                rSkidding: document.getElementById('r-skidding').value,
-                rLoading: document.getElementById('r-loading').value,
-                ownSalaries: document.getElementById('own-salaries').value,
-                ownFuel: document.getElementById('own-fuel').value,
-                ownParts: document.getElementById('own-parts').value,
-                ownLeasing: document.getElementById('own-leasing').value,
-                rSurvey: document.getElementById('r-survey').value,
-                rCleaning: document.getElementById('r-cleaning').value,
-                rCultivation: document.getElementById('r-cultivation').value,
-                rPlanting: document.getElementById('r-planting').value,
-                rRoadKm: document.getElementById('r-road-km').value,
-                rHaulKm: document.getElementById('r-haul-km').value,
-                taxMode: document.getElementById('tax-mode').value,
-                bid: document.getElementById('inp-bid').value,
-                margin: document.getElementById('inp-margin').value,
-                sawlog: document.getElementById('price-sawlog').value,
-                pulp: document.getElementById('price-pulp').value,
-                firewood: document.getElementById('price-firewood').value
+                area: getVal('inp-area'),
+                stock: getVal('inp-stock'),
+                cut: getVal('inp-cut'),
+                stockError: getVal('inp-stock-error'),
+                km: getVal('inp-km'),
+                newroad: getVal('inp-newroad'),
+                season: getVal('inp-season'),
+                terrain: getVal('inp-terrain'),
+                soil: getVal('inp-soil'),
+                road: getVal('inp-road'),
+                perAutumn: getVal('per-autumn'),
+                perWinter: getVal('per-winter'),
+                perSpring: getVal('per-spring'),
+                cfDeposit: getVal('cf-deposit'),
+                cfDelay: getVal('cf-delay'),
+                cfCredit: getVal('cf-credit'),
+                cfCreditRate: getVal('cf-credit-rate'),
+                modeTech: getVal('mode-tech'),
+                rLogging: getVal('r-logging'),
+                rSkidding: getVal('r-skidding'),
+                rLoading: getVal('r-loading'),
+                ownSalaries: getVal('own-salaries'),
+                ownFuel: getVal('own-fuel'),
+                ownParts: getVal('own-parts'),
+                ownLeasing: getVal('own-leasing'),
+                rSurvey: getVal('r-survey'),
+                rCleaning: getVal('r-cleaning'),
+                rCultivation: getVal('r-cultivation'),
+                rPlanting: getVal('r-planting'),
+                rRoadKm: getVal('r-road-km'),
+                rHaulKm: getVal('r-haul-km'),
+                taxMode: getVal('tax-mode'),
+                bid: getVal('inp-bid'),
+                margin: getVal('inp-margin'),
+                sawlog: getVal('price-sawlog'),
+                pulp: getVal('price-pulp'),
+                firewood: getVal('price-firewood')
             },
             customRows: customItemsSnap
         };
@@ -1143,13 +1165,18 @@
         const item = archive[idx];
         if (!item) return;
 
-        document.getElementById('proj-title').value = item.title;
-        document.getElementById('pass-region').value = item.pass.region;
-        document.getElementById('pass-les').value = item.pass.les;
-        document.getElementById('pass-uch').value = item.pass.uch;
-        document.getElementById('pass-kv-vyd').value = item.pass.kvVyd;
-        if(item.pass.pos) document.getElementById('pass-pos').value = item.pass.pos;
-        if(item.pass.fio) document.getElementById('pass-fio').value = item.pass.fio;
+        const setVal = (id, val) => {
+            const el = document.getElementById(id);
+            if (el && val !== undefined) el.value = val;
+        };
+
+        setVal('proj-title', item.title);
+        setVal('pass-region', item.pass.region);
+        setVal('pass-les', item.pass.les);
+        setVal('pass-uch', item.pass.uch);
+        setVal('pass-kv-vyd', item.pass.kvVyd);
+        setVal('pass-pos', item.pass.pos);
+        setVal('pass-fio', item.pass.fio);
 
         for (let key in item.inputs) {
             let elId = '';
@@ -1161,11 +1188,10 @@
             else if (key.startsWith('inp-') || key.startsWith('pass-') || key.startsWith('r-') || key.startsWith('cf-') || key.startsWith('own-') || key.startsWith('per-') || key === 'tax-mode' || key === 'mode-tech') elId = key;
             else elId = 'inp-' + key;
 
-            const el = document.getElementById(elId);
-            if (el) el.value = item.inputs[key];
+            setVal(elId, item.inputs[key]);
         }
 
-        toggleTechMode(document.getElementById('mode-tech').value);
+        toggleTechMode(getVal('mode-tech', 'contract'));
 
         const container = document.getElementById('custom-rows-container');
         if (container) {
