@@ -679,10 +679,11 @@
                                     <th>Дист.</th>
                                     <th>Метод / Углы</th>
                                     <th>Время</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody id="archive-table-body">
-                                <tr><td colspan="6" style="text-align: center; opacity: 0.5;">Замеров пока нет</td></tr>
+                                <tr><td colspan="7" style="text-align: center; opacity: 0.5;">Замеров пока нет</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -915,29 +916,34 @@
     }
 
     function lockBase() {
-        baseAngleRad = currentAngleRad;
-        const deg = (baseAngleRad * 180 / Math.PI).toFixed(1);
-        document.getElementById('base-angle').innerText = deg + '°';
-        
-        if (navigator.vibrate) navigator.vibrate(20);
-
         const isAutoDist = document.getElementById('auto-distance-toggle').checked;
-        if (isAutoDist) {
-            if (baseAngleRad < -0.02) { 
-                const h = parseFloat(document.getElementById('phone-height').value) || 1.6;
-                const calcDist = h / Math.tan(Math.abs(baseAngleRad));
-                document.getElementById('distance').value = calcDist.toFixed(1);
-            } else {
-                alert('Для AR-автозамера наклоните телефон вниз к основанию комля!');
-            }
+
+        // AR-автозамер: без наклона вниз комель не фиксируем, кнопка остаётся рабочей
+        if (isAutoDist && !(currentAngleRad < -0.02)) {
+            alert('Для AR-автозамера наклоните телефон вниз к основанию комля!');
+            return;
         }
 
-        document.getElementById('btn-base').disabled = true;
+        baseAngleRad = currentAngleRad;
+        topAngleRad = null;   // новый замер: старая вершина не используется
+        document.getElementById('base-angle').innerText = (baseAngleRad * 180 / Math.PI).toFixed(1) + '°';
+        document.getElementById('top-angle').innerText = '--';
+
+        if (navigator.vibrate) navigator.vibrate(20);
+
+        if (isAutoDist) {
+            const h = parseFloat(document.getElementById('phone-height').value) || 1.6;
+            const calcDist = h / Math.tan(Math.abs(baseAngleRad));
+            document.getElementById('distance').value = calcDist.toFixed(1);
+        }
+
+        // Кнопка «Комель» остаётся активной: можно перезафиксировать при ошибке или начать следующий замер
+        document.getElementById('btn-base').disabled = false;
         document.getElementById('btn-top').disabled = false;
-        
+
         const fsBtnBase = document.getElementById('fs-btn-base');
         const fsBtnTop = document.getElementById('fs-btn-top');
-        if (fsBtnBase) fsBtnBase.disabled = true;
+        if (fsBtnBase) fsBtnBase.disabled = false;
         if (fsBtnTop) fsBtnTop.disabled = false;
     }
 
@@ -1069,7 +1075,7 @@
         countSpan.innerText = `(${measurementsLog.length} шт)`;
 
         if (measurementsLog.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; opacity: 0.5;">Замеров пока нет</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; opacity: 0.5;">Замеров пока нет</td></tr>';
             return;
         }
 
@@ -1081,6 +1087,7 @@
                 <td>${item.distance}</td>
                 <td>${item.angles}</td>
                 <td>${item.time}</td>
+                <td><button onclick="deleteMeasurement(${item.id})" title="Удалить этот замер" style="background:none; border:none; color:#DC2626; font-size:16px; line-height:1; cursor:pointer; padding:4px 6px;">✕</button></td>
             </tr>
         `).join('');
     }
@@ -1113,6 +1120,20 @@
                 </div>
             `;
         }).join('');
+    }
+
+    function deleteMeasurement(id) {
+        const idx = measurementsLog.findIndex(m => m.id === id);
+        if (idx === -1) return;
+        const m = measurementsLog[idx];
+        if (!confirm(`Удалить замер: ${m.species}, ${m.height} м (${m.time})?`)) return;
+        measurementsLog.splice(idx, 1);
+        localStorage.setItem(ARCHIVE_STORAGE_KEY, JSON.stringify(measurementsLog));
+        renderArchiveTable();
+        renderSpeciesSummary();
+        syncHeightDataToCore();
+        if (measurementsLog.length === 0) document.getElementById('result-box').style.display = 'none';
+        showToast('Замер удалён');
     }
 
     function clearHeightsArchive() {
