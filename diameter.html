@@ -477,13 +477,29 @@
         </div>
     </div>
 
+    <!-- ПОПАП: ДИСТАНЦИЯ -->
+    <div id="distance-help-popup" class="popup-overlay" onclick="if(event.target.id==='distance-help-popup') closePopup('distance-help-popup')">
+        <div class="popup-window">
+            <button class="popup-close" onclick="closePopup('distance-help-popup')">&times;</button>
+            <h3 style="font-family:'Merriweather',serif; color:var(--forest-green); margin-top:0;">Дистанция до дерева</h3>
+            <p style="font-size:13px; line-height:1.5; margin-bottom:8px;">Диаметр считается по расстоянию от телефона <b>до середины ствола</b>. Мерить до середины неудобно, поэтому мерьте <b>до коры</b> (до ближайшей точки ствола), а галочка «Дистанция до коры» добавит радиус сама.</p>
+            <p style="font-size:13px; line-height:1.5; margin-bottom:8px;"><b>Как получить дистанцию:</b></p>
+            <ul style="font-size:13px; line-height:1.6; padding-left:18px; margin-bottom:8px;">
+                <li><b>Шнур или палка фиксированной длины</b> (например, 2 м): привязали к дереву, отошли на всю длину. Каждый раз одно и то же число.</li>
+                <li><b>Кнопка «📏 Дистанция по наклону»</b>: держите телефон на высоте из поля «Высота телефона», наведите перекрестие на место, где ствол входит в землю, и нажмите. Подходит для 1,5–4 м.</li>
+                <li><b>Шаги</b> (около 0,7 м) или рулетка.</li>
+            </ul>
+            <p style="font-size:12px; opacity:0.85; line-height:1.4;">«Комель выше (+) / ниже (−)»: если основание ствола выше места, где вы стоите, вводите плюс (ступенька около 0,15 м), ниже: минус. Нужно только для режима «по наклону». Если галочку «до коры» снять, введённое число считается расстоянием до середины ствола.</p>
+        </div>
+    </div>
+
     <!-- ПОПАП ИНСТРУКЦИИ -->
     <div id="instruction-popup" class="popup-overlay" onclick="closeInstructionOuter(event)">
         <div class="popup-window">
             <button class="popup-close" onclick="closeInstruction()">&times;</button>
             <h3 style="font-family:'Merriweather',serif; color:var(--forest-green); margin-top:0;">📖 Инструкция мерной вилки</h3>
             <ol style="padding-left:14px; font-size:12px; line-height:1.4; color:var(--text-graphite);">
-                <li>Измерьте расстояние до ствола в метрах (например, 2.0 м) и введите в поле <b>«Дистанция»</b>.</li>
+                <li>Определите расстояние до коры ствола в метрах (рулеткой, шнуром или кнопкой <b>«📏 Дистанция по наклону»</b>) и введите в поле <b>«Дистанция»</b> (подробнее по значку «?»).</li>
                 <li>Наведите видоискатель на ствол дерева на высоте 1.3 м. При необходимости нажмите <b>«❄️ Стоп-кадр»</b> для спокойного замера без тряски.</li>
                 <li>Совместите красные визиры строго по внешним границам коры ползунком, пинч-зумом или кнопками <b>[-0.5%] / [+0.5%]</b>.</li>
                 <li>Нажмите <b>«РАССЧИТАТЬ ДИАМЕТР»</b>. Замер запишется в журнал и посчитает средний диаметр делянки.</li>
@@ -577,6 +593,7 @@
                     <button class="btn-toggle-ctrl" onclick="restartCamera()">🔄 Перезапуск камеры</button>
                     <button id="btn-enable-sensors" class="btn-toggle-ctrl" onclick="enableSensors()">📐 Включить датчики</button>
                 </div>
+                <button id="btn-dist-tilt" class="btn-toggle-ctrl" style="width:100%; border-color:var(--info); color:var(--info); margin-bottom:6px;" onclick="measureDistanceByTilt()">📏 Дистанция по наклону (навести на основание ствола)</button>
                 <div id="tilt-indicator" style="font-size:11px; font-weight:700; text-align:center; margin-bottom:8px; opacity:0.85;">Наклон телефона: датчик не включён</div>
 
                 <div class="slider-container">
@@ -646,9 +663,23 @@
                 </div>
 
                 <div class="input-group">
-                    <label for="distance">Дистанция до оси ствола (м):</label>
+                    <label for="distance">Дистанция до дерева (м):
+                        <span onclick="openPopup('distance-help-popup')" style="display:inline-block; width:16px; height:16px; line-height:16px; text-align:center; border-radius:50%; background:var(--forest-green); color:#fff; font-size:11px; cursor:pointer; margin-left:3px;">?</span>
+                    </label>
                     <input type="number" id="distance" value="2.0" step="0.1" min="0.5" onfocus="this.select()">
-                    <div style="font-size:10.5px; opacity:0.75; margin-top:3px; line-height:1.3;">Это расстояние от телефона до середины ствола. Если мерите до коры, добавьте половину толщины ствола: у ствола 30 см прибавьте 15 см (0,15 м).</div>
+                    <label style="display:flex; align-items:center; gap:6px; font-size:11px; font-weight:600; margin-top:6px; text-transform:none; cursor:pointer;">
+                        <input type="checkbox" id="dist-to-bark" checked style="width:auto; margin:0;"> Дистанция до коры (радиус учту сам)
+                    </label>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px;">
+                        <div>
+                            <div style="font-size:10px; font-weight:600; opacity:0.8;">Высота телефона, м</div>
+                            <input type="number" id="phone-h" value="1.3" step="0.05" min="0.3" max="2.5" inputmode="decimal" onfocus="this.select()" style="width:100%;">
+                        </div>
+                        <div>
+                            <div style="font-size:10px; font-weight:600; opacity:0.8;">Комель выше (+) / ниже (−), м</div>
+                            <input type="number" id="base-offset" value="0" step="0.1" min="-10" max="10" inputmode="decimal" onfocus="this.select()" style="width:100%;">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="input-group">
@@ -783,6 +814,8 @@
     let lastTiltDeg = null;
     let lastTiltTs = 0;
     let lastTiltUiTs = 0;
+    let lastBeta = 0;
+    let lastLandscape = false;
 
     function stopMainCamera() {
         if (activeStream) {
@@ -852,6 +885,8 @@
         if (e.beta === null && e.gamma === null) return;
         const ang = (screen.orientation && typeof screen.orientation.angle === 'number') ? screen.orientation.angle : (window.orientation || 0);
         const landscape = Math.abs(ang) === 90;
+        lastBeta = e.beta || 0;
+        lastLandscape = landscape;
         lastTiltDeg = landscape ? Math.abs(90 - Math.abs(e.gamma || 0)) : Math.abs((e.beta || 0) - 90);
         lastTiltTs = Date.now();
         if (lastTiltTs - lastTiltUiTs > 300) {
@@ -1284,6 +1319,8 @@
         else body.setAttribute('data-theme', 'dark');
     }
 
+    function openPopup(id) { document.getElementById(id).style.display = 'flex'; }
+    function closePopup(id) { document.getElementById(id).style.display = 'none'; }
     function openInstruction() { document.getElementById('instruction-popup').style.display = 'flex'; }
     function closeInstruction() { document.getElementById('instruction-popup').style.display = 'none'; }
     function closeInstructionOuter(e) { if(e.target.id === 'instruction-popup') closeInstruction(); }
@@ -1323,6 +1360,35 @@
         }
     }
 
+    // Дистанция до коры по наклону телефона к основанию ствола (портретная ориентация)
+    function measureDistanceByTilt() {
+        if ((Date.now() - lastTiltTs) > 3000) {
+            showToast("📐 Сначала нажмите «Включить датчики» (датчик наклона не отвечает)");
+            return;
+        }
+        if (lastLandscape) {
+            showToast("📱 Держите телефон вертикально (портретно) и повторите");
+            return;
+        }
+        const pitchDown = 90 - lastBeta;   // градусы вниз от горизонта
+        const hPhone = parseFloat(document.getElementById('phone-h').value) || 1.3;
+        const e = parseFloat(document.getElementById('base-offset').value) || 0;
+        const hEff = hPhone - e;
+        if (pitchDown < 5) {
+            showToast("⚠️ Наклоните телефон вниз и наведите перекрестие на основание ствола (где он входит в землю)");
+            return;
+        }
+        if (hEff <= 0.05) {
+            showToast("⚠️ Основание выше телефона: определить по наклону нельзя, введите дистанцию вручную");
+            return;
+        }
+        const ds = hEff / Math.tan(pitchDown * Math.PI / 180);
+        document.getElementById('distance').value = ds.toFixed(2);
+        document.getElementById('dist-to-bark').checked = true;
+        if (navigator.vibrate) navigator.vibrate(25);
+        showToast(`📏 До коры: ${ds.toFixed(2)} м (угол вниз ${pitchDown.toFixed(1)}°)`);
+    }
+
     let calcLockUntil = 0;
     function flashCalcFeedback(text) {
         const btn = document.getElementById('btn-calc');
@@ -1356,7 +1422,19 @@
         const f = getViewFraction();
         const K = 2 * Math.tan((fovDegrees * Math.PI / 180) / 2);
 
-        const diameterMeters = pct * distance * K * f / Z;
+        // Дистанция до коры: ось ствола дальше на радиус. D_ось = D_кора / (1 − 0.5·доля·K·f/Z)
+        const kfz = K * f / Z;
+        const toBark = document.getElementById('dist-to-bark').checked;
+        let axisDistance = distance;
+        if (toBark) {
+            const denom = 1 - 0.5 * pct * kfz;
+            if (denom < 0.3) {
+                alert('Слишком близко к стволу или слишком широкие визиры: проверьте дистанцию и совмещение визиров с корой.');
+                return;
+            }
+            axisDistance = distance / denom;
+        }
+        const diameterMeters = pct * axisDistance * kfz;
         const diameterCm = diameterMeters * 100;
 
         resultBox.style.display = 'block';
@@ -1376,7 +1454,7 @@
         }
 
         // Диагностика замера: помогает проверить калибровку и найти источник ошибки
-        let note = `Раскрытие ${currentSpreadPercent.toFixed(1)}%, зум ${Z.toFixed(1)}×, видимая доля кадра ${(f * 100).toFixed(0)}%, FOV ${fovDegrees.toFixed(1)}°, дистанция ${distance} м`;
+        let note = `Раскрытие ${currentSpreadPercent.toFixed(1)}%, зум ${Z.toFixed(1)}×, видимая доля кадра ${(f * 100).toFixed(0)}%, FOV ${fovDegrees.toFixed(1)}°, дистанция ${distance} м${toBark ? ' (до коры, до оси ' + axisDistance.toFixed(2) + ' м)' : ' (до оси)'}`;
         if (lastTiltDeg !== null && (Date.now() - lastTiltTs) < 3000 && lastTiltDeg > 5) {
             note += `. ⚠️ Телефон наклонён на ${lastTiltDeg.toFixed(1)}°`;
             showToast(`⚠️ Телефон наклонён на ${lastTiltDeg.toFixed(1)}°: держите ровно на высоте 1,3 м`);
