@@ -484,6 +484,31 @@
             width: 100%; 
         }
 
+
+        /* --- ВРЕМЕННАЯ ПЛАШКА «ОБНОВЛЕНИЕ» И ЗНАЧКИ (скрываются сами по дате) --- */
+        .update-banner {
+            display: none; align-items: center; gap: 10px; flex-wrap: wrap;
+            background: linear-gradient(90deg, rgba(45,90,39,0.14), rgba(45,90,39,0.05));
+            border: 1px solid var(--forest-green); border-radius: 10px;
+            padding: 8px 34px 8px 12px; margin: 0 0 12px; position: relative; font-size: 13px; line-height: 1.35;
+        }
+        .update-banner-text { flex: 1 1 260px; color: var(--text-graphite); }
+        .update-banner-text b { color: var(--forest-green); }
+        .update-banner-links { display: flex; gap: 6px; flex-wrap: wrap; }
+        .update-banner-links a {
+            text-decoration: none; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 14px;
+            border: 1px solid var(--forest-green); color: var(--forest-green); white-space: nowrap;
+        }
+        .update-banner-links a.primary { background: var(--forest-green); color: #fff; }
+        .update-banner-close {
+            position: absolute; top: 4px; right: 6px; background: transparent; border: none;
+            color: var(--forest-green); font-size: 18px; line-height: 1; cursor: pointer; padding: 4px;
+        }
+        .update-badge {
+            display: none; vertical-align: middle; margin-left: 6px; font-family: system-ui, sans-serif;
+            font-size: 10px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+            background: #16A34A; color: #fff; padding: 2px 7px; border-radius: 10px;
+        }
         .bento-card {
             background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
             padding: 16px; display: flex; flex-direction: column;
@@ -866,6 +891,17 @@
         </div>
 
         <div id="home-view">
+
+            <!-- ВРЕМЕННАЯ ПЛАШКА ОБНОВЛЕНИЯ (до 08.11.2026, скрывается автоматически) -->
+            <div id="update-banner" class="update-banner" role="note">
+                <div class="update-banner-text">🆕 <b>Высотомер и вилка стали лучше:</b> поправка на склон, замер дистанции по наклону. Тесты на живых деревьях и новости модуля — в нашем канале.</div>
+                <div class="update-banner-links">
+                    <a href="height.html" onclick="trackPartnerClick('update_banner_height')">Высотомер</a>
+                    <a href="diameter.html" onclick="trackPartnerClick('update_banner_diameter')">Вилка</a>
+                    <a href="https://max.ru/id111801576622_biz" target="_blank" rel="noopener noreferrer" class="primary" onclick="trackPartnerClick('update_banner_max')">Смотреть в МАХ</a>
+                </div>
+                <button class="update-banner-close" onclick="dismissUpdateBanner()" aria-label="Скрыть">&times;</button>
+            </div>
             
             <!-- 1. ИНСТРУМЕНТЫ ЭКОСИСТЕМЫ В BENTO-КАРТОЧКАХ (СРАЗУ ПОД ПОИСКОМ) -->
             <h2 class="section-title">Лесоустроительные и таксационные инструменты</h2>
@@ -995,7 +1031,7 @@
                 </div>
 
                 <div class="bento-card" data-search-keywords="высотомер высота дерева крона замер ar">
-                    <h3>🌲 Высотомер для измерения высоты деревьев</h3>
+                    <h3>🌲 Высотомер для измерения высоты деревьев <span class="update-badge">Обновлено</span></h3>
                     <div class="bento-desc">
                         Оптический высотомер на базе гироскопа и камеры телефона. Позволяет узнать точную высоту растущего дерева без рулеток и громоздких приборов в полевых условиях.
                     </div>
@@ -1004,7 +1040,7 @@
 
                 <!-- РЯД 2: ТАКСАЦИОННЫЕ ПРИБОРЫ -->
                 <div class="bento-card" data-search-keywords="мерная вилка диаметр ствола дерево замер">
-                    <h3>📏 Мерная вилка для измерения диаметра ствола</h3>
+                    <h3>📏 Мерная вилка для измерения диаметра ствола <span class="update-badge">Обновлено</span></h3>
                     <div class="bento-desc">
                         Бесконтактный замер диаметра ствола дерева с экрана телефона с помощью тригонометрических расчетов и оптического визира. Заменяет классическую мерную вилку.
                     </div>
@@ -1991,5 +2027,27 @@
             });
         }
     </script>
+
+<script>
+// Временный блок обновления: показывается до указанной даты, потом скрывается сам
+(function () {
+    var UNTIL = new Date('2026-11-08T23:59:59+03:00').getTime();
+    var KEY = 'lesovik_update_2026_10_25_closed';
+    window.dismissUpdateBanner = function () {
+        var b = document.getElementById('update-banner');
+        if (b) b.style.display = 'none';
+        try { localStorage.setItem(KEY, '1'); } catch (e) {}
+    };
+    function init() {
+        if (Date.now() > UNTIL) return;
+        document.querySelectorAll('.update-badge').forEach(function (el) { el.style.display = 'inline-block'; });
+        var closed = false;
+        try { closed = localStorage.getItem(KEY) === '1'; } catch (e) {}
+        var b = document.getElementById('update-banner');
+        if (b && !closed) b.style.display = 'flex';
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
 </body>
 </html>
