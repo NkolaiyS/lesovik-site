@@ -644,6 +644,11 @@
                             <span style="font-size: 10.5px;">Высота удержания (м):</span>
                             <input type="number" id="phone-height" value="1.6" step="0.05" style="width: 55px; border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 4px; text-align: right; font-weight: bold; font-size:11px;">
                         </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                            <span style="font-size: 10.5px;">Комель выше (+) / ниже (−) ног, м:</span>
+                            <input type="number" id="base-offset" value="0" step="0.1" min="-10" max="10" style="width: 55px; border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 4px; text-align: right; font-weight: bold; font-size:11px;">
+                        </div>
+                        <div style="font-size: 9.5px; opacity: 0.65; margin-top: 3px; line-height: 1.3;">Основание дерева выше места, где вы стоите: вводите +, ниже: −. Ступенька около 0,15 м.</div>
                     </div>
                 </div>
 
@@ -924,6 +929,18 @@
             return;
         }
 
+        // Эффективная высота глаз над комлем с учётом рельефа: h − e
+        let arH = 0, arWarn = '';
+        if (isAutoDist) {
+            const hPhone = parseFloat(document.getElementById('phone-height').value) || 1.6;
+            const e = parseFloat(document.getElementById('base-offset').value) || 0;
+            arH = hPhone - e;
+            if (arH <= 0.05) {
+                alert('Комель выше уровня телефона: по AR дистанцию не определить. Выключите AR и введите дистанцию вручную.');
+                return;
+            }
+        }
+
         baseAngleRad = currentAngleRad;
         topAngleRad = null;   // новый замер: старая вершина не используется
         document.getElementById('base-angle').innerText = (baseAngleRad * 180 / Math.PI).toFixed(1) + '°';
@@ -932,9 +949,14 @@
         if (navigator.vibrate) navigator.vibrate(20);
 
         if (isAutoDist) {
-            const h = parseFloat(document.getElementById('phone-height').value) || 1.6;
-            const calcDist = h / Math.tan(Math.abs(baseAngleRad));
+            const aAbs = Math.abs(baseAngleRad);
+            const calcDist = arH / Math.tan(aAbs);
             document.getElementById('distance').value = calcDist.toFixed(1);
+            // Ошибка дистанции при неточности угла в 1°: dD = D * (1° в рад) / (sin·cos)
+            const dD = calcDist * 0.01745 / (Math.sin(aAbs) * Math.cos(aAbs));
+            if (aAbs < 10 * Math.PI / 180) {
+                showToast(`⚠️ Угол на комель мал (${(aAbs * 180 / Math.PI).toFixed(1)}°): дистанция по AR неточна (±${dD.toFixed(1)} м на 1°). Подойдите ближе или введите дистанцию вручную`);
+            }
         }
 
         // Кнопка «Комель» остаётся активной: можно перезафиксировать при ошибке или начать следующий замер
