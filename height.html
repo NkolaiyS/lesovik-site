@@ -565,6 +565,11 @@
                     <button class="btn-toggle-ctrl" style="border-color: #107C41; color: #107C41;" onclick="openPhotoModal()">📷 Фото дерева</button>
                 </div>
                 
+                <div class="controls-toggles-row">
+                    <button class="btn-toggle-ctrl" onclick="restartCamera()">🔄 Перезапуск камеры</button>
+                    <button id="btn-enable-sensors" class="btn-toggle-ctrl" onclick="enableSensors()">📐 Включить датчики</button>
+                </div>
+
                 <button class="btn-toggle-ctrl" style="width:100%; border-color:var(--border-color); color:var(--text-graphite); margin-top:2px;" onclick="resetApp()">Сбросить замер</button>
             </div>
 
@@ -763,34 +768,107 @@
         }
     }
 
-    // 1. АВТОЗАПУСК КАМЕРЫ И ДАТЧИКОВ
-    async function initCameraAndSensors() {
-        try {
-            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission().then(res => {
-                    if (res === 'granted') {
-                        window.addEventListener('deviceorientation', handleOrientation, true);
-                    }
-                }).catch(()=>{});
-            } else {
-                window.addEventListener('deviceorientation', handleOrientation, true);
-            }
+    // 1. КАМЕРА И ДАТЧИКИ: запуск, перезапуск, восстановление после зависания
+    let sensorsListening = false;
+    let lastOrientationTs = 0;
+    let cameraRestarting = false;
 
+    function stopMainCamera() {
+        if (activeStream) {
+            activeStream.getTracks().forEach(t => { t.onended = null; try { t.stop(); } catch (e) {} });
+        }
+        activeStream = null;
+        videoTrack = null;
+        ['camera-stream', 'fs-camera-stream'].forEach(id => {
+            const v = document.getElementById(id);
+            if (v) v.srcObject = null;
+        });
+    }
+
+    async function startMainCamera() {
+        if (cameraRestarting) return;
+        cameraRestarting = true;
+        try {
+            stopMainCamera();
             activeStream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
                 audio: false
             });
-            const videoEl = document.getElementById('camera-stream');
-            videoEl.srcObject = activeStream;
             videoTrack = activeStream.getVideoTracks()[0];
+            // Поток оборвался (другое приложение заняло камеру, фон и т.п.) — поднимаем заново
+            videoTrack.onended = () => { setTimeout(() => { if (!photoVideoStream) startMainCamera(); }, 500); };
+            ['camera-stream', 'fs-camera-stream'].forEach(id => {
+                const v = document.getElementById(id);
+                if (v) { v.srcObject = activeStream; v.play().catch(() => {}); }
+            });
+            const zs = document.getElementById('zoom-slider');
+            if (zs && parseFloat(zs.value) > 1) updateCameraZoom(zs.value);
         } catch (err) {
-            console.warn("Камера или датчики ожидают прямого взаимодействия:", err);
+            console.warn("Камера ожидает разрешения или недоступна:", err);
+            showToast("⚠️ Нет доступа к камере. Нажмите «Перезапуск камеры»");
+        } finally {
+            cameraRestarting = false;
         }
     }
+
+    async function restartCamera() {
+        showToast("🔄 Перезапускаю камеру...");
+        await startMainCamera();
+    }
+
+    function streamIsLive() {
+        return !!(activeStream && videoTrack && videoTrack.readyState === 'live' && !videoTrack.muted);
+    }
+
+    // Датчики наклона. На iPhone разрешение можно запросить только по нажатию кнопки
+    function attachOrientationListener() {
+        if (sensorsListening) return;
+        window.addEventListener('deviceorientation', handleOrientation, true);
+        sensorsListening = true;
+    }
+
+    async function enableSensors() {
+        try {
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                const res = await DeviceOrientationEvent.requestPermission();
+                if (res !== 'granted') {
+                    showToast("❌ Доступ к датчикам запрещён. Разрешите его в настройках браузера");
+                    return;
+                }
+            }
+            attachOrientationListener();
+            showToast("📐 Датчики включены. Наклоните телефон");
+            setTimeout(checkSensorsAlive, 2500);
+        } catch (e) {
+            showToast("⚠️ Не удалось включить датчики наклона");
+        }
+    }
+
+    function checkSensorsAlive() {
+        const btn = document.getElementById('btn-enable-sensors');
+        const alive = (Date.now() - lastOrientationTs) < 3000;
+        if (btn) btn.style.display = alive ? 'none' : '';
+        if (!alive) showToast("⚠️ Датчики наклона не отвечают. Нажмите «Включить датчики» или откройте страницу в Chrome/Safari");
+    }
+
+    async function initCameraAndSensors() {
+        const needsGesture = typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function';
+        if (!needsGesture) attachOrientationListener();
+        setTimeout(checkSensorsAlive, 3000);
+        await startMainCamera();
+    }
+
+    // Возврат на вкладку: если камера зависла или оборвалась — перезапускаем
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && !photoVideoStream && !streamIsLive()) {
+            startMainCamera();
+        }
+    });
 
     // 2. ОБРАБОТКА ДАТЧИКОВ НАКЛОНА И СГЛАЖИВАНИЕ
     function handleOrientation(event) {
         if (event.beta === null && event.gamma === null) return;
+        lastOrientationTs = Date.now();
         let beta = event.beta || 0;
         let gamma = event.gamma || 0;
         
@@ -1099,6 +1177,7 @@
         const modal = document.getElementById('photo-modal-screen');
         modal.style.display = 'flex';
         retakePhoto();
+        stopMainCamera();   // две камеры одновременно ломают друг друга на многих телефонах
         startPhotoCamera();
         updatePhotoModalHUD();
     }
@@ -1106,6 +1185,7 @@
     function closePhotoModal() {
         stopPhotoCamera();
         document.getElementById('photo-modal-screen').style.display = 'none';
+        startMainCamera();
     }
 
     async function startPhotoCamera() {
