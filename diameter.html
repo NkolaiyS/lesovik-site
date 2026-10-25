@@ -571,6 +571,12 @@
                 
                 <button class="btn-toggle-ctrl" style="width:100%; border-color:var(--info); color:var(--info); margin-bottom:8px;" onclick="openFullscreenCamera()">🔍 На весь экран</button>
 
+                <div class="controls-toggles-row">
+                    <button class="btn-toggle-ctrl" onclick="restartCamera()">🔄 Перезапуск камеры</button>
+                    <button id="btn-enable-sensors" class="btn-toggle-ctrl" onclick="enableSensors()">📐 Включить датчики</button>
+                </div>
+                <div id="tilt-indicator" style="font-size:11px; font-weight:700; text-align:center; margin-bottom:8px; opacity:0.85;">Наклон телефона: датчик не включён</div>
+
                 <div class="slider-container">
                     <div class="slider-label-box">
                         <span>Совмещение визиров по коре</span>
@@ -627,6 +633,7 @@
                 </div>
 
                 <div id="result-box">Диаметр ствола: 0.0 см</div>
+                <div id="calc-diag" style="font-size:10.5px; opacity:0.75; margin:-2px 0 8px; display:none;"></div>
 
                 <!-- СРЕДНИЕ ДИАМЕТРЫ -->
                 <div class="species-summary-card">
@@ -637,8 +644,9 @@
                 </div>
 
                 <div class="input-group">
-                    <label for="distance">Дистанция до дерева (м):</label>
+                    <label for="distance">Дистанция до оси ствола (м):</label>
                     <input type="number" id="distance" value="2.0" step="0.1" min="0.5" onfocus="this.select()">
+                    <div style="font-size:10.5px; opacity:0.75; margin-top:3px; line-height:1.3;">Мерьте до коры и прибавьте радиус (примерно половину диаметра).</div>
                 </div>
 
                 <div class="input-group">
@@ -680,10 +688,11 @@
                                     <th>Ступень</th>
                                     <th>Дист.</th>
                                     <th>Время</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody id="archive-table-body">
-                                <tr><td colspan="6" style="text-align: center; opacity: 0.5;">Замеров пока нет</td></tr>
+                                <tr><td colspan="7" style="text-align: center; opacity: 0.5;">Замеров пока нет</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -765,19 +774,118 @@
         }
     }
 
-    // 1. АВТОЗАПУСК КАМЕРЫ
-    async function initCamera() {
+    // 1. КАМЕРА: запуск, перезапуск, восстановление после зависания
+    let cameraRestarting = false;
+    let hwZoomSupported = false;
+    let sensorsListening = false;
+    let lastTiltDeg = null;
+    let lastTiltTs = 0;
+    let lastTiltUiTs = 0;
+
+    function stopMainCamera() {
+        if (activeStream) {
+            activeStream.getTracks().forEach(t => { t.onended = null; try { t.stop(); } catch (e) {} });
+        }
+        activeStream = null;
+        videoTrack = null;
+        ['camera-stream', 'fs-camera-stream'].forEach(id => {
+            const v = document.getElementById(id);
+            if (v) v.srcObject = null;
+        });
+    }
+
+    async function startMainCamera() {
+        if (cameraRestarting) return;
+        cameraRestarting = true;
         try {
+            stopMainCamera();
             activeStream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
                 audio: false
             });
-            const videoEl = document.getElementById('camera-stream');
-            videoEl.srcObject = activeStream;
             videoTrack = activeStream.getVideoTracks()[0];
+            videoTrack.onended = () => { setTimeout(() => { if (!photoVideoStream) startMainCamera(); }, 500); };
+            ['camera-stream', 'fs-camera-stream'].forEach(id => {
+                const v = document.getElementById(id);
+                if (v) { v.srcObject = activeStream; v.play().catch(() => {}); }
+            });
+            const zs = document.getElementById('zoom-slider');
+            if (zs) updateCameraZoom(zs.value);
         } catch (err) {
-            console.warn("Камера ожидает взаимодействия или заблокирована:", err);
+            console.warn("Камера ожидает разрешения или недоступна:", err);
+            showToast("⚠️ Нет доступа к камере. Нажмите «Перезапуск камеры»");
+        } finally {
+            cameraRestarting = false;
         }
+    }
+
+    async function initCamera() {
+        await startMainCamera();
+        setTimeout(checkSensorsAlive, 3000);
+        const needsGesture = typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function';
+        if (!needsGesture) attachTiltListener();
+    }
+
+    async function restartCamera() {
+        showToast("🔄 Перезапускаю камеру...");
+        await startMainCamera();
+    }
+
+    function streamIsLive() {
+        return !!(activeStream && videoTrack && videoTrack.readyState === 'live' && !videoTrack.muted);
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && !photoVideoStream && !streamIsLive()) startMainCamera();
+    });
+
+    // Датчик наклона телефона (на iPhone разрешение запрашивается только по нажатию кнопки)
+    function attachTiltListener() {
+        if (sensorsListening) return;
+        window.addEventListener('deviceorientation', handleTilt, true);
+        sensorsListening = true;
+    }
+
+    function handleTilt(e) {
+        if (e.beta === null && e.gamma === null) return;
+        const ang = (screen.orientation && typeof screen.orientation.angle === 'number') ? screen.orientation.angle : (window.orientation || 0);
+        const landscape = Math.abs(ang) === 90;
+        lastTiltDeg = landscape ? Math.abs(90 - Math.abs(e.gamma || 0)) : Math.abs((e.beta || 0) - 90);
+        lastTiltTs = Date.now();
+        if (lastTiltTs - lastTiltUiTs > 300) {
+            lastTiltUiTs = lastTiltTs;
+            const el = document.getElementById('tilt-indicator');
+            if (el) {
+                const t = lastTiltDeg;
+                el.style.color = t <= 3 ? '#16A34A' : (t <= 6 ? '#D97706' : '#DC2626');
+                el.innerText = `Наклон телефона: ${t.toFixed(1)}° ${t <= 3 ? '✔' : (t <= 6 ? '(держите ровнее)' : '⚠️ держите вертикально')}`;
+            }
+        }
+    }
+
+    async function enableSensors() {
+        try {
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                const res = await DeviceOrientationEvent.requestPermission();
+                if (res !== 'granted') {
+                    showToast("❌ Доступ к датчикам запрещён. Разрешите его в настройках браузера");
+                    return;
+                }
+            }
+            attachTiltListener();
+            showToast("📐 Датчики включены");
+            setTimeout(checkSensorsAlive, 2500);
+        } catch (e) {
+            showToast("⚠️ Не удалось включить датчики наклона");
+        }
+    }
+
+    function checkSensorsAlive() {
+        const btn = document.getElementById('btn-enable-sensors');
+        const alive = (Date.now() - lastTiltTs) < 3000;
+        if (btn) btn.style.display = alive ? 'none' : '';
+        const el = document.getElementById('tilt-indicator');
+        if (!alive && el) { el.style.color = ''; el.innerText = 'Наклон телефона: датчик не включён'; }
     }
 
     // 2. СТОП-КАДР
@@ -895,16 +1003,40 @@
         });
     }
 
+    // Зум применяется ОДИН раз: аппаратно, если камера умеет, иначе программно (CSS).
     function updateCameraZoom(val) {
-        document.getElementById('zoom-val-text').innerText = parseFloat(val).toFixed(1);
+        val = parseFloat(val) || 1;
+        document.getElementById('zoom-val-text').innerText = val.toFixed(1);
+        hwZoomSupported = false;
         if (videoTrack && typeof videoTrack.getCapabilities === 'function') {
             const caps = videoTrack.getCapabilities();
             if (caps.zoom) {
-                videoTrack.applyConstraints({ advanced: [{ zoom: parseFloat(val) }] }).catch(() => {});
+                hwZoomSupported = true;
+                const zmin = caps.zoom.min || 1, zmax = caps.zoom.max || val;
+                videoTrack.applyConstraints({ advanced: [{ zoom: Math.max(zmin, Math.min(zmax, val)) }] }).catch(() => {});
             }
         }
-        const videoEls = document.querySelectorAll('.camera-stream-el');
-        videoEls.forEach(el => el.style.transform = `scale(${val})`);
+        document.querySelectorAll('.camera-stream-el, .freeze-canvas-layer').forEach(el => {
+            el.style.transform = hwZoomSupported ? '' : `scale(${val})`;
+        });
+    }
+
+    // Реальный зум, с которым сейчас идёт съёмка (для расчёта и калибровки)
+    function getEffectiveZoom() {
+        const sv = parseFloat(document.getElementById('zoom-slider').value) || 1;
+        if (hwZoomSupported && videoTrack && typeof videoTrack.getSettings === 'function') {
+            const z = videoTrack.getSettings().zoom;
+            if (z) return z;
+        }
+        return sv;
+    }
+
+    // Какая доля ширины кадра видна на экране (object-fit: cover обрезает кадр по бокам)
+    function getViewFraction() {
+        const fsOpen = document.getElementById('fs-camera-modal').style.display === 'flex';
+        const v = document.getElementById(fsOpen ? 'fs-camera-stream' : 'camera-stream');
+        if (!v || !v.videoWidth || !v.videoHeight || !v.clientWidth || !v.clientHeight) return 1;
+        return Math.min(1, (v.clientWidth / v.clientHeight) / (v.videoWidth / v.videoHeight));
     }
 
     function openFullscreenCamera() {
@@ -942,6 +1074,7 @@
         const modal = document.getElementById('photo-modal-screen');
         modal.style.display = 'flex';
         retakePhoto();
+        stopMainCamera();   // две камеры одновременно ломают друг друга на многих телефонах
         startPhotoCamera();
         updatePhotoModalHUD();
     }
@@ -949,6 +1082,7 @@
     function closePhotoModal() {
         stopPhotoCamera();
         document.getElementById('photo-modal-screen').style.display = 'none';
+        startMainCamera();
     }
 
     async function startPhotoCamera() {
@@ -1160,6 +1294,8 @@
         btn.innerText = isCalibrationOpen ? 'Закрыть калибровку' : 'Калибровка FOV (по Листу А4)';
     }
 
+    // Линейная модель: ширина сцены на дистанции d = d · K · f / Z,
+    // где K = 2·tan(FOV/2) для всего кадра без зума, f — видимая доля кадра, Z — зум.
     function executeCameraCalibration() {
         const targetWidthCm = parseFloat(document.getElementById('cal-target-width').value);
         const targetDistM = parseFloat(document.getElementById('cal-target-dist').value);
@@ -1170,23 +1306,25 @@
         }
 
         const pct = currentSpreadPercent / 100;
-        const alphaCalRad = 2 * Math.atan(targetWidthCm / (200 * targetDistM));
-        const calculatedFovRad = alphaCalRad / pct;
-        const calculatedFovDeg = calculatedFovRad * (180 / Math.PI);
+        const Z = getEffectiveZoom();
+        const f = getViewFraction();
+        const K = ((targetWidthCm / 100) * Z) / (targetDistM * pct * f);
+        const calculatedFovDeg = 2 * Math.atan(K / 2) * (180 / Math.PI);
 
         if (calculatedFovDeg > 20 && calculatedFovDeg < 120) {
             document.getElementById('camera-fov').value = calculatedFovDeg.toFixed(1);
-            localStorage.setItem('lesovik_custom_fov', calculatedFovDeg.toFixed(1));
-            alert('Калибровка завершена! FOV камеры: ' + calculatedFovDeg.toFixed(1) + '°');
-            toggleCalibrationBlock(); 
+            localStorage.setItem('lesovik_custom_fov_v2', calculatedFovDeg.toFixed(1));
+            alert('Калибровка завершена! FOV камеры: ' + calculatedFovDeg.toFixed(1) + '°\n(зум ' + Z.toFixed(1) + '×, учтён)');
+            toggleCalibrationBlock();
         } else {
-            alert('Некорректное значение FOV: ' + calculatedFovDeg.toFixed(1) + '°\nПроверьте расстояние до листа А4.');
+            alert('Некорректное значение FOV: ' + calculatedFovDeg.toFixed(1) + '°\nПроверьте дистанцию до листа и совмещение визиров с краями листа.');
         }
     }
 
     function calculateDiameter() {
         const distance = parseFloat(document.getElementById('distance').value);
         const resultBox = document.getElementById('result-box');
+        const diag = document.getElementById('calc-diag');
 
         if (isNaN(distance) || distance <= 0) {
             alert('Укажите дистанцию до дерева!');
@@ -1195,9 +1333,11 @@
 
         const pct = currentSpreadPercent / 100;
         const fovDegrees = parseFloat(document.getElementById('camera-fov').value) || 60;
-        const subtendedAngleRad = (pct * fovDegrees) * (Math.PI / 180);
-        
-        const diameterMeters = 2 * distance * Math.tan(subtendedAngleRad / 2);
+        const Z = getEffectiveZoom();
+        const f = getViewFraction();
+        const K = 2 * Math.tan((fovDegrees * Math.PI / 180) / 2);
+
+        const diameterMeters = pct * distance * K * f / Z;
         const diameterCm = diameterMeters * 100;
 
         resultBox.style.display = 'block';
@@ -1205,7 +1345,7 @@
             const exactDiameter = parseFloat(diameterCm.toFixed(1));
             const stepDiameter = Math.round(exactDiameter / 4) * 4;
             const selectedSpecies = document.getElementById('species-select').value;
-            
+
             saveRecord(selectedSpecies, exactDiameter, stepDiameter, distance);
             resultBox.innerText = `Диаметр (${selectedSpecies}): ${exactDiameter} см (Ступень: ${stepDiameter} см)`;
             resultBox.style.background = 'var(--forest-light)';
@@ -1213,6 +1353,15 @@
             resultBox.innerText = `Ошибка замера`;
             resultBox.style.background = '#FCA5A5';
         }
+
+        // Диагностика замера: помогает проверить калибровку и найти источник ошибки
+        let note = `Раскрытие ${currentSpreadPercent.toFixed(1)}%, зум ${Z.toFixed(1)}×, видимая доля кадра ${(f * 100).toFixed(0)}%, FOV ${fovDegrees.toFixed(1)}°, дистанция ${distance} м`;
+        if (lastTiltDeg !== null && (Date.now() - lastTiltTs) < 3000 && lastTiltDeg > 5) {
+            note += `. ⚠️ Телефон наклонён на ${lastTiltDeg.toFixed(1)}°`;
+            showToast(`⚠️ Телефон наклонён на ${lastTiltDeg.toFixed(1)}°: держите ровно на высоте 1,3 м`);
+        }
+        diag.innerText = note;
+        diag.style.display = 'block';
     }
 
     // 5. ПРЯМОЙ РУЧНОЙ ВВОД ДАННЫХ ДИАМЕТРА
@@ -1221,7 +1370,7 @@
         const val = parseFloat(inputEl.value);
         const species = document.getElementById('species-select').value;
 
-        if (isNaN(val) || val < 1 || val > 160) {
+        if (isNaN(val) || val < 2 || val > 140) {
             alert('Введите корректный диаметр ствола в сантиметрах (от 2 до 140 см)!');
             return;
         }
@@ -1298,7 +1447,7 @@
         countSpan.innerText = `(${measurementsLog.length} шт)`;
 
         if (measurementsLog.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; opacity: 0.5;">Замеров пока нет</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; opacity: 0.5;">Замеров пока нет</td></tr>';
             return;
         }
 
@@ -1310,6 +1459,7 @@
                 <td><b>${item.stepDiameter} см</b></td>
                 <td>${item.distance}</td>
                 <td>${item.time}</td>
+                <td><button onclick="deleteMeasurement(${item.id})" title="Удалить этот замер" style="background:none; border:none; color:#DC2626; font-size:16px; line-height:1; cursor:pointer; padding:4px 6px;">✕</button></td>
             </tr>
         `).join('');
     }
@@ -1342,6 +1492,20 @@
                 </div>
             `;
         }).join('');
+    }
+
+    function deleteMeasurement(id) {
+        const idx = measurementsLog.findIndex(m => m.id === id);
+        if (idx === -1) return;
+        const m = measurementsLog[idx];
+        if (!confirm(`Удалить замер: ${m.species}, ${m.exactDiameter} см (${m.time})?`)) return;
+        measurementsLog.splice(idx, 1);
+        localStorage.setItem(ARCHIVE_STORAGE_KEY, JSON.stringify(measurementsLog));
+        renderArchiveTable();
+        renderSpeciesSummary();
+        syncDendroDataToCore();
+        if (measurementsLog.length === 0) document.getElementById('result-box').style.display = 'none';
+        showToast('Замер удалён');
     }
 
     function clearDiametersArchive() {
@@ -1471,7 +1635,7 @@
             renderSpeciesSummary();
         }
 
-        const savedFov = localStorage.getItem('lesovik_custom_fov');
+        const savedFov = localStorage.getItem('lesovik_custom_fov_v2');
         if (savedFov) document.getElementById('camera-fov').value = savedFov;
 
         updateArchiveDropdown();
