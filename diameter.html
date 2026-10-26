@@ -295,6 +295,16 @@
         .btn-manual-add:active { opacity: 0.9; }
 
         .btn { background-color: var(--forest-green); color: #fff; border: none; padding: 10px; width: 100%; border-radius: 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; cursor: pointer; margin-bottom: 6px; transition: 0.2s; text-align: center; }
+        .dist-sw { -webkit-appearance: none; appearance: none; width: 54px; height: 32px; border-radius: 16px; background: #9CA3AF; position: relative; cursor: pointer; transition: 0.2s; flex-shrink: 0; margin: 0; border: none; }
+        .dist-sw::after { content: ''; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .dist-sw:checked { background: var(--forest-green); }
+        .dist-sw:checked::after { left: 25px; }
+        .dist-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border-color); }
+        .dist-row-title { font-size: 13px; font-weight: 700; }
+        .dist-row-sub { font-size: 11px; opacity: 0.7; line-height: 1.3; margin-top: 2px; font-weight: 400; }
+        .dist-stepper { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+        .dist-stepper button { width: 38px; height: 38px; border: 1px solid var(--forest-green); background: transparent; color: var(--forest-green); border-radius: 8px; font-size: 20px; font-weight: 700; cursor: pointer; }
+        .dist-stepper input { width: 64px; height: 38px; border: 1px solid var(--border-color); border-radius: 8px; text-align: center; font-size: 15px; font-weight: 700; background: var(--bg-paper); color: var(--text-graphite); }
         .btn:active { transform: scale(0.95); filter: brightness(0.82); box-shadow: inset 0 2px 6px rgba(0,0,0,0.35); }
         @keyframes resultPulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(22,163,74,0.6); } 40% { transform: scale(1.03); box-shadow: 0 0 0 8px rgba(22,163,74,0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(22,163,74,0); } }
         .result-pulse { animation: resultPulse 0.6s ease-out; }
@@ -474,6 +484,48 @@
         <div class="photo-modal-bottom-bar" id="photo-review-panel" style="display:none;">
             <button class="btn btn-outline" style="flex:1; background:rgba(0,0,0,0.7); color:#FFF; border:1px solid #FFF;" onclick="retakePhoto()">🔄 Переснять</button>
             <button class="btn" style="flex:1;" onclick="downloadInspectedPhoto()">💾 Сохранить в галерею</button>
+        </div>
+    </div>
+
+    <!-- ПОПАП: НАСТРОЙКИ ДИСТАНЦИИ -->
+    <div id="distance-settings-popup" class="popup-overlay" onclick="if(event.target.id==='distance-settings-popup') closeDistSettings()">
+        <div class="popup-window">
+            <button class="popup-close" onclick="closeDistSettings()">&times;</button>
+            <h3 style="font-family:'Merriweather',serif; color:var(--forest-green); margin-top:0;">⚙️ Настройки дистанции</h3>
+
+            <label class="dist-row" style="cursor:pointer;">
+                <span>
+                    <div class="dist-row-title">Дистанция до коры</div>
+                    <div class="dist-row-sub">Радиус ствола добавлю сам. Выключите, если мерили до середины ствола.</div>
+                </span>
+                <input type="checkbox" id="dist-to-bark" class="dist-sw" checked onchange="updateDistSummary()">
+            </label>
+
+            <div class="dist-row">
+                <span>
+                    <div class="dist-row-title">Высота телефона, м</div>
+                    <div class="dist-row-sub">Для режима «по наклону». Обычно 1,3 м.</div>
+                </span>
+                <span class="dist-stepper">
+                    <button type="button" onclick="stepField('phone-h', -0.05, 0.3, 2.5, 2)">−</button>
+                    <input type="number" id="phone-h" value="1.30" step="0.05" inputmode="decimal" onfocus="this.select()" onclick="this.select()" onchange="updateDistSummary()">
+                    <button type="button" onclick="stepField('phone-h', 0.05, 0.3, 2.5, 2)">+</button>
+                </span>
+            </div>
+
+            <div class="dist-row" style="border-bottom:none;">
+                <span>
+                    <div class="dist-row-title">Комель выше (+) / ниже (−), м</div>
+                    <div class="dist-row-sub">Основание ствола выше вас: плюс, ниже: минус. Ступенька ≈ 0,15 м. Нужно для режима «по наклону».</div>
+                </span>
+                <span class="dist-stepper">
+                    <button type="button" onclick="stepField('base-offset', -0.1, -10, 10, 1)">−</button>
+                    <input type="number" id="base-offset" value="0.0" step="0.1" inputmode="decimal" onfocus="this.select()" onclick="this.select()" onchange="updateDistSummary()">
+                    <button type="button" onclick="stepField('base-offset', 0.1, -10, 10, 1)">+</button>
+                </span>
+            </div>
+
+            <button class="btn" style="margin-top:8px;" onclick="closeDistSettings()">Готово</button>
         </div>
     </div>
 
@@ -667,20 +719,11 @@
                         <span onclick="openPopup('distance-help-popup')" style="display:inline-block; width:16px; height:16px; line-height:16px; text-align:center; border-radius:50%; background:var(--forest-green); color:#fff; font-size:11px; cursor:pointer; margin-left:3px;">?</span>
                     </label>
                     <input type="number" id="distance" value="2.0" step="0.1" min="0.5" onfocus="this.select()">
-                    <label style="display:flex; align-items:center; gap:6px; font-size:11px; font-weight:600; margin-top:6px; text-transform:none; cursor:pointer;">
-                        <input type="checkbox" id="dist-to-bark" checked style="width:auto; margin:0;"> Дистанция до коры (радиус учту сам)
-                    </label>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px;">
-                        <div>
-                            <div style="font-size:10px; font-weight:600; opacity:0.8;">Высота телефона, м</div>
-                            <input type="number" id="phone-h" value="1.3" step="0.05" min="0.3" max="2.5" inputmode="decimal" onfocus="this.select()" style="width:100%;">
-                        </div>
-                        <div>
-                            <div style="font-size:10px; font-weight:600; opacity:0.8;">Комель выше (+) / ниже (−), м</div>
-                            <input type="number" id="base-offset" value="0" step="0.1" min="-10" max="10" inputmode="decimal" onfocus="this.select()" style="width:100%;">
-                        </div>
-                    </div>
                 </div>
+                <button id="btn-dist-settings" class="btn-toggle-ctrl" style="width:100%; margin-bottom:8px; text-align:left; padding:8px 10px;" onclick="openPopup('distance-settings-popup')">
+                    <span style="display:block; font-weight:700;">⚙️ Настройки дистанции</span>
+                    <span id="dist-settings-summary" style="display:block; font-size:10.5px; font-weight:500; opacity:0.8; margin-top:2px;"></span>
+                </button>
 
                 <div class="input-group">
                     <label for="camera-fov">Угол обзора FOV (град):</label>
@@ -785,6 +828,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        updateDistSummary();
         initCamera();
         initGPSWatcher();
         loadSavedData();
@@ -1319,6 +1363,20 @@
         else body.setAttribute('data-theme', 'dark');
     }
 
+    function stepField(id, delta, min, max, decimals) {
+        const el = document.getElementById(id);
+        const v = (parseFloat(el.value) || 0) + delta;
+        el.value = Math.max(min, Math.min(max, v)).toFixed(decimals);
+        updateDistSummary();
+    }
+    function updateDistSummary() {
+        const bark = document.getElementById('dist-to-bark').checked;
+        const h = parseFloat(document.getElementById('phone-h').value) || 1.3;
+        const e = parseFloat(document.getElementById('base-offset').value) || 0;
+        const el = document.getElementById('dist-settings-summary');
+        if (el) el.innerText = `${bark ? 'до коры' : 'до середины ствола'} · телефон ${h.toFixed(2).replace('.', ',')} м · комель ${e > 0 ? '+' : ''}${e.toFixed(1).replace('.', ',')} м`;
+    }
+    function closeDistSettings() { closePopup('distance-settings-popup'); updateDistSummary(); }
     function openPopup(id) { document.getElementById(id).style.display = 'flex'; }
     function closePopup(id) { document.getElementById(id).style.display = 'none'; }
     function openInstruction() { document.getElementById('instruction-popup').style.display = 'flex'; }
@@ -1385,6 +1443,7 @@
         const ds = hEff / Math.tan(pitchDown * Math.PI / 180);
         document.getElementById('distance').value = ds.toFixed(2);
         document.getElementById('dist-to-bark').checked = true;
+        updateDistSummary();
         if (navigator.vibrate) navigator.vibrate(25);
         showToast(`📏 До коры: ${ds.toFixed(2)} м (угол вниз ${pitchDown.toFixed(1)}°)`);
     }
