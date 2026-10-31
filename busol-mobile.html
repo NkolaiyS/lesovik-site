@@ -1,6 +1,6 @@
 <!-- 
   (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
-  Свидетельство ИНН: 11180157622.
+  Свидетельство ИНН: 111801576622.
   Программное обеспечение: «Электронная буссоль БГ-ХНС» (Версия 1.2).
 -->
 <!DOCTYPE html>
@@ -174,7 +174,7 @@
     <meta name="google-site-verification" content="rLtNyEQ2h992Lp8m73ynLM8J6xY5tJcr3dbVwbO35rU" />
     
     <title>Буссоль онлайн: замер азимута и углов лесосеки камерой телефона | БГ-ХНС 1.2</title>
-    <meta name="description" content="Бесплатная электронная буссоль и геодезический компас для отвода лесосек. Точное измерение магнитных азимутов, внутренних углов поворота делянки и визиров с помощью гироскопа и камеры смартфона.">
+    <meta name="description" content="Электронная буссоль и геодезический компас для отвода лесосек. Точное измерение магнитных азимутов, внутренних углов поворота делянки и визиров с помощью гироскопа и камеры смартфона.">
     <meta name="keywords" content="буссоль онлайн, буссоль лазерная карманная, electronic буссоль для телефона, компас таксатора, измерение азимута онлайн, отвод лесосек, углы поворота делянки, БГ-ХНС">
     <link rel="canonical" href="https://lesovik-pro.ru/busol.html">
 
@@ -336,36 +336,31 @@
             align-items: center;
             justify-content: center;
             box-sizing: border-box;
-            padding: 5px;
+            padding: 6px 5px 120px;
         }
         
         #compass-svg-canvas {
-            width: 96%;
-            aspect-ratio: 1;
+            width: 100%;
+            height: 100%;
+            display: block;
             transition: transform 0.05s linear;
         }
 
-        .compass-device-sight-line {
+        /* Визирная стрела лимба: яркая, длинная, с острым концом у шкалы */
+        .sight-needle-overlay {
             position: absolute;
-            top: 5px; left: 50%;
-            width: 4px; height: 40px;
-            background: #FF0000;
-            transform: translateX(-50%);
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            overflow: visible;
             z-index: 95;
-            filter: drop-shadow(0 0 8px #FF0000);
+            pointer-events: none;
+            filter: drop-shadow(0 0 4px #FF1A1A) drop-shadow(0 0 12px rgba(255, 26, 26, 0.8));
         }
-        .compass-device-sight-line::after {
-            content: '▲';
-            position: absolute;
-            bottom: -12px; left: 50%;
-            transform: translateX(-50%);
-            font-size: 14px; color: #FF0000;
-            filter: drop-shadow(0 0 8px #FF0000);
-        }
+        .limb-stage { position: relative; width: 88%; aspect-ratio: 1; flex: 0 0 auto; }
 
         .compass-center-bubble-level {
             position: absolute;
-            top: 42%; left: 50%;
+            top: 50%; left: 50%;
             width: 48px; height: 48px;
             border: 2px solid rgba(255,255,255,0.4);
             border-radius: 50%;
@@ -398,6 +393,37 @@
             z-index: 95;
             line-height: 1.3;
         }
+        .limb-az { font-size: clamp(17px, 5.4vw, 24px); font-weight: bold; color: #8FBC8F; margin-bottom: 2px; }
+        .limb-coords { font-size: clamp(12px, 3.5vw, 16px); opacity: 0.95; }
+        .limb-alt { font-size: clamp(12px, 3.5vw, 16px); color: #8FBC8F; }
+        .limb-rumb { font-size: clamp(12px, 3.6vw, 16px); color: #FBBF24; font-weight: bold; }
+        .limb-source { font-size: clamp(11px, 3.2vw, 14px); opacity: 0.85; }
+
+        /* Линза: удерживаемая кнопка и всплывающее «облако» с крупными данными */
+        .lens-btn {
+            position: absolute; top: 8px; right: 8px; z-index: 96;
+            min-width: 46px; height: 46px; padding: 0 12px; border-radius: 23px;
+            background: rgba(143,188,143,0.18); border: 1.5px solid #8FBC8F; color: #F9FBF9;
+            font-size: 15px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: none;
+        }
+        .lens-btn.pressed { background: #2D5A27; border-color: #F9FBF9; }
+        .lens-btn-fs { position: static; margin-top: 4px; width: 100%; max-width: 600px; border-radius: 12px; height: 52px; font-size: 16px; }
+        .lens-cloud {
+            display: none; position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            width: min(92vw, 520px); z-index: 99999; pointer-events: none;
+            background: rgba(10, 16, 13, 0.97); color: #FFF; border: 2px solid #8FBC8F; border-radius: 16px;
+            padding: 18px 16px; text-align: center; font-family: monospace; box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+        }
+        .lens-cloud.show { display: block; }
+        .lens-cloud .lc-title { font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: #8FBC8F; margin-bottom: 6px; font-family: 'Inter', sans-serif; font-weight: 700; }
+        .lens-cloud .lc-big { font-size: clamp(34px, 11vw, 56px); font-weight: bold; color: #8FBC8F; line-height: 1.1; }
+        .lens-cloud .lc-mid { font-size: clamp(20px, 6.2vw, 30px); font-weight: bold; margin-top: 6px; }
+        .lens-cloud .lc-warn { color: #FBBF24; }
+        .lens-cloud .lc-row { font-size: clamp(16px, 4.8vw, 22px); margin-top: 6px; word-break: break-word; }
+        .row-lens-cell { cursor: pointer; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+        .mode-tag { display: block; font-size: 10px; font-weight: 700; margin-top: 2px; color: #8FBC8F; }
+        .mode-tag.visir { color: #FBBF24; }
 
         .fullscreen-compass-modal {
             display: none;
@@ -517,11 +543,11 @@
         .measurements-log-table th, .measurements-log-table td { padding: 6px 4px; font-size: 12px; border-bottom: 1px solid var(--border-color); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .measurements-log-table th { font-weight: 700; text-transform: uppercase; font-size: 10px; color: var(--forest-green); }
         
-        .measurements-log-table th:nth-child(1), .measurements-log-table td:nth-child(1) { width: 8%; }
+        .measurements-log-table th:nth-child(1), .measurements-log-table td:nth-child(1) { width: 11%; }
         .measurements-log-table th:nth-child(2), .measurements-log-table td:nth-child(2) { width: 15%; }
         .measurements-log-table th:nth-child(3), .measurements-log-table td:nth-child(3) { width: 14%; }
         .measurements-log-table th:nth-child(4), .measurements-log-table td:nth-child(4) { width: 12%; }
-        .measurements-log-table th:nth-child(5), .measurements-log-table td:nth-child(5) { width: 43%; }
+        .measurements-log-table th:nth-child(5), .measurements-log-table td:nth-child(5) { width: 40%; }
         .measurements-log-table th:nth-child(6), .measurements-log-table td:nth-child(6) { width: 8%; }
 
         .btn-delete-row { background: transparent; border: none; color: var(--danger); font-size: 14px; cursor: pointer; font-weight: bold; }
@@ -583,8 +609,11 @@
         </div>
 
         <div class="fs-compass-viewport">
-            <div class="compass-device-sight-line"></div>
-            
+            <svg class="sight-needle-overlay" viewBox="0 0 300 300" aria-hidden="true">
+                <polygon points="146.5,-30 153.5,-30 153.5,-2 157,4 150,30 143,4 146.5,-2" fill="#FF1A1A"/>
+                <line x1="150" y1="-30" x2="150" y2="22" stroke="#FFE0E0" stroke-width="1.2" opacity="0.9"/>
+            </svg>
+
             <div class="fs-crosshair-line-v"></div>
             <div class="fs-crosshair-line-h"></div>
 
@@ -598,9 +627,12 @@
         </div>
 
         <div class="fs-bottom-controls-container">
-            <div id="fs-dms-azimuth" style="font-size: 20px; font-weight: bold; color: #8FBC8F; margin-bottom: 2px;">АЗИМУТ: 0° 00' 00"</div>
-            <div id="fs-dms-coords" style="font-size: 12px; opacity: 0.9;">61° 28' 48" с.ш.  50° 30' 06" в.д.</div>
-            <div id="fs-altitude" style="font-size: 12px; color: #8FBC8F; margin-bottom: 6px;">Высота: 150 м</div>
+            <div id="fs-dms-azimuth" class="limb-az" style="font-size: clamp(22px, 7vw, 30px);">АЗИМУТ: 0° 00' 00"</div>
+            <div id="fs-rumb" class="limb-rumb" style="font-size: clamp(15px, 4.6vw, 20px);">Румб — · Обр. —</div>
+            <div id="fs-dms-coords" class="limb-coords" style="font-size: clamp(13px, 4vw, 18px);">61° 28' 48" с.ш.  50° 30' 06" в.д.</div>
+            <div id="fs-altitude" class="limb-alt" style="font-size: clamp(13px, 4vw, 18px);">Высота: 150 м</div>
+            <div id="fs-source" class="limb-source">Источник: магнитометр телефона</div>
+            <button type="button" id="lens-btn-fs" class="lens-btn lens-btn-fs" aria-label="Линза" oncontextmenu="return false">🔍 Линза (удерживайте)</button>
             
             <button id="btn-fs-capture" class="btn-action btn-lock-measure btn-fs-huge-trigger" onclick="captureMeasurement(); closeFullscreenCompass();" disabled>Поймайте уровень horizon</button>
         </div>
@@ -740,20 +772,28 @@
 
                 <div class="camera-viewport-wrapper">
                     <div id="digital-compass-disk" class="digital-compass-disk-container">
-                        <div class="compass-device-sight-line"></div>
-                        
-                        <svg id="compass-svg-canvas" viewBox="0 0 300 300">
-                            <!-- JS нарисует лимб -->
-                        </svg>
+                        <button type="button" id="lens-btn" class="lens-btn" aria-label="Линза: удерживайте, чтобы увидеть данные крупно" oncontextmenu="return false">🔍 Линза</button>
 
-                        <div class="compass-center-bubble-level">
-                            <div id="compass-bubble" class="compass-bubble-dot"></div>
+                        <div class="limb-stage">
+                            <svg id="compass-svg-canvas" viewBox="0 0 300 300">
+                                <!-- JS нарисует лимб -->
+                            </svg>
+
+                            <svg class="sight-needle-overlay" viewBox="0 0 300 300" aria-hidden="true">
+                                <polygon points="147.5,-400 152.5,-400 152.5,-2 155.5,4 150,30 144.5,4 147.5,-2" fill="#FF1A1A"/>
+                                <line x1="150" y1="-400" x2="150" y2="22" stroke="#FFE0E0" stroke-width="1" opacity="0.9"/>
+                            </svg>
+
+                            <div class="compass-center-bubble-level">
+                                <div id="compass-bubble" class="compass-bubble-dot"></div>
+                            </div>
                         </div>
 
                         <div class="compass-bottom-info-panel">
-                            <div id="dms-azimuth-text" style="font-size: 15px; font-weight: bold; color: #8FBC8F; margin-bottom: 2px;">АЗИМУТ: 0° 00' 00"</div>
-                            <div id="dms-coords-text" style="font-size: 10px; opacity: 0.9;">61° 28' 48" с.ш.  50° 30' 06" в.д.</div>
-                            <div id="altitude-text" style="font-size: 10px; color: #8FBC8F;">Высота: 150 м</div>
+                            <div id="dms-azimuth-text" class="limb-az">АЗИМУТ: 0° 00' 00"</div>
+                            <div id="rumb-text" class="limb-rumb">Румб — · Обр. —</div>
+                            <div id="dms-coords-text" class="limb-coords">61° 28' 48" с.ш.  50° 30' 06" в.д.</div>
+                            <div id="altitude-text" class="limb-alt">Высота: 150 м</div>
                         </div>
                     </div>
 
@@ -794,7 +834,7 @@
 
             <div class="card">
                 <h2>Журнал полевой съемки визиров</h2>
-                <div class="subtitle">Сюда автоматически заносятся зафиксированные румбы линий делянки. Любое значение можно изменить вручную.</div>
+                <div class="subtitle">Сюда автоматически заносятся зафиксированные румбы линий делянки. Любое значение можно изменить вручную. Удерживайте № или координаты строки — данные покажутся крупно.</div>
                 
                 <div class="log-table-wrapper">
                     <table class="measurements-log-table">
@@ -916,8 +956,8 @@
             <div class="footer-column">
                 <h4>Контакты</h4>
                 <div style="font-weight: 600; margin-bottom: 4px;">ИП Худяков Николай Сергеевич</div>
-                <div style="font-size: 11px; opacity: 0.7; margin-bottom: 8px;">ИНН: 11180157622</div>
-                <a href="mailto:foltaim@mail.ru" style="color:#8FBC8F; font-weight:bold; text-decoration:none; display:block; margin-bottom:10px;">✉️ foltaim@mail.ru</a>
+                <div style="font-size: 11px; opacity: 0.7; margin-bottom: 8px;">ИНН: 111801576622</div>
+                <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; font-weight:bold; text-decoration:none; display:block; margin-bottom:10px;">✉️ folgoal@gmail.com</a>
             </div>
         </div>
         <div class="footer-bottom">
@@ -957,7 +997,13 @@
 
     let lastVibratedSector = -1; 
 
-    let calibrationOffsetDecimal = 0.0;
+    // Поправка хранится отдельно для вертикального визира и для лимба
+    let offsetMagnetic = 0.0;
+    let offsetLimb = 0.0;
+
+    function getCurrentOffsetDecimal() {
+        return (currentSystemMode === 'magnetic') ? offsetMagnetic : offsetLimb;
+    }
 
     function updateOffsetFromUI() {
         const sign = document.getElementById('offset-sign-select').value;
@@ -967,32 +1013,44 @@
         let total = deg + (min / 60.0);
         if (sign === '-') total = -total;
 
-        calibrationOffsetDecimal = total;
-        localStorage.setItem('lesovik_calibration_offset', calibrationOffsetDecimal);
-    }
-
-    function loadCalibrationOffset() {
-        const savedOffset = localStorage.getItem('lesovik_calibration_offset');
-        if (savedOffset !== null) {
-            calibrationOffsetDecimal = parseFloat(savedOffset) || 0.0;
-            
-            let absVal = Math.abs(calibrationOffsetDecimal);
-            let sign = calibrationOffsetDecimal < 0 ? '-' : '+';
-            let deg = Math.floor(absVal);
-            let min = Math.round((absVal - deg) * 60);
-
-            document.getElementById('offset-sign-select').value = sign;
-            document.getElementById('offset-deg-input').value = deg > 0 ? deg : '';
-            document.getElementById('offset-min-input').value = min > 0 ? min : '';
+        if (currentSystemMode === 'magnetic') {
+            offsetMagnetic = total;
+            localStorage.setItem('lesovik_calibration_offset', offsetMagnetic);
+        } else {
+            offsetLimb = total;
+            localStorage.setItem('lesovik_calibration_offset_limb', offsetLimb);
         }
     }
 
+    function showOffsetInUI() {
+        const val = getCurrentOffsetDecimal();
+        const absVal = Math.abs(val);
+        const sign = val < 0 ? '-' : '+';
+        const deg = Math.floor(absVal);
+        const min = Math.round((absVal - deg) * 60);
+        document.getElementById('offset-sign-select').value = sign;
+        document.getElementById('offset-deg-input').value = deg > 0 ? deg : '';
+        document.getElementById('offset-min-input').value = min > 0 ? min : '';
+    }
+
+    function loadCalibrationOffset() {
+        const savedMag = localStorage.getItem('lesovik_calibration_offset');
+        const savedLimb = localStorage.getItem('lesovik_calibration_offset_limb');
+        offsetMagnetic = savedMag !== null ? (parseFloat(savedMag) || 0.0) : 0.0;
+        // Для существующих пользователей лимб стартует с прежней общей поправкой
+        offsetLimb = savedLimb !== null ? (parseFloat(savedLimb) || 0.0) : offsetMagnetic;
+        showOffsetInUI();
+    }
+
     function clearCalibrationOffset() {
-        calibrationOffsetDecimal = 0.0;
-        localStorage.removeItem('lesovik_calibration_offset');
-        document.getElementById('offset-sign-select').value = '+';
-        document.getElementById('offset-deg-input').value = '';
-        document.getElementById('offset-min-input').value = '';
+        if (currentSystemMode === 'magnetic') {
+            offsetMagnetic = 0.0;
+            localStorage.removeItem('lesovik_calibration_offset');
+        } else {
+            offsetLimb = 0.0;
+            localStorage.setItem('lesovik_calibration_offset_limb', 0);
+        }
+        showOffsetInUI();
     }
 
     function openFullscreenCompass() {
@@ -1050,52 +1108,219 @@
         if (!svg) return;
         svg.innerHTML = '';
 
+        const NS = "http://www.w3.org/2000/svg";
         const cx = 150, cy = 150, r = 142;
 
-        let outerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        outerCircle.setAttribute("cx", cx);
-        outerCircle.setAttribute("cy", cy);
-        outerCircle.setAttribute("r", r);
-        outerCircle.setAttribute("fill", "#18221D");
-        outerCircle.setAttribute("stroke", "#8FBC8F");
-        outerCircle.setAttribute("stroke-width", "3");
-        svg.appendChild(outerCircle);
-
-        for (let i = 0; i < 360; i += 5) {
-            let angleRad = ((i - 90) * Math.PI) / 180;
-            let isMajor = (i % 30 === 0);
-            let tickLen = isMajor ? 16 : 8;
-
-            let x1 = cx + (r - 2) * Math.cos(angleRad);
-            let y1 = cy + (r - 2) * Math.sin(angleRad);
-            let x2 = cx + (r - 2 - tickLen) * Math.cos(angleRad);
-            let y2 = cy + (r - 2 - tickLen) * Math.sin(angleRad);
-
-            let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line.setAttribute("x1", x1);
-            line.setAttribute("y1", y1);
-            line.setAttribute("x2", x2);
-            line.setAttribute("y2", y2);
-            line.setAttribute("stroke", isMajor ? "#F9FBF9" : "rgba(255,255,255,0.4)");
-            line.setAttribute("stroke-width", isMajor ? "2.5" : "1");
-            svg.appendChild(line);
-
-            if (isMajor) {
-                let tx = cx + (r - 30) * Math.cos(angleRad);
-                let ty = cy + (r - 30) * Math.sin(angleRad);
-
-                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", tx);
-                text.setAttribute("y", ty + 4);
-                text.setAttribute("fill", i === 0 ? "#FF0000" : "#F9FBF9");
-                text.setAttribute("font-size", "12");
-                text.setAttribute("font-weight", "bold");
-                text.setAttribute("font-family", "Inter, sans-serif");
-                text.setAttribute("text-anchor", "middle");
-                text.textContent = (i === 0) ? "С" : i;
-                svg.appendChild(text);
-            }
+        function add(tag, attrs, text) {
+            const node = document.createElementNS(NS, tag);
+            Object.keys(attrs).forEach(k => node.setAttribute(k, attrs[k]));
+            if (text !== undefined) node.textContent = text;
+            svg.appendChild(node);
+            return node;
         }
+        function polar(deg, radius) {
+            const a = ((deg - 90) * Math.PI) / 180;
+            return { x: cx + radius * Math.cos(a), y: cy + radius * Math.sin(a) };
+        }
+
+        // Корпус лимба и внутренний диск
+        add('circle', { cx: cx, cy: cy, r: r, fill: '#18221D', stroke: '#8FBC8F', 'stroke-width': 3 });
+        add('circle', { cx: cx, cy: cy, r: 76, fill: '#121A16', stroke: 'rgba(143,188,143,0.35)', 'stroke-width': 1 });
+
+        // Шкала: деления через 1°, выделены 5°, 10° и 30°
+        for (let i = 0; i < 360; i += 1) {
+            let len, color, width;
+            if (i % 30 === 0) { len = 18; color = '#F9FBF9'; width = 2.5; }
+            else if (i % 10 === 0) { len = 12; color = 'rgba(249,251,249,0.9)'; width = 1.7; }
+            else if (i % 5 === 0) { len = 8; color = 'rgba(255,255,255,0.6)'; width = 1.2; }
+            else { len = 4; color = 'rgba(255,255,255,0.32)'; width = 0.6; }
+            if (i === 0) color = '#FF3B30';
+            const p1 = polar(i, r - 2);
+            const p2 = polar(i, r - 2 - len);
+            add('line', { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, stroke: color, 'stroke-width': width });
+        }
+
+        // Крупные подписи через 30°
+        for (let i = 0; i < 360; i += 30) {
+            const p = polar(i, r - 31);
+            add('text', {
+                x: p.x, y: p.y + 5,
+                fill: i === 0 ? '#FF3B30' : '#F9FBF9',
+                'font-size': 14, 'font-weight': 'bold',
+                'font-family': 'Inter, sans-serif', 'text-anchor': 'middle'
+            }, String(i));
+        }
+
+        // Подписи через 10° (кроме кратных 30°), читаемые в любом положении
+        for (let i = 10; i < 360; i += 10) {
+            if (i % 30 === 0) continue;
+            const flip = (i > 90 && i < 270);
+            const rot = flip ? i + 180 : i;
+            const py = flip ? cy + 121 : cy - 121;
+            add('text', {
+                x: cx, y: py + 3.2,
+                fill: 'rgba(249,251,249,0.82)',
+                'font-size': 8.5, 'font-family': 'Inter, sans-serif', 'text-anchor': 'middle',
+                transform: 'rotate(' + rot + ' ' + cx + ' ' + cy + ')'
+            }, String(i));
+        }
+
+        // Страны света и четвертные направления во внутреннем кольце
+        const dirs = ['С', 'СВ', 'В', 'ЮВ', 'Ю', 'ЮЗ', 'З', 'СЗ'];
+        dirs.forEach((name, k) => {
+            const main = (k % 2 === 0);
+            const p = polar(k * 45, 82);
+            add('text', {
+                x: p.x, y: p.y + (main ? 6 : 3.6),
+                fill: k === 0 ? '#FF3B30' : (main ? '#F9FBF9' : '#8FBC8F'),
+                'font-size': main ? 17 : 10,
+                'font-weight': 'bold', 'font-family': 'Inter, sans-serif', 'text-anchor': 'middle'
+            }, name);
+        });
+
+        // Стрелка север-юг и ось
+        add('polygon', { points: '150,84 142,150 158,150', fill: '#DC2626', filter: 'drop-shadow(0 0 6px rgba(220,38,38,0.8))' });
+        add('polygon', { points: '150,216 142,150 158,150', fill: '#FFFFFF', filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.5))' });
+        add('circle', { cx: cx, cy: cy, r: 5, fill: '#18221D', stroke: '#8FBC8F', 'stroke-width': 1.5 });
+    }
+
+    // Румб: острый угол от ближайшего меридиана с названием четверти
+    function azimuthToRumb(az) {
+        const a = ((az % 360) + 360) % 360;
+        let name, ang;
+        if (a < 90) { name = 'СВ'; ang = a; }
+        else if (a < 180) { name = 'ЮВ'; ang = 180 - a; }
+        else if (a < 270) { name = 'ЮЗ'; ang = a - 180; }
+        else { name = 'СЗ'; ang = 360 - a; }
+        return name + ' ' + ang.toFixed(1) + '°';
+    }
+
+    // Румб, обратный азимут и цвет пузырька уровня
+    function updateLimbReadouts(az, pitch, roll) {
+        const back = (az + 180) % 360;
+        const line = 'Румб ' + azimuthToRumb(az) + ' · Обр. ' + back.toFixed(1) + '°';
+        const rumbEl = document.getElementById('rumb-text');
+        if (rumbEl) rumbEl.innerText = line;
+        const fsRumb = document.getElementById('fs-rumb');
+        if (fsRumb) fsRumb.innerText = line;
+
+        // Пузырёк: зелёный в допуске фиксации (±4°), жёлтый до 12°, красный дальше
+        const tilt = Math.max(Math.abs(roll), Math.abs(pitch));
+        const color = tilt <= 4 ? '#16A34A' : (tilt <= 12 ? '#F59E0B' : '#DC2626');
+        ['compass-bubble', 'fs-compass-bubble'].forEach(id => {
+            const b = document.getElementById(id);
+            if (b) { b.style.background = color; b.style.boxShadow = '0 0 10px ' + color; }
+        });
+    }
+
+    // ---------- Линза: данные крупно, пока удерживается кнопка или строка журнала ----------
+    let lensSource = null;   // 'limb' | { row: id } | null
+    let lensLast = { az: 0, pitch: 0, roll: 0 };
+
+    function lensModeName(m) { return m === 'magnetic' ? 'визир' : 'лимб'; }
+
+    function lensHtmlLimb() {
+        const az = lensLast.az;
+        const back = (az + 180) % 360;
+        return `
+            <div class="lc-title">Азимут</div>
+            <div class="lc-big">${az.toFixed(1)}°</div>
+            <div class="lc-row">${decimalAngleToDMS(az)}</div>
+            <div class="lc-mid lc-warn">Румб ${azimuthToRumb(az)}</div>
+            <div class="lc-row">Обратный азимут ${back.toFixed(1)}°</div>
+            <div class="lc-row">${decimalToDMS(currentLat, true)}<br>${decimalToDMS(currentLng, false)}</div>
+            <div class="lc-row">Высота: ${currentAltitude} м</div>`;
+    }
+
+    function lensHtmlRow(id) {
+        const m = measurementsLog.find(x => x.id === id);
+        if (!m) return '';
+        const az = m.azimuth;
+        const back = (az + 180) % 360;
+        const lat = m.lat ? decimalToDMS(m.lat, true) : "0° 00' 00\" с.ш.";
+        const lng = m.lng ? decimalToDMS(m.lng, false) : "0° 00' 00\" в.д.";
+        const alt = m.altitude ? m.altitude : 150;
+        return `
+            <div class="lc-title">Линия №${m.id} · ${lensModeName(m.systemMode || 'magnetic')}</div>
+            <div class="lc-big">${az.toFixed(1)}°</div>
+            <div class="lc-mid lc-warn">Румб ${azimuthToRumb(az)}</div>
+            <div class="lc-row">Обратный азимут ${back.toFixed(1)}°</div>
+            <div class="lc-row">Длина ${m.distance} м</div>
+            <div class="lc-row">${lat}<br>${lng}</div>
+            <div class="lc-row">Высота: ${alt} м</div>`;
+    }
+
+    function lensShow(source) {
+        const cloud = document.getElementById('lens-cloud');
+        if (!cloud) return;
+        lensSource = source;
+        cloud.innerHTML = (source === 'limb') ? lensHtmlLimb() : lensHtmlRow(source.row);
+        if (!cloud.innerHTML) { lensHide(); return; }
+        cloud.classList.add('show');
+    }
+
+    function lensHide() {
+        lensSource = null;
+        const cloud = document.getElementById('lens-cloud');
+        if (cloud) cloud.classList.remove('show');
+        ['lens-btn', 'lens-btn-fs'].forEach(id => {
+            const b = document.getElementById(id);
+            if (b) b.classList.remove('pressed');
+        });
+    }
+
+    function lensRefreshLive() {
+        if (lensSource === 'limb') {
+            const cloud = document.getElementById('lens-cloud');
+            if (cloud) cloud.innerHTML = lensHtmlLimb();
+        }
+    }
+
+    function bindLensButton(id) {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        const down = (e) => {
+            e.preventDefault();
+            btn.classList.add('pressed');
+            try { btn.setPointerCapture(e.pointerId); } catch (err) {}
+            lensShow('limb');
+        };
+        const up = () => lensHide();
+        btn.addEventListener('pointerdown', down);
+        btn.addEventListener('pointerup', up);
+        btn.addEventListener('pointercancel', up);
+        btn.addEventListener('lostpointercapture', up);
+        btn.addEventListener('contextmenu', (e) => e.preventDefault());
+        btn.addEventListener('keydown', (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); if (lensSource !== 'limb') lensShow('limb'); } });
+        btn.addEventListener('keyup', (e) => { if (e.key === ' ' || e.key === 'Enter') lensHide(); });
+    }
+
+    // Долгое нажатие на № или координаты строки журнала
+    function bindRowLens() {
+        const tbody = document.getElementById('log-tbody');
+        if (!tbody || tbody.dataset.lensBound) return;
+        tbody.dataset.lensBound = '1';
+        let timer = null, startX = 0, startY = 0, active = false;
+
+        const cancelTimer = () => { if (timer) { clearTimeout(timer); timer = null; } };
+        tbody.addEventListener('pointerdown', (e) => {
+            const cell = e.target.closest('.row-lens-cell');
+            if (!cell) return;
+            const id = parseInt(cell.getAttribute('data-row-id'), 10);
+            startX = e.clientX; startY = e.clientY;
+            cancelTimer();
+            timer = setTimeout(() => { active = true; lensShow({ row: id }); }, 350);
+        });
+        tbody.addEventListener('pointermove', (e) => {
+            if (timer && (Math.abs(e.clientX - startX) > 10 || Math.abs(e.clientY - startY) > 10)) cancelTimer();
+        });
+        const end = () => { cancelTimer(); if (active) { active = false; lensHide(); } };
+        tbody.addEventListener('pointerup', end);
+        tbody.addEventListener('pointercancel', end);
+        tbody.addEventListener('pointerleave', end);
+        tbody.addEventListener('contextmenu', (e) => { if (e.target.closest('.row-lens-cell')) e.preventDefault(); });
+        const wrap = tbody.closest('.log-table-wrapper');
+        if (wrap) wrap.addEventListener('scroll', end, { passive: true });
     }
 
     function saveToLocalStorage() {
@@ -1111,7 +1336,12 @@
         const savedMode = localStorage.getItem('lesovik_system_mode');
         const savedDir = localStorage.getItem('lesovik_traverse_direction');
         
+        // режим нужен до загрузки поправки: у визира и лимба она своя
+        if (savedMode) { currentSystemMode = savedMode; }
         loadCalibrationOffset();
+        bindLensButton('lens-btn');
+        bindLensButton('lens-btn-fs');
+        bindRowLens();
 
         if (savedStep) {
             stepLength = parseFloat(savedStep);
@@ -1204,18 +1434,12 @@
     }
 
     function switchSystemMode(mode) {
-        if (measurementsLog.length > 0) {
-            if (!confirm("Внимание! При смене режима текущий журнал полевой съемки будет очищен. Продолжить?")) {
-                return;
-            }
-        }
-        measurementsLog = [];
-        baseAzimuth = null;
+        if (mode === currentSystemMode) return;
         activePedometerIndex = null;
         currentSystemMode = mode;
-        
+
         applyModeUI();
-        resetZeroDirection();
+        showOffsetInUI();
         renderLogTable();
         saveToLocalStorage();
         drawPolygon();
@@ -1333,6 +1557,17 @@
         }
     }
 
+    const dialState = {};
+    function rotateDial(el, id, azimuth) {
+        if (!el) return;
+        const prev = dialState[id] !== undefined ? dialState[id] : 0;
+        const target = -azimuth;
+        const delta = (((target - prev) % 360) + 540) % 360 - 180;
+        const next = prev + delta;
+        dialState[id] = next;
+        el.style.transform = `rotate(${next}deg)`;
+    }
+
     function handleOrientation(event) {
         let heading = event.webkitCompassHeading;
         if (heading === undefined) {
@@ -1382,7 +1617,7 @@
         
         // --- МГНОВЕННОЕ ПРИМЕНЕНИЕ ЮСТИРОВОЧНОЙ ПОПРАВКИ ---
         let rawAzimuth = smoothedAzimuth;
-        currentAzimuth = (rawAzimuth + calibrationOffsetDecimal + 360) % 360;
+        currentAzimuth = (rawAzimuth + getCurrentOffsetDecimal() + 360) % 360;
 
         let pitch = Math.round(event.beta || 0); 
         let roll = Math.round(event.gamma || 0);  
@@ -1425,8 +1660,8 @@
             const dialSvg = document.getElementById('compass-svg-canvas');
             const fsDialSvg = document.getElementById('fs-compass-svg');
             
-            if (dialSvg) dialSvg.style.transform = `rotate(${-currentAzimuth}deg)`;
-            if (fsDialSvg) fsDialSvg.style.transform = `rotate(${-currentAzimuth}deg)`;
+            rotateDial(dialSvg, 'compass-svg-canvas', currentAzimuth);
+            rotateDial(fsDialSvg, 'fs-compass-svg', currentAzimuth);
 
             let dmsText = `АЗИМУТ: ${decimalAngleToDMS(currentAzimuth)}`;
             let coordsText = `${decimalToDMS(currentLat, true)}  ${decimalToDMS(currentLng, false)}`;
@@ -1439,6 +1674,10 @@
             document.getElementById('fs-dms-azimuth').innerText = dmsText;
             document.getElementById('fs-dms-coords').innerText = coordsText;
             document.getElementById('fs-altitude').innerText = altText;
+
+            lensLast = { az: currentAzimuth, pitch: pitch, roll: roll };
+            updateLimbReadouts(currentAzimuth, pitch, roll);
+            lensRefreshLive();
 
             let currentSector = Math.floor((currentAzimuth + 2) / 30);
             if (currentSector !== lastVibratedSector) {
@@ -1693,7 +1932,7 @@
 
             tbody.innerHTML += `
                 <tr>
-                    <td><b>№${m.id}</b></td>
+                    <td class="row-lens-cell" data-row-id="${m.id}"><b>№${m.id}</b><span class="mode-tag ${m.systemMode === 'theodolite' ? '' : 'visir'}">${m.systemMode === 'theodolite' ? '🧭 лимб' : '👁 визир'}</span></td>
                     <td>
                         <input type="number" class="input-dist" value="${m.azimuth}" step="0.1" style="color:var(--forest-green); font-weight:700;" onfocus="this.select()" oninput="changeLineAzimuth(${m.id}, this.value)">
                     </td>
@@ -1707,7 +1946,7 @@
                         </select>
                         ${stepIndicator}
                     </td>
-                    <td><span style="font-size:10px; font-family:monospace; display:block; white-space:normal; word-break:break-all;">${dmsLat}<br>${dmsLng} (${altVal})</span></td>
+                    <td class="row-lens-cell" data-row-id="${m.id}"><span style="font-size:10px; font-family:monospace; display:block; white-space:normal; word-break:break-all;">${dmsLat}<br>${dmsLng} (${altVal})</span></td>
                     <td>
                         <button class="btn-delete-row" onclick="deleteMeasurement(${m.id})">❌</button>
                     </td>
@@ -1901,6 +2140,7 @@
             document.getElementById('traverse-select-direction').value = currentTraverseDirection;
             
             applyModeUI();
+            showOffsetInUI();
             if (baseAzimuth !== null) {
                 document.getElementById('base-azimuth').innerText = `${baseAzimuth.toFixed(1)}°`;
             } else {
@@ -1933,7 +2173,7 @@
         }
         
         let csvContent = "\uFEFF"; 
-        csvContent += "Название делянки;Дата сохранения;Линия;Угол/Азимут;Длина (м);Тип ввода;Широта (СШ);Долгота (ВД);Высота (м)\n";
+        csvContent += "Название делянки;Дата сохранения;Линия;Угол/Азимут;Длина (м);Тип ввода;Широта (СШ);Долгота (ВД);Высота (м);Режим замера\n";
         
         dataToExport.forEach(proj => {
             proj.log.forEach(m => {
@@ -1941,7 +2181,8 @@
                 let dmsLng = m.lng ? decimalToDMS(m.lng, false) : "0° 00' 00\" в.д.";
                 let altVal = m.altitude || 150;
                 let modeText = m.mode === 'manual' ? "Ручной" : "Шаги";
-                csvContent += `"${proj.name}";"${proj.timestamp}";"№${m.id}";"${m.azimuth}";"${m.distance}";"${modeText}";"${dmsLat}";"${dmsLng}";"${altVal}"\n`;
+                let sysText = m.systemMode === 'theodolite' ? "Лимб" : "Визир";
+                csvContent += `"${proj.name}";"${proj.timestamp}";"№${m.id}";"${m.azimuth}";"${m.distance}";"${modeText}";"${dmsLat}";"${dmsLng}";"${altVal}";"${sysText}"\n`;
             });
         });
 
@@ -2073,5 +2314,6 @@
         loadFromLocalStorage();
     });
 </script>
+<div id="lens-cloud" class="lens-cloud" aria-live="polite"></div>
 </body>
 </html>
