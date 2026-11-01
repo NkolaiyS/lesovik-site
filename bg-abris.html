@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Абрис-Схема лесосеки онлайн | Лесовик ПРО</title>
+    <meta name="description" content="Построение чертежей лесосек, привязка к квартальной сети, наложение сканов планшетов и расчет площадей по данным буссоли БГ-ХНС.">
+    <link rel="canonical" href="https://lesovik-pro.ru/bg-abris.html">
+    <link rel="icon" type="image/jpeg" href="logo.jpeg">
+    <meta name="theme-color" content="#2D5A27">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --bg-paper: #F9FBF9;
+            --text-graphite: #333333;
+            --forest-green: #2D5A27;
+            --forest-light: #8FBC8F;
+            --border-color: #E0E0E0;
+            --card-bg: #FFFFFF;
+            --glass-bg: rgba(249, 251, 249, 0.9);
+            --footer-bg: #2C3531;
+            --danger: #DC2626;
+            --success: #16A34A;
+            --warning-alert: #F59E0B;
+        }
+
+        [data-theme="dark"] {
+            --bg-paper: #1A2421;
+            --text-graphite: #F9FBF9;
+            --forest-green: #8FBC8F;
+            --forest-light: #2D5A27;
+            --border-color: #3A4F46;
+            --card-bg: #22302B;
+            --glass-bg: rgba(26, 36, 33, 0.9);
+            --footer-bg: #111815;
+        }
+
+        html, body {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-paper);
+            color: var(--text-graphite);
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+        }
+
+        *, *:before, *:after { box-sizing: border-box; }
+
+        /* ВЕРХНЯЯ ШАПКА */
+        .glass-header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 16px; background: var(--glass-bg);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            height: 54px;
+        }
+
+        .logo-container { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        .header-logo { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid var(--forest-green); }
+        .glass-header h1 { font-family: 'Merriweather', serif; color: var(--forest-green); margin: 0; font-size: 16px; }
+
+        .header-tools { display: flex; align-items: center; gap: 6px; }
+        .btn-header {
+            background: transparent; border: 1px solid var(--forest-green);
+            color: var(--forest-green); padding: 6px 10px; border-radius: 6px;
+            font-size: 11px; font-weight: 600; cursor: pointer; text-transform: uppercase;
+            display: inline-flex; align-items: center; gap: 4px;
+        }
+        .btn-header:hover { background: var(--forest-green); color: #FFF; }
+        .btn-header.active { background: var(--forest-green); color: #FFF; }
+
+        /* ОСНОВНОЙ ХОЛСТ ЧЕРТЕЖА */
+        #viewport-container {
+            position: absolute; top: 54px; left: 0; right: 0; bottom: 0;
+            overflow: hidden; background: #EFEFEF;
+            cursor: grab;
+        }
+        #viewport-container.grabbing { cursor: grabbing; }
+        #viewport-container.calibrating { cursor: crosshair; }
+
+        #main-canvas {
+            position: absolute; top: 0; left: 0;
+            transform-origin: 0 0;
+        }
+
+        /* ПЛАВАЮЩАЯ ПЕРЕМЕЩАЕМАЯ ПАНЕЛЬ (DOCK PANEL) */
+        .floating-panel {
+            position: absolute; top: 70px; right: 20px; width: 340px;
+            max-height: calc(100vh - 90px);
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            z-index: 500;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            transition: width 0.2s, height 0.2s;
+        }
+
+        .floating-panel.minimized {
+            width: 140px; height: 38px;
+        }
+        .floating-panel.minimized .panel-content { display: none; }
+
+        .panel-header {
+            padding: 8px 12px; background: rgba(45, 90, 39, 0.08);
+            border-bottom: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: move;
+        }
+        .panel-header-title { font-size: 12px; font-weight: 700; color: var(--forest-green); font-family: 'Merriweather', serif; }
+        .panel-controls-btn { background: none; border: none; font-size: 14px; cursor: pointer; color: var(--text-graphite); opacity: 0.7; }
+
+        .panel-content {
+            padding: 12px; overflow-y: auto; max-height: calc(100vh - 140px);
+            font-size: 12px;
+        }
+
+        /* ВКЛАДКИ ПАНЕЛИ */
+        .tab-nav { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 10px; }
+        .tab-btn {
+            flex: 1; padding: 6px 4px; background: none; border: none;
+            border-bottom: 2px solid transparent; font-size: 11px; font-weight: 600;
+            color: var(--text-graphite); cursor: pointer; text-align: center;
+        }
+        .tab-btn.active { color: var(--forest-green); border-bottom-color: var(--forest-green); }
+
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+
+        /* ТАБЛИЦА СЪЕМКИ */
+        .lines-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
+        .lines-table th, .lines-table td { border: 1px solid var(--border-color); padding: 4px; text-align: center; }
+        .lines-table th { background: rgba(0,0,0,0.03); color: var(--forest-green); font-size: 10px; }
+        .input-table { width: 100%; border: none; background: transparent; text-align: center; font-size: 11px; font-weight: 600; color: var(--text-graphite); }
+
+        .field-group { margin-bottom: 8px; }
+        .field-group label { display: block; font-size: 10px; font-weight: 600; opacity: 0.8; margin-bottom: 2px; }
+        .field-group input, .field-group select {
+            width: 100%; padding: 6px; border: 1px solid var(--border-color);
+            border-radius: 4px; background: var(--bg-paper); color: var(--text-graphite);
+            font-size: 11px;
+        }
+
+        /* ИНДИКАТОРЫ И ИНФОБЛОКИ */
+        .info-pill {
+            background: rgba(45, 90, 39, 0.1); border: 1px solid var(--border-color);
+            border-radius: 6px; padding: 6px 8px; font-size: 11px; margin-bottom: 8px;
+            font-weight: 600; color: var(--forest-green); text-align: center;
+        }
+
+        /* МОДАЛЬНЫЕ ОКНА */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6); z-index: 2000; display: none;
+            align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-box {
+            background: var(--card-bg); border-radius: 8px; width: 100%; max-width: 420px;
+            padding: 16px; border: 1px solid var(--border-color);
+        }
+        .modal-box h3 { margin-top: 0; color: var(--forest-green); font-family: 'Merriweather', serif; font-size: 15px; }
+    </style>
+</head>
+<body>
+
+    <header class="glass-header">
+        <a href="#" class="logo-container" onclick="return false;">
+            <img src="logo.jpeg" alt="Лесовик ПРО" class="header-logo" onerror="this.style.display='none'">
+            <h1>БГ-АБРИС <span style="font-size: 10px; opacity: 0.6; font-family:'Inter';">СХЕМА</span></h1>
+        </a>
+
+        <div class="header-tools">
+            <input type="file" id="raster-input" accept="image/jpeg,image/png" style="display: none;" onchange="loadRasterMap(event)">
+            <button class="btn-header" onclick="document.getElementById('raster-input').click()">🗺️ Скан планшета</button>
+
+            <button class="btn-header" id="btn-calib-tool" onclick="toggleCalibrationTool()">📐 Калибровка (Линейка)</button>
+            <button class="btn-header" onclick="triggerImportDialog()">📥 Загрузить из БГ-ХНС</button>
+            <button class="btn-header" onclick="exportProjectFile()">💾 Сохранить</button>
+            <button class="btn-header" onclick="window.print()">🖨️ Печать А4</button>
+            <button class="btn-header" onclick="toggleTheme()">🌓</button>
+        </div>
+    </header>
+
+    <div id="viewport-container">
+        <canvas id="main-canvas"></canvas>
+    </div>
+
+    <!-- ПЛАВАЮЩАЯ ПАНЕЛЬ АВЕРС-УПРАВЛЕНИЯ -->
+    <div id="dock-panel" class="floating-panel">
+        <div id="dock-header" class="panel-header">
+            <span class="panel-header-title">Параметры и съемка</span>
+            <div>
+                <button class="panel-controls-btn" onclick="togglePanelMinimize()">—</button>
+            </div>
+        </div>
+
+        <div class="panel-content">
+            <div class="tab-nav">
+                <button class="tab-btn active" onclick="switchTab('tab-lines')">Делянка</button>
+                <button class="tab-btn" onclick="switchTab('tab-tie')">Привязка</button>
+                <button class="tab-btn" onclick="switchTab('tab-raster')">Скан/Подложка</button>
+                <button class="tab-btn" onclick="switchTab('tab-stamp')">Штамп</button>
+            </div>
+
+            <!-- ВКЛАДКА 1: ХОД ДЕЛЯНКИ -->
+            <div id="tab-lines" class="tab-pane active">
+                <div class="info-pill" id="calc-area-badge">Площадь: 0.0000 га (P = 0 м)</div>
+
+                <table class="lines-table">
+                    <thead>
+                        <tr>
+                            <th>№</th>
+                            <th>Азимут, °</th>
+                            <th>Длина, м</th>
+                            <th>Удал.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lines-tbody">
+                        <!-- JS отрисует строки хода -->
+                    </tbody>
+                </table>
+                <button class="btn-header" style="width: 100%; margin-top: 8px; justify-content: center;" onclick="addNewLine()">➕ Добавить линию</button>
+            </div>
+
+            <!-- ВКЛАДКА 2: ПРИВЯЗКА -->
+            <div id="tab-tie" class="tab-pane">
+                <div style="font-size: 11px; margin-bottom: 6px; opacity: 0.8;">Ход от квартального столба / визира до Столба №1:</div>
+                <div class="field-group">
+                    <label>Начальная точка:</label>
+                    <input type="text" id="tie-start-name" value="Кв. столб 142/143" oninput="redrawAll()">
+                </div>
+                <div class="field-group">
+                    <label>Магнитный азимут линии привязки (°):</label>
+                    <input type="number" id="tie-azimuth" value="45.0" step="0.1" oninput="redrawAll()">
+                </div>
+                <div class="field-group">
+                    <label>Длина линии привязки (м):</label>
+                    <input type="number" id="tie-distance" value="150.0" step="1" oninput="redrawAll()">
+                </div>
+            </div>
+
+            <!-- ВКЛАДКА 3: УПРАВЛЕНИЕ ПОДЛОЖКОЙ ПЛАНШЕТА -->
+            <div id="tab-raster" class="tab-pane">
+                <div class="field-group">
+                    <label>Прозрачность скана:</label>
+                    <input type="range" id="raster-opacity" min="0.1" max="1.0" step="0.05" value="0.75" oninput="redrawAll()">
+                </div>
+                <div class="field-group">
+                    <label>Микроповорот подложки (°):</label>
+                    <input type="range" id="raster-rotation" min="-15" max="15" step="0.1" value="0" oninput="redrawAll()">
+                </div>
+                <div class="field-group">
+                    <label>Масштаб по линейке (1 пикс = м):</label>
+                    <input type="number" id="meters-per-pixel-input" value="1.0" step="0.05" oninput="updateManualScale(this.value)">
+                </div>
+                <button class="btn-header" style="width: 100%; color: var(--danger); border-color: var(--danger);" onclick="clearRasterMap()">🗑️ Удалить скан</button>
+            </div>
+
+            <!-- ВКЛАДКА 4: ШТАМП АБРИСА ПО ПРИКАЗУ МИНПРИРОДЫ -->
+            <div id="tab-stamp" class="tab-pane">
+                <div class="field-group">
+                    <label>Лесничество:</label>
+                    <input type="text" id="stamp-les" value="Ертомское" oninput="redrawAll()">
+                </div>
+                <div class="field-group">
+                    <label>Участковое лесничество:</label>
+                    <input type="text" id="stamp-uch" value="Важгортское" oninput="redrawAll()">
+                </div>
+                <div class="field-group">
+                    <label>Квартал / Выдел:</label>
+                    <input type="text" id="stamp-kv" value="кв. 142, выд. 12" oninput="redrawAll()">
+                </div>
+                <div class="field-group">
+                    <label>Масштаб чертежа:</label>
+                    <select id="stamp-scale" onchange="redrawAll()">
+                        <option value="10000">1:10 000 (в 1 см 100 м)</option>
+                        <option value="5000">1:5 000 (в 1 см 50 м)</option>
+                        <option value="25000">1:25 000 (в 1 см 250 м)</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label>Исполнитель:</label>
+                    <input type="text" id="stamp-author" value="ИП Худяков Н.С." oninput="redrawAll()">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ДИАЛОГ КАЛИБРОВКИ МАСШТАБА (ЛИНЕЙКИ) -->
+    <div id="calib-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Калибровка масштаба по линейке</h3>
+            <p style="font-size: 12px; opacity: 0.85;">Вы протянули контрольный отрезок на скане. Укажите, сколько метров составляет этот отрезок по линейке планшета:</p>
+            <div class="field-group">
+                <label>Фактическое расстояние (метров):</label>
+                <input type="number" id="calib-real-meters" value="100" min="1" step="1">
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+                <button class="btn-header" style="flex: 1; background: var(--forest-green); color: #FFF;" onclick="applyCalibration()">Применить</button>
+                <button class="btn-header" style="flex: 1;" onclick="cancelCalibration()">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ДИАЛОГ ВСТАВКИ ИЗ БГ-ХНС -->
+    <div id="import-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 500px;">
+            <h3>Импорт полевой съемки из БГ-ХНС</h3>
+            <p style="font-size: 11px; opacity: 0.85;">Вставьте скопированный текст из буфера обмена буссоли или выберите выгруженный JSON-файл:</p>
+            <textarea id="import-text-area" rows="6" style="width: 100%; font-family: monospace; font-size: 11px; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px;" placeholder='[{"id":1,"azimuth":90,"distance":100}, ...]'></textarea>
+            <div style="display: flex; gap: 8px; margin-top: 10px;">
+                <button class="btn-header" style="flex: 1; background: var(--forest-green); color: #FFF;" onclick="processImportText()">Импортировать</button>
+                <button class="btn-header" style="flex: 1;" onclick="closeModal('import-modal')">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ГЕОДЕЗИЧЕСКИЙ МАССИВ ДЕЛЯНКИ
+        let boundaryLines = [
+            { id: 1, azimuth: 90.0, distance: 200.0 },
+            { id: 2, azimuth: 180.0, distance: 150.0 },
+            { id: 3, azimuth: 270.0, distance: 200.0 },
+            { id: 4, azimuth: 0.0, distance: 150.0 }
+        ];
+
+        // ПОДЛОЖКА (СКАН КВАРТАЛА)
+        let rasterImage = null;
+        let rasterX = 0, rasterY = 0;
+        let rasterScale = 1.0;
+        let metersPerPixel = 1.0; // 1 пиксель скана = 1 метр местности
+
+        // ПАНОРАМИРОВАНИЕ И ЗУМ ВИДОВОГО ЭКРАНА
+        let viewX = 200, viewY = 200;
+        let viewZoom = 1.0;
+        let isDraggingView = false;
+        let dragStartX = 0, dragStartY = 0;
+
+        // РЕЖИМ КАЛИБРОВКИ ЛИНЕЙКИ
+        let isCalibrating = false;
+        let calibStartPoint = null;
+        let calibEndPoint = null;
+
+        const canvas = document.getElementById('main-canvas');
+        const ctx = canvas.getContext('2d');
+        const viewport = document.getElementById('viewport-container');
+
+        function initApp() {
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            initPanZoom();
+            initDockDrag();
+            renderTable();
+            redrawAll();
+        }
+
+        function resizeCanvas() {
+            canvas.width = viewport.clientWidth;
+            canvas.height = viewport.clientHeight;
+            redrawAll();
+        }
+
+        // --- УПРАВЛЕНИЕ ПАНОРАМИРОВАНИЕМ И ЗУМОМ ХОЛСТА ---
+        function initPanZoom() {
+            viewport.addEventListener('mousedown', (e) => {
+                if (isCalibrating) {
+                    const rect = canvas.getBoundingClientRect();
+                    const x = (e.clientX - rect.left - viewX) / viewZoom;
+                    const y = (e.clientY - rect.top - viewY) / viewZoom;
+                    if (!calibStartPoint) {
+                        calibStartPoint = { x, y };
+                    } else {
+                        calibEndPoint = { x, y };
+                        finishCalibLine();
+                    }
+                    redrawAll();
+                    return;
+                }
+
+                if (e.button === 0 || e.button === 1) { // Левая или средняя кнопка мыши
+                    isDraggingView = true;
+                    dragStartX = e.clientX - viewX;
+                    dragStartY = e.clientY - viewY;
+                    viewport.classList.add('grabbing');
+                }
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (isDraggingView) {
+                    viewX = e.clientX - dragStartX;
+                    viewY = e.clientY - dragStartY;
+                    redrawAll();
+                } else if (isCalibrating && calibStartPoint) {
+                    const rect = canvas.getBoundingClientRect();
+                    calibEndPoint = {
+                        x: (e.clientX - rect.left - viewX) / viewZoom,
+                        y: (e.clientY - rect.top - viewY) / viewZoom
+                    };
+                    redrawAll();
+                }
+            });
+
+            window.addEventListener('mouseup', () => {
+                isDraggingView = false;
+                viewport.classList.remove('grabbing');
+            });
+
+            viewport.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+                viewZoom *= zoomFactor;
+                redrawAll();
+            }, { passive: false });
+        }
+
+        // --- КАЛИБРОВКА МАСШТАБА ПО ЛИНЕЙКЕ ---
+        function toggleCalibrationTool() {
+            isCalibrating = !isCalibrating;
+            calibStartPoint = null;
+            calibEndPoint = null;
+            const btn = document.getElementById('btn-calib-tool');
+            if (isCalibrating) {
+                btn.classList.add('active');
+                viewport.classList.add('calibrating');
+            } else {
+                btn.classList.remove('active');
+                viewport.classList.remove('calibrating');
+            }
+        }
+
+        function finishCalibLine() {
+            isCalibrating = false;
+            document.getElementById('btn-calib-tool').classList.remove('active');
+            viewport.classList.remove('calibrating');
+            document.getElementById('calib-modal').style.display = 'flex';
+        }
+
+        function applyCalibration() {
+            if (!calibStartPoint || !calibEndPoint) return;
+            const dx = calibEndPoint.x - calibStartPoint.x;
+            const dy = calibEndPoint.y - calibStartPoint.y;
+            const pixelDist = Math.sqrt(dx * dx + dy * dy);
+
+            const realMeters = parseFloat(document.getElementById('calib-real-meters').value) || 100;
+            if (pixelDist > 0) {
+                metersPerPixel = realMeters / pixelDist;
+                document.getElementById('meters-per-pixel-input').value = metersPerPixel.toFixed(3);
+            }
+
+            cancelCalibration();
+            redrawAll();
+        }
+
+        function cancelCalibration() {
+            calibStartPoint = null;
+            calibEndPoint = null;
+            document.getElementById('calib-modal').style.display = 'none';
+            redrawAll();
+        }
+
+        function updateManualScale(val) {
+            metersPerPixel = parseFloat(val) || 1.0;
+            redrawAll();
+        }
+
+        // --- ЗАГРУЗКА РАСТРОВОЙ ПОДЛОЖКИ (СКАНА КВАРТАЛА) ---
+        function loadRasterMap(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    rasterImage = img;
+                    rasterX = 0;
+                    rasterY = 0;
+                    redrawAll();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearRasterMap() {
+            rasterImage = null;
+            redrawAll();
+        }
+
+        // --- РАСЧЕТ И ОТРИСОВКА ЧЕРТЕЖА ---
+        function redrawAll() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.save();
+            ctx.translate(viewX, viewY);
+            ctx.scale(viewZoom, viewZoom);
+
+            // 1. Отрисовка скана лесоустроительного планшета
+            if (rasterImage) {
+                ctx.save();
+                ctx.globalAlpha = parseFloat(document.getElementById('raster-opacity').value) || 0.75;
+                const rotDeg = parseFloat(document.getElementById('raster-rotation').value) || 0;
+                ctx.rotate((rotDeg * Math.PI) / 180);
+                ctx.drawImage(rasterImage, rasterX, rasterY);
+                ctx.restore();
+            }
+
+            // 2. Построение хода привязки
+            const tieAzimuth = parseFloat(document.getElementById('tie-azimuth').value) || 0;
+            const tieDist = parseFloat(document.getElementById('tie-distance').value) || 0;
+            const tieName = document.getElementById('tie-start-name').value;
+
+            // Точка квартального столба (0, 0)
+            const pStart = { x: 0, y: 0 };
+            const tieRad = (tieAzimuth * Math.PI) / 180;
+            // Перевод метров в пиксели холста
+            const tiePxDist = tieDist / metersPerPixel;
+            const pPost1 = {
+                x: pStart.x + tiePxDist * Math.sin(tieRad),
+                y: pStart.y - tiePxDist * Math.cos(tieRad)
+            };
+
+            ctx.strokeStyle = '#DC2626';
+            ctx.lineWidth = 2 / viewZoom;
+            ctx.setLineDash([6 / viewZoom, 4 / viewZoom]);
+            ctx.beginPath();
+            ctx.moveTo(pStart.x, pStart.y);
+            ctx.lineTo(pPost1.x, pPost1.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Метка квартального столба
+            ctx.fillStyle = '#DC2626';
+            ctx.beginPath();
+            ctx.arc(pStart.x, pStart.y, 4 / viewZoom, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.font = `${11 / viewZoom}px Inter, sans-serif`;
+            ctx.fillText(tieName, pStart.x + (6 / viewZoom), pStart.y - (6 / viewZoom));
+
+            // 3. Построение контура делянки от Столба №1
+            let currentPt = { ...pPost1 };
+            const polygonPoints = [ { ...currentPt } ];
+
+            ctx.strokeStyle = '#2D5A27';
+            ctx.lineWidth = 2.5 / viewZoom;
+
+            boundaryLines.forEach((line, index) => {
+                const rad = (line.azimuth * Math.PI) / 180;
+                const pxDist = line.distance / metersPerPixel;
+                const nextPt = {
+                    x: currentPt.x + pxDist * Math.sin(rad),
+                    y: currentPt.y - pxDist * Math.cos(rad)
+                };
+
+                ctx.beginPath();
+                ctx.moveTo(currentPt.x, currentPt.y);
+                ctx.lineTo(nextPt.x, nextPt.y);
+                ctx.stroke();
+
+                // Подпись румба и длины на середине линии
+                const midX = (currentPt.x + nextPt.x) / 2;
+                const midY = (currentPt.y + nextPt.y) / 2;
+                ctx.fillStyle = '#111815';
+                ctx.font = `bold ${10 / viewZoom}px Inter, sans-serif`;
+                ctx.fillText(`№${line.id} (${line.distance}м, ${line.azimuth}°)`, midX, midY - (4 / viewZoom));
+
+                currentPt = nextPt;
+                polygonPoints.push({ ...currentPt });
+            });
+
+            // Столбы делянки (узловые маркеры)
+            polygonPoints.forEach((pt, i) => {
+                if (i === polygonPoints.length - 1 && polygonPoints.length > 1) return; // Замыкание
+                ctx.fillStyle = '#16A34A';
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, 4.5 / viewZoom, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.fillStyle = '#000';
+                ctx.fillText(`Т.${i + 1}`, pt.x + (6 / viewZoom), pt.y + (12 / viewZoom));
+            });
+
+            // 4. Отрисовка калибровочного отрезка
+            if (calibStartPoint && calibEndPoint) {
+                ctx.strokeStyle = '#F59E0B';
+                ctx.lineWidth = 3 / viewZoom;
+                ctx.beginPath();
+                ctx.moveTo(calibStartPoint.x, calibStartPoint.y);
+                ctx.lineTo(calibEndPoint.x, calibEndPoint.y);
+                ctx.stroke();
+            }
+
+            ctx.restore();
+
+            calculatePolygonArea(polygonPoints);
+        }
+
+        // --- ВЫЧИСЛЕНИЕ ПЛОЩАДИ (ФОРМУЛА ГАУССА) ---
+        function calculatePolygonArea(pts) {
+            if (pts.length < 3) return;
+            let area = 0;
+            let j = pts.length - 1;
+            for (let i = 0; i < pts.length; i++) {
+                // переводим пиксели обратно в реальные метры
+                const xi = pts[i].x * metersPerPixel;
+                const yi = pts[i].y * metersPerPixel;
+                const xj = pts[j].x * metersPerPixel;
+                const yj = pts[j].y * metersPerPixel;
+                area += (xj + xi) * (yj - yi);
+                j = i;
+            }
+            area = Math.abs(area / 2);
+            const areaHa = area / 10000;
+
+            let perimeter = 0;
+            boundaryLines.forEach(l => perimeter += l.distance);
+
+            document.getElementById('calc-area-badge').innerText = `Площадь: ${areaHa.toFixed(4)} га (P = ${perimeter.toFixed(1)} м)`;
+        }
+
+        // --- ТАБЛИЦА ХОДА И РЕДАКТИРОВАНИЕ ---
+        function renderTable() {
+            const tbody = document.getElementById('lines-tbody');
+            tbody.innerHTML = '';
+            boundaryLines.forEach((l, idx) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${l.id}</b></td>
+                        <td><input type="number" step="0.1" class="input-table" value="${l.azimuth}" onchange="updateLine(${idx}, 'azimuth', this.value)"></td>
+                        <td><input type="number" step="0.5" class="input-table" value="${l.distance}" onchange="updateLine(${idx}, 'distance', this.value)"></td>
+                        <td><button style="border:none; background:none; cursor:pointer;" onclick="removeLine(${idx})">❌</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function updateLine(idx, field, val) {
+            boundaryLines[idx][field] = parseFloat(val) || 0;
+            redrawAll();
+        }
+
+        function addNewLine() {
+            const nextId = boundaryLines.length + 1;
+            boundaryLines.push({ id: nextId, azimuth: 0.0, distance: 100.0 });
+            renderTable();
+            redrawAll();
+        }
+
+        function removeLine(idx) {
+            boundaryLines.splice(idx, 1);
+            boundaryLines.forEach((l, i) => l.id = i + 1);
+            renderTable();
+            redrawAll();
+        }
+
+        // --- ПЕРЕМЕЩЕНИЕ И СВОРАЧИВАНИЕ ПАНЕЛИ ---
+        function initDockDrag() {
+            const panel = document.getElementById('dock-panel');
+            const header = document.getElementById('dock-header');
+            let isDragging = false, startX, startY, initX, initY;
+
+            header.addEventListener('mousedown', (e) => {
+                if (e.target.tagName === 'BUTTON') return;
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                initX = panel.offsetLeft;
+                initY = panel.offsetTop;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                panel.style.left = `${initX + (e.clientX - startX)}px`;
+                panel.style.top = `${initY + (e.clientY - startY)}px`;
+                panel.style.right = 'auto';
+            });
+
+            window.addEventListener('mouseup', () => { isDragging = false; });
+        }
+
+        function togglePanelMinimize() {
+            document.getElementById('dock-panel').classList.toggle('minimized');
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // --- ИМПОРТ ИЗ БГ-ХНС И СОХРАНЕНИЕ ---
+        function triggerImportDialog() {
+            document.getElementById('import-modal').style.display = 'flex';
+        }
+
+        function processImportText() {
+            const text = document.getElementById('import-text-area').value.trim();
+            if (!text) return;
+            try {
+                const parsed = JSON.parse(text);
+                if (Array.isArray(parsed)) {
+                    boundaryLines = parsed.map((m, i) => ({
+                        id: i + 1,
+                        azimuth: parseFloat(m.azimuth) || 0,
+                        distance: parseFloat(m.distance) || 0
+                    }));
+                    renderTable();
+                    redrawAll();
+                    closeModal('import-modal');
+                } else if (parsed.log && Array.isArray(parsed.log)) { // формат проекта архива БГ-ХНС
+                    boundaryLines = parsed.log.map((m, i) => ({
+                        id: i + 1,
+                        azimuth: parseFloat(m.azimuth) || 0,
+                        distance: parseFloat(m.distance) || 0
+                    }));
+                    renderTable();
+                    redrawAll();
+                    closeModal('import-modal');
+                }
+            } catch (e) {
+                alert("Ошибка структуры данных! Убедитесь, что скопирован массив съемки БГ-ХНС.");
+            }
+        }
+
+        function exportProjectFile() {
+            const projectData = {
+                version: "БГ-АБРИС 1.0",
+                stamp: {
+                    les: document.getElementById('stamp-les').value,
+                    uch: document.getElementById('stamp-uch').value,
+                    kv: document.getElementById('stamp-kv').value,
+                    author: document.getElementById('stamp-author').value
+                },
+                tie: {
+                    start: document.getElementById('tie-start-name').value,
+                    azimuth: parseFloat(document.getElementById('tie-azimuth').value) || 0,
+                    distance: parseFloat(document.getElementById('tie-distance').value) || 0
+                },
+                lines: boundaryLines
+            };
+
+            const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Абрис_${projectData.stamp.kv.replace(/[^a-zA-Z0-9а-яА-Я]/g, '_')}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function toggleTheme() {
+            const doc = document.documentElement;
+            if (doc.getAttribute('data-theme') === 'dark') {
+                doc.removeAttribute('data-theme');
+            } else {
+                doc.setAttribute('data-theme', 'dark');
+            }
+            redrawAll();
+        }
+
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
