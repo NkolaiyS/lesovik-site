@@ -356,7 +356,8 @@
             width: 100%;
             height: 100%;
             display: block;
-            transition: transform 0.05s linear;
+            will-change: transform;
+            backface-visibility: hidden;
         }
 
         /* Визирная стрела лимба: яркая, длинная, с острым концом у шкалы */
@@ -367,7 +368,6 @@
             overflow: visible;
             z-index: 95;
             pointer-events: none;
-            filter: drop-shadow(0 0 4px #FF1A1A) drop-shadow(0 0 12px rgba(255, 26, 26, 0.8));
         }
         .limb-stage { position: relative; width: 94%; aspect-ratio: 1; flex: 0 0 auto; }
 
@@ -497,7 +497,8 @@
         #fs-compass-svg {
             width: 100%;
             height: 100%;
-            transition: transform 0.05s linear;
+            will-change: transform;
+            backface-visibility: hidden;
         }
         .fs-crosshair-line-v {
             position: absolute;
@@ -864,6 +865,8 @@
 
         <div class="fs-compass-viewport">
             <svg class="sight-needle-overlay" viewBox="0 0 300 300" aria-hidden="true">
+                <polygon points="146.5,-30 153.5,-30 153.5,-2 157,4 150,30 143,4 146.5,-2" fill="rgba(255,26,26,0.18)" stroke="rgba(255,26,26,0.18)" stroke-width="22" stroke-linejoin="round"/>
+                <polygon points="146.5,-30 153.5,-30 153.5,-2 157,4 150,30 143,4 146.5,-2" fill="rgba(255,26,26,0.4)" stroke="rgba(255,26,26,0.4)" stroke-width="10" stroke-linejoin="round"/>
                 <polygon points="146.5,-30 153.5,-30 153.5,-2 157,4 150,30 143,4 146.5,-2" fill="#FF1A1A"/>
                 <line x1="150" y1="-30" x2="150" y2="22" stroke="#FFE0E0" stroke-width="1.2" opacity="0.9"/>
             </svg>
@@ -1155,7 +1158,9 @@
                             <svg id="compass-svg-canvas" viewBox="0 0 300 300"></svg>
 
                             <svg class="sight-needle-overlay" viewBox="0 0 300 300" aria-hidden="true">
-                                <polygon points="146,-400 154,-400 154,-2 157.5,4 150,30 142.5,4 146,-2" fill="#FF1A1A"/>
+                                <polygon points="146,-400 154,-400 154,-2 157.5,4 150,30 142.5,4 146,-2" fill="rgba(255,26,26,0.18)" stroke="rgba(255,26,26,0.18)" stroke-width="22" stroke-linejoin="round"/>
+                <polygon points="146,-400 154,-400 154,-2 157.5,4 150,30 142.5,4 146,-2" fill="rgba(255,26,26,0.4)" stroke="rgba(255,26,26,0.4)" stroke-width="10" stroke-linejoin="round"/>
+                <polygon points="146,-400 154,-400 154,-2 157.5,4 150,30 142.5,4 146,-2" fill="#FF1A1A"/>
                                 <line x1="150" y1="-400" x2="150" y2="22" stroke="#FFE0E0" stroke-width="1" opacity="0.9"/>
                             </svg>
 
@@ -2857,18 +2862,27 @@
         add('circle', { cx: cx, cy: cy, r: r, fill: '#18221D', stroke: '#8FBC8F', 'stroke-width': 3 });
         add('circle', { cx: cx, cy: cy, r: 76, fill: '#121A16', stroke: 'rgba(143,188,143,0.35)', 'stroke-width': 1 });
 
-        // Шкала: деления через 1°, выделены 5°, 10° и 30°
+        // Шкала: деления через 1°, выделены 5°, 10° и 30°.
+        // Штрихи собраны в несколько path по типу (быстрее вращать, чем 360 отдельных line)
+        const tickGroups = {
+            t1:  { d: '', color: 'rgba(255,255,255,0.32)', width: 0.6, len: 4 },
+            t5:  { d: '', color: 'rgba(255,255,255,0.6)',  width: 1.2, len: 8 },
+            t10: { d: '', color: 'rgba(249,251,249,0.9)',  width: 1.7, len: 12 },
+            t30: { d: '', color: '#F9FBF9',                width: 2.5, len: 18 }
+        };
+        let zeroTick = '';
         for (let i = 0; i < 360; i += 1) {
-            let len, color, width;
-            if (i % 30 === 0) { len = 18; color = '#F9FBF9'; width = 2.5; }
-            else if (i % 10 === 0) { len = 12; color = 'rgba(249,251,249,0.9)'; width = 1.7; }
-            else if (i % 5 === 0) { len = 8; color = 'rgba(255,255,255,0.6)'; width = 1.2; }
-            else { len = 4; color = 'rgba(255,255,255,0.32)'; width = 0.6; }
-            if (i === 0) color = '#FF3B30';
+            const g = (i % 30 === 0) ? tickGroups.t30 : (i % 10 === 0) ? tickGroups.t10 : (i % 5 === 0) ? tickGroups.t5 : tickGroups.t1;
             const p1 = polar(i, r - 2);
-            const p2 = polar(i, r - 2 - len);
-            add('line', { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, stroke: color, 'stroke-width': width });
+            const p2 = polar(i, r - 2 - g.len);
+            const seg = 'M' + p1.x.toFixed(2) + ' ' + p1.y.toFixed(2) + 'L' + p2.x.toFixed(2) + ' ' + p2.y.toFixed(2);
+            if (i === 0) zeroTick = seg; else g.d += seg;
         }
+        Object.keys(tickGroups).forEach(k => {
+            const g = tickGroups[k];
+            add('path', { d: g.d, stroke: g.color, 'stroke-width': g.width, fill: 'none' });
+        });
+        add('path', { d: zeroTick, stroke: '#FF3B30', 'stroke-width': 2.5, fill: 'none' });
 
         // Крупные подписи через 30°
         for (let i = 0; i < 360; i += 30) {
@@ -2909,8 +2923,8 @@
         });
 
         // Стрелка север-юг и ось
-        add('polygon', { points: '150,84 142,150 158,150', fill: '#DC2626', filter: 'drop-shadow(0 0 6px rgba(220,38,38,0.8))' });
-        add('polygon', { points: '150,216 142,150 158,150', fill: '#FFFFFF', filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.5))' });
+        add('polygon', { points: '150,84 142,150 158,150', fill: '#DC2626', stroke: 'rgba(220,38,38,0.35)', 'stroke-width': 4, 'stroke-linejoin': 'round' });
+        add('polygon', { points: '150,216 142,150 158,150', fill: '#FFFFFF', stroke: 'rgba(255,255,255,0.22)', 'stroke-width': 3, 'stroke-linejoin': 'round' });
         add('circle', { cx: cx, cy: cy, r: 5, fill: '#18221D', stroke: '#8FBC8F', 'stroke-width': 1.5 });
 
         // новый диск рисуется с нулевым поворотом — сбрасываем накопленный угол
@@ -3648,6 +3662,7 @@
         const prev = dialState[id] !== undefined ? dialState[id] : 0;
         const target = -azimuth;
         const delta = (((target - prev) % 360) + 540) % 360 - 180;
+        if (dialState[id] !== undefined && Math.abs(delta) < 0.02) return;
         const next = prev + delta;
         dialState[id] = next;
         el.style.transform = `rotate(${next}deg)`;
