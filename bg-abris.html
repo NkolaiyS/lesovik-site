@@ -174,7 +174,7 @@
         .lines-table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
         .lines-table th, .lines-table td { border: 1px solid var(--border-color); padding: 4px 3px; text-align: center; white-space: nowrap; }
         .lines-table th { background: rgba(0,0,0,0.03); color: var(--forest-green); font-size: 9.5px; font-weight: 700; position: sticky; top: 0; z-index: 5; }
-        .input-table { width: 100%; border: none; background: transparent; text-align: center; font-size: 10.5px; font-weight: 600; color: var(--text-graphite); }
+        .input-table { width: 100%; border: none; background: transparent; text-align: center; font-size: 10.5px; font-weight: 600; color: var(--text-graphite); padding: 2px; }
         .input-table:focus { outline: 1px solid var(--forest-green); background: var(--card-bg); }
 
         .closure-box {
@@ -281,12 +281,12 @@
         <div class="status-item">
             <span>Масштаб: <b id="status-scale-text">1:10 000</b></span>
             <span>|</span>
-            <span>Мерная база: <b id="status-pixel-ratio">1.000 м/пикс</b></span>
+            <span>Масштаб подложки: <b id="status-pixel-ratio">1.000 м/пикс</b></span>
         </div>
         <div class="status-item">
             <span>Поворот: <b id="status-rotation-text">0.0°</b></span>
             <span>|</span>
-            <span>Зум: <b id="status-zoom-text">100%</b></span>
+            <span>Зум экрана: <b id="status-zoom-text">100%</b></span>
         </div>
     </div>
 
@@ -363,7 +363,7 @@
             <!-- ВКЛАДКА 2: МАСШТАБ И БЛАНК -->
             <div id="tab-styling" class="tab-pane">
                 <div class="field-group">
-                    <label>Масштаб планшета / чертежа:</label>
+                    <label>Масштаб чертежа:</label>
                     <select id="stamp-scale" onchange="onScaleChanged(this.value)">
                         <option value="2000">1:2 000 (в 1 см 20 м)</option>
                         <option value="5000">1:5 000 (в 1 см 50 м)</option>
@@ -398,7 +398,7 @@
                 </div>
             </div>
 
-            <!-- ВКЛАДКА 3: ПОДЛОЖКА И ТОЧНЫЙ ПОВОРОТ -->
+            <!-- ВКЛАДКА 3: ПОДЛОЖКА -->
             <div id="tab-substrate" class="tab-pane">
                 <div class="field-group">
                     <label>Прозрачность планшета:</label>
@@ -428,7 +428,7 @@
                 </div>
 
                 <div class="field-group">
-                    <label>Калиброванная шкала (м/пикс):</label>
+                    <label>Масштаб подложки (метров в 1 пикселе скана):</label>
                     <input type="number" id="meters-per-pixel-input" value="1.000" step="0.005" oninput="updateManualRatio(this.value)">
                 </div>
 
@@ -440,22 +440,22 @@
         </div>
     </div>
 
-    <!-- ДИАЛОГ КАЛИБРОВКИ С АВТОРАСЧЕТОМ И РУЧНОЙ КОРРЕКЦИЕЙ -->
+    <!-- ДИАЛОГ КАЛИБРОВКИ (КАК В АВЕРСЕ) -->
     <div id="calib-modal" class="modal-overlay">
         <div class="modal-box">
-            <h3>Калибровка масштаба по квартальным столбам</h3>
-            <p style="font-size: 11px; opacity: 0.85;">Вы протянули линию между точками. Система рассчитала расстояние по выбранному масштабу. Сверьте с линейкой планшета и при необходимости введите точное значение:</p>
+            <h3>Калибровка (Укажите расстояние в метрах)</h3>
+            <p style="font-size: 11px; opacity: 0.85;">Вы протянули линию между квартальными столбами. Сверьте расчёт с линейкой планшета:</p>
             
             <div style="background: rgba(45,90,39,0.06); padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 11px;">
-                Экранный замер по масштабу: <b id="calib-measured-val">0.0 м</b>
+                Расчётное расстояние по скану: <b id="calib-measured-val">0.0 м</b>
             </div>
 
             <div class="field-group">
-                <label>Точное расстояние по планшету / линейке (м):</label>
-                <input type="number" id="calib-real-meters" value="1000" min="1" step="0.5">
+                <label>Расстояние по линейке планшета (м):</label>
+                <input type="number" id="calib-real-meters" value="2400.7" min="1" step="0.1">
             </div>
             <div style="display: flex; gap: 6px; margin-top: 10px;">
-                <button class="btn-top" style="flex: 1; background: var(--forest-green); color: #FFF; justify-content: center;" onclick="applyCalibration()">Применить масштаб</button>
+                <button class="btn-top" style="flex: 1; background: var(--forest-green); color: #FFF; justify-content: center;" onclick="applyCalibration()">OK</button>
                 <button class="btn-top" style="flex: 1; justify-content: center;" onclick="cancelCalibration()">Отмена</button>
             </div>
         </div>
@@ -486,7 +486,7 @@
                 <div><b>Участковое:</b> <span id="p-uch"></span></div>
                 <div><b>Масштаб:</b> <span id="p-scale"></span></div>
                 <div><b>Выдел / Квартал:</b> <span id="p-kv"></span></div>
-                <div><b>Вид рубки:</b> <span id="p-cut-type"></span></div>
+                <div><b>Исполнитель:</b> <span id="p-author"></span></div>
             </div>
 
             <div class="print-canvas-wrapper">
@@ -507,20 +507,21 @@
             </table>
 
             <div class="print-footer-stamp">
-                <div>Съемку и чертеж составил: <b id="p-author"></b></div>
-                <div>Дата составления: <b id="p-date"></b></div>
+                <div>Съемку и чертеж составил: <b id="p-author-footer"></b></div>
+                <div>Дата: <b id="p-date"></b></div>
                 <div>Подпись: _______________</div>
             </div>
         </div>
     </div>
 
     <script>
+        // ДЕЛЯНКА ВСЕГДА ХРАНИТСЯ В РЕАЛЬНЫХ МЕТРАХ МЕСТНОСТИ
         let plotPoints = [
-            { id: 0, name: "Т.0 (Кв. столб)", isTie: true, azimuth: 45.0, rumbQuarter: "СВ", rumbDeg: 45, rumbMin: 0, distance: 152.7, fieldDist: 152.7, lat: 61.48120, lng: 50.50020 },
-            { id: 1, name: "Столб 1", isTie: false, azimuth: 93.2, rumbQuarter: "ЮВ", rumbDeg: 86, rumbMin: 48, distance: 196.8, fieldDist: 196.8, lat: 61.48000, lng: 50.50160 },
-            { id: 2, name: "Столб 2", isTie: false, azimuth: 178.0, rumbQuarter: "ЮЗ", rumbDeg: 2, rumbMin: 0, distance: 150.0, fieldDist: 150.0, lat: 61.47990, lng: 50.50530 },
-            { id: 3, name: "Столб 3", isTie: false, azimuth: 273.2, rumbQuarter: "СЗ", rumbDeg: 86, rumbMin: 48, distance: 196.8, fieldDist: 196.8, lat: 61.47850, lng: 50.50520 },
-            { id: 4, name: "Столб 4", isTie: false, azimuth: 354.3, rumbQuarter: "СЗ", rumbDeg: 5, rumbMin: 42, distance: 212.3, fieldDist: 212.3, lat: 61.47860, lng: 50.50150 }
+            { id: 0, name: "Т.0 (Кв. столб)", isTie: true, azimuth: 45.0, rumbQuarter: "СВ", rumbDeg: 45, rumbMin: 0, distance: 152.7, lat: 61.48120, lng: 50.50020 },
+            { id: 1, name: "Столб 1", isTie: false, azimuth: 93.2, rumbQuarter: "ЮВ", rumbDeg: 86, rumbMin: 48, distance: 196.8, lat: 61.48000, lng: 50.50160 },
+            { id: 2, name: "Столб 2", isTie: false, azimuth: 178.0, rumbQuarter: "ЮЗ", rumbDeg: 2, rumbMin: 0, distance: 150.0, lat: 61.47990, lng: 50.50530 },
+            { id: 3, name: "Столб 3", isTie: false, azimuth: 273.2, rumbQuarter: "СЗ", rumbDeg: 86, rumbMin: 48, distance: 196.8, lat: 61.47850, lng: 50.50520 },
+            { id: 4, name: "Столб 4", isTie: false, azimuth: 354.3, rumbQuarter: "СЗ", rumbDeg: 5, rumbMin: 42, distance: 212.3, lat: 61.47860, lng: 50.50150 }
         ];
 
         let currentInputMode = 'gps';
@@ -530,20 +531,25 @@
         let closeTargetId = 1;
 
         let currentScaleValue = 10000;
-        let metersPerPixel = 1.0;
 
-        let plotOffsetX = 0.0;
-        let plotOffsetY = 0.0;
+        // МАСШТАБ СКАНИРОВАННОЙ ПОДЛОЖКИ (метров в одном пикселе картинки)
+        let rasterMetersPerPixel = 1.0; 
+
+        // Смещение делянки (в метрах)
+        let plotOffsetMetersX = 0.0;
+        let plotOffsetMetersY = 0.0;
         let isDraggingPlot = false;
         let plotDragStartX = 0, plotDragStartY = 0;
 
+        // Скан подложки
         let rasterImage = null;
-        let rasterX = 0.0, rasterY = 0.0;
+        let rasterMetersX = 0.0, rasterMetersY = 0.0;
         let rasterRotation = 0.0;
         let isDraggingRaster = false;
         let rasterDragStartX = 0, rasterDragStartY = 0;
 
-        let viewX = 160.0, viewY = 160.0;
+        // Камера холста
+        let viewX = 180.0, viewY = 180.0;
         let viewZoom = 1.0;
         let isDraggingView = false;
         let dragStartX = 0, dragStartY = 0;
@@ -554,7 +560,6 @@
         let isCalibrating = false;
         let calibStartPoint = null;
         let calibEndPoint = null;
-        let calibMeasuredMeters = 0;
 
         const canvas = document.getElementById('main-canvas');
         const ctx = canvas.getContext('2d');
@@ -589,15 +594,15 @@
         }
 
         function resetPlotPosition() {
-            plotOffsetX = 0.0;
-            plotOffsetY = 0.0;
+            plotOffsetMetersX = 0.0;
+            plotOffsetMetersY = 0.0;
             redrawAll();
         }
 
         function resetRasterPosition() {
             if (rasterImage) {
-                rasterX = -rasterImage.width / 2;
-                rasterY = -rasterImage.height / 2;
+                rasterMetersX = -(rasterImage.width * rasterMetersPerPixel) / 2;
+                rasterMetersY = -(rasterImage.height * rasterMetersPerPixel) / 2;
                 redrawAll();
             }
         }
@@ -605,9 +610,6 @@
         function onScaleChanged(val) {
             currentScaleValue = parseInt(val) || 10000;
             document.getElementById('status-scale-text').innerText = `1:${currentScaleValue.toLocaleString()}`;
-            metersPerPixel = currentScaleValue / 10000.0;
-            document.getElementById('meters-per-pixel-input').value = metersPerPixel.toFixed(3);
-            document.getElementById('status-pixel-ratio').innerText = `${metersPerPixel.toFixed(3)} м/пикс`;
             redrawAll();
         }
 
@@ -629,7 +631,7 @@
                     e.preventDefault();
                     const currentDist = getDist(e.touches[0], e.touches[1]);
                     const scaleFactor = currentDist / initialPinchDist;
-                    viewZoom = Math.min(Math.max(initialPinchZoom * scaleFactor, 0.15), 10.0);
+                    viewZoom = Math.min(Math.max(initialPinchZoom * scaleFactor, 0.05), 20.0);
                     document.getElementById('status-zoom-text').innerText = `${Math.round(viewZoom * 100)}%`;
                     redrawAll();
                     return;
@@ -649,7 +651,7 @@
             viewport.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-                viewZoom = Math.min(Math.max(viewZoom * zoomFactor, 0.15), 10.0);
+                viewZoom = Math.min(Math.max(viewZoom * zoomFactor, 0.05), 20.0);
                 document.getElementById('status-zoom-text').innerText = `${Math.round(viewZoom * 100)}%`;
                 redrawAll();
             }, { passive: false });
@@ -657,27 +659,27 @@
 
         function handleStartDrag(clientX, clientY, btn = 0) {
             const rect = canvas.getBoundingClientRect();
-            const worldX = (clientX - rect.left - viewX) / viewZoom;
-            const worldY = (clientY - rect.top - viewY) / viewZoom;
+            const meterX = (clientX - rect.left - viewX) / viewZoom;
+            const meterY = (clientY - rect.top - viewY) / viewZoom;
 
             if (isCalibrating) {
-                if (!calibStartPoint) calibStartPoint = { x: worldX, y: worldY };
-                else { calibEndPoint = { x: worldX, y: worldY }; finishCalibLine(); }
+                if (!calibStartPoint) calibStartPoint = { x: meterX, y: meterY };
+                else { calibEndPoint = { x: meterX, y: meterY }; finishCalibLine(); }
                 redrawAll();
                 return;
             }
 
             if (activeTool === 'move-plot' && btn === 0) {
                 isDraggingPlot = true;
-                plotDragStartX = worldX - (plotOffsetX / metersPerPixel);
-                plotDragStartY = worldY - (plotOffsetY / metersPerPixel);
+                plotDragStartX = meterX - plotOffsetMetersX;
+                plotDragStartY = meterY - plotOffsetMetersY;
                 return;
             }
 
             if (activeTool === 'move-raster' && btn === 0) {
                 isDraggingRaster = true;
-                rasterDragStartX = worldX - rasterX;
-                rasterDragStartY = worldY - rasterY;
+                rasterDragStartX = meterX - rasterMetersX;
+                rasterDragStartY = meterY - rasterMetersY;
                 return;
             }
 
@@ -689,23 +691,23 @@
 
         function handleMoveDrag(clientX, clientY) {
             const rect = canvas.getBoundingClientRect();
-            const worldX = (clientX - rect.left - viewX) / viewZoom;
-            const worldY = (clientY - rect.top - viewY) / viewZoom;
+            const meterX = (clientX - rect.left - viewX) / viewZoom;
+            const meterY = (clientY - rect.top - viewY) / viewZoom;
 
             if (isDraggingPlot) {
-                plotOffsetX = (worldX - plotDragStartX) * metersPerPixel;
-                plotOffsetY = (worldY - plotDragStartY) * metersPerPixel;
+                plotOffsetMetersX = meterX - plotDragStartX;
+                plotOffsetMetersY = meterY - plotDragStartY;
                 redrawAll();
             } else if (isDraggingRaster) {
-                rasterX = worldX - rasterDragStartX;
-                rasterY = worldY - rasterDragStartY;
+                rasterMetersX = meterX - rasterDragStartX;
+                rasterMetersY = meterY - rasterDragStartY;
                 redrawAll();
             } else if (isDraggingView) {
                 viewX = clientX - dragStartX;
                 viewY = clientY - dragStartY;
                 redrawAll();
             } else if (isCalibrating && calibStartPoint) {
-                calibEndPoint = { x: worldX, y: worldY };
+                calibEndPoint = { x: meterX, y: meterY };
                 redrawAll();
             }
         }
@@ -741,12 +743,10 @@
 
             const dx = calibEndPoint.x - calibStartPoint.x;
             const dy = calibEndPoint.y - calibStartPoint.y;
-            const pxDist = Math.hypot(dx, dy);
+            const currentMeters = Math.hypot(dx, dy);
 
-            // Автоматический предварительный расчёт метража с учётом масштаба
-            calibMeasuredMeters = pxDist * metersPerPixel;
-            document.getElementById('calib-measured-val').innerText = `${calibMeasuredMeters.toFixed(1)} м`;
-            document.getElementById('calib-real-meters').value = Math.round(calibMeasuredMeters);
+            document.getElementById('calib-measured-val').innerText = `${currentMeters.toFixed(1)} м`;
+            document.getElementById('calib-real-meters').value = currentMeters.toFixed(1);
 
             document.getElementById('calib-modal').style.display = 'flex';
         }
@@ -755,14 +755,17 @@
             if (!calibStartPoint || !calibEndPoint) return;
             const dx = calibEndPoint.x - calibStartPoint.x;
             const dy = calibEndPoint.y - calibStartPoint.y;
-            const pxDist = Math.hypot(dx, dy);
+            const currentMeters = Math.hypot(dx, dy);
 
-            const realMeters = parseFloat(document.getElementById('calib-real-meters').value) || 1000;
-            if (pxDist > 0) {
-                metersPerPixel = realMeters / pxDist;
-                document.getElementById('meters-per-pixel-input').value = metersPerPixel.toFixed(3);
-                document.getElementById('status-pixel-ratio').innerText = `${metersPerPixel.toFixed(3)} м/пикс`;
+            const userExactMeters = parseFloat(document.getElementById('calib-real-meters').value) || currentMeters;
+            
+            if (currentMeters > 0 && rasterImage) {
+                const ratio = userExactMeters / currentMeters;
+                rasterMetersPerPixel *= ratio;
+                document.getElementById('meters-per-pixel-input').value = rasterMetersPerPixel.toFixed(3);
+                document.getElementById('status-pixel-ratio').innerText = `${rasterMetersPerPixel.toFixed(3)} м/пикс`;
             }
+
             cancelCalibration();
             redrawAll();
         }
@@ -774,8 +777,8 @@
         }
 
         function updateManualRatio(val) {
-            metersPerPixel = parseFloat(val) || 1.0;
-            document.getElementById('status-pixel-ratio').innerText = `${metersPerPixel.toFixed(3)} м/пикс`;
+            rasterMetersPerPixel = parseFloat(val) || 1.0;
+            document.getElementById('status-pixel-ratio').innerText = `${rasterMetersPerPixel.toFixed(3)} м/пикс`;
             redrawAll();
         }
 
@@ -984,7 +987,6 @@
         function onDistanceChange(idx, val) {
             const d = parseFloat(val) || 0;
             plotPoints[idx].distance = d;
-            plotPoints[idx].fieldDist = d;
             syncGeometryFromAzimuths();
             renderTableBody();
             redrawAll();
@@ -1013,7 +1015,7 @@
             plotPoints.push({
                 id: nextId, name: `Столб ${nextId}`, isTie: false,
                 azimuth: 90.0, rumbQuarter: "СВ", rumbDeg: 90, rumbMin: 0,
-                distance: 100.0, fieldDist: 100.0,
+                distance: 100.0,
                 lat: last ? last.lat - 0.0006 : 61.4800,
                 lng: last ? last.lng + 0.0006 : 50.5016
             });
@@ -1082,8 +1084,8 @@
                 const img = new Image();
                 img.onload = () => {
                     rasterImage = img;
-                    rasterX = -img.width / 2;
-                    rasterY = -img.height / 2;
+                    rasterMetersX = -(img.width * rasterMetersPerPixel) / 2;
+                    rasterMetersY = -(img.height * rasterMetersPerPixel) / 2;
                     redrawAll();
                 };
                 img.src = event.target.result;
@@ -1093,6 +1095,7 @@
 
         function clearRasterMap() { rasterImage = null; redrawAll(); }
 
+        // --- ГЕОДЕЗИЧЕСКИЙ РЕНДЕРИНГ В МЕТРАХ ---
         function redrawAll() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -1100,40 +1103,49 @@
             ctx.translate(viewX, viewY);
             ctx.scale(viewZoom, viewZoom);
 
+            // 1. Подложка скана
             if (rasterImage) {
                 ctx.save();
                 ctx.globalAlpha = parseFloat(document.getElementById('raster-opacity').value) || 0.75;
-                ctx.translate(rasterX + rasterImage.width / 2, rasterY + rasterImage.height / 2);
+                const centerMX = rasterMetersX + (rasterImage.width * rasterMetersPerPixel) / 2;
+                const centerMY = rasterMetersY + (rasterImage.height * rasterMetersPerPixel) / 2;
+                ctx.translate(centerMX, centerMY);
                 ctx.rotate((rasterRotation * Math.PI) / 180);
-                ctx.drawImage(rasterImage, -rasterImage.width / 2, -rasterImage.height / 2);
+                ctx.drawImage(
+                    rasterImage,
+                    -(rasterImage.width * rasterMetersPerPixel) / 2,
+                    -(rasterImage.height * rasterMetersPerPixel) / 2,
+                    rasterImage.width * rasterMetersPerPixel,
+                    rasterImage.height * rasterMetersPerPixel
+                );
                 ctx.restore();
             }
 
+            // 2. Делянка и привязка
             if (plotPoints.length > 0) {
                 const p0 = plotPoints[0];
-                const startPxX = plotOffsetX / metersPerPixel;
-                const startPxY = plotOffsetY / metersPerPixel;
+                const startMX = plotOffsetMetersX;
+                const startMY = plotOffsetMetersY;
 
-                let post1PxX = startPxX;
-                let post1PxY = startPxY;
+                let post1MX = startMX;
+                let post1MY = startMY;
 
                 if (plotPoints.length > 1) {
                     const tieRad = (p0.azimuth * Math.PI) / 180;
-                    const tieDistPx = p0.distance / metersPerPixel;
-                    post1PxX = startPxX + tieDistPx * Math.sin(tieRad);
-                    post1PxY = startPxY - tieDistPx * Math.cos(tieRad);
+                    post1MX = startMX + p0.distance * Math.sin(tieRad);
+                    post1MY = startMY - p0.distance * Math.cos(tieRad);
 
                     ctx.strokeStyle = '#DC2626';
                     ctx.lineWidth = 1.8 / viewZoom;
                     ctx.setLineDash([5 / viewZoom, 3 / viewZoom]);
                     ctx.beginPath();
-                    ctx.moveTo(startPxX, startPxY);
-                    ctx.lineTo(post1PxX, post1PxY);
+                    ctx.moveTo(startMX, startMY);
+                    ctx.lineTo(post1MX, post1MY);
                     ctx.stroke();
                     ctx.setLineDash([]);
 
-                    const midTieX = (startPxX + post1PxX) / 2;
-                    const midTieY = (startPxY + post1PxY) / 2;
+                    const midTieX = (startMX + post1MX) / 2;
+                    const midTieY = (startMY + post1MY) / 2;
                     ctx.fillStyle = '#DC2626';
                     ctx.font = `bold ${9 / viewZoom}px Inter, sans-serif`;
                     ctx.fillText(`Привязка: ${p0.distance}м`, midTieX, midTieY - (4 / viewZoom));
@@ -1141,55 +1153,55 @@
 
                 ctx.fillStyle = '#DC2626';
                 ctx.beginPath();
-                ctx.arc(startPxX, startPxY, 5 / viewZoom, 0, 2 * Math.PI);
+                ctx.arc(startMX, startMY, 5 / viewZoom, 0, 2 * Math.PI);
                 ctx.fill();
-                ctx.fillText("Т.0 (Кв. столб)", startPxX + (6 / viewZoom), startPxY - (6 / viewZoom));
+                ctx.fillText("Т.0 (Кв. столб)", startMX + (6 / viewZoom), startMY - (6 / viewZoom));
 
                 const boundaryPts = plotPoints.filter(p => !p.isTie);
                 if (boundaryPts.length > 0) {
-                    let curPxX = post1PxX;
-                    let curPxY = post1PxY;
-                    const polyCoords = [ { x: curPxX, y: curPxY } ];
-                    const nodePositions = [ { id: 1, x: curPxX, y: curPxY } ];
+                    let curMX = post1MX;
+                    let curMY = post1MY;
+                    const polyCoords = [ { x: curMX, y: curMY } ];
+                    const nodePositions = [ { id: 1, x: curMX, y: curMY } ];
 
                     ctx.strokeStyle = '#2D5A27';
                     ctx.lineWidth = 2.5 / viewZoom;
+                    
+                    // Мягкая ненасыщенная полупрозрачная заливка (отлично виден контур и скан под ним)
                     ctx.fillStyle = document.getElementById('plot-non-exploitable').checked ?
-                                    'rgba(220, 38, 38, 0.15)' : 'rgba(45, 90, 39, 0.12)';
+                                    'rgba(220, 38, 38, 0.08)' : 'rgba(45, 90, 39, 0.08)';
 
                     ctx.beginPath();
-                    ctx.moveTo(curPxX, curPxY);
+                    ctx.moveTo(curMX, curMY);
 
-                    // Последовательное соединение вершин без сбоев
                     for (let i = 0; i < boundaryPts.length; i++) {
                         const p = boundaryPts[i];
                         const isLast = (i === boundaryPts.length - 1);
 
                         if (!isLast) {
                             const rad = (p.azimuth * Math.PI) / 180;
-                            const pxDist = p.distance / metersPerPixel;
-                            const nextPxX = curPxX + pxDist * Math.sin(rad);
-                            const nextPxY = curPxY - pxDist * Math.cos(rad);
+                            const nextMX = curMX + p.distance * Math.sin(rad);
+                            const nextMY = curMY - p.distance * Math.cos(rad);
 
-                            ctx.lineTo(nextPxX, nextPxY);
-                            polyCoords.push({ x: nextPxX, y: nextPxY });
-                            nodePositions.push({ id: p.id + 1, x: nextPxX, y: nextPxY });
+                            ctx.lineTo(nextMX, nextMY);
+                            polyCoords.push({ x: nextMX, y: nextMY });
+                            nodePositions.push({ id: p.id + 1, x: nextMX, y: nextMY });
 
-                            const mX = (curPxX + nextPxX) / 2;
-                            const mY = (curPxY + nextPxY) / 2;
+                            const mX = (curMX + nextMX) / 2;
+                            const mY = (curMY + nextMY) / 2;
                             ctx.fillStyle = '#2D5A27';
                             ctx.font = `bold ${9.5 / viewZoom}px Inter, sans-serif`;
                             ctx.fillText(`${p.rumbQuarter}:${p.rumbDeg}°${p.rumbMin}' (${p.distance}м)`, mX, mY - (3 / viewZoom));
 
-                            curPxX = nextPxX;
-                            curPxY = nextPxY;
+                            curMX = nextMX;
+                            curMY = nextMY;
                         } else {
                             if (isPolygonClosed) {
                                 const targetNode = nodePositions.find(n => n.id === closeTargetId) || nodePositions[0];
                                 ctx.lineTo(targetNode.x, targetNode.y);
 
-                                const mX = (curPxX + targetNode.x) / 2;
-                                const mY = (curPxY + targetNode.y) / 2;
+                                const mX = (curMX + targetNode.x) / 2;
+                                const mY = (curMY + targetNode.y) / 2;
                                 ctx.fillStyle = '#2D5A27';
                                 ctx.font = `bold ${9.5 / viewZoom}px Inter, sans-serif`;
                                 ctx.fillText(`${p.rumbQuarter}:${p.rumbDeg}°${p.rumbMin}' (${p.distance}м)`, mX, mY - (3 / viewZoom));
@@ -1217,6 +1229,7 @@
                 }
             }
 
+            // 3. Линия калибровки линейки
             if (calibStartPoint && calibEndPoint) {
                 ctx.strokeStyle = '#F59E0B';
                 ctx.lineWidth = 3 / viewZoom;
@@ -1233,29 +1246,22 @@
             if (pts.length < 3) return;
             const first = pts[0];
             const last = pts[pts.length - 1];
-            const dxMeters = (last.x - first.x) * metersPerPixel;
-            const dyMeters = (last.y - first.y) * metersPerPixel;
-            const linearError = Math.hypot(dxMeters, dyMeters);
+            const linearError = Math.hypot(last.x - first.x, last.y - first.y);
 
             document.getElementById('closure-linear').innerText = `${linearError.toFixed(2)} м`;
 
             let area = 0;
             let j = pts.length - 1;
             for (let i = 0; i < pts.length; i++) {
-                const xi = pts[i].x * metersPerPixel;
-                const yi = pts[i].y * metersPerPixel;
-                const xj = pts[j].x * metersPerPixel;
-                const yj = pts[j].y * metersPerPixel;
-                area += (xj + xi) * (yj - yi);
+                area += (pts[j].x + pts[i].x) * (pts[j].y - pts[i].y);
                 j = i;
             }
             area = Math.abs(area / 2);
             document.getElementById('plot-area-input').value = (area / 10000).toFixed(4);
         }
 
-        // --- ФОРМИРОВАНИЕ ЧИСТОВОГО ПЕЧАТНОГО БЛАНКА А4 ---
+        // --- ЧИСТОВОЙ БЛАНК ПЕЧАТИ А4 ---
         function prepareAndPrint() {
-            // Подстановка заполненных данных пользователя в форму
             document.getElementById('p-region').innerText = document.getElementById('stamp-region').value;
             document.getElementById('p-plot-name').innerText = document.getElementById('plot-name').value;
             document.getElementById('p-les').innerText = document.getElementById('stamp-les').value;
@@ -1263,11 +1269,10 @@
             document.getElementById('p-uch').innerText = document.getElementById('stamp-uch').value;
             document.getElementById('p-scale').innerText = `1:${currentScaleValue.toLocaleString()}`;
             document.getElementById('p-kv').innerText = document.getElementById('stamp-kv').value;
-            document.getElementById('p-cut-type').innerText = document.getElementById('stamp-cut-type').value;
             document.getElementById('p-author').innerText = document.getElementById('stamp-author').value;
+            document.getElementById('p-author-footer').innerText = document.getElementById('stamp-author').value;
             document.getElementById('p-date').innerText = new Date().toLocaleDateString('ru-RU');
 
-            // Заполнение ведомости линий
             const tb = document.getElementById('print-geom-tbody');
             tb.innerHTML = '';
             plotPoints.forEach((p, idx) => {
@@ -1283,11 +1288,9 @@
                 `;
             });
 
-            // Захват чистового изображения чертежа с холста
             const imgData = canvas.toDataURL("image/png");
             document.getElementById('print-canvas-img').src = imgData;
 
-            // Запуск печати
             setTimeout(() => { window.print(); }, 250);
         }
 
@@ -1328,7 +1331,6 @@
                             rumbDeg: r.deg,
                             rumbMin: r.min,
                             distance: dist,
-                            fieldDist: dist,
                             lat: parseFloat(m.lat) || 61.4800,
                             lng: parseFloat(m.lng) || 50.5016
                         };
@@ -1353,10 +1355,10 @@
                 areaHa: document.getElementById('plot-area-input').value,
                 scale: currentScaleValue,
                 rotation: rasterRotation,
-                metersPerPixel: metersPerPixel,
+                rasterMetersPerPixel: rasterMetersPerPixel,
                 isPolygonClosed: isPolygonClosed,
                 closeTargetId: closeTargetId,
-                plotOffset: { x: plotOffsetX, y: plotOffsetY },
+                plotOffsetMeters: { x: plotOffsetMetersX, y: plotOffsetMetersY },
                 points: plotPoints
             };
             const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
