@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Абрис-Схема лесосеки | БГ-АБРИС ПРО 2.0</title>
-    <meta name="description" content="Мобильный и ПК редактор абрисов лесосек, привязка к квартальной сети по GPS навигатору, наложение сканов планшетов.">
-    <link rel="canonical" href="https://lesovik-pro.ru/bg-abris.html">
+    <title>БГ-АБРИС ПРО 2.0 | Лесовик ПРО</title>
     <link rel="icon" type="image/jpeg" href="logo.jpeg">
     <meta name="theme-color" content="#2D5A27">
 
@@ -19,12 +17,12 @@
             --forest-light: #8FBC8F;
             --border-color: #D3DDD3;
             --card-bg: #FFFFFF;
-            --glass-bg: rgba(244, 246, 244, 0.95);
+            --glass-bg: rgba(244, 246, 244, 0.96);
             --danger: #DC2626;
             --success: #16A34A;
             --warning-alert: #F59E0B;
-            --bento-bg: rgba(45, 90, 39, 0.06);
-            --header-h: 96px;
+            --bento-bg: rgba(45, 90, 39, 0.08);
+            --header-h: 94px;
         }
 
         [data-theme="dark"] {
@@ -34,11 +32,8 @@
             --forest-light: #2D5A27;
             --border-color: #2D3A33;
             --card-bg: #1B2420;
-            --glass-bg: rgba(18, 24, 21, 0.95);
-            --danger: #EF4444;
-            --success: #22C55E;
-            --warning-alert: #FBBF24;
-            --bento-bg: rgba(143, 188, 143, 0.1);
+            --glass-bg: rgba(18, 24, 21, 0.96);
+            --bento-bg: rgba(143, 188, 143, 0.12);
         }
 
         html, body {
@@ -54,7 +49,7 @@
 
         *, *:before, *:after { box-sizing: border-box; }
 
-        /* ДВУХЪЯРУСНАЯ БЕНТО-ШАПКА ДЛЯ СМАРТФОНОВ И ПК */
+        /* ДВУХЪЯРУСНАЯ БЕНТО-ШАПКА */
         .bento-header {
             position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
             background: var(--glass-bg);
@@ -65,14 +60,11 @@
             height: var(--header-h);
         }
 
-        /* Верхний ярус: бренд + быстрые действия */
-        .header-top-row {
-            display: flex; justify-content: space-between; align-items: center; width: 100%;
-        }
+        .header-top-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         .brand-box { display: flex; align-items: center; gap: 6px; text-decoration: none; }
         .header-logo { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--forest-green); }
         .brand-title { font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 14px; font-weight: 700; margin: 0; }
-        .brand-tag { font-size: 9px; font-family: 'Inter'; opacity: 0.6; padding: 1px 4px; background: var(--bento-bg); border-radius: 4px; }
+        .brand-tag { font-size: 9px; opacity: 0.6; padding: 1px 4px; background: var(--bento-bg); border-radius: 4px; }
 
         .top-actions { display: flex; align-items: center; gap: 4px; }
         .btn-top {
@@ -81,7 +73,6 @@
             font-size: 11px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;
         }
 
-        /* Нижний ярус: Бенто-плитки режимов и инструментов */
         .header-bento-grid {
             display: flex; gap: 4px; width: 100%; overflow-x: auto; padding-bottom: 2px;
             scrollbar-width: none;
@@ -98,11 +89,10 @@
             background: var(--forest-green); color: #FFF; border-color: var(--forest-green);
         }
 
-        /* РАБОЧАЯ ОБЛАСТЬ ЧЕРТЕЖА */
+        /* ХОЛСТ */
         #viewport-container {
             position: absolute; top: var(--header-h); left: 0; right: 0; bottom: 22px;
-            overflow: hidden; background: #E5EAE5;
-            cursor: grab;
+            overflow: hidden; background: #E5EAE5; cursor: grab;
         }
         #viewport-container.grabbing { cursor: grabbing; }
         #viewport-container.moving-plot { cursor: move; }
@@ -111,7 +101,6 @@
 
         #main-canvas { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
 
-        /* СТАТУС-БАР */
         .status-bar {
             position: fixed; bottom: 0; left: 0; right: 0; height: 22px;
             background: var(--card-bg); border-top: 1px solid var(--border-color);
@@ -120,7 +109,7 @@
             z-index: 900;
         }
 
-        /* АДАПТИВНАЯ ПАНЕЛЬ-ШТОРКА (BOTTOM SHEET / FLOATING DOCK) */
+        /* ПАНЕЛЬ-ШТОРКА */
         .floating-panel {
             position: absolute; z-index: 500;
             background: var(--card-bg); border: 1px solid var(--border-color);
@@ -128,28 +117,24 @@
             box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
         }
 
-        /* Мобильный экран: шторка снизу */
         @media (max-width: 768px) {
             .floating-panel {
                 left: 0; right: 0; bottom: 22px; width: 100%;
                 border-radius: 14px 14px 0 0;
-                max-height: 70vh;
+                max-height: 72vh;
                 transform: translateY(0);
                 transition: transform 0.25s ease-out;
             }
-            .floating-panel.collapsed {
-                transform: translateY(calc(100% - 38px));
-            }
+            .floating-panel.collapsed { transform: translateY(calc(100% - 38px)); }
             .mobile-drag-pill {
-                width: 36px; height: 4px; background: rgba(0,0,0,0.2);
-                border-radius: 2px; margin: 4px auto 2px;
+                width: 38px; height: 4px; background: rgba(0,0,0,0.25);
+                border-radius: 2px; margin: 4px auto 2px; cursor: pointer;
             }
         }
 
-        /* Десктоп экран: плавающий док справа */
         @media (min-width: 769px) {
             .floating-panel {
-                top: calc(var(--header-h) + 12px); right: 14px; width: 380px;
+                top: calc(var(--header-h) + 12px); right: 14px; width: 385px;
                 max-height: calc(100vh - 140px); border-radius: 10px;
                 box-shadow: 0 8px 30px rgba(0,0,0,0.15);
             }
@@ -165,12 +150,7 @@
             cursor: pointer;
         }
         .panel-header-title { font-size: 11.5px; font-weight: 700; color: var(--forest-green); font-family: 'Merriweather', serif; }
-        .panel-controls-btn { background: none; border: none; font-size: 14px; cursor: pointer; color: var(--text-graphite); }
-
-        .panel-content {
-            padding: 10px; overflow-y: auto; max-height: calc(70vh - 50px);
-            font-size: 11px;
-        }
+        .panel-content { padding: 10px; overflow-y: auto; max-height: calc(72vh - 50px); font-size: 11px; }
 
         .tab-nav { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 8px; }
         .tab-btn {
@@ -192,25 +172,15 @@
             font-size: 11px; font-weight: 600;
         }
 
-        .select-mode-dropdown {
-            width: 100%; padding: 5px 6px; border: 1.5px solid var(--forest-green);
-            border-radius: 5px; background: var(--bg-paper); color: var(--forest-green);
-            font-size: 11px; font-weight: 700; margin-bottom: 6px;
-        }
-
-        /* ТАБЛИЦА СЪЕМКИ */
         .lines-table-wrapper {
-            max-height: 200px; overflow-y: auto; overflow-x: auto;
+            max-height: 190px; overflow-y: auto; overflow-x: auto;
             border: 1px solid var(--border-color); border-radius: 6px; margin-top: 4px;
         }
         .lines-table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
         .lines-table th, .lines-table td { border: 1px solid var(--border-color); padding: 4px 3px; text-align: center; white-space: nowrap; }
         .lines-table th { background: rgba(0,0,0,0.03); color: var(--forest-green); font-size: 9.5px; font-weight: 700; position: sticky; top: 0; z-index: 5; }
-        .input-table { width: 100%; border: none; background: transparent; text-align: center; font-size: 10.5px; font-weight: 600; color: var(--text-graphite); padding: 2px; }
+        .input-table { width: 100%; border: none; background: transparent; text-align: center; font-size: 10.5px; font-weight: 600; color: var(--text-graphite); }
         .input-table:focus { outline: 1px solid var(--forest-green); background: var(--card-bg); }
-
-        .diff-alert { color: var(--danger); font-size: 8.5px; font-weight: bold; }
-        .diff-ok { color: var(--success); font-size: 8.5px; font-weight: bold; }
 
         .closure-box {
             background: rgba(45, 90, 39, 0.05); border: 1px solid var(--border-color);
@@ -218,16 +188,15 @@
         }
 
         .rotation-presets-grid {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; margin-top: 3px; margin-bottom: 6px;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 4px; margin-bottom: 6px;
         }
         .btn-action-small {
-            padding: 4px 2px; font-size: 9.5px; font-weight: bold; border-radius: 4px;
+            padding: 5px 2px; font-size: 10px; font-weight: bold; border-radius: 4px;
             border: 1px solid var(--border-color); background: var(--bg-paper);
             color: var(--text-graphite); cursor: pointer; text-align: center;
         }
         .btn-action-small:hover { background: var(--bento-bg); border-color: var(--forest-green); }
 
-        /* МОДАЛЬНЫЕ ОКНА */
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.6); z-index: 2000; display: none;
@@ -242,13 +211,11 @@
 </head>
 <body>
 
-    <!-- ДВУХЪЯРУСНАЯ БЕНТО-ШАПКА -->
     <header class="bento-header">
-        <!-- ЯРУС 1: Бренд и файл -->
         <div class="header-top-row">
             <a href="#" class="brand-box" onclick="return false;">
                 <img src="logo.jpeg" alt="Лесовик ПРО" class="header-logo" onerror="this.style.display='none'">
-                <h1 class="brand-title">БГ-АБРИС <span class="brand-tag">ПРО</span></h1>
+                <h1 class="brand-title">БГ-АБРИС <span class="brand-tag">ПРО 2.0</span></h1>
             </a>
             <div class="top-actions">
                 <button class="btn-top" onclick="triggerImportDialog()">📥 Из БГ-ХНС</button>
@@ -258,7 +225,6 @@
             </div>
         </div>
 
-        <!-- ЯРУС 2: Бенто-блоки инструментов -->
         <div class="header-bento-grid">
             <button class="bento-tile active" id="tool-pan" onclick="setActiveTool('pan')">✋ Панорама</button>
             <button class="bento-tile" id="tool-plot" onclick="setActiveTool('move-plot')">📍 Двигать делянку</button>
@@ -276,12 +242,11 @@
         <canvas id="main-canvas"></canvas>
     </div>
 
-    <!-- СТАТУС-БАР -->
     <div class="status-bar">
         <div class="status-item">
             <span>Масштаб: <b id="status-scale-text">1:10 000</b></span>
             <span>|</span>
-            <span>1 см = <b id="status-pixel-ratio">100 м</b></span>
+            <span>Мерная база: <b id="status-pixel-ratio">1.000 м/пикс</b></span>
         </div>
         <div class="status-item">
             <span>Поворот: <b id="status-rotation-text">0.0°</b></span>
@@ -290,18 +255,17 @@
         </div>
     </div>
 
-    <!-- ПАНЕЛЬ-ШТОРКА (DOCK PANEL / BOTTOM SHEET) -->
     <div id="dock-panel" class="floating-panel">
         <div class="mobile-drag-pill" onclick="togglePanelCollapse()"></div>
         <div id="dock-header" class="panel-header" onclick="togglePanelCollapse()">
-            <span class="panel-header-title">Параметры и съемка делянки</span>
+            <span class="panel-header-title">Съемка делянки и привязка</span>
             <button class="panel-controls-btn" id="panel-toggle-btn">▲</button>
         </div>
 
         <div class="panel-content">
             <div class="tab-nav">
                 <button class="tab-btn active" onclick="switchTab('tab-properties')">Свойства</button>
-                <button class="tab-btn" onclick="switchTab('tab-styling')">Оформление</button>
+                <button class="tab-btn" onclick="switchTab('tab-styling')">Оформление / Масштаб</button>
                 <button class="tab-btn" onclick="switchTab('tab-substrate')">Подложка</button>
             </div>
 
@@ -325,13 +289,12 @@
                     </label>
                 </div>
 
-                <!-- МЕТОДЫ ВВОДА (GPS-ПРИВЯЗКА ПЕРВАЯ) -->
+                <!-- СПИСОК МЕТОДОВ (ТОЛЬКО ПОНЯТНЫЕ МЕТОДЫ) -->
                 <label style="font-size: 9px; font-weight: 700; opacity: 0.8; display: block; margin-bottom: 2px;">МЕТОД ВВОДА И СЪЕМКИ:</label>
-                <select id="input-mode-select" class="select-mode-dropdown" onchange="changeInputMode(this.value)">
-                    <option value="gps">gps - привязка (Тчк 1 - кв. столб, далее делянка)</option>
+                <select id="input-mode-select" class="field-group" style="margin-bottom: 6px;" onchange="changeInputMode(this.value)">
+                    <option value="gps">gps - привязка (Т.0 - кв. столб, далее делянка)</option>
                     <option value="rumbs">Румбы (Четверти СВ/ЮВ/ЮЗ/СЗ)</option>
                     <option value="azimuths">Азимуты (0 - 360°)</option>
-                    <option value="coordinates">Координаты (МСК X / Y метры)</option>
                 </select>
 
                 <div class="lines-table-wrapper">
@@ -339,6 +302,15 @@
                         <thead id="geometry-thead"></thead>
                         <tbody id="geometry-tbody"></tbody>
                     </table>
+                </div>
+
+                <!-- БЛОК ЗАМЫКАНИЯ -->
+                <div style="background: rgba(0,0,0,0.03); border: 1px dashed var(--border-color); border-radius: 6px; padding: 6px; margin-top: 6px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                        <span style="font-size: 10px; font-weight: bold;">Замкнуть с точкой №:</span>
+                        <input type="number" id="close-to-point-input" value="1" min="1" max="99" style="width: 45px; padding: 2px; text-align: center; font-weight: bold;" oninput="onCloseTargetChanged(this.value)">
+                        <button class="btn-top" id="btn-toggle-closure" style="padding: 3px 6px;" onclick="toggleManualClosure()">🔒 Замкнут</button>
+                    </div>
                 </div>
 
                 <div style="display: flex; gap: 5px; margin-top: 6px;">
@@ -355,14 +327,16 @@
                 </div>
             </div>
 
-            <!-- ВКЛАДКА 2: ОФОРМЛЕНИЕ И ШТАМП -->
+            <!-- ВКЛАДКА 2: МАСШТАБ И ОФОРМЛЕНИЕ -->
             <div id="tab-styling" class="tab-pane">
                 <div class="field-group">
                     <label>Масштаб чертежа:</label>
                     <select id="stamp-scale" onchange="onScaleChanged(this.value)">
-                        <option value="10000">1:10 000 (в 1 см 100 м)</option>
+                        <option value="2000">1:2 000 (в 1 см 20 м)</option>
                         <option value="5000">1:5 000 (в 1 см 50 м)</option>
+                        <option value="10000" selected>1:10 000 (в 1 см 100 м)</option>
                         <option value="25000">1:25 000 (в 1 см 250 м)</option>
+                        <option value="50000">1:50 000 (в 1 см 500 м)</option>
                     </select>
                 </div>
                 <div class="field-group">
@@ -383,7 +357,7 @@
                 </div>
             </div>
 
-            <!-- ВКЛАДКА 3: ПОДЛОЖКА (СВОБОДНЫЙ ПОВОРОТ 0-360) -->
+            <!-- ВКЛАДКА 3: ПОДЛОЖКА И ТОЧНЫЙ ПОВОРОТ -->
             <div id="tab-substrate" class="tab-pane">
                 <div class="field-group">
                     <label>Прозрачность планшета:</label>
@@ -391,18 +365,21 @@
                 </div>
 
                 <div class="field-group">
-                    <label>Свободный угол поворота (0 - 360°):</label>
+                    <label>Угол поворота подложки (0 - 360°):</label>
                     <div style="display: flex; gap: 6px; align-items: center;">
-                        <input type="range" id="raster-rotation-slider" min="0" max="360" step="0.5" value="0" oninput="setRotationValue(this.value)">
+                        <input type="range" id="raster-rotation-slider" min="0" max="360" step="0.1" value="0" oninput="setRotationValue(this.value)">
                         <input type="number" id="raster-rotation-input" min="0" max="360" step="0.1" value="0.0" style="width: 65px;" oninput="setRotationValue(this.value)">
                     </div>
 
+                    <!-- БЫСТРЫЕ РАЗВОРОТЫ НА 90 И 180 -->
                     <div class="rotation-presets-grid">
                         <button class="btn-action-small" onclick="rotateByStep(-90)">↺ -90°</button>
                         <button class="btn-action-small" onclick="rotateByStep(90)">↻ +90°</button>
                         <button class="btn-action-small" onclick="setRotationValue(180)">180°</button>
                         <button class="btn-action-small" onclick="setRotationValue(0)">0° (С)</button>
                     </div>
+
+                    <!-- ТОЧНАЯ МИКРОЮСТИРОВКА +/- 1.0 И +/- 0.1 ГРАДУСА -->
                     <div class="rotation-presets-grid">
                         <button class="btn-action-small" onclick="rotateByStep(-1.0)">-1.0°</button>
                         <button class="btn-action-small" onclick="rotateByStep(-0.1)">-0.1°</button>
@@ -418,19 +395,18 @@
 
                 <div style="display: flex; gap: 5px; margin-top: 6px;">
                     <button class="btn-action-small" style="flex: 1;" onclick="resetRasterPosition()">🎯 Скан в центр</button>
-                    <button class="btn-action-small" style="color: var(--danger); border-color: var(--danger);" onclick="clearRasterMap()">🗑️ Удалить скан</button>
+                    <button class="btn-action-small" style="color: var(--danger); border-color: var(--danger);" onclick="clearRasterMap()">🗑️ Удалить</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ДИАЛОГ КАЛИБРОВКИ ЛИНЕЙКИ -->
+    <!-- МОДАЛЬНЫЕ ОКНА -->
     <div id="calib-modal" class="modal-overlay">
         <div class="modal-box">
             <h3>Калибровка масштаба по линейке</h3>
-            <p style="font-size: 11px; opacity: 0.85;">Вы протянули контрольный отрезок. Укажите фактическое расстояние по линейке планшета:</p>
+            <p style="font-size: 11px; opacity: 0.85;">Укажите фактическое расстояние между выбранными точками (в метрах):</p>
             <div class="field-group">
-                <label>Расстояние по линейке (метров):</label>
                 <input type="number" id="calib-real-meters" value="100" min="1" step="1">
             </div>
             <div style="display: flex; gap: 6px; margin-top: 10px;">
@@ -440,12 +416,10 @@
         </div>
     </div>
 
-    <!-- ДИАЛОГ ИМПОРТА ИЗ БГ-ХНС -->
     <div id="import-modal" class="modal-overlay">
         <div class="modal-box" style="max-width: 500px;">
             <h3>Импорт данных из БГ-ХНС</h3>
-            <p style="font-size: 11px; opacity: 0.85;">Вставьте журнал съемки, скопированный из буссоли БГ-ХНС:</p>
-            <textarea id="import-text-area" rows="6" style="width: 100%; font-family: monospace; font-size: 10.5px; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px;" placeholder='[{"id":1,"azimuth":85.5,"distance":120.0,"lat":61.4800,"lng":50.5016}, ...]'></textarea>
+            <textarea id="import-text-area" rows="6" style="width: 100%; font-family: monospace; font-size: 10.5px; padding: 6px;" placeholder='[{"id":1,"azimuth":85.5,"distance":120.0,"lat":61.4800,"lng":50.5016}, ...]'></textarea>
             <div style="display: flex; gap: 6px; margin-top: 8px;">
                 <button class="btn-top" style="flex: 1; background: var(--forest-green); color: #FFF; justify-content: center;" onclick="processImportText()">Импортировать</button>
                 <button class="btn-top" style="flex: 1; justify-content: center;" onclick="closeModal('import-modal')">Отмена</button>
@@ -455,17 +429,25 @@
 
     <script>
         // БАЗОВЫЙ МАССИВ ТОЧЕК
-        // Точка 1 — это Квартальный столб (привязка). Точки 2, 3, 4... — столбы делянки.
+        // Точка id: 0 — Квартальный столб (Привязка). Точки 1..N — контур лесосеки.
         let plotPoints = [
-            { id: 1, name: "Кв. столб", isTie: true, azimuth: 45.0, rumbQuarter: "СВ", rumbDeg: 45, rumbMin: 0, distance: 150.0, fieldDist: 150.0, x: 0.0, y: 0.0, lat: 61.48120, lng: 50.50020 },
-            { id: 2, name: "Столб 1", isTie: false, azimuth: 90.0, rumbQuarter: "СВ", rumbDeg: 90, rumbMin: 0, distance: 200.0, fieldDist: 200.0, x: 106.0, y: 106.0, lat: 61.48000, lng: 50.50160 },
-            { id: 3, name: "Столб 2", isTie: false, azimuth: 180.0, rumbQuarter: "ЮВ", rumbDeg: 0, rumbMin: 0, distance: 150.0, fieldDist: 150.0, x: 306.0, y: 106.0, lat: 61.47990, lng: 50.50530 },
-            { id: 4, name: "Столб 3", isTie: false, azimuth: 270.0, rumbQuarter: "ЮЗ", rumbDeg: 90, rumbMin: 0, distance: 200.0, fieldDist: 200.0, x: 306.0, y: -44.0, lat: 61.47850, lng: 50.50520 },
-            { id: 5, name: "Столб 4", isTie: false, azimuth: 0.0, rumbQuarter: "СЗ", rumbDeg: 0, rumbMin: 0, distance: 150.0, fieldDist: 150.0, x: 106.0, y: -44.0, lat: 61.47860, lng: 50.50150 }
+            { id: 0, name: "Т.0 (Кв. столб)", isTie: true, azimuth: 45.0, rumbQuarter: "СВ", rumbDeg: 45, rumbMin: 0, distance: 152.7, fieldDist: 152.7, lat: 61.48120, lng: 50.50020 },
+            { id: 1, name: "Столб 1", isTie: false, azimuth: 93.2, rumbQuarter: "ЮВ", rumbDeg: 86, rumbMin: 48, distance: 196.8, fieldDist: 196.8, lat: 61.48000, lng: 50.50160 },
+            { id: 2, name: "Столб 2", isTie: false, azimuth: 178.0, rumbQuarter: "ЮЗ", rumbDeg: 2, rumbMin: 0, distance: 150.0, fieldDist: 150.0, lat: 61.47990, lng: 50.50530 },
+            { id: 3, name: "Столб 3", isTie: false, azimuth: 273.2, rumbQuarter: "СЗ", rumbDeg: 86, rumbMin: 48, distance: 196.8, fieldDist: 196.8, lat: 61.47850, lng: 50.50520 },
+            { id: 4, name: "Столб 4", isTie: false, azimuth: 354.3, rumbQuarter: "СЗ", rumbDeg: 5, rumbMin: 42, distance: 212.3, fieldDist: 212.3, lat: 61.47860, lng: 50.50150 }
         ];
 
-        let currentInputMode = 'gps'; // gps | rumbs | azimuths | coordinates
+        let currentInputMode = 'gps'; // gps | rumbs | azimuths
         let activeTool = 'pan'; // pan | move-plot | move-raster
+
+        // РУЧНОЕ ЗАМЫКАНИЕ КОНТУРА
+        let isPolygonClosed = true;
+        let closeTargetId = 1; // Замыкать на точку №1 (или №3 по выбору)
+
+        // МАСШТАБ СЕТКИ И ХОЛСТА (ПО УМОЛЧАНИЮ 1:10 000)
+        let currentScaleValue = 10000;
+        let metersPerPixel = 1.0; // 1 пиксель = 1 метр при 1:10 000
 
         // СМЕЩЕНИЕ ДЕЛЯНКИ
         let plotOffsetX = 0.0;
@@ -477,15 +459,18 @@
         let rasterImage = null;
         let rasterX = 0.0, rasterY = 0.0;
         let rasterRotation = 0.0;
-        let metersPerPixel = 1.0;
         let isDraggingRaster = false;
         let rasterDragStartX = 0, rasterDragStartY = 0;
 
         // ВИДОВОЙ ЭКРАН (КАМЕРА)
-        let viewX = 180.0, viewY = 180.0;
+        let viewX = 160.0, viewY = 160.0;
         let viewZoom = 1.0;
         let isDraggingView = false;
         let dragStartX = 0, dragStartY = 0;
+
+        // PINCH-TO-ZOOM
+        let initialPinchDist = null;
+        let initialPinchZoom = 1.0;
 
         // КАЛИБРОВКА ЛИНЕЙКИ
         let isCalibrating = false;
@@ -499,7 +484,7 @@
         function initApp() {
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
-            initTouchAndMouse();
+            initGesturesAndMouse();
             syncGeometryFromGPS();
             renderTableHeader();
             renderTableBody();
@@ -513,7 +498,6 @@
             redrawAll();
         }
 
-        // --- ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ ДВИЖЕНИЯ ---
         function setActiveTool(tool) {
             activeTool = tool;
             document.getElementById('tool-pan').classList.toggle('active', tool === 'pan');
@@ -539,118 +523,151 @@
             }
         }
 
-        // --- УПРАВЛЕНИЕ МЫШЬЮ И ТАЧ-СОБЫТИЯМИ НА СМАРТФОНЕ ---
-        function initTouchAndMouse() {
-            const getCoords = (e) => {
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                const rect = canvas.getBoundingClientRect();
-                return {
-                    clientX, clientY,
-                    worldX: (clientX - rect.left - viewX) / viewZoom,
-                    worldY: (clientY - rect.top - viewY) / viewZoom
-                };
-            };
+        // --- УПРАВЛЕНИЕ МАСШТАБОМ (1:2 000, 1:5 000, 1:10 000, 1:25 000, 1:50 000) ---
+        function onScaleChanged(val) {
+            currentScaleValue = parseInt(val) || 10000;
+            document.getElementById('status-scale-text').innerText = `1:${currentScaleValue.toLocaleString()}`;
 
-            const onStart = (e) => {
-                if (e.touches && e.touches.length > 1) return; // мультитач зум
-                const { clientX, clientY, worldX, worldY } = getCoords(e);
+            // Масштабирование: базовый коэффициент при 1:10 000 = 1.0 м/пикс
+            metersPerPixel = currentScaleValue / 10000.0;
+            document.getElementById('meters-per-pixel-input').value = metersPerPixel.toFixed(3);
+            document.getElementById('status-pixel-ratio').innerText = `${metersPerPixel.toFixed(3)} м/пикс`;
 
-                if (isCalibrating) {
-                    if (!calibStartPoint) {
-                        calibStartPoint = { x: worldX, y: worldY };
-                    } else {
-                        calibEndPoint = { x: worldX, y: worldY };
-                        finishCalibLine();
-                    }
+            redrawAll();
+        }
+
+        // --- PINCH-TO-ZOOM И МЫШЬ ---
+        function initGesturesAndMouse() {
+            const getDist = (t1, t2) => Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+
+            viewport.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 2) {
+                    initialPinchDist = getDist(e.touches[0], e.touches[1]);
+                    initialPinchZoom = viewZoom;
+                    isDraggingView = false; isDraggingPlot = false; isDraggingRaster = false;
+                    return;
+                }
+                if (e.touches.length === 1) {
+                    handleStartDrag(e.touches[0].clientX, e.touches[0].clientY);
+                }
+            }, { passive: false });
+
+            window.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2 && initialPinchDist) {
+                    e.preventDefault();
+                    const currentDist = getDist(e.touches[0], e.touches[1]);
+                    const scaleFactor = currentDist / initialPinchDist;
+                    viewZoom = Math.min(Math.max(initialPinchZoom * scaleFactor, 0.15), 10.0);
+                    document.getElementById('status-zoom-text').innerText = `${Math.round(viewZoom * 100)}%`;
                     redrawAll();
                     return;
                 }
-
-                if (activeTool === 'move-plot') {
-                    isDraggingPlot = true;
-                    plotDragStartX = worldX - (plotOffsetX / metersPerPixel);
-                    plotDragStartY = worldY - (plotOffsetY / metersPerPixel);
-                    return;
+                if (e.touches.length === 1) {
+                    handleMoveDrag(e.touches[0].clientX, e.touches[0].clientY);
                 }
+            }, { passive: false });
 
-                if (activeTool === 'move-raster') {
-                    isDraggingRaster = true;
-                    rasterDragStartX = worldX - rasterX;
-                    rasterDragStartY = worldY - rasterY;
-                    return;
-                }
+            window.addEventListener('touchend', (e) => {
+                if (e.touches.length < 2) initialPinchDist = null;
+                handleEndDrag();
+            });
 
-                isDraggingView = true;
-                dragStartX = clientX - viewX;
-                dragStartY = clientY - viewY;
-                viewport.classList.add('grabbing');
-            };
-
-            const onMove = (e) => {
-                if (e.touches && e.touches.length > 1) return;
-                const { clientX, clientY, worldX, worldY } = getCoords(e);
-
-                if (isDraggingPlot) {
-                    plotOffsetX = (worldX - plotDragStartX) * metersPerPixel;
-                    plotOffsetY = (worldY - plotDragStartY) * metersPerPixel;
-                    redrawAll();
-                } else if (isDraggingRaster) {
-                    rasterX = worldX - rasterDragStartX;
-                    rasterY = worldY - rasterDragStartY;
-                    redrawAll();
-                } else if (isDraggingView) {
-                    viewX = clientX - dragStartX;
-                    viewY = clientY - dragStartY;
-                    redrawAll();
-                } else if (isCalibrating && calibStartPoint) {
-                    calibEndPoint = { x: worldX, y: worldY };
-                    redrawAll();
-                }
-            };
-
-            const onEnd = () => {
-                isDraggingPlot = false;
-                isDraggingRaster = false;
-                isDraggingView = false;
-                viewport.classList.remove('grabbing');
-            };
-
-            viewport.addEventListener('mousedown', onStart);
-            window.addEventListener('mousemove', onMove);
-            window.addEventListener('mouseup', onEnd);
-
-            viewport.addEventListener('touchstart', onStart, { passive: false });
-            window.addEventListener('touchmove', onMove, { passive: false });
-            window.addEventListener('touchend', onEnd);
+            viewport.addEventListener('mousedown', (e) => {
+                handleStartDrag(e.clientX, e.clientY, e.button);
+            });
+            window.addEventListener('mousemove', (e) => {
+                handleMoveDrag(e.clientX, e.clientY);
+            });
+            window.addEventListener('mouseup', handleEndDrag);
 
             viewport.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-                viewZoom *= zoomFactor;
+                viewZoom = Math.min(Math.max(viewZoom * zoomFactor, 0.15), 10.0);
                 document.getElementById('status-zoom-text').innerText = `${Math.round(viewZoom * 100)}%`;
                 redrawAll();
             }, { passive: false });
         }
 
-        // --- ВРАЩЕНИЕ ПОДЛОЖКИ ---
+        function handleStartDrag(clientX, clientY, btn = 0) {
+            const rect = canvas.getBoundingClientRect();
+            const worldX = (clientX - rect.left - viewX) / viewZoom;
+            const worldY = (clientY - rect.top - viewY) / viewZoom;
+
+            if (isCalibrating) {
+                if (!calibStartPoint) calibStartPoint = { x: worldX, y: worldY };
+                else { calibEndPoint = { x: worldX, y: worldY }; finishCalibLine(); }
+                redrawAll();
+                return;
+            }
+
+            if (activeTool === 'move-plot' && btn === 0) {
+                isDraggingPlot = true;
+                plotDragStartX = worldX - (plotOffsetX / metersPerPixel);
+                plotDragStartY = worldY - (plotOffsetY / metersPerPixel);
+                return;
+            }
+
+            if (activeTool === 'move-raster' && btn === 0) {
+                isDraggingRaster = true;
+                rasterDragStartX = worldX - rasterX;
+                rasterDragStartY = worldY - rasterY;
+                return;
+            }
+
+            isDraggingView = true;
+            dragStartX = clientX - viewX;
+            dragStartY = clientY - viewY;
+            viewport.classList.add('grabbing');
+        }
+
+        function handleMoveDrag(clientX, clientY) {
+            const rect = canvas.getBoundingClientRect();
+            const worldX = (clientX - rect.left - viewX) / viewZoom;
+            const worldY = (clientY - rect.top - viewY) / viewZoom;
+
+            if (isDraggingPlot) {
+                plotOffsetX = (worldX - plotDragStartX) * metersPerPixel;
+                plotOffsetY = (worldY - plotDragStartY) * metersPerPixel;
+                redrawAll();
+            } else if (isDraggingRaster) {
+                rasterX = worldX - rasterDragStartX;
+                rasterY = worldY - rasterDragStartY;
+                redrawAll();
+            } else if (isDraggingView) {
+                viewX = clientX - dragStartX;
+                viewY = clientY - dragStartY;
+                redrawAll();
+            } else if (isCalibrating && calibStartPoint) {
+                calibEndPoint = { x: worldX, y: worldY };
+                redrawAll();
+            }
+        }
+
+        function handleEndDrag() {
+            isDraggingPlot = false; isDraggingRaster = false; isDraggingView = false;
+            viewport.classList.remove('grabbing');
+        }
+
+        // --- ВРАЩЕНИЕ ПОДЛОЖКИ (С ТОЧНЫМИ ШАГАМИ +/-1 И +/-0.1) ---
         function setRotationValue(val) {
             let deg = parseFloat(val) || 0;
             deg = (deg % 360 + 360) % 360;
-            rasterRotation = deg;
-            document.getElementById('raster-rotation-slider').value = deg.toFixed(1);
-            document.getElementById('raster-rotation-input').value = deg.toFixed(1);
-            document.getElementById('status-rotation-text').innerText = `${deg.toFixed(1)}°`;
+            rasterRotation = parseFloat(deg.toFixed(1));
+            document.getElementById('raster-rotation-slider').value = rasterRotation;
+            document.getElementById('raster-rotation-input').value = rasterRotation;
+            document.getElementById('status-rotation-text').innerText = `${rasterRotation.toFixed(1)}°`;
             redrawAll();
         }
 
-        function rotateByStep(step) { setRotationValue(rasterRotation + step); }
+        function rotateByStep(step) {
+            setRotationValue(rasterRotation + step);
+        }
 
         // --- КАЛИБРОВКА ЛИНЕЙКИ ---
         function toggleCalibrationTool() {
             isCalibrating = !isCalibrating;
-            calibStartPoint = null;
-            calibEndPoint = null;
+            calibStartPoint = null; calibEndPoint = null;
             document.getElementById('btn-calib-tool').classList.toggle('active', isCalibrating);
             viewport.classList.toggle('calibrating', isCalibrating);
         }
@@ -690,7 +707,21 @@
             redrawAll();
         }
 
-        // --- МАТЕМАТИКА GPS И ГЕОМЕТРИИ (АВТОМАТИЧЕСКИЙ РАСЧЕТ ПРОМЕРА) ---
+        // --- РУЧНОЕ ЗАМЫКАНИЕ КОНТУРА ---
+        function toggleManualClosure() {
+            isPolygonClosed = !isPolygonClosed;
+            const btn = document.getElementById('btn-toggle-closure');
+            btn.innerText = isPolygonClosed ? "🔒 Замкнут" : "🔓 Разомкнут";
+            btn.style.color = isPolygonClosed ? "var(--forest-green)" : "var(--danger)";
+            redrawAll();
+        }
+
+        function onCloseTargetChanged(val) {
+            closeTargetId = parseInt(val) || 1;
+            redrawAll();
+        }
+
+        // --- МАТЕМАТИКА ГЕОМЕТРИИ И РАСЧЕТ ПРОМЕРОВ ПОСЛЕДОВАТЕЛЬНО ---
         function changeInputMode(mode) {
             currentInputMode = mode;
             renderTableHeader();
@@ -728,16 +759,18 @@
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
 
-        // Автоматический пересчет дистанций и румбов по GPS-координатам навигатора
+        // СТРОГО ПОСЛЕДОВАТЕЛЬНЫЙ РАСЧЕТ ПРОМЕРОВ (БЕЗ СБОЕВ ПРИ ДОБАВЛЕНИИ ТОЧЕК)
         function syncGeometryFromGPS() {
             for (let i = 0; i < plotPoints.length; i++) {
                 let nextIdx;
                 if (i === 0) {
-                    // Точка 1 (кв. столб) соединяется с Точкой 2 (Столб 1)
-                    nextIdx = 1;
+                    nextIdx = 1; // Т.0 (кв. столб) соединяется с Т.1 (начало делянки)
+                } else if (i < plotPoints.length - 1) {
+                    nextIdx = i + 1; // строго последовательно: 1->2, 2->3, 3->4, 4->5...
                 } else {
-                    // Замкнутый контур делянки: точки 2 -> 3 -> 4 -> 5 -> 2
-                    nextIdx = (i === plotPoints.length - 1) ? 1 : i + 1;
+                    // Последняя точка соединяется с целевой точкой замыкания (по умолчанию Т.1)
+                    nextIdx = plotPoints.findIndex(p => p.id === closeTargetId);
+                    if (nextIdx === -1) nextIdx = 1;
                 }
 
                 if (plotPoints[nextIdx]) {
@@ -764,14 +797,7 @@
         }
 
         function syncGeometryFromAzimuths() {
-            let curX = 0, curY = 0;
             plotPoints.forEach((p) => {
-                p.x = parseFloat(curX.toFixed(2));
-                p.y = parseFloat(curY.toFixed(2));
-                const rad = (p.azimuth * Math.PI) / 180;
-                curX += p.distance * Math.sin(rad);
-                curY += p.distance * Math.cos(rad);
-
                 const r = azimuthToRumb(p.azimuth);
                 p.rumbQuarter = r.quarter;
                 p.rumbDeg = r.deg;
@@ -779,18 +805,17 @@
             });
         }
 
-        // --- ОТРИСОВКА ТАБЛИЦЫ ---
+        // --- ТАБЛИЦА СЪЕМКИ ---
         function renderTableHeader() {
             const thead = document.getElementById('geometry-thead');
             if (currentInputMode === 'gps') {
                 thead.innerHTML = `
                     <tr>
                         <th style="width:25px;">Тчк</th>
-                        <th>Название / Тип</th>
+                        <th>Направление линии</th>
                         <th>Широта (с.ш.)</th>
                         <th>Долгота (в.д.)</th>
-                        <th>Расчет м</th>
-                        <th>Полевой м</th>
+                        <th>Промер, м</th>
                     </tr>
                 `;
             } else if (currentInputMode === 'rumbs') {
@@ -813,16 +838,6 @@
                         <th>❌</th>
                     </tr>
                 `;
-            } else if (currentInputMode === 'coordinates') {
-                thead.innerHTML = `
-                    <tr>
-                        <th style="width:25px;">Тчк</th>
-                        <th>X (метры)</th>
-                        <th>Y (метры)</th>
-                        <th>Расчет м</th>
-                        <th>Полевой м</th>
-                    </tr>
-                `;
             }
         }
 
@@ -832,18 +847,22 @@
 
             plotPoints.forEach((p, idx) => {
                 if (currentInputMode === 'gps') {
-                    const diff = Math.abs(p.distance - p.fieldDist);
-                    const diffBadge = diff > 5.0 ? `<span class="diff-alert">Δ ${diff.toFixed(1)}м</span>` : `<span class="diff-ok">ОК</span>`;
-                    const badgeType = p.isTie ? `<span style="color:var(--danger);font-weight:bold;">Привязка</span>` : `Столб ${idx}`;
+                    let label = "";
+                    if (p.isTie) {
+                        label = `<b style="color:var(--danger);">Привязка (Т.0 → Т.1)</b>`;
+                    } else if (idx === plotPoints.length - 1) {
+                        label = `Линия Т.${p.id} → Т.${closeTargetId} (Замык.)`;
+                    } else {
+                        label = `Линия Т.${p.id} → Т.${plotPoints[idx + 1].id}`;
+                    }
 
                     tbody.innerHTML += `
                         <tr>
                             <td><b>${p.id}</b></td>
-                            <td>${badgeType}</td>
+                            <td style="text-align:left; font-size:10px;">${label}</td>
                             <td><input type="number" class="input-table" value="${p.lat}" step="0.00005" oninput="onGPSChange(${idx}, 'lat', this.value)"></td>
                             <td><input type="number" class="input-table" value="${p.lng}" step="0.00005" oninput="onGPSChange(${idx}, 'lng', this.value)"></td>
-                            <td><b>${p.distance}</b> м ${diffBadge}</td>
-                            <td><input type="number" class="input-table" value="${p.fieldDist}" step="0.5" oninput="onFieldDistChange(${idx}, this.value)"></td>
+                            <td><b>${p.distance}</b> м</td>
                         </tr>
                     `;
                 } else if (currentInputMode === 'rumbs') {
@@ -873,34 +892,15 @@
                             <td><button style="border:none;background:none;cursor:pointer;" onclick="removePoint(${idx})">❌</button></td>
                         </tr>
                     `;
-                } else if (currentInputMode === 'coordinates') {
-                    const diff = Math.abs(p.distance - p.fieldDist);
-                    const diffBadge = diff > 3.0 ? `<span class="diff-alert">Δ ${diff.toFixed(1)}м</span>` : `<span class="diff-ok">ОК</span>`;
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><b>Т.${p.id}</b></td>
-                            <td><input type="number" class="input-table" value="${p.x}" step="1" oninput="onCoordChange(${idx}, 'x', this.value)"></td>
-                            <td><input type="number" class="input-table" value="${p.y}" step="1" oninput="onCoordChange(${idx}, 'y', this.value)"></td>
-                            <td><b>${p.distance}</b> м ${diffBadge}</td>
-                            <td><input type="number" class="input-table" value="${p.fieldDist}" step="0.5" oninput="onFieldDistChange(${idx}, this.value)"></td>
-                        </tr>
-                    `;
                 }
             });
         }
 
-        // --- СОБЫТИЯ ИЗМЕНЕНИЙ В ТАБЛИЦЕ ---
         function onGPSChange(idx, coord, val) {
             plotPoints[idx][coord] = parseFloat(val) || 0;
-            // Корректировка координат сразу пересчитывает метражи и румбы в таблице
             syncGeometryFromGPS();
             renderTableBody();
             redrawAll();
-        }
-
-        function onFieldDistChange(idx, val) {
-            plotPoints[idx].fieldDist = parseFloat(val) || 0;
-            renderTableBody();
         }
 
         function onAzimuthChange(idx, val) {
@@ -941,14 +941,14 @@
         }
 
         function addNewPoint() {
-            const nextId = plotPoints.length + 1;
+            const nextId = plotPoints.length;
             const last = plotPoints[plotPoints.length - 1];
             plotPoints.push({
-                id: nextId, name: `Столб ${nextId - 1}`, isTie: false,
+                id: nextId, name: `Столб ${nextId}`, isTie: false,
                 azimuth: 90.0, rumbQuarter: "СВ", rumbDeg: 90, rumbMin: 0,
-                distance: 100.0, fieldDist: 100.0, x: 0, y: 0,
-                lat: last ? last.lat - 0.0005 : 61.4800,
-                lng: last ? last.lng + 0.0005 : 50.5016
+                distance: 100.0, fieldDist: 100.0,
+                lat: last ? last.lat - 0.0006 : 61.4800,
+                lng: last ? last.lng + 0.0006 : 50.5016
             });
             if (currentInputMode === 'gps') syncGeometryFromGPS();
             else syncGeometryFromAzimuths();
@@ -957,9 +957,9 @@
         }
 
         function removePoint(idx) {
-            if (plotPoints.length <= 3) { alert("В делянке должно оставаться минимум 3 точки!"); return; }
+            if (plotPoints.length <= 2) { alert("В проекте должно оставаться минимум 2 точки!"); return; }
             plotPoints.splice(idx, 1);
-            plotPoints.forEach((p, i) => p.id = i + 1);
+            plotPoints.forEach((p, i) => p.id = i);
             if (currentInputMode === 'gps') syncGeometryFromGPS();
             else syncGeometryFromAzimuths();
             renderTableBody();
@@ -967,16 +967,14 @@
         }
 
         function clearAllPoints() {
-            if (confirm("Очистить все точки хода лесосеки?")) {
+            if (confirm("Очистить все точки?")) {
                 plotPoints = [];
                 renderTableBody();
                 redrawAll();
             }
         }
 
-        // --- УВЯЗКА ПОЛИГОНА ---
         function adjustPolygonClosure() {
-            // Увязываются только граничные столбы делянки (исключая точку привязки)
             const boundaryPts = plotPoints.filter(p => !p.isTie);
             if (boundaryPts.length < 3) return;
 
@@ -1006,10 +1004,9 @@
             syncGeometryFromAzimuths();
             renderTableBody();
             redrawAll();
-            alert("Полигон лесосеки успешно увязан!");
+            alert("Полигон успешно увязан!");
         }
 
-        // --- ЗАГРУЗКА РАСТРА ПОДЛОЖКИ ---
         function loadRasterMap(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -1029,7 +1026,7 @@
 
         function clearRasterMap() { rasterImage = null; redrawAll(); }
 
-        // --- ГЕОДЕЗИЧЕСКАЯ ОТРИСОВКА ЧЕРТЕЖА ---
+        // --- ГЕОДЕЗИЧЕСКИЙ РЕНДЕРИНГ БЕЗ ЦЕНТРАЛЬНОЙ ПРИВЯЗКИ ---
         function redrawAll() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -1037,7 +1034,7 @@
             ctx.translate(viewX, viewY);
             ctx.scale(viewZoom, viewZoom);
 
-            // 1. Отрисовка скана подложки с вращением 0-360
+            // 1. Скан планшета
             if (rasterImage) {
                 ctx.save();
                 ctx.globalAlpha = parseFloat(document.getElementById('raster-opacity').value) || 0.75;
@@ -1047,22 +1044,19 @@
                 ctx.restore();
             }
 
-            // 2. Меридиональное перекрестие Север-Юг
-            drawMeridianCrosshair();
-
-            // 3. Отрисовка привязки и полигона лесосеки
+            // 2. Отрисовка делянки и привязки
             if (plotPoints.length > 0) {
-                const p1 = plotPoints[0]; // Точка 1: Квартальный столб
+                const p0 = plotPoints[0]; // Точка 0: Привязка
                 const startPxX = plotOffsetX / metersPerPixel;
                 const startPxY = plotOffsetY / metersPerPixel;
 
-                // Линия привязки (красный пунктир от кв. столба к Столбу 1)
                 let post1PxX = startPxX;
                 let post1PxY = startPxY;
 
+                // Линия привязки от Т.0 до Т.1
                 if (plotPoints.length > 1) {
-                    const tieRad = (p1.azimuth * Math.PI) / 180;
-                    const tieDistPx = p1.distance / metersPerPixel;
+                    const tieRad = (p0.azimuth * Math.PI) / 180;
+                    const tieDistPx = p0.distance / metersPerPixel;
                     post1PxX = startPxX + tieDistPx * Math.sin(tieRad);
                     post1PxY = startPxY - tieDistPx * Math.cos(tieRad);
 
@@ -1075,27 +1069,27 @@
                     ctx.stroke();
                     ctx.setLineDash([]);
 
-                    // Подпись линии привязки
                     const midTieX = (startPxX + post1PxX) / 2;
                     const midTieY = (startPxY + post1PxY) / 2;
                     ctx.fillStyle = '#DC2626';
                     ctx.font = `bold ${9 / viewZoom}px Inter, sans-serif`;
-                    ctx.fillText(`Привязка: ${p1.distance}м`, midTieX, midTieY - (4 / viewZoom));
+                    ctx.fillText(`Привязка: ${p0.distance}м`, midTieX, midTieY - (4 / viewZoom));
                 }
 
-                // Квартальный столб (красный маркер)
+                // Маркер Т.0 (Квартальный столб)
                 ctx.fillStyle = '#DC2626';
                 ctx.beginPath();
                 ctx.arc(startPxX, startPxY, 5 / viewZoom, 0, 2 * Math.PI);
                 ctx.fill();
-                ctx.fillText("Кв. столб", startPxX + (6 / viewZoom), startPxY - (6 / viewZoom));
+                ctx.fillText("Т.0 (Кв. столб)", startPxX + (6 / viewZoom), startPxY - (6 / viewZoom));
 
-                // Построение замкнутого контура делянки (начиная со Столба 1)
+                // Построение контура делянки строго от Т.1 последовательно
                 const boundaryPts = plotPoints.filter(p => !p.isTie);
-                if (boundaryPts.length > 1) {
+                if (boundaryPts.length > 0) {
                     let curPxX = post1PxX;
                     let curPxY = post1PxY;
                     const polyCoords = [ { x: curPxX, y: curPxY } ];
+                    const nodePositions = [ { id: 1, x: curPxX, y: curPxY } ];
 
                     ctx.strokeStyle = '#2D5A27';
                     ctx.lineWidth = 2.5 / viewZoom;
@@ -1105,50 +1099,66 @@
                     ctx.beginPath();
                     ctx.moveTo(curPxX, curPxY);
 
-                    boundaryPts.forEach((p) => {
-                        const rad = (p.azimuth * Math.PI) / 180;
-                        const pxDist = p.distance / metersPerPixel;
-                        curPxX += pxDist * Math.sin(rad);
-                        curPxY -= pxDist * Math.cos(rad);
-                        ctx.lineTo(curPxX, curPxY);
-                        polyCoords.push({ x: curPxX, y: curPxY });
-                    });
-                    ctx.closePath();
-                    ctx.fill();
+                    // Последовательное добавление сторон: 1->2, 2->3, 3->4, 4->5...
+                    for (let i = 0; i < boundaryPts.length; i++) {
+                        const p = boundaryPts[i];
+                        const isLast = (i === boundaryPts.length - 1);
+
+                        if (!isLast) {
+                            const rad = (p.azimuth * Math.PI) / 180;
+                            const pxDist = p.distance / metersPerPixel;
+                            const nextPxX = curPxX + pxDist * Math.sin(rad);
+                            const nextPxY = curPxY - pxDist * Math.cos(rad);
+
+                            ctx.lineTo(nextPxX, nextPxY);
+                            polyCoords.push({ x: nextPxX, y: nextPxY });
+                            nodePositions.push({ id: p.id + 1, x: nextPxX, y: nextPxY });
+
+                            const mX = (curPxX + nextPxX) / 2;
+                            const mY = (curPxY + nextPxY) / 2;
+                            ctx.fillStyle = '#2D5A27';
+                            ctx.font = `bold ${9.5 / viewZoom}px Inter, sans-serif`;
+                            ctx.fillText(`${p.rumbQuarter}:${p.rumbDeg}°${p.rumbMin}' (${p.distance}м)`, mX, mY - (3 / viewZoom));
+
+                            curPxX = nextPxX;
+                            curPxY = nextPxY;
+                        } else {
+                            // Последняя точка — соединяется с целевой точкой замыкания (например Т.1 или Т.3)
+                            if (isPolygonClosed) {
+                                const targetNode = nodePositions.find(n => n.id === closeTargetId) || nodePositions[0];
+                                ctx.lineTo(targetNode.x, targetNode.y);
+
+                                const mX = (curPxX + targetNode.x) / 2;
+                                const mY = (curPxY + targetNode.y) / 2;
+                                ctx.fillStyle = '#2D5A27';
+                                ctx.font = `bold ${9.5 / viewZoom}px Inter, sans-serif`;
+                                ctx.fillText(`${p.rumbQuarter}:${p.rumbDeg}°${p.rumbMin}' (${p.distance}м)`, mX, mY - (3 / viewZoom));
+                            }
+                        }
+                    }
+
+                    if (isPolygonClosed) {
+                        ctx.closePath();
+                        ctx.fill();
+                    }
                     ctx.stroke();
 
-                    // Столбы делянки и подписи сторон
-                    let sX = post1PxX;
-                    let sY = post1PxY;
-                    boundaryPts.forEach((p, i) => {
-                        const rad = (p.azimuth * Math.PI) / 180;
-                        const pxDist = p.distance / metersPerPixel;
-                        const eX = sX + pxDist * Math.sin(rad);
-                        const eY = sY - pxDist * Math.cos(rad);
-
+                    // Отрисовка столбов Т.1 .. Т.N
+                    nodePositions.forEach((n) => {
                         ctx.fillStyle = '#16A34A';
                         ctx.beginPath();
-                        ctx.arc(sX, sY, 4.5 / viewZoom, 0, 2 * Math.PI);
+                        ctx.arc(n.x, n.y, 4.5 / viewZoom, 0, 2 * Math.PI);
                         ctx.fill();
 
                         ctx.fillStyle = '#111815';
-                        ctx.font = `bold ${9.5 / viewZoom}px Inter, sans-serif`;
-                        ctx.fillText(`Т.${i + 1}`, sX + (5 / viewZoom), sY - (5 / viewZoom));
-
-                        const mX = (sX + eX) / 2;
-                        const mY = (sY + eY) / 2;
-                        ctx.fillStyle = '#2D5A27';
-                        ctx.fillText(`${p.rumbQuarter}:${p.rumbDeg}°${p.rumbMin}' (${p.distance}м)`, mX, mY - (3 / viewZoom));
-
-                        sX = eX;
-                        sY = eY;
+                        ctx.fillText(`Т.${n.id}`, n.x + (5 / viewZoom), n.y - (5 / viewZoom));
                     });
 
                     calculateClosureAndArea(polyCoords);
                 }
             }
 
-            // 4. Отрезок линейки калибровки
+            // 3. Линия калибровки линейки
             if (calibStartPoint && calibEndPoint) {
                 ctx.strokeStyle = '#F59E0B';
                 ctx.lineWidth = 3 / viewZoom;
@@ -1158,22 +1168,6 @@
                 ctx.stroke();
             }
 
-            ctx.restore();
-        }
-
-        function drawMeridianCrosshair() {
-            ctx.save();
-            ctx.strokeStyle = 'rgba(0,0,0,0.25)';
-            ctx.lineWidth = 1 / viewZoom;
-            ctx.beginPath();
-            ctx.moveTo(0, -50 / viewZoom); ctx.lineTo(0, 50 / viewZoom);
-            ctx.moveTo(-50 / viewZoom, 0); ctx.lineTo(50 / viewZoom, 0);
-            ctx.stroke();
-
-            ctx.fillStyle = '#111815';
-            ctx.font = `bold ${10 / viewZoom}px Merriweather, serif`;
-            ctx.fillText("С", -3 / viewZoom, -56 / viewZoom);
-            ctx.fillText("Ю", -3 / viewZoom, 64 / viewZoom);
             ctx.restore();
         }
 
@@ -1201,12 +1195,10 @@
             document.getElementById('plot-area-input').value = (area / 10000).toFixed(4);
         }
 
-        // --- УПРАВЛЕНИЕ ПАНЕЛЬЮ-ШТОРКОЙ ---
         function togglePanelCollapse() {
             const panel = document.getElementById('dock-panel');
             panel.classList.toggle('collapsed');
-            const btn = document.getElementById('panel-toggle-btn');
-            btn.innerText = panel.classList.contains('collapsed') ? '▲' : '▼';
+            document.getElementById('panel-toggle-btn').innerText = panel.classList.contains('collapsed') ? '▲' : '▼';
         }
 
         function switchTab(tabId) {
@@ -1216,12 +1208,6 @@
             document.getElementById(tabId).classList.add('active');
         }
 
-        function onScaleChanged(val) {
-            document.getElementById('status-scale-text').innerText = `1:${parseInt(val).toLocaleString()}`;
-            redrawAll();
-        }
-
-        // --- ИМПОРТ ИЗ БГ-ХНС ---
         function triggerImportDialog() { document.getElementById('import-modal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
@@ -1238,8 +1224,8 @@
                         const dist = parseFloat(m.distance) || 0;
                         const r = azimuthToRumb(az);
                         return {
-                            id: i + 1,
-                            name: i === 0 ? "Кв. столб (привязка)" : `Столб ${i}`,
+                            id: i,
+                            name: i === 0 ? "Т.0 (Кв. столб)" : `Столб ${i}`,
                             isTie: (i === 0),
                             azimuth: az,
                             rumbQuarter: r.quarter,
@@ -1247,7 +1233,6 @@
                             rumbMin: r.min,
                             distance: dist,
                             fieldDist: dist,
-                            x: 0, y: 0,
                             lat: parseFloat(m.lat) || 61.4800,
                             lng: parseFloat(m.lng) || 50.5016
                         };
@@ -1261,7 +1246,7 @@
                     alert(`Импортировано ${plotPoints.length} точек хода из БГ-ХНС!`);
                 }
             } catch (e) {
-                alert("Ошибка формата данных БГ-ХНС!");
+                alert("Ошибка структуры данных БГ-ХНС!");
             }
         }
 
@@ -1270,9 +1255,11 @@
                 version: "БГ-АБРИС 2.0",
                 name: document.getElementById('plot-name').value,
                 areaHa: document.getElementById('plot-area-input').value,
-                scale: document.getElementById('stamp-scale').value,
+                scale: currentScaleValue,
                 rotation: rasterRotation,
                 metersPerPixel: metersPerPixel,
+                isPolygonClosed: isPolygonClosed,
+                closeTargetId: closeTargetId,
                 plotOffset: { x: plotOffsetX, y: plotOffsetY },
                 points: plotPoints
             };
