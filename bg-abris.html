@@ -1,1401 +1,1280 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>Абрис ПРО | Лесовик ПРО</title>
-    <link rel="icon" type="image/jpeg" href="logo.jpeg">
-    <meta name="theme-color" content="#2D5A27">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="БГ-ХНС АБРИС — чертёж делянки на скане планшета лесничества. Тестовая версия. Работает без интернета.">
+<meta name="theme-color" content="#2D5A27">
+<title>БГ-ХНС АБРИС</title>
+<link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjogItCR0JMt0KXQndChINCQ0JHQoNCY0KEiLCAic2hvcnRfbmFtZSI6ICLQkNCx0YDQuNGBIiwgInN0YXJ0X3VybCI6ICIuL2J1c29sLWFicmlzLmh0bWwiLCAic2NvcGUiOiAiLi8iLCAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwgImJhY2tncm91bmRfY29sb3IiOiAiI0YxRjRGMCIsICJ0aGVtZV9jb2xvciI6ICIjMkQ1QTI3In0=">
+<!-- Яндекс.Метрика (счётчик загружается асинхронно; без интернета страница работает как обычно) -->
+<script>
+(function(m,e,t,r,i,k,a){
+    m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+    m[i].l=1*new Date();
+    for (var j = 0; j < document.scripts.length; j++) { if (document.scripts[j].src === r) { return; } }
+    k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+})(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js?id=109130409', 'ym');
+ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: true, webvisor: false});
+</script>
+<!-- Яндекс.РСЯ: загрузчик (один раз на страницу) -->
+<script>window.yaContextCb=window.yaContextCb||[]</script>
+<script src="https://yandex.ru/ads/system/context.js" async></script>
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+<style>
+    :root {
+        --fs: 15px;
+        --bg: #F1F4F0; --card: #FFFFFF; --text: #1E2A22; --muted: #5B6B60;
+        --forest: #2D5A27; --forest-dark: #1F4128; --border: #CBD8C8; --bento: rgba(45,90,39,.08);
+        --danger: #C62828; --ok: #15803D; --warn: #B45309; --header-h: 96px;
+    }
+    [data-theme="dark"] {
+        --bg: #121815; --card: #1B2420; --text: #F1F4F0; --muted: #A9B8AE;
+        --forest: #8FBC8F; --forest-dark: #0F1A14; --border: #2D3A33; --bento: rgba(143,188,143,.14);
+        --danger: #F87171; --ok: #4ADE80; --warn: #FBBF24;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+        font-family: 'Inter', 'Segoe UI', Roboto, Arial, sans-serif; font-size: var(--fs); }
+    button, input, select, textarea { font: inherit; color: inherit; }
 
-        :root {
-            --bg-paper: #F4F6F4;
-            --text-graphite: #222523;
-            --forest-green: #2D5A27;
-            --forest-light: #8FBC8F;
-            --border-color: #D3DDD3;
-            --card-bg: #FFFFFF;
-            --glass-bg: rgba(244, 246, 244, 0.96);
-            --danger: #DC2626;
-            --success: #16A34A;
-            --warning-alert: #F59E0B;
-            --bento-bg: rgba(45, 90, 39, 0.08);
-            --header-h: 94px;
-        }
+    header { position: fixed; top: 0; left: 0; right: 0; height: var(--header-h); z-index: 1000; background: var(--card);
+        border-bottom: 1px solid var(--border); padding: 6px 10px; display: flex; flex-direction: column; gap: 6px; }
+    .top-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: nowrap; }
+    .brand { font-weight: 800; color: var(--forest); font-size: 1.1em; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+    .brand .tag { font-size: .62em; background: #C2410C; color: #fff; padding: 2px 7px; border-radius: 10px; }
+    .top-actions { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; }
+    .top-actions::-webkit-scrollbar, .tiles::-webkit-scrollbar { display: none; }
+    .btn { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; font-weight: 700;
+        font-size: .82em; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
+    .btn:hover { border-color: var(--forest); }
+    .btn.primary { background: var(--forest); color: #fff; border-color: var(--forest); }
+    [data-theme="dark"] .btn.primary { color: #0F1A14; }
+    .btn.danger { color: var(--danger); border-color: var(--danger); }
+    .btn:disabled { opacity: .45; cursor: default; }
+    .tiles { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; }
+    .tile { flex: 0 0 auto; background: var(--bento); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px;
+        font-weight: 700; font-size: .82em; cursor: pointer; white-space: nowrap; user-select: none; -webkit-user-select: none; touch-action: none; }
+    .tile.active { background: var(--forest); color: #fff; border-color: var(--forest); }
+    [data-theme="dark"] .tile.active { color: #0F1A14; }
 
-        [data-theme="dark"] {
-            --bg-paper: #121815;
-            --text-graphite: #F4F6F4;
-            --forest-green: #8FBC8F;
-            --forest-light: #2D5A27;
-            --border-color: #2D3A33;
-            --card-bg: #1B2420;
-            --glass-bg: rgba(18, 24, 21, 0.96);
-            --bento-bg: rgba(143, 188, 143, 0.12);
-        }
+    #view { position: absolute; top: var(--header-h); left: 0; right: 0; bottom: 26px; overflow: hidden; background: #E5EAE5; touch-action: none; cursor: grab; }
+    #view.scanmode { cursor: move; } #view.pick { cursor: crosshair; }
+    #cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    #hint { position: absolute; left: 10px; top: 10px; max-width: calc(100% - 80px); background: rgba(31,65,40,.94); color: #fff;
+        padding: 8px 12px; border-radius: 10px; font-size: .88em; display: none; z-index: 20; }
+    #hint.on { display: block; }
+    .zoom { position: absolute; left: 10px; bottom: 62px; display: flex; flex-direction: column; gap: 6px; z-index: 20; }
+    .zoom button { width: 42px; height: 42px; font-size: 22px; font-weight: 800; border-radius: 10px; border: 1px solid var(--border);
+        background: rgba(255,255,255,.96); color: #1F4128; cursor: pointer; }
+    .status { position: fixed; left: 0; right: 0; bottom: 0; height: 26px; z-index: 900; background: var(--card); border-top: 1px solid var(--border);
+        display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-size: 11.5px; color: var(--muted); gap: 8px; overflow: hidden; white-space: nowrap; }
 
-        html, body {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            overflow: hidden;
-            background-color: var(--bg-paper);
-            color: var(--text-graphite);
-            font-family: 'Inter', sans-serif;
-            touch-action: none;
-            -webkit-tap-highlight-color: transparent;
-        }
+    #dock { position: absolute; z-index: 500; background: var(--card); border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+    .dock-head { padding: 8px 12px; background: var(--bento); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: move; user-select: none; -webkit-user-select: none; touch-action: none; }
+    .dock-head b { color: var(--forest); font-size: .95em; }
+    .dock-body { overflow-y: auto; padding: 10px; flex: 1; min-height: 0; }
+    @media (min-width: 769px) {
+        #dock { top: calc(var(--header-h) + 12px); right: 14px; width: 470px; min-width: 330px; max-width: 94vw; min-height: 120px; max-height: calc(100vh - var(--header-h) - 44px);
+            border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.18); resize: both; }
+        #dock.hidden { display: none; }
+        .sheet-pill { display: none; }
+    }
+    @media (max-width: 768px) {
+        #dock { left: 0; right: 0; bottom: 26px; width: 100%; max-height: 66vh; border-radius: 14px 14px 0 0; box-shadow: 0 -4px 20px rgba(0,0,0,.2); transition: transform .25s ease-out; }
+        #dock.collapsed { transform: translateY(calc(100% - 46px)); }
+        #dock.hidden { display: none; }
+        .dock-head { cursor: pointer; }
+        .zoom { bottom: calc(66vh + 40px); display: none; }
+        .status span:last-child { display: none; }
+        .zoom.show { display: flex; }
+    }
+    .tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 10px; }
+    .tab { flex: 1; padding: 8px 2px; background: none; border: none; border-bottom: 3px solid transparent; margin-bottom: -2px; font-weight: 800; font-size: .8em; text-transform: uppercase; color: var(--muted); cursor: pointer; }
+    .tab.active { color: var(--forest); border-bottom-color: var(--forest); }
+    .pane { display: none; } .pane.active { display: block; }
+    .f { display: block; margin-bottom: 9px; }
+    .f > span { display: block; font-size: .78em; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 3px; }
+    input[type=text], input[type=number], select, textarea { width: 100%; padding: 7px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); font-weight: 600; }
+    textarea { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .82em; min-height: 120px; }
+    .row { display: flex; gap: 8px; align-items: flex-end; } .row > * { flex: 1; min-width: 0; }
+    .box { background: var(--bento); border: 1px solid var(--border); border-radius: 10px; padding: 9px 10px; margin-bottom: 10px; }
+    .box h4 { margin: 0 0 6px; font-size: .9em; color: var(--forest); }
+    .note { font-size: .8em; color: var(--muted); line-height: 1.4; }
+    .info { border-radius: 10px; padding: 10px 12px; margin: 8px 0; border: 2px solid var(--border); background: var(--card); }
+    .info .big { font-size: 1.7em; font-weight: 800; color: var(--forest); line-height: 1.1; }
+    .info .st { font-weight: 700; margin-top: 4px; font-size: .92em; }
+    .info.ok { border-color: var(--ok); } .info.bad { border-color: var(--danger); } .info.mid { border-color: var(--warn); }
+    .info.ok .st { color: var(--ok); } .info.bad .st { color: var(--danger); } .info.mid .st { color: var(--warn); }
+    .tbl-wrap { overflow: auto; border: 1px solid var(--border); border-radius: 8px; max-height: 300px; }
+    table.lines { width: 100%; border-collapse: collapse; font-size: .9em; }
+    table.lines th, table.lines td { border: 1px solid var(--border); padding: 3px; text-align: center; white-space: nowrap; }
+    table.lines th { position: sticky; top: 0; background: var(--card); color: var(--forest); font-size: .78em; z-index: 2; }
+    table.lines td.lbl { text-align: left; min-width: 86px; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+    table.lines td.lbl .sub { display: block; font-size: .72em; color: var(--muted); font-weight: 500; font-family: ui-monospace, Menlo, Consolas, monospace; }
+    table.lines tr.tie td { background: rgba(198,40,40,.07); }
+    table.lines tr.ret td { background: rgba(180,83,9,.09); }
+    table.lines tr.sel td { outline: 2px solid var(--forest); outline-offset: -2px; }
+    table.lines input, table.lines select { border: none; background: transparent; text-align: center; padding: 5px 2px; font-weight: 700; width: 100%; min-width: 46px; border-radius: 4px; }
+    table.lines select { min-width: 54px; }
+    table.lines input:focus, table.lines select:focus { outline: 2px solid var(--forest); background: var(--card); }
+    .show-az .col-rumb, .show-rumb .col-az { display: none; }
+    .badge-t { font-size: .7em; font-weight: 800; color: var(--danger); }
+    .badge-r { font-size: .7em; font-weight: 800; color: var(--warn); }
 
-        *, *:before, *:after { box-sizing: border-box; }
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 14px; }
+    .overlay.on { display: flex; }
+    .modal { background: var(--card); border-radius: 12px; width: 100%; max-width: 520px; padding: 16px; border: 1px solid var(--border); max-height: 92vh; overflow-y: auto; }
+    .modal h3 { margin: 0 0 8px; color: var(--forest); font-size: 1.05em; }
+    #lens { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 100000; background: rgba(15,24,19,.96); color: #fff;
+        border: 2px solid #8FBC8F; border-radius: 16px; padding: 16px 20px; width: min(92vw, 560px); display: none; text-align: center; pointer-events: none; }
+    #lens.on { display: block; }
+    #lens .t { color: #8FBC8F; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; font-size: 1em; }
+    #lens .b { font-size: 3.2em; font-weight: 800; color: #8FBC8F; line-height: 1.1; margin: 4px 0; font-family: ui-monospace, Menlo, Consolas, monospace; }
+    #lens .m { font-size: 1.6em; font-weight: 700; margin: 4px 0; }
+    #lens .y { color: #FBBF24; } #lens .r { color: #F87171; } #lens .g { color: #4ADE80; }
+    #toast { position: fixed; left: 50%; bottom: 44px; transform: translateX(-50%); background: var(--forest-dark); color: #fff; padding: 10px 16px; border-radius: 10px; z-index: 4000; display: none; max-width: 92vw; text-align: center; font-size: .92em; }
 
-        .bento-header {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-color);
-            display: flex; flex-direction: column;
-            gap: 4px; padding: 6px 10px;
-            height: var(--header-h);
-        }
-
-        .header-top-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        .brand-box { display: flex; align-items: center; gap: 6px; text-decoration: none; }
-        .header-logo { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--forest-green); }
-        .brand-title { font-family: 'Merriweather', serif; color: var(--forest-green); font-size: 15px; font-weight: 700; margin: 0; }
-
-        .top-actions { display: flex; align-items: center; gap: 4px; }
-        .btn-top {
-            background: var(--card-bg); border: 1px solid var(--border-color);
-            color: var(--text-graphite); padding: 4px 7px; border-radius: 5px;
-            font-size: 11px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;
-        }
-
-        .header-bento-grid {
-            display: flex; gap: 4px; width: 100%; overflow-x: auto; padding-bottom: 2px;
-            scrollbar-width: none;
-        }
-        .header-bento-grid::-webkit-scrollbar { display: none; }
-
-        .bento-tile {
-            flex: 0 0 auto; background: var(--bento-bg); border: 1px solid var(--border-color);
-            border-radius: 6px; padding: 5px 8px; font-size: 10.5px; font-weight: 700;
-            color: var(--text-graphite); cursor: pointer; display: inline-flex; align-items: center;
-            gap: 4px; white-space: nowrap; transition: 0.15s;
-        }
-        .bento-tile.active {
-            background: var(--forest-green); color: #FFF; border-color: var(--forest-green);
-        }
-
-        #viewport-container {
-            position: absolute; top: var(--header-h); left: 0; right: 0; bottom: 22px;
-            overflow: hidden; background: #E5EAE5; cursor: grab;
-        }
-        #viewport-container.grabbing { cursor: grabbing; }
-        #viewport-container.moving-plot { cursor: move; }
-        #viewport-container.moving-raster { cursor: all-scroll; }
-        #viewport-container.calibrating { cursor: crosshair; }
-
-        #main-canvas { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
-
-        .status-bar {
-            position: fixed; bottom: 0; left: 0; right: 0; height: 22px;
-            background: var(--card-bg); border-top: 1px solid var(--border-color);
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0 8px; font-size: 9.5px; font-family: monospace; opacity: 0.9;
-            z-index: 900;
-        }
-
-        .floating-panel {
-            position: absolute; z-index: 500;
-            background: var(--card-bg); border: 1px solid var(--border-color);
-            display: flex; flex-direction: column; overflow: hidden;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
-        }
-
-        @media (max-width: 768px) {
-            .floating-panel {
-                left: 0; right: 0; bottom: 22px; width: 100%;
-                border-radius: 14px 14px 0 0; max-height: 72vh;
-                transform: translateY(0); transition: transform 0.25s ease-out;
-            }
-            .floating-panel.collapsed { transform: translateY(calc(100% - 38px)); }
-            .mobile-drag-pill {
-                width: 38px; height: 4px; background: rgba(0,0,0,0.25);
-                border-radius: 2px; margin: 4px auto 2px; cursor: pointer;
-            }
-        }
-
-        @media (min-width: 769px) {
-            .floating-panel {
-                top: calc(var(--header-h) + 12px); right: 14px; width: 400px;
-                max-height: calc(100vh - 140px); border-radius: 10px;
-                box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-            }
-            .floating-panel.collapsed { width: 160px; height: 38px; }
-            .floating-panel.collapsed .panel-content { display: none; }
-            .mobile-drag-pill { display: none; }
-        }
-
-        .panel-header {
-            padding: 6px 12px; background: rgba(45, 90, 39, 0.05);
-            border-bottom: 1px solid var(--border-color);
-            display: flex; justify-content: space-between; align-items: center;
-            cursor: pointer;
-        }
-        .panel-header-title { font-size: 11.5px; font-weight: 700; color: var(--forest-green); font-family: 'Merriweather', serif; }
-        .panel-content { padding: 10px; overflow-y: auto; max-height: calc(72vh - 50px); font-size: 11px; }
-
-        .tab-nav { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 8px; }
-        .tab-btn {
-            flex: 1; padding: 6px 2px; background: none; border: none;
-            border-bottom: 2px solid transparent; margin-bottom: -2px; font-size: 10.5px; font-weight: 700;
-            color: var(--text-graphite); cursor: pointer; text-align: center; text-transform: uppercase;
-        }
-        .tab-btn.active { color: var(--forest-green); border-bottom-color: var(--forest-green); }
-
-        .tab-pane { display: none; }
-        .tab-pane.active { display: block; }
-
-        .field-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 6px; }
-        .field-group { margin-bottom: 6px; }
-        .field-group label { display: block; font-size: 9.5px; font-weight: 700; opacity: 0.75; margin-bottom: 2px; text-transform: uppercase; }
-        .field-group input, .field-group select {
-            width: 100%; padding: 5px 6px; border: 1px solid var(--border-color);
-            border-radius: 4px; background: var(--bg-paper); color: var(--text-graphite);
-            font-size: 11px; font-weight: 600;
-        }
-
-        .lines-table-wrapper {
-            max-height: 200px; overflow-y: auto; overflow-x: auto;
-            border: 1px solid var(--border-color); border-radius: 6px; margin-top: 4px;
-        }
-        .lines-table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
-        .lines-table th, .lines-table td { border: 1px solid var(--border-color); padding: 4px 3px; text-align: center; white-space: nowrap; }
-        .lines-table th { background: rgba(0,0,0,0.03); color: var(--forest-green); font-size: 9.5px; font-weight: 700; position: sticky; top: 0; z-index: 5; }
-        
-        .input-table {
-            width: 100%; border: none; background: transparent; text-align: center;
-            font-size: 11px; font-weight: 600; color: var(--text-graphite); padding: 3px;
-            border-radius: 3px;
-        }
-        .input-table:focus {
-            outline: 2px solid var(--forest-green); background: var(--card-bg);
-        }
-
-        .closure-box {
-            background: rgba(45, 90, 39, 0.05); border: 1px solid var(--border-color);
-            border-radius: 6px; padding: 6px 8px; margin-top: 6px; font-size: 10.5px;
-        }
-
-        .rotation-presets-grid {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 3px; margin-bottom: 6px;
-        }
-        .btn-action-small {
-            padding: 5px 2px; font-size: 10px; font-weight: bold; border-radius: 4px;
-            border: 1px solid var(--border-color); background: var(--bg-paper);
-            color: var(--text-graphite); cursor: pointer; text-align: center;
-        }
-        .btn-action-small:hover { background: var(--bento-bg); border-color: var(--forest-green); }
-
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6); z-index: 2000; display: none;
-            align-items: center; justify-content: center; padding: 14px;
-        }
-        .modal-box {
-            background: var(--card-bg); border-radius: 8px; width: 100%; max-width: 440px;
-            padding: 16px; border: 1px solid var(--border-color);
-        }
-        .modal-box h3 { margin-top: 0; color: var(--forest-green); font-family: 'Merriweather', serif; font-size: 14px; }
-
-        #print-sheet-container { display: none; }
-
-        @media print {
-            body { background: #FFF !important; color: #000 !important; overflow: visible !important; }
-            .bento-header, .status-bar, .floating-panel, #viewport-container, .modal-overlay { display: none !important; }
-            #print-sheet-container {
-                display: block !important; width: 210mm; min-height: 297mm;
-                padding: 10mm 12mm; margin: 0 auto; box-sizing: border-box;
-                font-family: 'Inter', sans-serif; font-size: 10pt; line-height: 1.3;
-            }
-            .print-border-box {
-                border: 2px solid #000; width: 100%; min-height: 275mm;
-                padding: 6mm; position: relative; box-sizing: border-box;
-            }
-            .print-header-title {
-                text-align: center; font-family: 'Merriweather', serif;
-                font-size: 14pt; font-weight: bold; margin-bottom: 3mm;
-            }
-            .print-meta-grid {
-                display: grid; grid-template-columns: 1fr 1fr; gap: 2mm 6mm;
-                font-size: 9pt; border-bottom: 1px solid #000; padding-bottom: 3mm; margin-bottom: 3mm;
-            }
-            .print-canvas-wrapper {
-                width: 100%; height: 140mm; border: 1px dashed #666;
-                position: relative; display: flex; align-items: center; justify-content: center;
-                margin-bottom: 3mm; overflow: hidden;
-            }
-            #print-canvas-img { max-width: 100%; max-height: 100%; object-fit: contain; }
-            .print-table {
-                width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-top: 2mm;
-            }
-            .print-table th, .print-table td {
-                border: 1px solid #000; padding: 3px 4px; text-align: center;
-            }
-            .print-footer-stamp {
-                margin-top: 5mm; display: flex; justify-content: space-between; font-size: 9pt;
-            }
-        }
-    </style>
+    #print-sheet { display: none; }
+    @media print {
+        @page { size: A4 portrait; margin: 8mm; }
+        html, body { overflow: visible !important; height: auto !important; background: #fff !important; color: #000 !important; }
+        header, .status, #dock, #view, .overlay, #lens, #toast, .zoom { display: none !important; }
+        #print-sheet { display: block !important; width: 194mm; font-size: 10pt; color: #000; }
+        .ps-border { border: 2px solid #000; padding: 6mm; }
+        .ps-title { text-align: center; font-weight: 800; font-size: 14pt; margin-bottom: 3mm; }
+        .ps-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 6mm; font-size: 9pt; border-bottom: 1px solid #000; padding-bottom: 2mm; margin-bottom: 3mm; }
+        #ps-img { width: 180mm; height: 135mm; display: block; border: 1px solid #666; margin: 0 auto 3mm; }
+        table.ps-tbl { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+        table.ps-tbl th, table.ps-tbl td { border: 1px solid #000; padding: 2px 4px; text-align: center; }
+        .ps-foot { margin-top: 5mm; display: flex; justify-content: space-between; font-size: 9pt; }
+    }
+</style>
 </head>
 <body>
-
-    <header class="bento-header">
-        <div class="header-top-row">
-            <a href="#" class="brand-box" onclick="return false;">
-                <img src="logo.jpeg" alt="Лесовик ПРО" class="header-logo" onerror="this.style.display='none'">
-                <h1 class="brand-title">АБРИС ПРО</h1>
-            </a>
-            <div class="top-actions">
-                <button class="btn-top" onclick="triggerImportDialog()">📥 Из БГ-ХНС</button>
-                <button class="btn-top" onclick="exportProjectFile()">💾 Файл</button>
-                <button class="btn-top" onclick="prepareAndPrint()">🖨️ А4</button>
-                <button class="btn-top" onclick="toggleTheme()">🌓</button>
-            </div>
-        </div>
-
-        <div class="header-bento-grid">
-            <button class="bento-tile active" id="tool-pan" onclick="setActiveTool('pan')">✋ Панорама</button>
-            <button class="bento-tile" id="tool-plot" onclick="setActiveTool('move-plot')">📍 Двигать делянку</button>
-            <button class="bento-tile" id="tool-raster" onclick="setActiveTool('move-raster')">🗺️ Двигать скан</button>
-            <button class="bento-tile" onclick="resetPlotPosition()">🎯 В центр</button>
-            
-            <input type="file" id="raster-input" accept="image/jpeg,image/png" style="display: none;" onchange="loadRasterMap(event)">
-            <button class="bento-tile" onclick="document.getElementById('raster-input').click()">📁 Скан</button>
-            <button class="bento-tile" id="btn-calib-tool" onclick="toggleCalibrationTool()">📐 Калибровка</button>
-            <button class="bento-tile" onclick="togglePanelCollapse()">📋 Таблица</button>
-        </div>
-    </header>
-
-    <div id="viewport-container">
-        <canvas id="main-canvas"></canvas>
-    </div>
-
-    <div class="status-bar">
-        <div class="status-item">
-            <span>Масштаб: <b id="status-scale-text">1:10 000</b></span>
-            <span>|</span>
-            <span>Шкала подложки: <b id="status-pixel-ratio">1.000 м/пикс</b></span>
-        </div>
-        <div class="status-item">
-            <span>Поворот: <b id="status-rotation-text">0.0°</b></span>
-            <span>|</span>
-            <span>Зум: <b id="status-zoom-text">100%</b></span>
+<noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt=""></div></noscript>
+<header>
+    <div class="top-row">
+        <div class="brand">📐 БГ-ХНС АБРИС <span class="tag">ТЕСТ</span></div>
+        <div class="top-actions">
+            <button class="btn primary" id="b-import">📥 Из БГ-ХНС</button>
+            <button class="btn" id="b-open">📂 Открыть</button>
+            <button class="btn" id="b-save">💾 Сохранить</button>
+            <button class="btn" id="b-print">🖨️ Печать</button>
+            <button class="btn" id="b-fm" aria-label="Мельче">A−</button>
+            <button class="btn" id="b-fp" aria-label="Крупнее">A+</button>
+            <button class="btn" id="b-theme" aria-label="Тема">🌓</button>
         </div>
     </div>
+    <div class="tiles">
+        <div class="tile active" id="t-pan">✋ Панорама</div>
+        <div class="tile" id="t-scan">🗺️ Двигать скан</div>
+        <div class="tile" id="t-load">📁 Скан</div>
+        <div class="tile" id="t-cal">📐 Масштаб линией</div>
+        <div class="tile" id="t-tie">📍 Привязать столб</div>
+        <div class="tile" id="t-fit">🎯 Показать всё</div>
+        <div class="tile" id="t-panel">📋 Таблица</div>
+        <div class="tile" id="t-lens">🔍 Линза (держать)</div>
+        <div class="tile" id="t-ex">▶ Пример</div>
+    </div>
+</header>
 
-    <div id="dock-panel" class="floating-panel">
-        <div class="mobile-drag-pill" onclick="togglePanelCollapse()"></div>
-        <div id="dock-header" class="panel-header" onclick="togglePanelCollapse()">
-            <span class="panel-header-title">Параметры и съемка делянки</span>
-            <button class="panel-controls-btn" id="panel-toggle-btn">▲</button>
+<div id="view">
+    <canvas id="cv"></canvas>
+    <div id="hint"></div>
+    <div class="zoom" id="zoomctl">
+        <button id="z-in" aria-label="Приблизить">+</button>
+        <button id="z-out" aria-label="Отдалить">−</button>
+    </div>
+</div>
+<div class="status">
+    <span>Масштаб чертежа: <b id="s-scale">1:10 000</b> · скан: <b id="s-mpp">—</b></span>
+    <span>Поворот скана: <b id="s-rot">0.0°</b> · зум: <b id="s-zoom">100%</b></span>
+</div>
+
+<div id="dock">
+    <div class="dock-head" id="dock-head"><b>Параметры и съёмка делянки</b><button class="btn" id="dock-x" style="padding:3px 9px" aria-label="Скрыть">✕</button></div>
+    <div class="dock-body">
+        <div class="tabs">
+            <button class="tab active" data-tab="p-plot">Делянка</button>
+            <button class="tab" data-tab="p-scan">Скан</button>
+            <button class="tab" data-tab="p-blank">Бланк</button>
+            <button class="tab" data-tab="p-data">Данные</button>
         </div>
 
-        <div class="panel-content">
-            <div class="tab-nav">
-                <button class="tab-btn active" onclick="switchTab('tab-properties')">Свойства</button>
-                <button class="tab-btn" onclick="switchTab('tab-styling')">Масштаб / Бланк</button>
-                <button class="tab-btn" onclick="switchTab('tab-substrate')">Подложка</button>
+        <div class="pane active" id="p-plot">
+            <label class="f"><span>Название делянки</span><input type="text" id="f-name" placeholder="например: Лесосека №1"></label>
+            <div class="box">
+                <h4>Т.0 — квартальный столб (от него идёт привязка)</h4>
+                <div class="row">
+                    <label class="f" style="margin:0"><span>Широта</span><input type="text" id="p0-lat" inputmode="decimal" placeholder="61.480000"></label>
+                    <label class="f" style="margin:0"><span>Долгота</span><input type="text" id="p0-lng" inputmode="decimal" placeholder="50.501600"></label>
+                </div>
+                <div class="note" style="margin-top:6px">Координаты нужны для выгрузки в GPX/GeoJSON и для привязки скана по координатам. Для чертежа не обязательны.</div>
             </div>
-
-            <!-- ВКЛАДКА 1: СВОЙСТВА -->
-            <div id="tab-properties" class="tab-pane active">
-                <div class="field-row">
-                    <div style="flex: 1;">
-                        <label style="font-size: 9px; font-weight: bold; opacity: 0.7;">НАЗВАНИЕ:</label>
-                        <input type="text" id="plot-name" value="" placeholder="Введите название делянки" style="width: 100%; padding: 3px; font-weight: bold;" oninput="redrawAll()">
-                    </div>
-                    <div style="width: 105px;">
-                        <label style="font-size: 9px; font-weight: bold; opacity: 0.7;">ПЛОЩАДЬ, ГА:</label>
-                        <input type="text" id="plot-area-input" value="0.0000" readonly style="width: 100%; padding: 3px; font-weight: bold; color: var(--forest-green); background: rgba(0,0,0,0.03);">
-                    </div>
+            <div class="box">
+                <h4>Где начинается делянка и как она замыкается</h4>
+                <div class="row">
+                    <label class="f" style="margin:0"><span>Делянка начинается с точки №</span><input type="number" id="f-s" min="0" value="1"></label>
+                    <label class="f" style="margin:0"><span>Допуск невязки, 1:</span><input type="number" id="f-tol" min="0" placeholder="не задан"></label>
                 </div>
-
-                <div class="field-row" style="margin-bottom: 6px;">
-                    <label style="display: inline-flex; align-items: center; gap: 5px; cursor: pointer; font-size: 10.5px;">
-                        <input type="checkbox" id="plot-non-exploitable" onchange="redrawAll()">
-                        Неэксплуатационный участок (вычет площади)
-                    </label>
-                </div>
-
-                <div class="field-row" style="margin-bottom: 6px;">
-                    <label style="display: inline-flex; align-items: center; gap: 5px; cursor: pointer; font-size: 10.5px;">
-                        <input type="checkbox" id="plot-fill-enabled" checked onchange="redrawAll()">
-                        Легкая заливка контура (8%)
-                    </label>
-                </div>
-
-                <label style="font-size: 9px; font-weight: 700; opacity: 0.8; display: block; margin-bottom: 2px;">МЕТОД СЪЕМКИ:</label>
-                <select id="input-mode-select" class="field-group" style="margin-bottom: 6px;" onchange="changeInputMode(this.value)">
-                    <option value="gps">gps - привязка (Т.0 кв. столб, далее делянка)</option>
-                    <option value="rumbs">Румбы (Четверти СВ/ЮВ/ЮЗ/СЗ)</option>
-                    <option value="azimuths">Азимуты (0 - 360°)</option>
-                </select>
-
-                <div class="lines-table-wrapper">
-                    <table class="lines-table" id="geometry-table">
-                        <thead id="geometry-thead"></thead>
-                        <tbody id="geometry-tbody"></tbody>
-                    </table>
-                </div>
-
-                <!-- ЗАМЫКАНИЕ -->
-                <div style="background: rgba(0,0,0,0.03); border: 1px dashed var(--border-color); border-radius: 6px; padding: 6px; margin-top: 6px;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
-                        <span style="font-size: 10px; font-weight: bold;">Замкнуть с точкой №:</span>
-                        <input type="number" id="close-to-point-input" value="1" min="1" max="99" style="width: 45px; padding: 2px; text-align: center; font-weight: bold;" onfocus="this.select()" onchange="onCloseTargetChanged(this.value)">
-                        <button class="btn-top" id="btn-toggle-closure" style="padding: 3px 6px;" onclick="toggleManualClosure()">🔒 Замкнут</button>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 5px; margin-top: 6px;">
-                    <button class="btn-top" style="flex: 1; justify-content: center;" onclick="addNewPoint()">➕ Добавить точку</button>
-                    <button class="btn-top" style="color: var(--danger);" onclick="clearAllPoints()" title="Очистить точки">🗑️</button>
-                </div>
-
-                <div class="closure-box">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>Линейная невязка: <b id="closure-linear" style="color: var(--forest-green);">0.00 м</b></span>
-                        <button class="btn-top" style="padding: 2px 6px; font-size: 9.5px;" onclick="adjustPolygonClosure()" title="Увязать полигон">Увязать</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ВКЛАДКА 2: МАСШТАБ И БЛАНК -->
-            <div id="tab-styling" class="tab-pane">
-                <div class="field-group">
-                    <label>Масштаб чертежа:</label>
-                    <select id="stamp-scale" onchange="onScaleChanged(this.value)">
-                        <option value="2000">1:2 000 (в 1 см 20 м)</option>
-                        <option value="5000">1:5 000 (в 1 см 50 м)</option>
-                        <option value="10000" selected>1:10 000 (в 1 см 100 м)</option>
-                        <option value="25000">1:25 000 (в 1 см 250 м)</option>
-                        <option value="50000">1:50 000 (в 1 см 500 м)</option>
+                <label class="f" style="margin:8px 0 0"><span>Замыкание</span>
+                    <select id="f-mode">
+                        <option value="return">Последняя линия возвращает в точку №…</option>
+                        <option value="auto">Замкнуть автоматически (невязка не проверяется)</option>
+                        <option value="open">Не замыкать (только длина)</option>
                     </select>
-                </div>
-                <div class="field-group">
-                    <label>Субъект РФ / Район:</label>
-                    <input type="text" id="stamp-region" value="" placeholder="Республика / Область" onfocus="this.select()" onchange="redrawAll()">
-                </div>
-                <div class="field-group">
-                    <label>Лесничество:</label>
-                    <input type="text" id="stamp-les" value="" placeholder="Лесничество" onfocus="this.select()" onchange="redrawAll()">
-                </div>
-                <div class="field-group">
-                    <label>Участковое лесничество:</label>
-                    <input type="text" id="stamp-uch" value="" placeholder="Участковое лесничество" onfocus="this.select()" onchange="redrawAll()">
-                </div>
-                <div class="field-group">
-                    <label>Квартал / Выдел / Делянка:</label>
-                    <input type="text" id="stamp-kv" value="" placeholder="кв. __, выд. __, дел. __" onfocus="this.select()" onchange="redrawAll()">
-                </div>
-                <div class="field-group">
-                    <label>Исполнитель съемки:</label>
-                    <input type="text" id="stamp-author" value="" placeholder="ФИО исполнителя" onfocus="this.select()" onchange="redrawAll()">
-                </div>
+                </label>
+                <label class="f" style="margin:8px 0 0" id="f-c-wrap"><span>Замыкается на точку №</span><input type="number" id="f-c" min="0" placeholder="как начало"></label>
+                <div class="note" style="margin-top:6px">Точки до начала делянки — это привязка от столба (красным). Делянка может начинаться с любой точки: 0, 1, 2, 3…</div>
             </div>
 
-            <!-- ВКЛАДКА 3: ПОДЛОЖКА -->
-            <div id="tab-substrate" class="tab-pane">
-                <div class="field-group">
-                    <label>Прозрачность планшета:</label>
-                    <input type="range" id="raster-opacity" min="0.05" max="1.0" step="0.05" value="0.75" oninput="redrawAll()">
-                </div>
+            <div class="info" id="info"><div class="big">—</div><div class="st">Добавьте линии или загрузите из БГ-ХНС</div></div>
 
-                <div class="field-group">
-                    <label>Угол поворота подложки (0 - 360°):</label>
-                    <div style="display: flex; gap: 6px; align-items: center;">
-                        <input type="range" id="raster-rotation-slider" min="0" max="360" step="0.1" value="0" oninput="setRotationValue(this.value)">
-                        <input type="number" id="raster-rotation-input" min="0" max="360" step="0.1" value="0.0" style="width: 65px;" onfocus="this.select()" onchange="setRotationValue(this.value)">
-                    </div>
-
-                    <div class="rotation-presets-grid">
-                        <button class="btn-action-small" onclick="rotateByStep(-90)">↺ -90°</button>
-                        <button class="btn-action-small" onclick="rotateByStep(90)">↻ +90°</button>
-                        <button class="btn-action-small" onclick="setRotationValue(180)">180°</button>
-                        <button class="btn-action-small" onclick="setRotationValue(0)">0° (С)</button>
-                    </div>
-
-                    <div class="rotation-presets-grid">
-                        <button class="btn-action-small" onclick="rotateByStep(-1.0)">-1.0°</button>
-                        <button class="btn-action-small" onclick="rotateByStep(-0.1)">-0.1°</button>
-                        <button class="btn-action-small" onclick="rotateByStep(0.1)">+0.1°</button>
-                        <button class="btn-action-small" onclick="rotateByStep(1.0)">+1.0°</button>
-                    </div>
-                </div>
-
-                <div class="field-group">
-                    <label>Масштаб подложки (метров в 1 пикселе скана):</label>
-                    <input type="number" id="meters-per-pixel-input" value="1.000" step="0.005" onfocus="this.select()" onchange="updateManualRatio(this.value)">
-                </div>
-
-                <div style="display: flex; gap: 5px; margin-top: 6px;">
-                    <button class="btn-action-small" style="flex: 1;" onclick="resetRasterPosition()">🎯 Скан в центр</button>
-                    <button class="btn-action-small" style="color: var(--danger); border-color: var(--danger);" onclick="clearRasterMap()">🗑️ Удалить</button>
-                </div>
+            <div class="row" style="margin-bottom:8px">
+                <label class="f" style="margin:0"><span>Показывать в таблице</span>
+                    <select id="f-view"><option value="az">Азимуты</option><option value="rumb">Румбы</option></select></label>
+                <label class="f" style="margin:0"><span>Подписи на чертеже</span>
+                    <select id="f-labels"><option value="1">Линии и точки</option><option value="2">Только точки</option><option value="0">Без подписей</option></select></label>
+            </div>
+            <div class="tbl-wrap show-az" id="tbl-wrap">
+                <table class="lines">
+                    <thead><tr><th>Линия</th><th class="col-az">Азимут, °</th><th class="col-rumb">Румб</th><th>Длина, м</th><th></th></tr></thead>
+                    <tbody id="tbody"></tbody>
+                </table>
+            </div>
+            <div class="note" style="margin:4px 0 8px">Удерживайте название линии — данные покажутся крупно.</div>
+            <div class="row">
+                <button class="btn primary" id="b-add">➕ Добавить линию</button>
+                <button class="btn" id="b-adj">Увязать</button>
+                <button class="btn" id="b-undo-adj" disabled>↩ Отменить увязку</button>
+                <button class="btn danger" id="b-clear">🗑️</button>
             </div>
         </div>
-    </div>
 
-    <!-- ДИАЛОГ КАЛИБРОВКИ ЛИНЕЙКИ -->
-    <div id="calib-modal" class="modal-overlay">
-        <div class="modal-box">
-            <h3>Калибровка масштаба планшета</h3>
-            <p style="font-size: 11px; opacity: 0.85;">Вы протянули линию между квартальными столбами. Сверьте расчёт с линейкой планшета:</p>
-            
-            <div style="background: rgba(45,90,39,0.06); padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 11px;">
-                Расчётное расстояние по скану: <b id="calib-measured-val">0.0 м</b>
+        <div class="pane" id="p-scan">
+            <div class="box">
+                <h4>Скан планшета</h4>
+                <input type="file" id="f-img" accept="image/jpeg,image/png,image/webp,image/*">
+                <div class="note" id="scan-info" style="margin-top:6px">Скан не загружен.</div>
             </div>
-
-            <div class="field-group">
-                <label>Расстояние по линейке планшета (м):</label>
-                <input type="number" id="calib-real-meters" value="1000.0" min="1" step="0.1" onfocus="this.select()">
+            <div class="box">
+                <h4>1. Приблизительный масштаб</h4>
+                <div class="row">
+                    <label class="f" style="margin:0"><span>Масштаб планшета</span>
+                        <select id="f-pscale"><option value="2000">1:2 000</option><option value="5000">1:5 000</option><option value="10000" selected>1:10 000</option><option value="25000">1:25 000</option><option value="50000">1:50 000</option></select></label>
+                    <label class="f" style="margin:0"><span>DPI скана</span><input type="number" id="f-dpi" value="96" min="30" max="1200"></label>
+                    <button class="btn" id="b-apply-scale">Применить</button>
+                </div>
+                <div class="note" style="margin-top:6px">Это грубая оценка. Точный масштаб задаётся линией по линейке планшета (шаг 2).</div>
             </div>
-            <div style="display: flex; gap: 6px; margin-top: 10px;">
-                <button class="btn-top" style="flex: 1; background: var(--forest-green); color: #FFF; justify-content: center;" onclick="applyCalibration()">OK</button>
-                <button class="btn-top" style="flex: 1; justify-content: center;" onclick="cancelCalibration()">Отмена</button>
+            <div class="box">
+                <h4>2. Точный масштаб — линия по линейке</h4>
+                <button class="btn primary" id="b-cal" style="width:100%;justify-content:center">📐 Протянуть линию между двумя точками</button>
+                <div class="note" style="margin-top:6px">Нажмите две точки на скане (например, два квартальных столба), затем введите расстояние между ними по линейке планшета.</div>
             </div>
-        </div>
-    </div>
-
-    <!-- ДИАЛОГ ИМПОРТА -->
-    <div id="import-modal" class="modal-overlay">
-        <div class="modal-box" style="max-width: 500px;">
-            <h3>Импорт данных из БГ-ХНС</h3>
-            <textarea id="import-text-area" rows="6" style="width: 100%; font-family: monospace; font-size: 10.5px; padding: 6px;" placeholder='[{"id":1,"azimuth":85.5,"distance":120.0,"lat":61.480000,"lng":50.501600}, ...]'></textarea>
-            <div style="display: flex; gap: 6px; margin-top: 8px;">
-                <button class="btn-top" style="flex: 1; background: var(--forest-green); color: #FFF; justify-content: center;" onclick="processImportText()">Импортировать</button>
-                <button class="btn-top" style="flex: 1; justify-content: center;" onclick="closeModal('import-modal')">Отмена</button>
+            <div class="box">
+                <h4>3. Привязка и поворот</h4>
+                <button class="btn" id="b-tie" style="width:100%;justify-content:center">📍 Указать на скане квартальный столб (Т.0)</button>
+                <label class="f" style="margin:10px 0 4px"><span>Поворот скана, ° по часовой</span>
+                    <div class="row"><input type="range" id="f-rot-r" min="0" max="360" step="0.1" value="0"><input type="number" id="f-rot" min="0" max="360" step="0.1" value="0" style="max-width:90px"></div></label>
+                <div class="row" style="gap:5px">
+                    <button class="btn" data-rot="-90">↺ −90°</button><button class="btn" data-rot="90">↻ +90°</button>
+                    <button class="btn" data-rot="-0.1">−0.1°</button><button class="btn" data-rot="0.1">+0.1°</button>
+                </div>
+                <label class="f" style="margin:10px 0 0"><span>Метров в 1 пикселе скана</span><input type="number" id="f-mpp" step="0.001" value="1"></label>
+                <label class="f" style="margin:10px 0 0"><span>Прозрачность скана: <b id="op-v">75%</b></span><input type="range" id="f-op" min="10" max="100" value="75"></label>
             </div>
-        </div>
-    </div>
-
-    <!-- ЧИСТОВОЙ БЛАНК ПЕЧАТИ А4 -->
-    <div id="print-sheet-container">
-        <div class="print-border-box">
-            <div class="print-header-title">ЧЕРТЕЖ АБРИСА ЛЕСОСЕКИ</div>
-            
-            <div class="print-meta-grid">
-                <div><b>Субъект:</b> <span id="p-region"></span></div>
-                <div><b>Лесосека:</b> <span id="p-plot-name"></span></div>
-                <div><b>Лесничество:</b> <span id="p-les"></span></div>
-                <div><b>Площадь делянки:</b> <span id="p-area"></span> га</div>
-                <div><b>Участковое:</b> <span id="p-uch"></span></div>
-                <div><b>Масштаб:</b> <span id="p-scale"></span></div>
-                <div><b>Выдел / Квартал:</b> <span id="p-kv"></span></div>
-                <div><b>Исполнитель:</b> <span id="p-author"></span></div>
-            </div>
-
-            <div class="print-canvas-wrapper">
-                <img id="print-canvas-img" alt="Чертеж делянки">
-            </div>
-
-            <div style="font-weight: bold; font-size: 9pt; margin-top: 2mm;">ВЕДОМОСТЬ ПРИВЯЗКИ И ХОДОВЫХ ЛИНИЙ ЛЕСОСЕКИ:</div>
-            <table class="print-table" id="print-geom-table">
-                <thead>
-                    <tr>
-                        <th>Линия</th>
-                        <th>Румб / Азимут</th>
-                        <th>Длина (м)</th>
-                        <th>Координаты WGS-84 (Широта / Долгота)</th>
-                    </tr>
-                </thead>
-                <tbody id="print-geom-tbody"></tbody>
-            </table>
-
-            <div class="print-footer-stamp">
-                <div>Съемку и чертеж составил: <b id="p-author-footer"></b></div>
-                <div>Дата: <b id="p-date"></b></div>
-                <div>Подпись: _______________</div>
+            <details class="box">
+                <summary style="font-weight:800;color:var(--forest);cursor:pointer">Привязка по двум точкам с координатами (точнее)</summary>
+                <div class="note" style="margin:6px 0">Нужны координаты столба Т.0 (вкладка «Делянка»). Укажите на скане две точки с известными координатами (разнесите их подальше).</div>
+                <div class="row"><button class="btn" id="b-gA">📍 Точка А</button><span id="gA-px" class="note"></span></div>
+                <div class="row" style="margin:6px 0"><label class="f" style="margin:0"><span>Широта А</span><input type="text" id="gA-lat" inputmode="decimal"></label><label class="f" style="margin:0"><span>Долгота А</span><input type="text" id="gA-lng" inputmode="decimal"></label></div>
+                <div class="row"><button class="btn" id="b-gB">📍 Точка Б</button><span id="gB-px" class="note"></span></div>
+                <div class="row" style="margin:6px 0"><label class="f" style="margin:0"><span>Широта Б</span><input type="text" id="gB-lat" inputmode="decimal"></label><label class="f" style="margin:0"><span>Долгота Б</span><input type="text" id="gB-lng" inputmode="decimal"></label></div>
+                <button class="btn primary" id="b-geo" style="width:100%;justify-content:center">Применить привязку</button>
+            </details>
+            <div class="row">
+                <button class="btn" id="b-center">🎯 Скан в центр</button>
+                <button class="btn danger" id="b-delscan">🗑️ Удалить скан</button>
             </div>
         </div>
+
+        <div class="pane" id="p-blank">
+            <label class="f"><span>Масштаб чертежа (печать А4)</span>
+                <select id="f-scale"><option value="500">1:500</option><option value="1000">1:1 000</option><option value="2000">1:2 000</option><option value="5000">1:5 000</option><option value="10000" selected>1:10 000</option><option value="25000">1:25 000</option><option value="50000">1:50 000</option></select></label>
+            <div class="note" style="margin-bottom:10px">Чертёж на печати строится строго в выбранном масштабе: 1 см на бумаге = столько метров, сколько указано в масштабе.</div>
+            <label class="f"><span>Субъект РФ / район</span><input type="text" id="s-region"></label>
+            <label class="f"><span>Лесничество</span><input type="text" id="s-les"></label>
+            <label class="f"><span>Участковое лесничество</span><input type="text" id="s-uch"></label>
+            <label class="f"><span>Квартал / выдел / делянка</span><input type="text" id="s-kv"></label>
+            <label class="f"><span>Исполнитель съёмки</span><input type="text" id="s-author"></label>
+            <button class="btn primary" id="b-print2" style="width:100%;justify-content:center">🖨️ Печать чертежа А4</button>
+        </div>
+
+        <div class="pane" id="p-data">
+            <div class="box">
+                <h4>Загрузить данные</h4>
+                <button class="btn primary" id="b-import2" style="width:100%;justify-content:center">📥 Из БГ-ХНС / файл (GPX, KML, GeoJSON, CSV)</button>
+            </div>
+            <div class="box">
+                <h4>Выгрузить контур делянки</h4>
+                <label class="chk" style="display:flex;gap:6px;align-items:center;margin-bottom:8px"><input type="checkbox" id="ex-t0"> добавить столб Т.0 как путевую точку (GPX)</label>
+                <div class="row"><button class="btn" id="ex-gpx">GPX</button><button class="btn" id="ex-gj">GeoJSON</button><button class="btn" id="ex-png">Картинка</button></div>
+                <div class="note" style="margin-top:6px">Нужны координаты столба Т.0. GeoJSON подготовлен в структуре АВЕРС:МДО.</div>
+            </div>
+            <div class="box">
+                <h4>Проект</h4>
+                <label class="chk" style="display:flex;gap:6px;align-items:center;margin-bottom:8px"><input type="checkbox" id="sv-scan"> включить скан в файл проекта (файл станет больше)</label>
+                <div class="note">Данные сохраняются в этом браузере автоматически. Файл проекта (.abris) нужен, чтобы перенести работу на другой компьютер.</div>
+            </div>
+            <button class="btn" id="b-example" style="width:100%;justify-content:center">▶ Показать пример (учебный планшет)</button>
+        </div>
     </div>
+</div>
 
-    <script>
-        // ИНИЦИАЛИЗАЦИЯ: ЧИСТЫЙ СТАРТ БЕЗ ПРЕДУСТАНОВЛЕННЫХ ТОЧЕК
-        let plotPoints = [];
+<div class="overlay" id="m-cal"><div class="modal">
+    <h3>Калибровка: расстояние по линейке</h3>
+    <div class="box" style="margin-bottom:10px">Сейчас по скану эта линия равна: <b id="cal-now">—</b></div>
+    <label class="f"><span>Расстояние по линейке планшета, м</span><input type="number" id="cal-real" step="0.1" min="0.1"></label>
+    <div class="row"><button class="btn primary" id="cal-ok" style="justify-content:center">OK</button><button class="btn" id="cal-cancel" style="justify-content:center">Отмена</button></div>
+</div></div>
 
-        let currentInputMode = 'gps';
-        let activeTool = 'pan';
+<div class="overlay" id="m-imp"><div class="modal">
+    <h3>Загрузка данных из БГ-ХНС или файла</h3>
+    <div class="note" style="margin-bottom:8px">Вставьте данные, скопированные в БГ-ХНС кнопкой «В Абрис», или выберите файл (CSV из БГ-ХНС, GPX, KML, GeoJSON, .abris).</div>
+    <textarea id="imp-text" placeholder='[{"azimuth":140.2,"distance":390.5,"lat":61.48,"lng":50.5}, …]'></textarea>
+    <div class="row" style="margin:8px 0"><button class="btn" id="imp-paste">📋 Вставить из буфера</button><button class="btn" id="imp-file">📁 Выбрать файл</button></div>
+    <div class="row"><button class="btn primary" id="imp-go" style="justify-content:center">Загрузить</button><button class="btn" id="imp-cancel" style="justify-content:center">Отмена</button></div>
+</div></div>
 
-        let isPolygonClosed = false;
-        let closeTargetId = 1;
+<input type="file" id="f-any" accept=".abris,.json,.geojson,.csv,.gpx,.kml,.txt,text/*,application/json" style="display:none">
+<div id="lens"></div>
+<div id="toast"></div>
 
-        let currentScaleValue = 10000;
-        let rasterMetersPerPixel = 1.0; 
+<div id="print-sheet">
+    <div class="ps-border">
+        <div class="ps-title">ЧЕРТЁЖ АБРИСА ДЕЛЯНКИ</div>
+        <div class="ps-meta">
+            <div><b>Субъект:</b> <span id="p-region"></span></div><div><b>Делянка:</b> <span id="p-name"></span></div>
+            <div><b>Лесничество:</b> <span id="p-les"></span></div><div><b>Площадь:</b> <span id="p-area"></span></div>
+            <div><b>Участковое:</b> <span id="p-uch"></span></div><div><b>Масштаб:</b> <span id="p-scale"></span></div>
+            <div><b>Квартал / выдел:</b> <span id="p-kv"></span></div><div><b>Невязка:</b> <span id="p-gap"></span></div>
+        </div>
+        <img id="ps-img" alt="Чертёж делянки">
+        <div style="font-weight:800;font-size:9pt;margin:2mm 0">ВЕДОМОСТЬ ЛИНИЙ:</div>
+        <table class="ps-tbl"><thead><tr><th>Линия</th><th>Азимут</th><th>Румб</th><th>Длина, м</th><th>Координаты конца линии</th></tr></thead><tbody id="ps-body"></tbody></table>
+        <div class="ps-foot"><div>Съёмку и чертёж составил: <b id="p-author"></b></div><div>Дата: <b id="p-date"></b></div><div>Подпись: ____________</div></div>
+    </div>
+</div>
 
-        let plotOffsetMetersX = 0.0;
-        let plotOffsetMetersY = 0.0;
-        let isDraggingPlot = false;
-        let plotDragStartX = 0, plotDragStartY = 0;
+<script>
+(function () {
+'use strict';
+var MPD = 111139;                // метров в градусе широты (как в БГ-ХНС)
+var KEY = 'bg_hns_abris_v1', HANDOFF = 'bg_hns_to_abris';
+var $ = function (id) { return document.getElementById(id); };
+function goal(n) { try { if (window.ym) ym(109130409, 'reachGoal', n); } catch (e) { } }
+var cv = $('cv'), g = cv.getContext('2d');
 
-        let rasterImage = null;
-        let rasterMetersX = 0.0, rasterMetersY = 0.0;
-        let rasterRotation = 0.0;
-        let isDraggingRaster = false;
-        let rasterDragStartX = 0, rasterDragStartY = 0;
+/* ---------- состояние ---------- */
+function newState() {
+    return {
+        name: '', lines: [], p0: { lat: null, lng: null }, s: 1, mode: 'return', c: null, tol: null,
+        stamp: { region: '', les: '', uch: '', kv: '', author: '' },
+        pscale: 10000, dpi: 96, printScale: 10000, viewMode: 'az', labels: 1,
+        scan: { on: false, name: '', w: 0, h: 0, fix: 1, a: { re: 1, im: 0 }, c: { re: 0, im: 0 }, op: 0.75 }
+    };
+}
+var S = newState();
+var scanImg = null;              // Image/Canvas (в пикселях скана после уменьшения)
+var scanBlob = null;
+var V = { k: 1, cx: 0, cy: 0 }, W = 300, H = 300, dpr = 1;
+var ui = { tool: 'pan', pick: null, calA: null, calB: null, gA: null, gB: null, undoLines: null };
 
-        let viewX = 180.0, viewY = 180.0;
-        let viewZoom = 1.0;
-        let isDraggingView = false;
-        let dragStartX = 0, dragStartY = 0;
+function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function num(v) { var x = parseFloat(String(v).replace(',', '.')); return isFinite(x) ? x : NaN; }
+function f1(x) { return (Math.round(x * 10) / 10).toFixed(1); }
+function f2(x) { return (Math.round(x * 100) / 100).toFixed(2); }
+function cosd(l) { return Math.cos(l * Math.PI / 180); }
+var toastT;
+function toast(m) { var t = $('toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(function () { t.style.display = 'none'; }, 3400); }
+function parseCoord(str, isLat) {
+    if (str === null || str === undefined) return NaN;
+    var s = String(str).trim(); if (!s) return NaN;
+    var neg = /^\s*-/.test(s) || /[SЮWЗ]\s*$/i.test(s) || /^\s*[SЮWЗ]/i.test(s);
+    var p = s.match(/\d+(?:[.,]\d+)?/g); if (!p || p.length > 3) return NaN;
+    p = p.map(function (x) { return parseFloat(x.replace(',', '.')); });
+    var v = p[0] + (p[1] || 0) / 60 + (p[2] || 0) / 3600; if (neg) v = -v;
+    return Math.abs(v) <= (isLat ? 90 : 180) ? v : NaN;
+}
+function hasP0() { return isFinite(S.p0.lat) && isFinite(S.p0.lng) && S.p0.lat !== null && S.p0.lng !== null; }
 
-        let initialPinchDist = null;
-        let initialPinchZoom = 1.0;
+/* ---------- румбы ---------- */
+function azToRumb(az) {
+    az = ((az % 360) + 360) % 360;
+    var q, a;
+    if (az <= 90) { q = 'СВ'; a = az; } else if (az <= 180) { q = 'ЮВ'; a = 180 - az; } else if (az <= 270) { q = 'ЮЗ'; a = az - 180; } else { q = 'СЗ'; a = 360 - az; }
+    var d = Math.floor(a + 1e-9), m = Math.round((a - d) * 60);
+    if (m === 60) { d += 1; m = 0; }
+    return { q: q, d: d, m: m };
+}
+function rumbToAz(q, d, m) {
+    var a = (num(d) || 0) + (num(m) || 0) / 60;
+    if (q === 'СВ') return a; if (q === 'ЮВ') return 180 - a; if (q === 'ЮЗ') return 180 + a; return 360 - a;
+}
+function rumbStr(az) { var r = azToRumb(az); return r.q + ' ' + r.d + '°' + (r.m < 10 ? '0' : '') + r.m + "'"; }
 
-        let isCalibrating = false;
-        let calibStartPoint = null;
-        let calibEndPoint = null;
+/* ---------- расчёт ---------- */
+function clampInt(v, lo, hi) { v = Math.round(v); return Math.max(lo, Math.min(hi, v)); }
+function compute() {
+    var n = S.lines.length, pts = [{ x: 0, y: 0 }], i;
+    for (i = 0; i < n; i++) {
+        var r = (S.lines[i].az || 0) * Math.PI / 180, d = S.lines[i].d || 0, p = pts[i];
+        pts.push({ x: p.x + d * Math.sin(r), y: p.y + d * Math.cos(r) });
+    }
+    var R = { n: n, pts: pts, poly: null, idx: [], area: 0, perim: 0, len: 0, gap: null, gapRel: null, s: 0, c: 0, mode: S.mode, warn: '' };
+    if (n === 0) return R;
+    R.s = clampInt(S.s, 0, Math.max(0, n - 1));
+    var sumFrom = function (a) { var t = 0; for (var j = a; j < n; j++) t += S.lines[j].d || 0; return t; };
+    if (S.mode === 'open') {
+        R.len = sumFrom(R.s); return R;
+    }
+    if (S.mode === 'return') {
+        var c = (S.c === null || S.c === undefined || S.c === '') ? R.s : clampInt(S.c, R.s, n);
+        R.c = c;
+        if (n - c < 3) { R.warn = 'Для замыкания нужно минимум 3 вершины делянки после точки ' + c + '.'; R.len = sumFrom(c); return R; }
+        for (i = c; i < n; i++) R.idx.push(i);               // вершины P_c … P_{n-1}
+        R.poly = R.idx.map(function (k) { return pts[k]; });
+        R.gap = Math.hypot(pts[c].x - pts[n].x, pts[c].y - pts[n].y);
+        R.gapV = { x: pts[c].x - pts[n].x, y: pts[c].y - pts[n].y };
+        R.perim = sumFrom(c);
+        R.gapRel = R.gap > 0.005 ? R.perim / R.gap : Infinity;
+    } else {                                                   // auto
+        if (n + 1 - R.s < 3) { R.warn = 'Для делянки нужно минимум 3 вершины, начиная с точки ' + R.s + '.'; R.len = sumFrom(R.s); return R; }
+        for (i = R.s; i <= n; i++) R.idx.push(i);
+        R.poly = R.idx.map(function (k) { return pts[k]; });
+        R.perim = sumFrom(R.s) + Math.hypot(pts[n].x - pts[R.s].x, pts[n].y - pts[R.s].y);
+    }
+    var a = 0, m = R.poly.length;
+    for (i = 0; i < m; i++) { var j = (i + 1) % m; a += R.poly[i].x * R.poly[j].y - R.poly[j].x * R.poly[i].y; }
+    R.area = Math.abs(a) / 2;
+    return R;
+}
+function llPoints() {
+    if (!hasP0()) return null;
+    var out = [{ lat: S.p0.lat, lng: S.p0.lng }], lat = S.p0.lat, lng = S.p0.lng;
+    S.lines.forEach(function (l) {
+        var r = (l.az || 0) * Math.PI / 180, d = l.d || 0;
+        lat += d * Math.cos(r) / MPD; lng += d * Math.sin(r) / (MPD * cosd(lat));
+        out.push({ lat: lat, lng: lng });
+    });
+    return out;
+}
+function fmtArea(R) { return R.poly ? (R.area / 10000).toFixed(4) + ' га' : '—'; }
+function gapText(R) {
+    if (R.gap === null) return '';
+    if (R.gap < 0.005) return 'Невязка 0 м';
+    return 'Невязка ' + f2(R.gap) + ' м (1:' + Math.round(R.gapRel) + ')';
+}
+function gapStatus(R) {
+    if (R.gap === null) return { cls: '', txt: '' };
+    if (R.gap < 0.005) return { cls: 'ok', txt: 'Замкнуто точно' };
+    if (S.tol) return R.gapRel >= S.tol ? { cls: 'ok', txt: 'Замкнуто, невязка в допуске (1:' + S.tol + ')' } : { cls: 'bad', txt: 'Невязка выше допуска (1:' + S.tol + ')' };
+    return { cls: 'mid', txt: 'Допуск не задан — оцените невязку сами' };
+}
 
-        const canvas = document.getElementById('main-canvas');
-        const ctx = canvas.getContext('2d');
-        const viewport = document.getElementById('viewport-container');
+/* ---------- скан: преобразования ---------- */
+function pix2w(u, v) { var a = S.scan.a, c = S.scan.c; return { x: a.re * u + a.im * v + c.re, y: a.im * u - a.re * v + c.im }; }
+function w2pix(x, y) {
+    var a = S.scan.a, c = S.scan.c, dx = x - c.re, dy = y - c.im, d = a.re * a.re + a.im * a.im;
+    return { u: (dx * a.re + dy * a.im) / d, v: -((dy * a.re - dx * a.im) / d) };
+}
+function scanScale() { return Math.hypot(S.scan.a.re, S.scan.a.im); }
+function scanRotCW() { var d = -Math.atan2(S.scan.a.im, S.scan.a.re) * 180 / Math.PI; return ((d % 360) + 360) % 360; }
+function setScanCenterAt(x, y) {   // центр скана -> мировая точка
+    var a = S.scan.a, zc = { re: S.scan.w / 2, im: -S.scan.h / 2 };
+    S.scan.c = { re: x - (a.re * zc.re - a.im * zc.im), im: y - (a.re * zc.im + a.im * zc.re) };
+}
+function rotateScan(deltaDeg) {   // положительный = по часовой на экране
+    var d = -deltaDeg * Math.PI / 180, cs = Math.cos(d), sn = Math.sin(d), a = S.scan.a, c = S.scan.c;
+    S.scan.a = { re: a.re * cs - a.im * sn, im: a.re * sn + a.im * cs };
+    S.scan.c = { re: c.re * cs - c.im * sn, im: c.re * sn + c.im * cs };
+}
+function setScanRot(deg) { rotateScan(((deg - scanRotCW() + 540) % 360) - 180); }
 
-        function initApp() {
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
-            initGesturesAndMouse();
-            renderTableHeader();
-            renderTableBody();
-            resetPlotPosition();
-            redrawAll();
+/* ---------- вид ---------- */
+function w2s(x, y) { return { x: W / 2 + V.k * (x - V.cx), y: H / 2 - V.k * (y - V.cy) }; }
+function s2w(sx, sy) { return { x: V.cx + (sx - W / 2) / V.k, y: V.cy - (sy - H / 2) / V.k }; }
+function resize() {
+    var r = $('view').getBoundingClientRect();
+    dpr = Math.min(window.devicePixelRatio || 1, 3);
+    W = Math.max(50, Math.round(r.width)); H = Math.max(50, Math.round(r.height));
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    draw();
+}
+function bounds(R) {
+    var xs = [], ys = [];
+    R.pts.forEach(function (p) { xs.push(p.x); ys.push(p.y); });
+    if (scanImg && S.scan.on) [[0, 0], [S.scan.w, 0], [S.scan.w, S.scan.h], [0, S.scan.h]].forEach(function (q) { var w = pix2w(q[0], q[1]); xs.push(w.x); ys.push(w.y); });
+    return { x0: Math.min.apply(null, xs), x1: Math.max.apply(null, xs), y0: Math.min.apply(null, ys), y1: Math.max.apply(null, ys) };
+}
+function fitView(onlyPlot) {
+    var R = compute(), b;
+    if (onlyPlot || !(scanImg && S.scan.on)) {
+        var xs = R.pts.map(function (p) { return p.x; }), ys = R.pts.map(function (p) { return p.y; });
+        b = { x0: Math.min.apply(null, xs), x1: Math.max.apply(null, xs), y0: Math.min.apply(null, ys), y1: Math.max.apply(null, ys) };
+        var pad = Math.max(b.x1 - b.x0, b.y1 - b.y0, 30) * 0.25;
+        b = { x0: b.x0 - pad, x1: b.x1 + pad, y0: b.y0 - pad, y1: b.y1 + pad };
+    } else b = bounds(R);
+    var w = Math.max(b.x1 - b.x0, 1), h = Math.max(b.y1 - b.y0, 1);
+    V.k = Math.min(W / w, H / h) * 0.92; V.cx = (b.x0 + b.x1) / 2; V.cy = (b.y0 + b.y1) / 2;
+    draw();
+}
+function zoomAt(sx, sy, f) {
+    var w = s2w(sx, sy); V.k = Math.max(1e-4, Math.min(V.k * f, 1e5));
+    V.cx = w.x - (sx - W / 2) / V.k; V.cy = w.y + (sy - H / 2) / V.k; draw();
+}
+function niceStep(m) { var p = Math.pow(10, Math.floor(Math.log10(m))), f = m / p; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p; }
+function fmtLen(m) { return m >= 1000 ? (m / 1000) + ' км' : Math.round(m * 100) / 100 + ' м'; }
+function hexRGBA(hex, a) { var n = parseInt(hex.slice(1), 16); return 'rgba(' + (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255) + ',' + a + ')'; }
+function fsScale() { return (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fs')) || 15) / 15; }
+
+/* ---------- отрисовка (экран и печать) ---------- */
+function drawScene(g, W, H, v, u, forPrint) {
+    var R = compute();
+    var X = function (x) { return W / 2 + v.k * (x - v.cx); }, Y = function (y) { return H / 2 - v.k * (y - v.cy); };
+    g.fillStyle = forPrint ? '#fff' : '#E5EAE5'; g.fillRect(0, 0, W, H);
+    if (scanImg && S.scan.on) {
+        var a = S.scan.a, c = S.scan.c, k = v.k;
+        g.save();
+        g.transform(k * a.re, -k * a.im, k * a.im, k * a.re, W / 2 + k * (c.re - v.cx), H / 2 - k * (c.im - v.cy));
+        g.globalAlpha = forPrint ? 0.85 : S.scan.op;
+        g.drawImage(scanImg, 0, 0);
+        g.restore(); g.globalAlpha = 1;
+    }
+    if (R.n === 0) {
+        if (!forPrint) { g.fillStyle = '#5B6B60'; g.font = (15 * u) + 'px sans-serif'; g.textAlign = 'center'; g.fillText('Добавьте линии, загрузите данные из БГ-ХНС или нажмите «Показать пример»', W / 2, H / 2); g.textAlign = 'start'; }
+        return R;
+    }
+    var P = R.pts, lw = function (x) { return x * u; };
+    var labelsMode = S.labels, font = function (px, bold) { return (bold ? 'bold ' : '') + Math.round(px * u) + 'px sans-serif'; };
+    function halo(txt, x, y, col, size, bold, align) {
+        g.font = font(size, bold); g.textAlign = align || 'start'; g.lineJoin = 'round';
+        g.strokeStyle = 'rgba(255,255,255,.95)'; g.lineWidth = lw(4); g.strokeText(txt, x, y); g.fillStyle = col; g.fillText(txt, x, y); g.textAlign = 'start';
+    }
+    var tieEnd = Math.min(R.s, R.n);
+    // привязка (красным, пунктиром)
+    if (tieEnd > 0) {
+        g.strokeStyle = '#DC2626'; g.lineWidth = lw(2.2); g.setLineDash([lw(7), lw(5)]); g.beginPath();
+        g.moveTo(X(P[0].x), Y(P[0].y)); for (var i = 1; i <= tieEnd; i++) g.lineTo(X(P[i].x), Y(P[i].y)); g.stroke(); g.setLineDash([]);
+    }
+    // измеренный ход (тонкая линия)
+    if (R.n > tieEnd) {
+        g.strokeStyle = 'rgba(20,40,25,.55)'; g.lineWidth = lw(1.3); g.beginPath();
+        g.moveTo(X(P[tieEnd].x), Y(P[tieEnd].y)); for (i = tieEnd + 1; i <= R.n; i++) g.lineTo(X(P[i].x), Y(P[i].y)); g.stroke();
+    }
+    // многоугольник
+    var st = gapStatus(R), strokeCol = st.cls === 'bad' ? '#DC2626' : '#1B5E20';
+    if (R.poly) {
+        g.beginPath(); R.poly.forEach(function (p, i) { if (i === 0) g.moveTo(X(p.x), Y(p.y)); else g.lineTo(X(p.x), Y(p.y)); }); g.closePath();
+        g.fillStyle = st.cls === 'bad' ? 'rgba(220,38,38,.09)' : 'rgba(46,125,50,.09)'; g.fill();
+        g.lineWidth = lw(3); g.strokeStyle = strokeCol; g.lineJoin = 'round'; g.stroke();
+    }
+    // невязка (красный разрыв)
+    if (R.gap !== null && R.gap >= 0.005) {
+        var pn = P[R.n], pc = P[R.c];
+        g.strokeStyle = '#DC2626'; g.lineWidth = lw(2.6); g.setLineDash([lw(4), lw(3)]); g.beginPath(); g.moveTo(X(pn.x), Y(pn.y)); g.lineTo(X(pc.x), Y(pc.y)); g.stroke(); g.setLineDash([]);
+        g.beginPath(); g.arc(X(pn.x), Y(pn.y), lw(5), 0, 6.2832); g.fillStyle = '#fff'; g.fill(); g.lineWidth = lw(2.5); g.strokeStyle = '#DC2626'; g.stroke();
+        if (labelsMode) halo('Т.' + R.n + ' (факт)', X(pn.x) + lw(9), Y(pn.y) + lw(16), '#B91C1C', 12, true);
+    }
+    // подписи линий
+    if (labelsMode === 1) {
+        for (i = 0; i < R.n; i++) {
+            var l = S.lines[i], mx = (X(P[i].x) + X(P[i + 1].x)) / 2, my = (Y(P[i].y) + Y(P[i + 1].y)) / 2;
+            if (Math.hypot(X(P[i].x) - X(P[i + 1].x), Y(P[i].y) - Y(P[i + 1].y)) < lw(46)) continue;
+            halo(rumbStr(l.az) + ' · ' + f1(l.d) + ' м', mx, my - lw(6), '#14301A', 12, true, 'center');
         }
+    }
+    // точки
+    for (i = 0; i <= R.n; i++) {
+        var px = X(P[i].x), py = Y(P[i].y), inPoly = R.idx.indexOf(i) >= 0, isT0 = (i === 0);
+        g.beginPath(); g.arc(px, py, lw(isT0 ? 7 : 5), 0, 6.2832);
+        g.fillStyle = isT0 ? '#DC2626' : (inPoly ? '#fff' : '#FCA5A5'); g.fill();
+        g.lineWidth = lw(2.4); g.strokeStyle = isT0 ? '#7F1D1D' : (inPoly ? strokeCol : '#DC2626'); g.stroke();
+        if (labelsMode && !(i === R.n && R.gap !== null && R.gap >= 0.005)) halo(isT0 ? 'Т.0 (столб)' : 'Т.' + i, px + lw(9), py - lw(8), isT0 ? '#7F1D1D' : '#111', 12.5, true);
+    }
+    // площадь в центре
+    if (R.poly) {
+        var cx = 0, cy = 0; R.poly.forEach(function (p) { cx += p.x; cy += p.y; }); cx = X(cx / R.poly.length); cy = Y(cy / R.poly.length);
+        var title = S.name ? S.name : 'Делянка';
+        halo(title, cx, cy - lw(10), '#111', 13, true, 'center');
+        halo((R.area / 10000).toFixed(4) + ' га' + (R.mode === 'return' && R.gap !== null && R.gap >= 0.005 && st.cls !== 'ok' ? ' (предв.)' : ''), cx, cy + lw(12), strokeCol, 17, true, 'center');
+    }
+    // линейка масштаба и север
+    var bar = niceStep(120 * u / v.k), px2 = bar * v.k;
+    g.fillStyle = 'rgba(255,255,255,.92)'; g.fillRect(lw(10), H - lw(42), px2 + lw(24), lw(32));
+    g.fillStyle = '#1E2A22'; g.fillRect(lw(22), H - lw(22), px2, lw(3.5)); g.font = font(12.5, true); g.fillText(fmtLen(bar), lw(22), H - lw(27));
+    g.save(); g.translate(W - lw(40), lw(40));
+    g.fillStyle = 'rgba(255,255,255,.92)'; g.beginPath(); g.arc(0, 0, lw(26), 0, 6.2832); g.fill();
+    g.fillStyle = '#B91C1C'; g.beginPath(); g.moveTo(0, -lw(20)); g.lineTo(lw(7), lw(5)); g.lineTo(-lw(7), lw(5)); g.closePath(); g.fill();
+    g.fillStyle = '#1E2A22'; g.font = font(13, true); g.textAlign = 'center'; g.fillText('С', 0, lw(20)); g.restore();
+    return R;
+}
+var raf = 0;
+function draw() { if (raf) return; raf = requestAnimationFrame(function () { raf = 0; paint(); }); }
+function paint() {
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var R = drawScene(g, W, H, V, fsScale(), false);
+    $('s-zoom').textContent = Math.round(V.k * 100 / 1) / 100 + ' px/м';
+    return R;
+}
 
-        function resizeCanvas() {
-            canvas.width = viewport.clientWidth;
-            canvas.height = viewport.clientHeight;
-            redrawAll();
-        }
+/* ---------- жесты ---------- */
+var ptrs = {}, moved = false, downT = 0, lastD = 0, lastM = null, downPos = null;
+function evPos(e) { var r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+cv.addEventListener('pointerdown', function (e) {
+    cv.setPointerCapture(e.pointerId); ptrs[e.pointerId] = evPos(e);
+    var ids = Object.keys(ptrs);
+    if (ids.length === 1) { moved = false; downT = Date.now(); downPos = evPos(e); }
+    if (ids.length === 2) { moved = true; var a = ptrs[ids[0]], b = ptrs[ids[1]]; lastD = Math.hypot(a.x - b.x, a.y - b.y); lastM = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
+});
+cv.addEventListener('pointermove', function (e) {
+    if (!ptrs[e.pointerId]) return;
+    var p = evPos(e), old = ptrs[e.pointerId], ids = Object.keys(ptrs);
+    if (ids.length === 1) {
+        var dx = p.x - old.x, dy = p.y - old.y;
+        if (!moved && Math.hypot(p.x - downPos.x, p.y - downPos.y) < 6) return;
+        moved = true; ptrs[e.pointerId] = p;
+        if (ui.tool === 'scan' && S.scan.on && !ui.pick) { S.scan.c = { re: S.scan.c.re + dx / V.k, im: S.scan.c.im - dy / V.k }; scheduleSave(); }
+        else { V.cx -= dx / V.k; V.cy += dy / V.k; }
+        draw();
+    } else if (ids.length === 2) {
+        ptrs[e.pointerId] = p;
+        var a = ptrs[ids[0]], b = ptrs[ids[1]], d = Math.hypot(a.x - b.x, a.y - b.y), m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+        if (lastD > 0 && d > 0) { V.cx -= (m.x - lastM.x) / V.k; V.cy += (m.y - lastM.y) / V.k; zoomAt(m.x, m.y, d / lastD); }
+        lastD = d; lastM = m;
+    }
+});
+function endPtr(e) {
+    if (!ptrs[e.pointerId]) return;
+    var ids = Object.keys(ptrs), tap = ids.length === 1 && !moved && Date.now() - downT < 700, p = ptrs[e.pointerId];
+    delete ptrs[e.pointerId];
+    if (e.type === 'pointerup' && tap) onTap(p.x, p.y);
+    if (Object.keys(ptrs).length === 1) { lastD = 0; moved = true; }
+}
+cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', endPtr);
+cv.addEventListener('wheel', function (e) { e.preventDefault(); var p = evPos(e); zoomAt(p.x, p.y, e.deltaY < 0 ? 1.18 : 1 / 1.18); }, { passive: false });
+$('z-in').onclick = function () { zoomAt(W / 2, H / 2, 1.4); };
+$('z-out').onclick = function () { zoomAt(W / 2, H / 2, 1 / 1.4); };
 
-        function setActiveTool(tool) {
-            activeTool = tool;
-            document.getElementById('tool-pan').classList.toggle('active', tool === 'pan');
-            document.getElementById('tool-plot').classList.toggle('active', tool === 'move-plot');
-            document.getElementById('tool-raster').classList.toggle('active', tool === 'move-raster');
+function setHint(t) { var h = $('hint'); if (t) { h.textContent = t; h.classList.add('on'); } else h.classList.remove('on'); $('view').classList.toggle('pick', !!t); }
+function startPick(kind) {
+    if (!scanImg || !S.scan.on) { toast('Сначала загрузите скан'); return; }
+    ui.pick = kind;
+    setHint({ cal1: 'Нажмите первую точку линии на скане', cal2: 'Нажмите вторую точку линии', tie: 'Нажмите на скане квартальный столб (Т.0)', gA: 'Нажмите на скане точку А', gB: 'Нажмите на скане точку Б' }[kind]);
+}
+function onTap(sx, sy) {
+    if (!ui.pick) return;
+    var w = s2w(sx, sy), q = w2pix(w.x, w.y);
+    if (q.u < 0 || q.v < 0 || q.u > S.scan.w || q.v > S.scan.h) { toast('Точка за пределами скана'); return; }
+    var k = ui.pick;
+    if (k === 'cal1') { ui.calA = q; ui.pick = 'cal2'; setHint('Нажмите вторую точку линии'); draw(); return; }
+    if (k === 'cal2') {
+        ui.calB = q; ui.pick = null; setHint(null);
+        var A = pix2w(ui.calA.u, ui.calA.v), B = pix2w(q.u, q.v), dist = Math.hypot(B.x - A.x, B.y - A.y);
+        $('cal-now').textContent = f2(dist) + ' м'; $('cal-real').value = f2(dist); $('m-cal').classList.add('on'); return;
+    }
+    if (k === 'tie') {   // столб на скане -> начало координат
+        var a = S.scan.a, z = { re: q.u, im: -q.v };
+        S.scan.c = { re: -(a.re * z.re - a.im * z.im), im: -(a.re * z.im + a.im * z.re) };
+        ui.pick = null; setHint(null); scheduleSave(); fitView(false); toast('Скан привязан: столб Т.0 совпал с точкой на скане'); return;
+    }
+    if (k === 'gA') { ui.gA = q; ui.pick = null; setHint(null); $('gA-px').textContent = '✓ указана'; draw(); return; }
+    if (k === 'gB') { ui.gB = q; ui.pick = null; setHint(null); $('gB-px').textContent = '✓ указана'; draw(); return; }
+}
+function cancelPick() { ui.pick = null; ui.calA = ui.calB = null; setHint(null); }
 
-            viewport.classList.remove('moving-plot', 'moving-raster');
-            if (tool === 'move-plot') viewport.classList.add('moving-plot');
-            if (tool === 'move-raster') viewport.classList.add('moving-raster');
-        }
+/* ---------- калибровка ---------- */
+$('cal-ok').onclick = function () {
+    var real = num($('cal-real').value);
+    if (!(real > 0)) { toast('Введите расстояние, м'); return; }
+    var A = pix2w(ui.calA.u, ui.calA.v), B = pix2w(ui.calB.u, ui.calB.v), now = Math.hypot(B.x - A.x, B.y - A.y);
+    if (now <= 0) { toast('Точки совпадают'); return; }
+    var f = real / now, a = S.scan.a, zA = { re: ui.calA.u, im: -ui.calA.v };
+    S.scan.a = { re: a.re * f, im: a.im * f };
+    var na = S.scan.a;
+    S.scan.c = { re: A.x - (na.re * zA.re - na.im * zA.im), im: A.y - (na.re * zA.im + na.im * zA.re) };
+    $('m-cal').classList.remove('on'); ui.calA = ui.calB = null; syncScanUI(); scheduleSave(); draw();
+    toast('Масштаб скана уточнён: ' + scanScale().toFixed(3) + ' м в пикселе');
+};
+$('cal-cancel').onclick = function () { $('m-cal').classList.remove('on'); ui.calA = ui.calB = null; draw(); };
+$('b-geo').onclick = function () {
+    if (!scanImg) return toast('Сначала загрузите скан');
+    if (!hasP0()) return toast('Сначала введите координаты столба Т.0 (вкладка «Делянка»)');
+    if (!ui.gA || !ui.gB) return toast('Укажите на скане обе точки');
+    var la = parseCoord($('gA-lat').value, true), lo = parseCoord($('gA-lng').value, false), lb = parseCoord($('gB-lat').value, true), ob = parseCoord($('gB-lng').value, false);
+    if ([la, lo, lb, ob].some(isNaN)) return toast('Введите координаты обеих точек');
+    function ll2w(lat, lng) { return { x: (lng - S.p0.lng) * MPD * cosd(S.p0.lat), y: (lat - S.p0.lat) * MPD }; }
+    var wA = ll2w(la, lo), wB = ll2w(lb, ob), zA = { re: ui.gA.u, im: -ui.gA.v }, zB = { re: ui.gB.u, im: -ui.gB.v };
+    var dz = { re: zB.re - zA.re, im: zB.im - zA.im }, dw = { re: wB.x - wA.x, im: wB.y - wA.y }, d2 = dz.re * dz.re + dz.im * dz.im;
+    if (Math.sqrt(d2) < 20 || Math.hypot(dw.re, dw.im) < 1) return toast('Точки слишком близко');
+    var a = { re: (dw.re * dz.re + dw.im * dz.im) / d2, im: (dw.im * dz.re - dw.re * dz.im) / d2 };
+    S.scan.a = a; S.scan.c = { re: wA.x - (a.re * zA.re - a.im * zA.im), im: wA.y - (a.re * zA.im + a.im * zA.re) };
+    syncScanUI(); scheduleSave(); fitView(false);
+    toast('Скан привязан по координатам. Масштаб ' + scanScale().toFixed(3) + ' м/пикс, поворот ' + scanRotCW().toFixed(1) + '°');
+};
 
-        function resetPlotPosition() {
-            plotOffsetMetersX = 0.0;
-            plotOffsetMetersY = 0.0;
-            redrawAll();
-        }
-
-        function resetRasterPosition() {
-            if (rasterImage) {
-                rasterMetersX = -(rasterImage.width * rasterMetersPerPixel) / 2;
-                rasterMetersY = -(rasterImage.height * rasterMetersPerPixel) / 2;
-                redrawAll();
+/* ---------- скан: загрузка ---------- */
+function loadScanBlob(blob, name, keep) {
+    return new Promise(function (resolve) {
+        var url = URL.createObjectURL(blob), im = new Image();
+        im.onload = function () {
+            var w = im.naturalWidth, h = im.naturalHeight, src = im, fix = 1, MAX = 4096;
+            if (Math.max(w, h) > MAX) {
+                fix = MAX / Math.max(w, h); var c = document.createElement('canvas'); c.width = Math.round(w * fix); c.height = Math.round(h * fix);
+                c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); src = c; w = c.width; h = c.height;
             }
-        }
+            scanImg = src; scanBlob = blob; URL.revokeObjectURL(url);
+            if (!keep) {
+                var mpp = S.pscale * 0.0254 / (S.dpi || 96) / fix, R = compute(), cx = V.cx, cy = V.cy;
+                S.scan = { on: true, name: name, w: w, h: h, fix: fix, a: { re: mpp, im: 0 }, c: { re: 0, im: 0 }, op: S.scan.op || 0.75 };
+                setScanCenterAt(R.n ? (R.pts[0].x) : cx, R.n ? (R.pts[0].y) : cy);
+            } else { S.scan.on = true; S.scan.w = w; S.scan.h = h; S.scan.fix = fix; S.scan.name = name; }
+            syncScanUI(); saveScanBlob(blob); scheduleSave(); fitView(false); resolve(true);
+        };
+        im.onerror = function () { URL.revokeObjectURL(url); toast('Не удалось открыть изображение'); resolve(false); };
+        im.src = url;
+    });
+}
+$('f-img').addEventListener('change', function () { var f = this.files && this.files[0]; if (f) loadScanBlob(f, f.name, false).then(function () { toast('Скан загружен. Теперь уточните масштаб линией.'); }); this.value = ''; });
+$('t-load').onclick = function () { switchTab('p-scan'); showDock(); $('f-img').click(); };
+function syncScanUI() {
+    var on = scanImg && S.scan.on;
+    $('scan-info').textContent = on ? S.scan.name + ' (' + S.scan.w + '×' + S.scan.h + ' px)' : 'Скан не загружен.';
+    $('f-mpp').value = on ? scanScale().toFixed(4) : '1';
+    $('f-rot').value = $('f-rot-r').value = scanRotCW().toFixed(1);
+    $('f-op').value = Math.round(S.scan.op * 100); $('op-v').textContent = Math.round(S.scan.op * 100) + '%';
+    $('s-mpp').textContent = on ? scanScale().toFixed(3) + ' м/пикс' : '—'; $('s-rot').textContent = scanRotCW().toFixed(1) + '°';
+}
+$('b-apply-scale').onclick = function () {
+    S.pscale = parseInt($('f-pscale').value, 10) || 10000; S.dpi = num($('f-dpi').value) || 96;
+    if (!scanImg) return toast('Сначала загрузите скан');
+    var mpp = S.pscale * 0.0254 / S.dpi / S.scan.fix, a = S.scan.a, r = mpp / scanScale();
+    S.scan.a = { re: a.re * r, im: a.im * r }; S.scan.c = { re: S.scan.c.re * r, im: S.scan.c.im * r };
+    syncScanUI(); scheduleSave(); draw(); toast('Масштаб применён. Уточните его линией по линейке.');
+};
+$('f-mpp').onchange = function () {
+    var v = num(this.value); if (!(v > 0) || !scanImg) return;
+    var r = v / scanScale(), a = S.scan.a; S.scan.a = { re: a.re * r, im: a.im * r }; S.scan.c = { re: S.scan.c.re * r, im: S.scan.c.im * r }; syncScanUI(); scheduleSave(); draw();
+};
+function onRot(v) { if (!scanImg) return; var d = num(v); if (isNaN(d)) return; setScanRot(((d % 360) + 360) % 360); syncScanUI(); scheduleSave(); draw(); }
+$('f-rot').onchange = function () { onRot(this.value); }; $('f-rot-r').oninput = function () { onRot(this.value); };
+document.querySelectorAll('[data-rot]').forEach(function (b) { b.onclick = function () { if (!scanImg) return; rotateScan(parseFloat(b.getAttribute('data-rot'))); syncScanUI(); scheduleSave(); draw(); }; });
+$('f-op').oninput = function () { S.scan.op = this.value / 100; $('op-v').textContent = this.value + '%'; scheduleSave(); draw(); };
+$('b-center').onclick = function () { if (scanImg) { setScanCenterAt(V.cx, V.cy); scheduleSave(); draw(); } };
+$('b-delscan').onclick = function () { scanImg = null; scanBlob = null; S.scan.on = false; delScanBlob(); syncScanUI(); scheduleSave(); draw(); };
+$('b-cal').onclick = function () { hideDockMobile(); startPick('cal1'); }; $('t-cal').onclick = $('b-cal').onclick;
+$('b-tie').onclick = function () { hideDockMobile(); startPick('tie'); }; $('t-tie').onclick = $('b-tie').onclick;
+$('b-gA').onclick = function () { hideDockMobile(); startPick('gA'); }; $('b-gB').onclick = function () { hideDockMobile(); startPick('gB'); };
 
-        function onScaleChanged(val) {
-            currentScaleValue = parseInt(val) || 10000;
-            document.getElementById('status-scale-text').innerText = `1:${currentScaleValue.toLocaleString()}`;
-            redrawAll();
-        }
+/* ---------- таблица линий ---------- */
+function rowHtml(i) {
+    var l = S.lines[i], r = azToRumb(l.az);
+    return '<tr data-i="' + i + '"><td class="lbl"></td>' +
+        '<td class="col-az"><input type="number" data-f="az" step="0.01" inputmode="decimal" value="' + (+(+l.az).toFixed(3)) + '"></td>' +
+        '<td class="col-rumb"><div style="display:flex;gap:1px"><select data-f="rq">' + ['СВ', 'ЮВ', 'ЮЗ', 'СЗ'].map(function (q) { return '<option' + (q === r.q ? ' selected' : '') + '>' + q + '</option>'; }).join('') + '</select>' +
+        '<input type="number" data-f="rd" min="0" max="90" value="' + r.d + '" style="min-width:40px"><input type="number" data-f="rm" min="0" max="59" value="' + r.m + '" style="min-width:40px"></div></td>' +
+        '<td><input type="number" data-f="d" step="0.01" inputmode="decimal" value="' + (+(+l.d).toFixed(3)) + '"></td>' +
+        '<td><button class="btn" data-del="' + i + '" style="padding:2px 7px" aria-label="Удалить">✕</button></td></tr>';
+}
+function renderTable() {
+    var tb = $('tbody');
+    if (!S.lines.length) { tb.innerHTML = '<tr><td colspan="5" style="padding:14px;color:var(--muted)">Нет линий. Нажмите «Добавить линию» или загрузите данные из БГ-ХНС.</td></tr>'; return; }
+    tb.innerHTML = S.lines.map(function (_, i) { return rowHtml(i); }).join('');
+    refreshLabels();
+}
+function refreshLabels() {   // подписи линий и классы (без пересоздания полей ввода)
+    var R = compute(), ll = llPoints(), rows = $('tbody').querySelectorAll('tr[data-i]');
+    rows.forEach(function (tr) {
+        var i = +tr.getAttribute('data-i'), td = tr.querySelector('.lbl'), cls = [];
+        var tie = i < R.s, ret = R.gap !== null && i === R.n - 1;
+        if (tie) cls.push('tie'); if (ret) cls.push('ret');
+        tr.className = cls.join(' ');
+        var tag = tie ? '<span class="badge-t">привязка</span> ' : (ret ? '<span class="badge-r">возврат</span> ' : '');
+        td.innerHTML = '<b>Т.' + i + '→Т.' + (i + 1) + '</b> ' + tag + (ll ? '<span class="sub">' + ll[i + 1].lat.toFixed(6) + ', ' + ll[i + 1].lng.toFixed(6) + '</span>' : '');
+    });
+}
+function syncRow(i) {
+    var tr = $('tbody').querySelector('tr[data-i="' + i + '"]'); if (!tr) return;
+    var l = S.lines[i], r = azToRumb(l.az), set = function (f, v) { var el = tr.querySelector('[data-f="' + f + '"]'); if (el && document.activeElement !== el) el.value = v; };
+    set('az', +(+l.az).toFixed(3)); set('rq', r.q); set('rd', r.d); set('rm', r.m); set('d', +(+l.d).toFixed(3));
+}
+$('tbody').addEventListener('change', function (e) {
+    var tr = e.target.closest('tr[data-i]'); if (!tr) return;
+    var i = +tr.getAttribute('data-i'), f = e.target.getAttribute('data-f'), l = S.lines[i];
+    if (f === 'az') { var v = num(e.target.value); l.az = isNaN(v) ? 0 : ((v % 360) + 360) % 360; }
+    else if (f === 'd') { var d = num(e.target.value); l.d = isNaN(d) || d < 0 ? 0 : d; }
+    else { l.az = rumbToAz(tr.querySelector('[data-f="rq"]').value, tr.querySelector('[data-f="rd"]').value, tr.querySelector('[data-f="rm"]').value); }
+    e.target.blur && 0; syncRow(i); afterChange(true);
+});
+$('tbody').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-del]'); if (!b) return;
+    S.lines.splice(+b.getAttribute('data-del'), 1); ui.undoLines = null; $('b-undo-adj').disabled = true; renderTable(); afterChange(false);
+});
+$('b-add').onclick = function () {
+    var last = S.lines[S.lines.length - 1]; S.lines.push({ az: last ? last.az : 0, d: 0 }); renderTable(); afterChange(false);
+    var inp = $('tbody').querySelector('tr:last-child [data-f="d"]'); if (inp) { inp.focus(); inp.select && inp.select(); }
+};
+$('b-clear').onclick = function () { if (S.lines.length && confirm('Очистить все линии?')) { S.lines = []; S.p0 = { lat: null, lng: null }; syncFields(); renderTable(); afterChange(false); } };
 
-        function initGesturesAndMouse() {
-            const getDist = (t1, t2) => Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+/* увязка */
+$('b-adj').onclick = function () {
+    var R = compute();
+    if (R.gap === null || R.gap < 0.005) return toast('Увязывать нечего: невязки нет или замыкание не по линии возврата.');
+    var from = R.c, tot = 0, i; for (i = from; i < R.n; i++) tot += S.lines[i].d;
+    if (!(tot > 0)) return;
+    var msg = 'Невязка ' + f2(R.gap) + ' м (1:' + Math.round(R.gapRel) + '). Распределить пропорционально длинам линий?\nПосле увязки можно нажать «Отменить увязку».';
+    if (!confirm(msg)) return;
+    ui.undoLines = JSON.parse(JSON.stringify(S.lines));
+    var gx = R.gapV.x, gy = R.gapV.y;
+    for (i = from; i < R.n; i++) {
+        var l = S.lines[i], r = l.az * Math.PI / 180, dx = l.d * Math.sin(r) + gx * (l.d / tot), dy = l.d * Math.cos(r) + gy * (l.d / tot);
+        l.d = Math.round(Math.hypot(dx, dy) * 100) / 100;
+        var az = Math.atan2(dx, dy) * 180 / Math.PI; l.az = Math.round(((az % 360) + 360) % 360 * 100) / 100;
+    }
+    $('b-undo-adj').disabled = false; renderTable(); afterChange(false); toast('Полигон увязан. Невязка теперь: ' + f2(compute().gap || 0) + ' м');
+};
+$('b-undo-adj').onclick = function () { if (!ui.undoLines) return; S.lines = ui.undoLines; ui.undoLines = null; this.disabled = true; renderTable(); afterChange(false); toast('Увязка отменена'); };
 
-            viewport.addEventListener('touchstart', (e) => {
-                if (e.touches.length === 2) {
-                    initialPinchDist = getDist(e.touches[0], e.touches[1]);
-                    initialPinchZoom = viewZoom;
-                    isDraggingView = false; isDraggingPlot = false; isDraggingRaster = false;
-                    return;
+/* поля */
+function syncFields() {
+    $('f-name').value = S.name; $('p0-lat').value = hasP0() ? S.p0.lat.toFixed(6) : ''; $('p0-lng').value = hasP0() ? S.p0.lng.toFixed(6) : '';
+    $('f-s').value = S.s; $('f-tol').value = S.tol || ''; $('f-mode').value = S.mode; $('f-c').value = (S.c === null || S.c === undefined) ? '' : S.c;
+    $('f-c-wrap').style.display = S.mode === 'return' ? '' : 'none';
+    $('s-region').value = S.stamp.region; $('s-les').value = S.stamp.les; $('s-uch').value = S.stamp.uch; $('s-kv').value = S.stamp.kv; $('s-author').value = S.stamp.author;
+    $('f-scale').value = S.printScale; $('f-pscale').value = S.pscale; $('f-dpi').value = S.dpi; $('f-view').value = S.viewMode; $('f-labels').value = String(S.labels);
+    $('tbl-wrap').className = 'tbl-wrap ' + (S.viewMode === 'rumb' ? 'show-rumb' : 'show-az');
+    $('s-scale').textContent = '1:' + S.printScale.toLocaleString('ru-RU');
+}
+function bindField(id, fn) { $(id).addEventListener('change', function () { fn(this.value); afterChange(false); }); }
+bindField('f-name', function (v) { S.name = v.trim(); });
+function bindP0() { var la = parseCoord($('p0-lat').value, true), lo = parseCoord($('p0-lng').value, false); S.p0 = { lat: isNaN(la) ? null : la, lng: isNaN(lo) ? null : lo }; }
+$('p0-lat').addEventListener('change', function () { bindP0(); afterChange(false); });
+$('p0-lng').addEventListener('change', function () { bindP0(); afterChange(false); });
+bindField('f-s', function (v) { S.s = Math.max(0, parseInt(v, 10) || 0); });
+bindField('f-tol', function (v) { var t = parseInt(v, 10); S.tol = t > 0 ? t : null; });
+bindField('f-mode', function (v) { S.mode = v; $('f-c-wrap').style.display = v === 'return' ? '' : 'none'; });
+bindField('f-c', function (v) { var c = parseInt(v, 10); S.c = isNaN(c) ? null : Math.max(0, c); });
+bindField('f-view', function (v) { S.viewMode = v; $('tbl-wrap').className = 'tbl-wrap ' + (v === 'rumb' ? 'show-rumb' : 'show-az'); });
+bindField('f-labels', function (v) { S.labels = parseInt(v, 10); });
+bindField('f-scale', function (v) { S.printScale = parseInt(v, 10) || 10000; $('s-scale').textContent = '1:' + S.printScale.toLocaleString('ru-RU'); });
+['region', 'les', 'uch', 'kv', 'author'].forEach(function (k) { bindField('s-' + k, function (v) { S.stamp[k] = v; }); });
+
+function renderInfo() {
+    var R = compute(), el = $('info'), st = gapStatus(R);
+    if (!R.n) { el.className = 'info'; el.innerHTML = '<div class="big">—</div><div class="st" style="color:var(--muted)">Добавьте линии или загрузите из БГ-ХНС</div>'; return R; }
+    if (R.warn) { el.className = 'info mid'; el.innerHTML = '<div class="big">—</div><div class="st">' + esc(R.warn) + '</div>'; return R; }
+    if (!R.poly) { el.className = 'info'; el.innerHTML = '<div class="big">' + f1(R.len) + ' м</div><div class="st" style="color:var(--muted)">Длина хода (без замыкания)</div>'; return R; }
+    var extra = '<div style="font-size:.88em;color:var(--muted);margin-top:3px">Периметр: ' + f1(R.perim) + ' м · вершин: ' + R.poly.length + '</div>';
+    el.className = 'info ' + st.cls;
+    el.innerHTML = '<div class="big">' + (R.area / 10000).toFixed(4) + ' га</div>' + (R.gap !== null ? '<div class="st">' + esc(gapText(R)) + '<br>' + esc(st.txt) + '</div>' : '<div class="st" style="color:var(--muted)">Замкнуто автоматически — невязка не проверена</div>') + extra;
+    return R;
+}
+var saveT = 0;
+function scheduleSave() { clearTimeout(saveT); saveT = setTimeout(saveState, 400); }
+function afterChange(onlyLabels) { renderInfo(); refreshLabels(); draw(); scheduleSave(); }
+
+/* ---------- панели ---------- */
+function switchTab(id) {
+    document.querySelectorAll('.tab').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-tab') === id); });
+    document.querySelectorAll('.pane').forEach(function (p) { p.classList.toggle('active', p.id === id); });
+}
+document.querySelectorAll('.tab').forEach(function (b) { b.onclick = function () { switchTab(b.getAttribute('data-tab')); }; });
+var mobile = function () { return window.matchMedia('(max-width: 768px)').matches; };
+function showDock() { $('dock').classList.remove('hidden', 'collapsed'); $('zoomctl').classList.toggle('show', mobile()); }
+function hideDockMobile() { if (mobile()) $('dock').classList.add('collapsed'); }
+$('t-panel').onclick = function () { var d = $('dock'); if (d.classList.contains('hidden') || (mobile() && d.classList.contains('collapsed'))) showDock(); else if (mobile()) d.classList.add('collapsed'); else d.classList.add('hidden'); };
+$('dock-x').onclick = function (e) { e.stopPropagation(); if (mobile()) $('dock').classList.toggle('collapsed'); else $('dock').classList.add('hidden'); };
+// перемещение панели (компьютер)
+(function () {
+    var dock = $('dock'), head = $('dock-head'), drag = null;
+    head.addEventListener('pointerdown', function (e) {
+        if (e.target.closest('button')) return;
+        if (mobile()) { dock.classList.toggle('collapsed'); return; }
+        var r = dock.getBoundingClientRect(); drag = { dx: e.clientX - r.left, dy: e.clientY - r.top }; head.setPointerCapture(e.pointerId);
+    });
+    head.addEventListener('pointermove', function (e) {
+        if (!drag) return;
+        var x = Math.max(0, Math.min(window.innerWidth - 120, e.clientX - drag.dx)), y = Math.max(0, Math.min(window.innerHeight - 60, e.clientY - drag.dy));
+        dock.style.left = x + 'px'; dock.style.top = y + 'px'; dock.style.right = 'auto';
+    });
+    function end() { if (!drag) return; drag = null; try { localStorage.setItem(KEY + '_dock', JSON.stringify({ l: dock.style.left, t: dock.style.top, w: dock.style.width, h: dock.style.height })); } catch (e) { } }
+    head.addEventListener('pointerup', end); head.addEventListener('pointercancel', end);
+    if (window.ResizeObserver) new ResizeObserver(function () { if (!mobile()) try { localStorage.setItem(KEY + '_dock', JSON.stringify({ l: dock.style.left, t: dock.style.top, w: dock.style.width, h: dock.style.height })); } catch (e) { } }).observe(dock);
+    try {
+        var d = JSON.parse(localStorage.getItem(KEY + '_dock') || 'null');
+        if (d && !mobile()) { if (d.l) { dock.style.left = d.l; dock.style.right = 'auto'; } if (d.t) dock.style.top = d.t; if (d.w) dock.style.width = d.w; if (d.h) dock.style.height = d.h; }
+    } catch (e) { }
+})();
+function setTool(t) {
+    ui.tool = t; $('t-pan').classList.toggle('active', t === 'pan'); $('t-scan').classList.toggle('active', t === 'scan');
+    $('view').classList.toggle('scanmode', t === 'scan'); if (t !== 'pan' || ui.pick) { }
+}
+$('t-pan').onclick = function () { cancelPick(); setTool('pan'); };
+$('t-scan').onclick = function () { cancelPick(); if (!scanImg) return toast('Сначала загрузите скан'); setTool('scan'); toast('Тяните скан пальцем или мышью'); };
+$('t-fit').onclick = function () { fitView(false); };
+$('hint').addEventListener('click', cancelPick);
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { cancelPick(); document.querySelectorAll('.overlay').forEach(function (o) { o.classList.remove('on'); }); } });
+
+/* размер шрифта и тема */
+function setFs(px) { px = Math.max(12, Math.min(26, px)); document.documentElement.style.setProperty('--fs', px + 'px'); try { localStorage.setItem(KEY + '_fs', px); } catch (e) { } draw(); }
+$('b-fp').onclick = function () { setFs((parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fs')) || 15) + 1); };
+$('b-fm').onclick = function () { setFs((parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fs')) || 15) - 1); };
+$('b-theme').onclick = function () { var d = document.documentElement; if (d.getAttribute('data-theme') === 'dark') d.removeAttribute('data-theme'); else d.setAttribute('data-theme', 'dark'); try { localStorage.setItem(KEY + '_theme', d.getAttribute('data-theme') || ''); } catch (e) { } };
+
+/* ---------- линза ---------- */
+function lensArea() {
+    var R = compute(), st = gapStatus(R), h = '<div class="t">' + esc(S.name || 'Делянка') + '</div>';
+    if (!R.n) return h + '<div class="m">Нет данных</div>';
+    if (R.poly) {
+        h += '<div class="b">' + (R.area / 10000).toFixed(4) + ' га</div><div class="m">Периметр ' + f1(R.perim) + ' м</div>';
+        if (R.gap !== null) h += '<div class="m ' + (st.cls === 'ok' ? 'g' : st.cls === 'bad' ? 'r' : 'y') + '">' + esc(gapText(R)) + '</div><div class="m ' + (st.cls === 'ok' ? 'g' : st.cls === 'bad' ? 'r' : 'y') + '" style="font-size:1.2em">' + esc(st.txt) + '</div>';
+        else h += '<div class="m y">Замкнуто автоматически</div>';
+    } else h += '<div class="b">' + f1(R.len) + ' м</div><div class="m">Длина хода</div>';
+    return h;
+}
+function lensLine(i) {
+    var l = S.lines[i]; if (!l) return '';
+    var ll = llPoints(), h = '<div class="t">Линия Т.' + i + ' → Т.' + (i + 1) + (i < compute().s ? ' · привязка' : '') + '</div>';
+    h += '<div class="b">' + f1(l.az) + '°</div><div class="m y">' + esc(rumbStr(l.az)) + '</div><div class="m">Длина ' + f2(l.d) + ' м</div>';
+    if (ll) h += '<div class="m" style="font-size:1.2em">' + ll[i + 1].lat.toFixed(6) + ', ' + ll[i + 1].lng.toFixed(6) + '</div>';
+    return h;
+}
+function lensShow(html) { var el = $('lens'); el.innerHTML = html; el.classList.add('on'); }
+function lensHide() { $('lens').classList.remove('on'); }
+(function () {
+    var t = $('t-lens');
+    t.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    t.addEventListener('pointerdown', function (e) { try { t.setPointerCapture(e.pointerId); } catch (x) { } t.classList.add('active'); lensShow(lensArea()); });
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (ev) { t.addEventListener(ev, function () { t.classList.remove('active'); lensHide(); }); });
+    var tb = $('tbody'), timer = 0, sx = 0, sy = 0, on = false;
+    tb.addEventListener('contextmenu', function (e) { if (e.target.closest('.lbl')) e.preventDefault(); });
+    tb.addEventListener('pointerdown', function (e) {
+        var td = e.target.closest('.lbl'); if (!td) return; var i = +td.parentNode.getAttribute('data-i'); sx = e.clientX; sy = e.clientY;
+        clearTimeout(timer); timer = setTimeout(function () { on = true; lensShow(lensLine(i)); }, 350);
+    });
+    tb.addEventListener('pointermove', function (e) { if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) { clearTimeout(timer); timer = 0; } });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) { tb.addEventListener(ev, function () { clearTimeout(timer); timer = 0; if (on) { on = false; lensHide(); } }); });
+})();
+
+/* ---------- импорт ---------- */
+function distLL(a, b) { var lm = (a.lat + b.lat) / 2; return Math.hypot((b.lng - a.lng) * MPD * cosd(lm), (b.lat - a.lat) * MPD); }
+function linesFromLL(pts) {
+    var out = [];
+    for (var i = 1; i < pts.length; i++) {
+        var dy = (pts[i].lat - pts[i - 1].lat) * MPD, dx = (pts[i].lng - pts[i - 1].lng) * MPD * cosd(pts[i].lat);
+        var az = Math.atan2(dx, dy) * 180 / Math.PI; out.push({ az: Math.round(((az % 360) + 360) % 360 * 100) / 100, d: Math.round(Math.hypot(dx, dy) * 100) / 100 });
+    }
+    return out;
+}
+function autoClosure(res) {   // 'return' если последняя линия возвращает к началу, иначе 'auto'
+    var save = { l: S.lines, s: S.s, m: S.mode, c: S.c };
+    S.lines = res.lines; S.s = res.s; S.mode = 'return'; S.c = null;
+    var R = compute(), ok = R.poly && R.gap !== null && R.gap <= Math.max(5, R.perim * 0.05);
+    S.lines = save.l; S.s = save.s; S.mode = save.m; S.c = save.c;
+    return ok ? 'return' : 'auto';
+}
+function fromRows(rows, meta) {
+    var lines = [], p0 = { lat: null, lng: null }, i;
+    for (i = 0; i < rows.length; i++) {
+        var r = rows[i], az = num(r.azimuth !== undefined ? r.azimuth : r.az), d = num(r.distance !== undefined ? r.distance : (r.d !== undefined ? r.d : r.len));
+        if (!isFinite(az) || !isFinite(d)) continue;
+        lines.push({ az: ((az % 360) + 360) % 360, d: d });
+    }
+    for (i = 0; i < rows.length; i++) { var la = num(rows[i].lat), lo = num(rows[i].lng !== undefined ? rows[i].lng : rows[i].lon); if (isFinite(la) && isFinite(lo) && (la !== 0 || lo !== 0)) { p0 = { lat: la, lng: lo }; break; } }
+    var res = { name: (meta && meta.name) || '', lines: lines, p0: p0, s: (meta && meta.s !== undefined) ? meta.s : 1, passport: meta && meta.passport };
+    if (lines.length <= res.s + 2) res.s = Math.max(0, Math.min(res.s, lines.length - 3));
+    res.mode = autoClosure(res);
+    return res;
+}
+function parseCSV(text) {
+    var ln = text.replace(/^﻿/, '').split(/\r?\n/).filter(function (l) { return l.trim(); });
+    function sp(line) { var o = [], c = '', q = false; for (var i = 0; i < line.length; i++) { var ch = line[i]; if (q) { if (ch === '"') { if (line[i + 1] === '"') { c += '"'; i++; } else q = false; } else c += ch; } else if (ch === '"') q = true; else if (ch === ';') { o.push(c); c = ''; } else c += ch; } o.push(c); return o; }
+    if (ln.length < 2) return null;
+    var h = sp(ln[0]).map(function (s) { return s.trim().toLowerCase(); });
+    function col(re) { for (var i = 0; i < h.length; i++) if (re.test(h[i])) return i; return -1; }
+    var iN = col(/назван/), iA = col(/азимут/), iL = col(/длин/), iLat = col(/широта.*dd/), iLng = col(/долгота.*dd/);
+    if (iA < 0 || iL < 0) return null;
+    var groups = {}, order = [];
+    for (var r = 1; r < ln.length; r++) { var f = sp(ln[r]), k = iN >= 0 ? f[iN] : 'Делянка'; if (!groups[k]) { groups[k] = []; order.push(k); } groups[k].push({ azimuth: f[iA], distance: f[iL], lat: iLat >= 0 ? f[iLat] : '', lng: iLng >= 0 ? f[iLng] : '' }); }
+    return { names: order, groups: groups };
+}
+function llContours(text, name) {
+    var t = text.replace(/^﻿/, '').trim(), out = [];
+    function ll(el) { return { lat: parseFloat(el.getAttribute('lat')), lng: parseFloat(el.getAttribute('lon')) }; }
+    function ok(p) { return isFinite(p.lat) && isFinite(p.lng); }
+    if (/<gpx[\s>]/i.test(t.slice(0, 800)) || /\.gpx$/i.test(name)) {
+        var d = new DOMParser().parseFromString(t, 'application/xml');
+        [].forEach.call(d.getElementsByTagName('trk'), function (trk) { var n = trk.getElementsByTagName('name')[0]; [].forEach.call(trk.getElementsByTagName('trkseg'), function (sg) { var pts = [].map.call(sg.getElementsByTagName('trkpt'), ll).filter(ok); if (pts.length > 1) out.push({ name: n ? n.textContent.trim() : '', pts: pts }); }); });
+        [].forEach.call(d.getElementsByTagName('rte'), function (rt) { var n = rt.getElementsByTagName('name')[0], pts = [].map.call(rt.getElementsByTagName('rtept'), ll).filter(ok); if (pts.length > 1) out.push({ name: n ? n.textContent.trim() : '', pts: pts }); });
+    } else if (/<kml[\s>]/i.test(t.slice(0, 800)) || /\.kml$/i.test(name)) {
+        var dk = new DOMParser().parseFromString(t, 'application/xml');
+        [].forEach.call(dk.getElementsByTagName('Placemark'), function (pm) {
+            var n = pm.getElementsByTagName('name')[0], c = pm.getElementsByTagName('Polygon')[0] || pm.getElementsByTagName('LineString')[0];
+            if (!c) return; var ce = c.getElementsByTagName('coordinates')[0]; if (!ce) return;
+            var pts = ce.textContent.trim().split(/\s+/).map(function (s) { var a = s.split(','); return { lat: parseFloat(a[1]), lng: parseFloat(a[0]) }; }).filter(ok);
+            if (pts.length > 1) out.push({ name: n ? n.textContent.trim() : '', pts: pts });
+        });
+    } else if (t[0] === '{') {
+        var obj = JSON.parse(t), geo = function (gm, nm) {
+            if (!gm) return;
+            if (gm.type === 'GeometryCollection') (gm.geometries || []).forEach(function (x) { geo(x, nm); });
+            else if (gm.type === 'Polygon') { if (gm.coordinates[0]) out.push({ name: nm, pts: gm.coordinates[0].map(function (c) { return { lat: c[1], lng: c[0] }; }) }); }
+            else if (gm.type === 'MultiPolygon') gm.coordinates.forEach(function (p) { if (p[0]) out.push({ name: nm, pts: p[0].map(function (c) { return { lat: c[1], lng: c[0] }; }) }); });
+            else if (gm.type === 'LineString') out.push({ name: nm, pts: gm.coordinates.map(function (c) { return { lat: c[1], lng: c[0] }; }) });
+        };
+        (obj.type === 'FeatureCollection' ? obj.features : [obj]).forEach(function (f) { if (f.type === 'Feature') geo(f.geometry, (f.properties && f.properties.name) || ''); else geo(f, ''); });
+    }
+    return out;
+}
+function loadResult(res, msg) {
+    S.name = res.name || S.name; S.lines = res.lines; S.p0 = res.p0; S.s = res.s; S.mode = res.mode; S.c = null; ui.undoLines = null; $('b-undo-adj').disabled = true;
+    if (res.passport) {
+        var p = res.passport; if (p.region) S.stamp.region = p.region; if (p.lesnichestvo) S.stamp.les = p.lesnichestvo; if (p.uchastkovoe) S.stamp.uch = p.uchastkovoe;
+        var kv = [p.kvartal ? 'кв. ' + p.kvartal : '', p.vydel ? 'выд. ' + p.vydel : '', p.delyanka ? 'дел. ' + p.delyanka : ''].filter(Boolean).join(', '); if (kv) S.stamp.kv = kv;
+    }
+    if (scanImg && S.scan.on && hasP0() === false) { /* координат нет — скан остаётся как был */ }
+    syncFields(); renderTable(); renderInfo(); fitView(false); scheduleSave();
+    toast(msg || ('Загружено линий: ' + S.lines.length));
+}
+function importText(text, fname) {
+    goal('abris_import');
+    fname = fname || ''; var t = text.replace(/^﻿/, '').trim();
+    if (!t) return toast('Нечего загружать');
+    try {
+        if (t[0] === '{' || t[0] === '[') {
+            var obj = JSON.parse(t);
+            if (!Array.isArray(obj) && obj.format === 'abris') return openProject(obj);
+            if (Array.isArray(obj) || obj.log || obj.lines) {
+                var rows = Array.isArray(obj) ? obj : (obj.log || obj.lines);
+                if (rows.length && (rows[0].azimuth !== undefined || rows[0].az !== undefined)) {
+                    var r = fromRows(rows, { name: obj.name, passport: obj.passport, s: obj.s });
+                    if (!r.lines.length) return toast('В данных нет линий (азимут и длина)');
+                    return loadResult(r, 'Из БГ-ХНС загружено линий: ' + r.lines.length + (hasPt(r) ? '' : '. Координат нет — привязка скана вручную.'));
                 }
-                if (e.touches.length === 1) handleStartDrag(e.touches[0].clientX, e.touches[0].clientY);
-            }, { passive: false });
-
-            window.addEventListener('touchmove', (e) => {
-                if (e.touches.length === 2 && initialPinchDist) {
-                    e.preventDefault();
-                    const currentDist = getDist(e.touches[0], e.touches[1]);
-                    const scaleFactor = currentDist / initialPinchDist;
-                    viewZoom = Math.min(Math.max(initialPinchZoom * scaleFactor, 0.05), 20.0);
-                    document.getElementById('status-zoom-text').innerText = `${Math.round(viewZoom * 100)}%`;
-                    redrawAll();
-                    return;
-                }
-                if (e.touches.length === 1) handleMoveDrag(e.touches[0].clientX, e.touches[0].clientY);
-            }, { passive: false });
-
-            window.addEventListener('touchend', (e) => {
-                if (e.touches.length < 2) initialPinchDist = null;
-                handleEndDrag();
-            });
-
-            viewport.addEventListener('mousedown', (e) => handleStartDrag(e.clientX, e.clientY, e.button));
-            window.addEventListener('mousemove', (e) => handleMoveDrag(e.clientX, e.clientY));
-            window.addEventListener('mouseup', handleEndDrag);
-
-            viewport.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-                viewZoom = Math.min(Math.max(viewZoom * zoomFactor, 0.05), 20.0);
-                document.getElementById('status-zoom-text').innerText = `${Math.round(viewZoom * 100)}%`;
-                redrawAll();
-            }, { passive: false });
-        }
-
-        function handleStartDrag(clientX, clientY, btn = 0) {
-            const rect = canvas.getBoundingClientRect();
-            const meterX = (clientX - rect.left - viewX) / viewZoom;
-            const meterY = (clientY - rect.top - viewY) / viewZoom;
-
-            if (isCalibrating) {
-                if (!calibStartPoint) calibStartPoint = { x: meterX, y: meterY };
-                else { calibEndPoint = { x: meterX, y: meterY }; finishCalibLine(); }
-                redrawAll();
-                return;
             }
-
-            if (activeTool === 'move-plot' && btn === 0) {
-                isDraggingPlot = true;
-                plotDragStartX = meterX - plotOffsetMetersX;
-                plotDragStartY = meterY - plotOffsetMetersY;
-                return;
-            }
-
-            if (activeTool === 'move-raster' && btn === 0) {
-                isDraggingRaster = true;
-                rasterDragStartX = meterX - rasterMetersX;
-                rasterDragStartY = meterY - rasterMetersY;
-                return;
-            }
-
-            isDraggingView = true;
-            dragStartX = clientX - viewX;
-            dragStartY = clientY - viewY;
-            viewport.classList.add('grabbing');
+            if (obj.type) { var c0 = llContours(t, fname); if (c0.length) return fromContour(c0); }
+            return toast('Формат данных не распознан');
         }
-
-        function handleMoveDrag(clientX, clientY) {
-            const rect = canvas.getBoundingClientRect();
-            const meterX = (clientX - rect.left - viewX) / viewZoom;
-            const meterY = (clientY - rect.top - viewY) / viewZoom;
-
-            if (isDraggingPlot) {
-                plotOffsetMetersX = meterX - plotDragStartX;
-                plotOffsetMetersY = meterY - plotDragStartY;
-                redrawAll();
-            } else if (isDraggingRaster) {
-                rasterMetersX = meterX - rasterDragStartX;
-                rasterMetersY = meterY - rasterDragStartY;
-                redrawAll();
-            } else if (isDraggingView) {
-                viewX = clientX - dragStartX;
-                viewY = clientY - dragStartY;
-                redrawAll();
-            } else if (isCalibrating && calibStartPoint) {
-                calibEndPoint = { x: meterX, y: meterY };
-                redrawAll();
-            }
+        if (/<gpx|<kml/i.test(t.slice(0, 800)) || /\.(gpx|kml)$/i.test(fname)) { var c1 = llContours(t, fname); return c1.length ? fromContour(c1) : toast('В файле нет линий или контуров'); }
+        var csv = parseCSV(t);
+        if (csv) {
+            var nm = csv.names[0], rr = fromRows(csv.groups[nm], { name: nm });
+            if (!rr.lines.length) return toast('В CSV нет линий');
+            return loadResult(rr, 'CSV из БГ-ХНС: загружена «' + nm + '», линий: ' + rr.lines.length + (csv.names.length > 1 ? '. В файле ещё делянок: ' + (csv.names.length - 1) + ' (загружена первая).' : ''));
         }
-
-        function handleEndDrag() {
-            isDraggingPlot = false; isDraggingRaster = false; isDraggingView = false;
-            viewport.classList.remove('grabbing');
+        toast('Формат не распознан. Нужны данные БГ-ХНС, CSV, GPX, KML или GeoJSON.');
+    } catch (e) { toast('Ошибка чтения данных: ' + e.message); }
+}
+function hasPt(r) { return r.p0 && isFinite(r.p0.lat) && r.p0.lat !== null; }
+function fromContour(list) {
+    var c = list.slice().sort(function (a, b) { return b.pts.length - a.pts.length; })[0], pts = c.pts.slice();
+    var closed = pts.length > 3 && distLL(pts[0], pts[pts.length - 1]) < 0.5;
+    var res = { name: c.name || '', lines: linesFromLL(pts), p0: { lat: pts[0].lat, lng: pts[0].lng }, s: 0, mode: closed ? 'return' : 'auto' };
+    loadResult(res, 'Контур загружен: вершин ' + (closed ? pts.length - 1 : pts.length) + '. Т.0 поставлена в первую вершину (привязки нет).');
+}
+function openImport() { $('imp-text').value = ''; $('m-imp').classList.add('on'); }
+$('b-import').onclick = openImport; $('b-import2').onclick = openImport;
+$('imp-cancel').onclick = function () { $('m-imp').classList.remove('on'); };
+$('imp-go').onclick = function () { importText($('imp-text').value, ''); $('m-imp').classList.remove('on'); };
+$('imp-file').onclick = function () { $('f-any').click(); };
+$('b-open').onclick = function () { $('f-any').click(); };
+$('imp-paste').onclick = function () {
+    if (navigator.clipboard && navigator.clipboard.readText) navigator.clipboard.readText().then(function (t) { $('imp-text').value = t; }, function () { toast('Браузер не разрешил чтение буфера. Вставьте вручную (Ctrl+V).'); });
+    else toast('Вставьте вручную (Ctrl+V).');
+};
+$('f-any').addEventListener('change', function () {
+    var f = this.files && this.files[0], inp = this; if (!f) return;
+    var fr = new FileReader(); fr.onload = function () { $('m-imp').classList.remove('on'); importText(String(fr.result), f.name); inp.value = ''; }; fr.readAsText(f);
+});
+// передача из БГ-ХНС через общее хранилище (если оба файла на одном сайте)
+function checkHandoff(silent) {
+    try {
+        var raw = localStorage.getItem(HANDOFF); if (!raw) return;
+        var p = JSON.parse(raw);
+        if (!p || !p.log || Date.now() - (p.ts || 0) > 30 * 60 * 1000) { localStorage.removeItem(HANDOFF); return; }
+        if (confirm('Найдены данные из БГ-ХНС: «' + (p.name || 'без названия') + '», линий: ' + p.log.length + '. Загрузить в Абрис?')) {
+            var r = fromRows(p.log, { name: p.name, passport: p.passport }); if (r.lines.length) loadResult(r, 'Из БГ-ХНС загружено линий: ' + r.lines.length);
         }
-
-        function setRotationValue(val) {
-            let deg = parseFloat(val) || 0;
-            deg = (deg % 360 + 360) % 360;
-            rasterRotation = parseFloat(deg.toFixed(1));
-            document.getElementById('raster-rotation-slider').value = rasterRotation;
-            document.getElementById('raster-rotation-input').value = rasterRotation;
-            document.getElementById('status-rotation-text').innerText = `${rasterRotation.toFixed(1)}°`;
-            redrawAll();
-        }
-
-        function rotateByStep(step) { setRotationValue(rasterRotation + step); }
-
-        function toggleCalibrationTool() {
-            isCalibrating = !isCalibrating;
-            calibStartPoint = null; calibEndPoint = null;
-            document.getElementById('btn-calib-tool').classList.toggle('active', isCalibrating);
-            viewport.classList.toggle('calibrating', isCalibrating);
-        }
-
-        function finishCalibLine() {
-            isCalibrating = false;
-            document.getElementById('btn-calib-tool').classList.remove('active');
-            viewport.classList.remove('calibrating');
-
-            const dx = calibEndPoint.x - calibStartPoint.x;
-            const dy = calibEndPoint.y - calibStartPoint.y;
-            const currentMeters = Math.hypot(dx, dy);
-
-            document.getElementById('calib-measured-val').innerText = `${currentMeters.toFixed(1)} м`;
-            document.getElementById('calib-real-meters').value = currentMeters.toFixed(1);
-
-            document.getElementById('calib-modal').style.display = 'flex';
-        }
-
-        function applyCalibration() {
-            if (!calibStartPoint || !calibEndPoint) return;
-            const dx = calibEndPoint.x - calibStartPoint.x;
-            const dy = calibEndPoint.y - calibStartPoint.y;
-            const currentMeters = Math.hypot(dx, dy);
-
-            const userExactMeters = parseFloat(document.getElementById('calib-real-meters').value) || currentMeters;
-            
-            if (currentMeters > 0 && rasterImage) {
-                const ratio = userExactMeters / currentMeters;
-                rasterMetersPerPixel *= ratio;
-                document.getElementById('meters-per-pixel-input').value = rasterMetersPerPixel.toFixed(3);
-                document.getElementById('status-pixel-ratio').innerText = `${rasterMetersPerPixel.toFixed(3)} м/пикс`;
-            }
-
-            cancelCalibration();
-            redrawAll();
-        }
-
-        function cancelCalibration() {
-            calibStartPoint = null; calibEndPoint = null;
-            document.getElementById('calib-modal').style.display = 'none';
-            redrawAll();
-        }
-
-        function updateManualRatio(val) {
-            rasterMetersPerPixel = parseFloat(val) || 1.0;
-            document.getElementById('status-pixel-ratio').innerText = `${rasterMetersPerPixel.toFixed(3)} м/пикс`;
-            redrawAll();
-        }
-
-        function toggleManualClosure() {
-            isPolygonClosed = !isPolygonClosed;
-            const btn = document.getElementById('btn-toggle-closure');
-            btn.innerText = isPolygonClosed ? "🔒 Замкнут" : "🔓 Разомкнут";
-            btn.style.color = isPolygonClosed ? "var(--forest-green)" : "var(--danger)";
-            redrawAll();
-        }
-
-        function onCloseTargetChanged(val) {
-            closeTargetId = parseInt(val) || 1;
-            redrawAll();
-        }
-
-        function changeInputMode(mode) {
-            currentInputMode = mode;
-            renderTableHeader();
-            renderTableBody();
-        }
-
-        function azimuthToRumb(azimuth) {
-            azimuth = (azimuth % 360 + 360) % 360;
-            let quarter = "СВ", rumbVal = azimuth;
-            if (azimuth >= 0 && azimuth <= 90) { quarter = "СВ"; rumbVal = azimuth; }
-            else if (azimuth > 90 && azimuth <= 180) { quarter = "ЮВ"; rumbVal = 180 - azimuth; }
-            else if (azimuth > 180 && azimuth <= 270) { quarter = "ЮЗ"; rumbVal = azimuth - 180; }
-            else { quarter = "СЗ"; rumbVal = 360 - azimuth; }
-            const deg = Math.floor(rumbVal);
-            const min = Math.round((rumbVal - deg) * 60);
-            return { quarter, deg, min };
-        }
-
-        function rumbToAzimuth(quarter, deg, min) {
-            const angle = (parseFloat(deg) || 0) + ((parseFloat(min) || 0) / 60.0);
-            if (quarter === "СВ") return angle;
-            if (quarter === "ЮВ") return 180.0 - angle;
-            if (quarter === "ЮЗ") return 180.0 + angle;
-            if (quarter === "СЗ") return 360.0 - angle;
-            return angle;
-        }
-
-        function getDistanceWGS84(lat1, lon1, lat2, lon2) {
-            const R = 6371000;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                      Math.sin(dLon/2) * Math.sin(dLon/2);
-            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        }
-
-        function syncGeometryFromGPS() {
-            if (plotPoints.length < 2) return;
-            for (let i = 0; i < plotPoints.length; i++) {
-                let nextIdx;
-                if (i === 0) {
-                    nextIdx = 1;
-                } else if (i < plotPoints.length - 1) {
-                    nextIdx = i + 1;
-                } else {
-                    nextIdx = plotPoints.findIndex(p => p.id === closeTargetId);
-                    if (nextIdx === -1) nextIdx = 1;
-                }
-
-                if (plotPoints[nextIdx]) {
-                    const calcDist = getDistanceWGS84(
-                        plotPoints[i].lat, plotPoints[i].lng,
-                        plotPoints[nextIdx].lat, plotPoints[nextIdx].lng
-                    );
-
-                    const dY = (plotPoints[nextIdx].lat - plotPoints[i].lat) * 111111;
-                    const dX = (plotPoints[nextIdx].lng - plotPoints[i].lng) * 111111 * Math.cos(plotPoints[i].lat * Math.PI / 180);
-
-                    let calcAzimuth = (Math.atan2(dX, dY) * 180 / Math.PI);
-                    if (calcAzimuth < 0) calcAzimuth += 360;
-
-                    plotPoints[i].distance = parseFloat(calcDist.toFixed(1));
-                    plotPoints[i].azimuth = parseFloat(calcAzimuth.toFixed(1));
-
-                    const r = azimuthToRumb(plotPoints[i].azimuth);
-                    plotPoints[i].rumbQuarter = r.quarter;
-                    plotPoints[i].rumbDeg = r.deg;
-                    plotPoints[i].rumbMin = r.min;
-                }
-            }
-        }
-
-        function syncGeometryFromAzimuths() {
-            plotPoints.forEach((p) => {
-                const r = azimuthToRumb(p.azimuth);
-                p.rumbQuarter = r.quarter;
-                p.rumbDeg = r.deg;
-                p.rumbMin = r.min;
-            });
-        }
-
-        function renderTableHeader() {
-            const thead = document.getElementById('geometry-thead');
-            if (currentInputMode === 'gps') {
-                thead.innerHTML = `
-                    <tr>
-                        <th style="width:25px;">Тчк</th>
-                        <th>Направление линии</th>
-                        <th>Широта (с.ш. 6 знаков)</th>
-                        <th>Долгота (в.д. 6 знаков)</th>
-                        <th>Промер, м</th>
-                    </tr>
-                `;
-            } else if (currentInputMode === 'rumbs') {
-                thead.innerHTML = `
-                    <tr>
-                        <th style="width:25px;">№</th>
-                        <th>Четв.</th>
-                        <th>Град.</th>
-                        <th>Мин.</th>
-                        <th>Промер, м</th>
-                        <th>❌</th>
-                    </tr>
-                `;
-            } else if (currentInputMode === 'azimuths') {
-                thead.innerHTML = `
-                    <tr>
-                        <th style="width:25px;">№</th>
-                        <th>Азимут, °</th>
-                        <th>Промер, м</th>
-                        <th>❌</th>
-                    </tr>
-                `;
-            }
-        }
-
-        function renderTableBody() {
-            const tbody = document.getElementById('geometry-tbody');
-            tbody.innerHTML = '';
-
-            if (plotPoints.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="padding:15px;color:gray;">Нет точек. Нажмите «➕ Добавить точку» или загрузите из БГ-ХНС.</td></tr>`;
-                return;
-            }
-
-            plotPoints.forEach((p, idx) => {
-                if (currentInputMode === 'gps') {
-                    let label = "";
-                    if (p.isTie) {
-                        label = `<b style="color:var(--danger);">Привязка (Т.0 → Т.1)</b>`;
-                    } else if (idx === plotPoints.length - 1) {
-                        label = `Линия Т.${p.id} → Т.${closeTargetId}`;
-                    } else {
-                        label = `Линия Т.${p.id} → Т.${plotPoints[idx + 1].id}`;
-                    }
-
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><b>${p.id}</b></td>
-                            <td style="text-align:left; font-size:10px;">${label}</td>
-                            <td><input type="text" class="input-table" value="${p.lat.toFixed(6)}" onfocus="this.select()" onchange="onGPSChange(${idx}, 'lat', this.value)"></td>
-                            <td><input type="text" class="input-table" value="${p.lng.toFixed(6)}" onfocus="this.select()" onchange="onGPSChange(${idx}, 'lng', this.value)"></td>
-                            <td><b>${p.distance}</b> м</td>
-                        </tr>
-                    `;
-                } else if (currentInputMode === 'rumbs') {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><b>${p.id}</b></td>
-                            <td>
-                                <select class="input-table" onchange="onRumbQuarterChange(${idx}, this.value)">
-                                    <option value="СВ" ${p.rumbQuarter === 'СВ' ? 'selected' : ''}>СВ</option>
-                                    <option value="ЮВ" ${p.rumbQuarter === 'ЮВ' ? 'selected' : ''}>ЮВ</option>
-                                    <option value="ЮЗ" ${p.rumbQuarter === 'ЮЗ' ? 'selected' : ''}>ЮЗ</option>
-                                    <option value="СЗ" ${p.rumbQuarter === 'СЗ' ? 'selected' : ''}>СЗ</option>
-                                </select>
-                            </td>
-                            <td><input type="number" class="input-table" value="${p.rumbDeg}" min="0" max="89" onfocus="this.select()" onchange="onRumbAngleChange(${idx}, this.value, ${p.rumbMin})"></td>
-                            <td><input type="number" class="input-table" value="${p.rumbMin}" min="0" max="59" onfocus="this.select()" onchange="onRumbAngleChange(${idx}, ${p.rumbDeg}, this.value)"></td>
-                            <td><input type="number" class="input-table" value="${p.distance}" step="0.5" onfocus="this.select()" onchange="onDistanceChange(${idx}, this.value)"></td>
-                            <td><button style="border:none;background:none;cursor:pointer;" onclick="removePoint(${idx})">❌</button></td>
-                        </tr>
-                    `;
-                } else if (currentInputMode === 'azimuths') {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><b>${p.id}</b></td>
-                            <td><input type="number" class="input-table" value="${p.azimuth}" step="0.1" onfocus="this.select()" onchange="onAzimuthChange(${idx}, this.value)"></td>
-                            <td><input type="number" class="input-table" value="${p.distance}" step="0.5" onfocus="this.select()" onchange="onDistanceChange(${idx}, this.value)"></td>
-                            <td><button style="border:none;background:none;cursor:pointer;" onclick="removePoint(${idx})">❌</button></td>
-                        </tr>
-                    `;
-                }
-            });
-        }
-
-        function onGPSChange(idx, coord, val) {
-            const cleanVal = parseFloat(String(val).replace(',', '.')) || 0;
-            plotPoints[idx][coord] = cleanVal;
-            syncGeometryFromGPS();
-            renderTableBody();
-            redrawAll();
-        }
-
-        function onAzimuthChange(idx, val) {
-            plotPoints[idx].azimuth = parseFloat(val) || 0;
-            const r = azimuthToRumb(plotPoints[idx].azimuth);
-            plotPoints[idx].rumbQuarter = r.quarter;
-            plotPoints[idx].rumbDeg = r.deg;
-            plotPoints[idx].rumbMin = r.min;
-            syncGeometryFromAzimuths();
-            renderTableBody();
-            redrawAll();
-        }
-
-        function onDistanceChange(idx, val) {
-            const d = parseFloat(val) || 0;
-            plotPoints[idx].distance = d;
-            syncGeometryFromAzimuths();
-            renderTableBody();
-            redrawAll();
-        }
-
-        function onRumbQuarterChange(idx, q) {
-            plotPoints[idx].rumbQuarter = q;
-            plotPoints[idx].azimuth = rumbToAzimuth(q, plotPoints[idx].rumbDeg, plotPoints[idx].rumbMin);
-            syncGeometryFromAzimuths();
-            renderTableBody();
-            redrawAll();
-        }
-
-        function onRumbAngleChange(idx, deg, min) {
-            plotPoints[idx].rumbDeg = parseFloat(deg) || 0;
-            plotPoints[idx].rumbMin = parseFloat(min) || 0;
-            plotPoints[idx].azimuth = rumbToAzimuth(plotPoints[idx].rumbQuarter, plotPoints[idx].rumbDeg, plotPoints[idx].rumbMin);
-            syncGeometryFromAzimuths();
-            renderTableBody();
-            redrawAll();
-        }
-
-        function addNewPoint() {
-            const nextId = plotPoints.length;
-            const last = plotPoints.length > 0 ? plotPoints[plotPoints.length - 1] : null;
-
-            if (plotPoints.length === 0) {
-                plotPoints.push({
-                    id: 0, name: "Т.0 (Кв. столб)", isTie: true,
-                    azimuth: 45.0, rumbQuarter: "СВ", rumbDeg: 45, rumbMin: 0,
-                    distance: 100.0, lat: 61.481234, lng: 50.500567
-                });
-            } else {
-                plotPoints.push({
-                    id: nextId, name: `Столб ${nextId}`, isTie: false,
-                    azimuth: 90.0, rumbQuarter: "СВ", rumbDeg: 90, rumbMin: 0,
-                    distance: 100.0,
-                    lat: last ? last.lat - 0.000600 : 61.480000,
-                    lng: last ? last.lng + 0.000600 : 50.501600
-                });
-            }
-
-            if (currentInputMode === 'gps') syncGeometryFromGPS();
-            else syncGeometryFromAzimuths();
-            renderTableBody();
-            redrawAll();
-        }
-
-        function removePoint(idx) {
-            plotPoints.splice(idx, 1);
-            plotPoints.forEach((p, i) => p.id = i);
-            if (currentInputMode === 'gps') syncGeometryFromGPS();
-            else syncGeometryFromAzimuths();
-            renderTableBody();
-            redrawAll();
-        }
-
-        function clearAllPoints() {
-            if (confirm("Очистить все точки?")) {
-                plotPoints = [];
-                renderTableBody();
-                redrawAll();
-            }
-        }
-
-        function adjustPolygonClosure() {
-            const boundaryPts = plotPoints.filter(p => !p.isTie);
-            if (boundaryPts.length < 3) return;
-
-            let sumDX = 0, sumDY = 0, totalP = 0;
-            boundaryPts.forEach(p => {
-                const rad = (p.azimuth * Math.PI) / 180;
-                sumDX += p.distance * Math.sin(rad);
-                sumDY += p.distance * Math.cos(rad);
-                totalP += p.distance;
-            });
-
-            if (totalP === 0) return;
-
-            boundaryPts.forEach(p => {
-                const corrX = -(sumDX * (p.distance / totalP));
-                const corrY = -(sumDY * (p.distance / totalP));
-                const rad = (p.azimuth * Math.PI) / 180;
-                const newDX = p.distance * Math.sin(rad) + corrX;
-                const newDY = p.distance * Math.cos(rad) + corrY;
-
-                p.distance = parseFloat(Math.hypot(newDX, newDY).toFixed(1));
-                let newAz = Math.atan2(newDX, newDY) * 180 / Math.PI;
-                if (newAz < 0) newAz += 360;
-                p.azimuth = parseFloat(newAz.toFixed(1));
-            });
-
-            syncGeometryFromAzimuths();
-            renderTableBody();
-            redrawAll();
-            alert("Полигон успешно увязан!");
-        }
-
-        function loadRasterMap(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const img = new Image();
-                img.onload = () => {
-                    rasterImage = img;
-                    rasterMetersX = -(img.width * rasterMetersPerPixel) / 2;
-                    rasterMetersY = -(img.height * rasterMetersPerPixel) / 2;
-                    redrawAll();
-                };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function clearRasterMap() { rasterImage = null; redrawAll(); }
-
-        // --- ГЕОДЕЗИЧЕСКИЙ РЕНДЕРИНГ В МЕТРАХ (ЧИСТЫЙ ЧЕРТЕЖ БЕЗ ЛИШНИХ ДАННЫХ) ---
-        function redrawAll() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            ctx.save();
-            ctx.translate(viewX, viewY);
-            ctx.scale(viewZoom, viewZoom);
-
-            // 1. Подложка скана планшета
-            if (rasterImage) {
-                ctx.save();
-                ctx.globalAlpha = parseFloat(document.getElementById('raster-opacity').value) || 0.75;
-                const centerMX = rasterMetersX + (rasterImage.width * rasterMetersPerPixel) / 2;
-                const centerMY = rasterMetersY + (rasterImage.height * rasterMetersPerPixel) / 2;
-                ctx.translate(centerMX, centerMY);
-                ctx.rotate((rasterRotation * Math.PI) / 180);
-                ctx.drawImage(
-                    rasterImage,
-                    -(rasterImage.width * rasterMetersPerPixel) / 2,
-                    -(rasterImage.height * rasterMetersPerPixel) / 2,
-                    rasterImage.width * rasterMetersPerPixel,
-                    rasterImage.height * rasterMetersPerPixel
-                );
-                ctx.restore();
-            }
-
-            // 2. Делянка и привязка
-            if (plotPoints.length > 0) {
-                const p0 = plotPoints[0];
-                const startMX = plotOffsetMetersX;
-                const startMY = plotOffsetMetersY;
-
-                let post1MX = startMX;
-                let post1MY = startMY;
-
-                if (plotPoints.length > 1) {
-                    const tieRad = (p0.azimuth * Math.PI) / 180;
-                    post1MX = startMX + p0.distance * Math.sin(tieRad);
-                    post1MY = startMY - p0.distance * Math.cos(tieRad);
-
-                    // Линия привязки (красный пунктир)
-                    ctx.strokeStyle = '#DC2626';
-                    ctx.lineWidth = 2.0 / viewZoom;
-                    ctx.setLineDash([6 / viewZoom, 4 / viewZoom]);
-                    ctx.beginPath();
-                    ctx.moveTo(startMX, startMY);
-                    ctx.lineTo(post1MX, post1MY);
-                    ctx.stroke();
-                    ctx.setLineDash([]);
-                }
-
-                // Столб Т.0
-                ctx.fillStyle = '#DC2626';
-                ctx.beginPath();
-                ctx.arc(startMX, startMY, 5.5 / viewZoom, 0, 2 * Math.PI);
-                ctx.fill();
-                ctx.font = `bold ${10.5 / viewZoom}px Inter, sans-serif`;
-                ctx.fillText("Т.0", startMX + (6 / viewZoom), startMY - (6 / viewZoom));
-
-                const boundaryPts = plotPoints.filter(p => !p.isTie);
-                if (boundaryPts.length > 0) {
-                    let curMX = post1MX;
-                    let curMY = post1MY;
-                    const polyCoords = [ { x: curMX, y: curMY } ];
-                    const nodePositions = [ { id: 1, x: curMX, y: curMY } ];
-
-                    ctx.beginPath();
-                    ctx.moveTo(curMX, curMY);
-
-                    for (let i = 0; i < boundaryPts.length; i++) {
-                        const p = boundaryPts[i];
-                        const isLast = (i === boundaryPts.length - 1);
-
-                        if (!isLast) {
-                            const rad = (p.azimuth * Math.PI) / 180;
-                            const nextMX = curMX + p.distance * Math.sin(rad);
-                            const nextMY = curMY - p.distance * Math.cos(rad);
-
-                            ctx.lineTo(nextMX, nextMY);
-                            polyCoords.push({ x: nextMX, y: nextMY });
-                            nodePositions.push({ id: p.id + 1, x: nextMX, y: nextMY });
-
-                            curMX = nextMX;
-                            curMY = nextMY;
-                        } else {
-                            if (isPolygonClosed) {
-                                const targetNode = nodePositions.find(n => n.id === closeTargetId) || nodePositions[0];
-                                ctx.lineTo(targetNode.x, targetNode.y);
-                            }
-                        }
-                    }
-
-                    // Легкая заливка ровно 8% без наслоений
-                    if (isPolygonClosed && document.getElementById('plot-fill-enabled').checked) {
-                        ctx.closePath();
-                        ctx.fillStyle = document.getElementById('plot-non-exploitable').checked ?
-                                        'rgba(220, 38, 38, 0.08)' : 'rgba(45, 90, 39, 0.08)';
-                        ctx.fill();
-                    }
-
-                    // Четкая граница контура
-                    ctx.strokeStyle = '#1B4D1B';
-                    ctx.lineWidth = 2.6 / viewZoom;
-                    ctx.stroke();
-
-                    // Отрисовка маркеров столбов — ТОЛЬКО НОМЕРА ТОЧЕК
-                    nodePositions.forEach((n) => {
-                        ctx.fillStyle = '#16A34A';
-                        ctx.beginPath();
-                        ctx.arc(n.x, n.y, 4.5 / viewZoom, 0, 2 * Math.PI);
-                        ctx.fill();
-
-                        ctx.fillStyle = '#111815';
-                        ctx.font = `bold ${11 / viewZoom}px Inter, sans-serif`;
-                        ctx.fillText(`Т.${n.id}`, n.x + (6 / viewZoom), n.y - (6 / viewZoom));
-                    });
-
-                    // Расчет площади и подпись в центре контура
-                    calculateClosureAndArea(polyCoords);
-                }
-            }
-
-            // 3. Линия калибровки
-            if (calibStartPoint && calibEndPoint) {
-                ctx.strokeStyle = '#F59E0B';
-                ctx.lineWidth = 3 / viewZoom;
-                ctx.beginPath();
-                ctx.moveTo(calibStartPoint.x, calibStartPoint.y);
-                ctx.lineTo(calibEndPoint.x, calibEndPoint.y);
-                ctx.stroke();
-            }
-
-            ctx.restore();
-        }
-
-        function calculateClosureAndArea(pts) {
-            if (pts.length < 3) return;
-            const first = pts[0];
-            const last = pts[pts.length - 1];
-            const linearError = Math.hypot(last.x - first.x, last.y - first.y);
-
-            document.getElementById('closure-linear').innerText = `${linearError.toFixed(2)} м`;
-
-            let area = 0;
-            let j = pts.length - 1;
-            let centerX = 0, centerY = 0;
-
-            for (let i = 0; i < pts.length; i++) {
-                area += (pts[j].x + pts[i].x) * (pts[j].y - pts[i].y);
-                centerX += pts[i].x;
-                centerY += pts[i].y;
-                j = i;
-            }
-            area = Math.abs(area / 2);
-            const areaHa = (area / 10000).toFixed(4);
-            document.getElementById('plot-area-input').value = areaHa;
-
-            // Крупная читаемая надпись площади прямо в центре контура делянки
-            if (isPolygonClosed && pts.length > 2) {
-                centerX = centerX / pts.length;
-                centerY = centerY / pts.length;
-
-                ctx.save();
-                ctx.fillStyle = 'rgba(27, 77, 27, 0.9)';
-                ctx.font = `bold ${14 / viewZoom}px Merriweather, serif`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(`${areaHa} га`, centerX, centerY);
-                ctx.restore();
-            }
-        }
-
-        function prepareAndPrint() {
-            document.getElementById('p-region').innerText = document.getElementById('stamp-region').value;
-            document.getElementById('p-plot-name').innerText = document.getElementById('plot-name').value;
-            document.getElementById('p-les').innerText = document.getElementById('stamp-les').value;
-            document.getElementById('p-area').innerText = document.getElementById('plot-area-input').value;
-            document.getElementById('p-uch').innerText = document.getElementById('stamp-uch').value;
-            document.getElementById('p-scale').innerText = `1:${currentScaleValue.toLocaleString()}`;
-            document.getElementById('p-kv').innerText = document.getElementById('stamp-kv').value;
-            document.getElementById('p-author').innerText = document.getElementById('stamp-author').value;
-            document.getElementById('p-author-footer').innerText = document.getElementById('stamp-author').value;
-            document.getElementById('p-date').innerText = new Date().toLocaleDateString('ru-RU');
-
-            const tb = document.getElementById('print-geom-tbody');
-            tb.innerHTML = '';
-            plotPoints.forEach((p, idx) => {
-                let lineTitle = p.isTie ? "Привязка (Т.0 → Т.1)" : `Т.${p.id} → Т.${(idx === plotPoints.length - 1) ? closeTargetId : p.id + 1}`;
-                let wgs = `${p.lat.toFixed(6)}° с.ш., ${p.lng.toFixed(6)}° в.д.`;
-                tb.innerHTML += `
-                    <tr>
-                        <td><b>${lineTitle}</b></td>
-                        <td>${p.rumbQuarter}: ${p.rumbDeg}°${p.rumbMin}' (${p.azimuth}°)</td>
-                        <td>${p.distance} м</td>
-                        <td style="font-family:monospace;">${wgs}</td>
-                    </tr>
-                `;
-            });
-
-            const imgData = canvas.toDataURL("image/png");
-            document.getElementById('print-canvas-img').src = imgData;
-
-            setTimeout(() => { window.print(); }, 250);
-        }
-
-        function togglePanelCollapse() {
-            const panel = document.getElementById('dock-panel');
-            panel.classList.toggle('collapsed');
-            document.getElementById('panel-toggle-btn').innerText = panel.classList.contains('collapsed') ? '▲' : '▼';
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-            event.target.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
-        }
-
-        function triggerImportDialog() { document.getElementById('import-modal').style.display = 'flex'; }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-        function processImportText() {
-            const text = document.getElementById('import-text-area').value.trim();
-            if (!text) return;
-            try {
-                const parsed = JSON.parse(text);
-                const rawLog = Array.isArray(parsed) ? parsed : (parsed.log || []);
-
-                if (rawLog.length > 0) {
-                    plotPoints = rawLog.map((m, i) => {
-                        const az = parseFloat(m.azimuth) || 0;
-                        const dist = parseFloat(m.distance) || 0;
-                        const r = azimuthToRumb(az);
-                        return {
-                            id: i,
-                            name: i === 0 ? "Т.0 (Кв. столб)" : `Столб ${i}`,
-                            isTie: (i === 0),
-                            azimuth: az,
-                            rumbQuarter: r.quarter,
-                            rumbDeg: r.deg,
-                            rumbMin: r.min,
-                            distance: dist,
-                            lat: parseFloat(m.lat) || 61.480000,
-                            lng: parseFloat(m.lng) || 50.501600
-                        };
-                    });
-
-                    syncGeometryFromGPS();
-                    renderTableBody();
-                    resetPlotPosition();
-                    redrawAll();
-                    closeModal('import-modal');
-                    alert(`Импортировано ${plotPoints.length} точек хода из БГ-ХНС!`);
-                }
-            } catch (e) {
-                alert("Ошибка структуры данных БГ-ХНС!");
-            }
-        }
-
-        function exportProjectFile() {
-            const project = {
-                version: "АБРИС ПРО 2.0",
-                name: document.getElementById('plot-name').value,
-                areaHa: document.getElementById('plot-area-input').value,
-                scale: currentScaleValue,
-                rotation: rasterRotation,
-                rasterMetersPerPixel: rasterMetersPerPixel,
-                isPolygonClosed: isPolygonClosed,
-                closeTargetId: closeTargetId,
-                plotOffsetMeters: { x: plotOffsetMetersX, y: plotOffsetMetersY },
-                points: plotPoints
-            };
-            const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${project.name || 'Делянка'}.abris`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function toggleTheme() {
-            const doc = document.documentElement;
-            if (doc.getAttribute('data-theme') === 'dark') doc.removeAttribute('data-theme');
-            else doc.setAttribute('data-theme', 'dark');
-            redrawAll();
-        }
-
-        document.addEventListener('DOMContentLoaded', initApp);
-    </script>
+        localStorage.removeItem(HANDOFF);
+    } catch (e) { }
+}
+window.addEventListener('storage', function (e) { if (e.key === HANDOFF && e.newValue) checkHandoff(); });
+
+/* ---------- проект, сохранение ---------- */
+function projectObject(withScan) {
+    var o = JSON.parse(JSON.stringify(S)); o.format = 'abris'; o.version = 1;
+    return o;
+}
+function openProject(o) {
+    var n = newState(); S = Object.assign(n, o); S.stamp = Object.assign(n.stamp, o.stamp || {}); S.scan = Object.assign(n.scan, o.scan || {});
+    delete S.format; delete S.version; var embedded = o.scanData; delete S.scanData;
+    scanImg = null; scanBlob = null; S.scan.on = false;
+    syncFields(); renderTable(); renderInfo(); syncScanUI(); fitView(true);
+    if (embedded) { fetch(embedded).then(function (r) { return r.blob(); }).then(function (b) { var sc = JSON.parse(JSON.stringify(o.scan)); return loadScanBlob(b, sc.name, true).then(function () { S.scan = Object.assign(S.scan, sc, { on: true }); syncScanUI(); fitView(false); }); }); }
+    toast('Проект открыт' + (o.scan && o.scan.name && !embedded ? '. Скан нужно загрузить заново (в файле его нет).' : ''));
+}
+$('b-save').onclick = function () {
+    var o = projectObject(); var go = function () { var blob = new Blob([JSON.stringify(o, null, 1)], { type: 'application/json' }); download((S.name || 'делянка') + '.abris', blob); };
+    if ($('sv-scan').checked && scanBlob) { var fr = new FileReader(); fr.onload = function () { o.scanData = fr.result; go(); }; fr.readAsDataURL(scanBlob); } else go();
+};
+function download(name, blob) {
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name.replace(/[\\/:*?"<>|]+/g, '_'); document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1500);
+}
+function saveState() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { } }
+function restoreState() {
+    try {
+        var raw = localStorage.getItem(KEY); if (!raw) return false;
+        var o = JSON.parse(raw), n = newState(); S = Object.assign(n, o); S.stamp = Object.assign(n.stamp, o.stamp || {}); S.scan = Object.assign(n.scan, o.scan || {});
+        return true;
+    } catch (e) { return false; }
+}
+// скан хранится в IndexedDB (может быть крупным)
+function idb(fn) {
+    try {
+        var rq = indexedDB.open('bg_hns_abris', 1);
+        rq.onupgradeneeded = function () { rq.result.createObjectStore('scan'); };
+        rq.onsuccess = function () { try { fn(rq.result); } catch (e) { } };
+    } catch (e) { }
+}
+function saveScanBlob(b) { idb(function (db) { db.transaction('scan', 'readwrite').objectStore('scan').put(b, 'img'); }); }
+function delScanBlob() { idb(function (db) { db.transaction('scan', 'readwrite').objectStore('scan').delete('img'); }); }
+function restoreScan() {
+    return new Promise(function (res) {
+        if (!(S.scan && S.scan.name)) return res(false);
+        idb(function (db) {
+            var rq = db.transaction('scan').objectStore('scan').get('img');
+            rq.onsuccess = function () { if (rq.result) loadScanBlob(rq.result, S.scan.name, true).then(function () { res(true); }); else { S.scan.on = false; res(false); } };
+            rq.onerror = function () { res(false); };
+        });
+        setTimeout(function () { res(false); }, 1500);
+    });
+}
+
+/* ---------- выгрузка ---------- */
+function exportPolyLL() {
+    var R = compute(), ll = llPoints();
+    if (!R.poly) { toast('Нет замкнутого контура'); return null; }
+    if (!ll) { toast('Нужны координаты столба Т.0'); return null; }
+    return R.idx.map(function (i) { return ll[i]; });
+}
+function xmlEsc(s) { return esc(s); }
+$('ex-gpx').onclick = function () {
+    var pts = exportPolyLL(); if (!pts) return;
+    var s = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="БГ-ХНС АБРИС" xmlns="http://www.topografix.com/GPX/1/1">\n';
+    if ($('ex-t0').checked) s += '<wpt lat="' + S.p0.lat.toFixed(7) + '" lon="' + S.p0.lng.toFixed(7) + '"><name>Т.0 (столб)</name></wpt>\n';
+    s += '<trk><name>' + xmlEsc(S.name || 'Делянка') + '</name><trkseg>\n' + pts.map(function (p) { return '<trkpt lat="' + p.lat.toFixed(7) + '" lon="' + p.lng.toFixed(7) + '"></trkpt>'; }).join('\n') + '\n</trkseg></trk>\n</gpx>\n';
+    download((S.name || 'делянка') + '.gpx', new Blob([s], { type: 'application/gpx+xml' }));
+};
+function guid() { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }); }
+$('ex-gj').onclick = function () {
+    var pts = exportPolyLL(); if (!pts) return;
+    var R = compute(), ring = pts.map(function (p) { return [+p.lng.toFixed(7), +p.lat.toFixed(7)]; }); ring.push(ring[0].slice());
+    var ga = +(R.area / 10000).toFixed(4);
+    var gj = { type: 'FeatureCollection', features: [{ type: 'Feature', geometry: { type: 'GeometryCollection', geometries: [{ type: 'Polygon', coordinates: [ring] }] },
+        properties: { 'stroke': '#000000', 'stroke-width': 1, 'stroke-opacity': 1, 'fill': '#b3b3b3', 'fill-opacity': 0.6, 'id': guid(), 'name': S.name || 'Делянка', 'area': ga, 'areaexploitation': ga, 'nonexploitationarea': false } }] };
+    download('Poligons.json', new Blob([JSON.stringify(gj, null, '\t')], { type: 'application/json' }));
+};
+$('ex-png').onclick = function () { paint(); cv.toBlob(function (b) { if (b) download((S.name || 'абрис') + '.png', b); }, 'image/png'); };
+
+/* ---------- печать в масштабе ---------- */
+function doPrint() {
+    goal('abris_print');
+    var R = compute();
+    if (!R.n) return toast('Нет данных для печати');
+    var N = S.printScale, k = 10000 / N, pw = 1800, ph = 1350;                    // 180×135 мм, 10 пикс/мм
+    var xs = R.pts.map(function (p) { return p.x; }), ys = R.pts.map(function (p) { return p.y; });
+    var bx = (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2, by = (Math.min.apply(null, ys) + Math.max.apply(null, ys)) / 2;
+    var needW = Math.max.apply(null, xs) - Math.min.apply(null, xs), needH = Math.max.apply(null, ys) - Math.min.apply(null, ys);
+    if (needW * k > pw * 0.96 || needH * k > ph * 0.96) toast('Чертёж не помещается на лист в масштабе 1:' + N + '. Выберите более мелкий масштаб.');
+    var c = document.createElement('canvas'); c.width = pw; c.height = ph;
+    var pg = c.getContext('2d'); drawScene(pg, pw, ph, { k: k, cx: bx, cy: by }, 2.64, true);
+    pg.strokeStyle = '#000'; pg.lineWidth = 3; pg.strokeRect(1.5, 1.5, pw - 3, ph - 3);
+    $('ps-img').src = c.toDataURL('image/png');
+    var ll = llPoints(), body = '';
+    S.lines.forEach(function (l, i) {
+        body += '<tr><td>Т.' + i + '→Т.' + (i + 1) + (i < R.s ? ' (привязка)' : '') + '</td><td>' + f1(l.az) + '°</td><td>' + esc(rumbStr(l.az)) + '</td><td>' + f2(l.d) + '</td><td>' + (ll ? ll[i + 1].lat.toFixed(6) + ', ' + ll[i + 1].lng.toFixed(6) : '') + '</td></tr>';
+    });
+    $('ps-body').innerHTML = body;
+    $('p-region').textContent = S.stamp.region; $('p-name').textContent = S.name; $('p-les').textContent = S.stamp.les; $('p-area').textContent = R.poly ? (R.area / 10000).toFixed(4) + ' га' : '—';
+    $('p-uch').textContent = S.stamp.uch; $('p-scale').textContent = '1:' + N.toLocaleString('ru-RU'); $('p-kv').textContent = S.stamp.kv; $('p-gap').textContent = R.gap !== null ? gapText(R).replace('Невязка ', '') : '—';
+    $('p-author').textContent = S.stamp.author; $('p-date').textContent = new Date().toLocaleDateString('ru-RU');
+    setTimeout(function () { window.print(); }, 300);
+}
+$('b-print').onclick = doPrint; $('b-print2').onclick = doPrint;
+
+/* ---------- пример ---------- */
+function makeDemoScan() {
+    var Sz = 1000, c = document.createElement('canvas'); c.width = Sz; c.height = Sz;
+    var q = c.getContext('2d'), th = 3 * Math.PI / 180;
+    q.fillStyle = '#F5F1E4'; q.fillRect(0, 0, Sz, Sz); q.save(); q.translate(500, 500); q.rotate(th); q.translate(-500, -500);
+    q.strokeStyle = 'rgba(0,0,0,.12)'; for (var i = -200; i <= 1200; i += 100) { q.beginPath(); q.moveTo(i, -200); q.lineTo(i, 1200); q.moveTo(-200, i); q.lineTo(1200, i); q.stroke(); }
+    var pal = ['#CFE3C0', '#DCEBCB', '#BFD8B0', '#E6EFD6'];
+    [[100, 100, 400, 350], [500, 100, 400, 400], [100, 450, 300, 450], [400, 500, 500, 400]].forEach(function (r, k) {
+        q.fillStyle = pal[k]; q.fillRect(r[0], r[1], r[2], r[3]); q.strokeStyle = 'rgba(47,93,58,.25)';
+        for (var y = r[1]; y < r[1] + r[3]; y += 14) { q.beginPath(); q.moveTo(r[0], y); q.lineTo(r[0] + r[2], y + 8); q.stroke(); }
+        q.fillStyle = '#2F5D3A'; q.font = 'bold 16px sans-serif'; q.fillText('выд. ' + (k + 1), r[0] + 12, r[1] + 26);
+    });
+    q.strokeStyle = '#B91C1C'; q.lineWidth = 4; q.setLineDash([14, 6]); q.strokeRect(100, 100, 800, 800); q.setLineDash([]);
+    [[100, 100, '1'], [900, 100, '2'], [900, 900, '3'], [100, 900, '4']].forEach(function (p) {
+        q.beginPath(); q.arc(p[0], p[1], 9, 0, 6.2832); q.fillStyle = '#fff'; q.fill(); q.lineWidth = 3; q.strokeStyle = '#B91C1C'; q.stroke();
+        q.fillStyle = '#7F1D1D'; q.font = 'bold 18px sans-serif'; q.fillText('ст.' + p[2], p[0] + (p[0] > 500 ? -52 : 14), p[1] + (p[1] > 500 ? -14 : 28));
+    });
+    q.fillStyle = '#111'; q.font = 'bold 22px sans-serif'; q.fillText('УЧЕБНЫЙ ПЛАНШЕТ · квартал 12', 250, 70); q.restore();
+    var dx = -400, dy = -400;
+    return { canvas: c, u: 500 + dx * Math.cos(th) - dy * Math.sin(th), v: 500 + dx * Math.sin(th) + dy * Math.cos(th) };
+}
+$('t-ex').onclick = function () { $('b-example').onclick(); };
+$('b-example').onclick = function () {
+    goal('abris_example');
+    var d = makeDemoScan(), tie = { az: Math.atan2(250, -300) * 180 / Math.PI, d: Math.hypot(250, 300) };
+    S = newState(); scanImg = d.canvas; scanBlob = null;
+    S.name = 'Делянка (пример)'; S.p0 = { lat: 61.48, lng: 50.5 }; S.s = 1; S.mode = 'return'; S.tol = 200;
+    S.lines = [{ az: Math.round(tie.az * 100) / 100, d: Math.round(tie.d * 100) / 100 }, { az: 90, d: 200 }, { az: 180, d: 150 }, { az: 270, d: 199 }, { az: 0, d: 150 }];
+    var mpp = 1.25, th = 3 * Math.PI / 180;
+    S.scan = { on: true, name: 'учебный планшет', w: 1000, h: 1000, fix: 1, a: { re: mpp * Math.cos(th), im: mpp * Math.sin(th) }, c: { re: 0, im: 0 }, op: 0.75 };
+    var a = S.scan.a, z = { re: d.u, im: -d.v }; S.scan.c = { re: -(a.re * z.re - a.im * z.im), im: -(a.re * z.im + a.im * z.re) };
+    S.stamp = { region: 'Учебный пример', les: '', uch: '', kv: 'кв. 12', author: '' };
+    syncFields(); syncScanUI(); renderTable(); renderInfo(); fitView(false); scheduleSave();
+    toast('Пример: скан повёрнут на 3°, привязка от столба Т.0, делянка начинается с Т.1.');
+};
+
+/* ---------- запуск ---------- */
+function init() {
+    try { var fs = parseFloat(localStorage.getItem(KEY + '_fs')); if (fs) document.documentElement.style.setProperty('--fs', fs + 'px'); var th = localStorage.getItem(KEY + '_theme'); if (th) document.documentElement.setAttribute('data-theme', th); } catch (e) { }
+    restoreState(); syncFields(); renderTable(); renderInfo(); syncScanUI(); resize();
+    if (mobile()) { $('dock').classList.add('collapsed'); $('zoomctl').classList.add('show'); }
+    fitView(true);
+    restoreScan().then(function (ok) { if (ok) { syncScanUI(); fitView(false); } });
+    window.addEventListener('resize', function () { resize(); if (!mobile()) $('zoomctl').classList.remove('show'); else $('zoomctl').classList.add('show'); });
+    if (window.ResizeObserver) new ResizeObserver(resize).observe($('view'));
+    setTimeout(checkHandoff, 500);
+}
+window.__abris = { get S() { return S; }, compute: compute, importText: importText, parseCoord: parseCoord, llPoints: llPoints, azToRumb: azToRumb, rumbToAz: rumbToAz, scanScale: scanScale, scanRotCW: scanRotCW, newState: newState, setS: function (x) { S = x; }, fromRows: fromRows, w2s: w2s, pix2w: pix2w, s2w: s2w, ui: ui, get V() { return V; } };
+init();
+})();
+</script>
+<!-- Яндекс.РСЯ: блоки (идентификаторы из кабинета РСЯ) -->
+<script>
+window.yaContextCb.push(function () {
+    // телефоны и планшеты: оверлей
+    Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-7", "type": "overlay", "platform": "touch" });
+    // компьютер: нижний блок и полноэкранный
+    Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-4", "type": "floorAd", "platform": "desktop" });
+    Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-3", "type": "fullscreen", "platform": "desktop" });
+});
+</script>
 </body>
 </html>
