@@ -1089,6 +1089,8 @@
                     <button class="btn-action" style="padding: 8px 15px; background-color: var(--danger); color: #FFF; width: auto;" onclick="deleteSelectedFromArchive()">🗑️ Удалить из архива</button>
                     <button class="btn-action btn-reset-zero" style="padding: 8px 15px; border: 1px solid var(--forest-green); color: var(--forest-green); width: auto;" onclick="exportArchiveToCSV()">📊 Экспорт CSV (Excel)</button>
                     <button class="btn-action btn-reset-zero" style="padding: 8px 15px; border: 1px solid var(--warning-alert); color: var(--warning-alert); width: auto;" onclick="exportToKML()">🗺️ Экспорт KML (ГИС)</button>
+                    <button class="btn-action btn-reset-zero" style="padding: 8px 15px; border: 1px solid var(--forest-green); color: var(--forest-green); width: auto;" onclick="sendToAbris()">📐 В Абрис (копировать)</button>
+                    <a class="btn-action btn-reset-zero" href="busol-abris.html" target="_blank" rel="noopener" style="padding: 8px 15px; border: 1px solid var(--forest-green); color: var(--forest-green); width: auto; text-decoration: none; display: inline-flex; align-items: center;">↗ Открыть Абрис</a>
                 </div>
             </div>
         </div>
@@ -4420,6 +4422,45 @@
         link.click();
         document.body.removeChild(link);
         setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    // Передача журнала в «Абрис»: копирование в буфер + общее хранилище (если оба файла на одном сайте)
+    function sendToAbris() {
+        if (window.LesovikCore && !window.LesovikCore.isPro()) {
+            window.showProPromoModal("Передача данных в Абрис доступна только в профессиональной версии БГ-ХНС PRO.");
+            return;
+        }
+        if (measurementsLog.length === 0) { showToast("Журнал пуст!"); return; }
+        let payload = {
+            format: 'bg-hns-abris', version: 1,
+            name: (document.getElementById('project-name').value || '').trim(),
+            ts: Date.now(),
+            log: measurementsLog.map(m => {
+                let row = { id: m.id, azimuth: m.azimuth, distance: m.distance };
+                if (hasCoords(m)) { row.lat = m.lat; row.lng = m.lng; }
+                if (m.altitude !== null && m.altitude !== undefined) row.altitude = m.altitude;
+                row.mode = m.systemMode === 'theodolite' ? 'limb' : (m.systemMode === 'gps_heading' ? 'gps' : 'visor');
+                return row;
+            })
+        };
+        try {
+            if (window.LesovikCore && window.LesovikCore.getActiveProject) {
+                const ap = window.LesovikCore.getActiveProject();
+                if (ap && ap.passport) payload.passport = {
+                    lesnichestvo: ap.passport.lesnichestvo || '', kvartal: ap.passport.kvartal || '',
+                    vydel: ap.passport.vydel || '', delyanka: ap.passport.delyanka || ''
+                };
+            }
+        } catch (e) {}
+        const text = JSON.stringify(payload);
+        try { localStorage.setItem('bg_hns_to_abris', text); } catch (e) {}
+        let copied = false;
+        const done = () => showToast(copied
+            ? "📐 Данные скопированы. В Абрисе: «Из БГ-ХНС» → «Вставить из буфера»."
+            : "📐 Данные подготовлены. Откройте Абрис — он предложит загрузить их.");
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => { copied = true; done(); }, () => done());
+        } else { done(); }
     }
 
     function exportToKML() {
