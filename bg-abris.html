@@ -63,13 +63,13 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
 
     /* ЛЕВАЯ КОЛОНКА: ИНСТРУМЕНТЫ И ЗУМ */
     .left-controls {
-        position: absolute; left: 10px; top: calc(var(--header-h) + 12px); z-index: 40;
-        display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+        position: absolute; left: 10px; top: calc(var(--header-h) + 10px); z-index: 40;
+        display: flex; flex-direction: column; gap: 6px; pointer-events: none;
     }
     .left-controls > * { pointer-events: auto; }
 
     .left-toolbar {
-        display: flex; flex-direction: column; gap: 6px; background: var(--card);
+        display: flex; flex-direction: column; gap: 5px; background: var(--card);
         padding: 6px; border-radius: 10px; border: 1px solid var(--border);
         box-shadow: 0 4px 16px rgba(0,0,0,0.12);
     }
@@ -129,12 +129,12 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         #dock.collapsed { transform: translateY(calc(100% - 44px)); }
         #dock.hidden { display: none; }
         .dock-head { cursor: pointer; }
-        .left-controls { top: calc(var(--header-h) + 8px); left: 6px; gap: 6px; }
+        .left-controls { top: calc(var(--header-h) + 8px); left: 6px; gap: 5px; }
         .left-toolbar { padding: 4px; gap: 4px; }
         .tool-btn span { display: none; }
-        .tool-btn { padding: 6px; }
+        .tool-btn { padding: 7px; font-size: 14px; }
         .zoom { padding: 3px; gap: 3px; }
-        .zoom button { width: 32px; height: 32px; font-size: 18px; }
+        .zoom button { width: 34px; height: 34px; font-size: 20px; }
         .status span:last-child { display: none; }
         #scanbar, #plotbar { bottom: 12px; }
     }
@@ -236,14 +236,14 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
 <!-- ЛЕВАЯ ВЕРТИКАЛЬНАЯ ПАНЕЛЬ ИНСТРУМЕНТОВ И КНОПКИ МАСШТАБА +/- РОВНО ПОД НЕЙ -->
 <div class="left-controls">
     <div class="left-toolbar">
-        <button class="tool-btn active" id="t-pan" onclick="setTool('pan')">✋ <span>Панорама</span></button>
-        <button class="tool-btn" id="t-plot" onclick="toggleTool('plot')">📍 <span>Делянка</span></button>
-        <button class="tool-btn" id="t-scan" onclick="toggleTool('scan')">🗺 <span>Скан</span></button>
-        <button class="tool-btn" id="t-fit" onclick="fitView(false)">🎯 <span>Показать всё</span></button>
-        <button class="tool-btn" id="t-load" onclick="$('f-img').click()">🖼 <span>Скан</span></button>
-        <button class="tool-btn" id="t-cal" onclick="startPick('cal1')">📏 <span>Линейка</span></button>
-        <button class="tool-btn" id="t-panel" onclick="toggleDock()">📋 <span>Данные</span></button>
-        <button class="tool-btn" id="t-lens" style="display:none">🔍 <span>Линза</span></button>
+        <button class="tool-btn active" id="t-pan">✋ <span>Панорама</span></button>
+        <button class="tool-btn" id="t-plot">📍 <span>Делянка</span></button>
+        <button class="tool-btn" id="t-scan">🗺 <span>Скан</span></button>
+        <button class="tool-btn" id="t-rot">↺ <span>Поворот</span></button>
+        <button class="tool-btn" id="t-fit">🎯 <span>Показать всё</span></button>
+        <button class="tool-btn" id="t-load">🖼 <span>Скан</span></button>
+        <button class="tool-btn" id="t-cal">📏 <span>Линейка</span></button>
+        <button class="tool-btn" id="t-panel">📋 <span>Данные</span></button>
     </div>
     <div class="zoom" id="zoomctl">
         <button id="z-in" aria-label="Приблизить" title="Приблизить">+</button>
@@ -1384,6 +1384,7 @@ $('ex-gj').onclick = function () {
 };
 
 // Печать бланка А4
+var SCALES = [500, 1000, 2000, 5000, 10000, 25000, 50000];
 function renderSheet(opts) {
     var PX = 8, c = document.createElement('canvas'); c.width = 210 * PX; c.height = 297 * PX; var q = c.getContext('2d');
     q.fillStyle = '#fff'; q.fillRect(0, 0, c.width, c.height);
@@ -1478,7 +1479,7 @@ function syncFromCore() {
     }
 }
 
-// Запуск
+// ПРИВЯЗКА ВСЕХ ОБРАБОТЧИКОВ И ИНТЕРФЕЙСА
 function init() {
     restoreState();
     syncFields();
@@ -1492,9 +1493,30 @@ function init() {
     restoreScan().then(function (ok) { if (ok) { syncScanUI(); fitView(false); } });
     window.addEventListener('resize', resize);
     setTimeout(syncFromCore, 500);
+
+    // Слушатели кнопок левой вертикальной панели
+    $('t-pan').onclick = function () { setTool('pan'); };
+    $('t-plot').onclick = function () { toggleTool('plot'); };
+    $('t-scan').onclick = function () { toggleTool('scan'); };
+    $('t-rot').onclick = function () {
+        if (!scanImg || !S.scan.on) return toast('Сначала загрузите скан');
+        $('scanbar').classList.toggle('on');
+    };
+    $('t-fit').onclick = function () { fitView(false); };
+    $('t-load').onclick = function () { $('f-img').click(); };
+    $('t-cal').onclick = function () { startPick('cal1'); };
+    $('t-panel').onclick = function () { toggleDock(); };
+
+    // Зум
+    $('z-in').onclick = function () { zoomAt(W / 2, H / 2, 1.35); };
+    $('z-out').onclick = function () { zoomAt(W / 2, H / 2, 1 / 1.35); };
 }
 
-window.__abris = { S: S, archOpen: archOpen, draw: draw };
+// Экспорт наружу для вызова из других контекстов
+window.__abris = {
+    S: S, archOpen: archOpen, draw: draw, fitView: fitView, startPick: startPick, setTool: setTool, toggleTool: toggleTool, toggleDock: toggleDock
+};
+
 window.addEventListener('load', init);
 })();
 </script>
