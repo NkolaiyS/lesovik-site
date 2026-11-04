@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Абрис ПРО — чертёж делянки на скане планшета лесничества: масштаб по линейке, ввод по координатам, азимутам или румбам, печать на А4. Входит в экосистему Лесовик PRO. Работает без интернета.">
+<meta name="description" content="Абрис ПРО — геодезический чертёж делянки на скане планшета лесничества: масштаб по линейке, эллипсоид WGS-84, ввод по координатам GPS, азимутам или румбам, печать на А4. Входит в экосистему Лесовик PRO. Работает офлайн.">
 <meta name="theme-color" content="#2D5A27">
 <title>Абрис ПРО | Лесовик PRO</title>
 
@@ -61,7 +61,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     .btn.on { background: var(--bento); border-color: var(--forest); color: var(--forest); }
     .btn:disabled { opacity: .45; cursor: default; }
 
-    /* ЛЕВАЯ ВЕРТИКАЛЬНАЯ ПАНЕЛЬ И ЗУМ */
+    /* ЛЕВАЯ КОЛОНКА: ИНСТРУМЕНТЫ ХОЛСТА И ЗУМ ПОД НИМИ */
     .left-controls {
         position: absolute; left: 10px; top: calc(var(--header-h) + 10px); z-index: 40;
         display: flex; flex-direction: column; gap: 6px; pointer-events: none;
@@ -493,7 +493,23 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
 <script>
 (function () {
 'use strict';
-var MPD = 111139;
+
+// ТОЧНЫЕ ПАРАМЕТРЫ ЭЛЛИПСОИДА WGS-84 ДЛЯ ВСЕХ ШИРОТ РОССИИ И МИРА
+var WGS84_A = 6378137.0;             // большая полуось
+var WGS84_E2 = 0.00669437999014;       // квадрат эксцентриситета
+
+function getMetersPerDeg(latDeg) {
+    var latRad = latDeg * Math.PI / 180;
+    var sinLat = Math.sin(latRad);
+    var w = Math.sqrt(1 - WGS84_E2 * sinLat * sinLat);
+    var M = (WGS84_A * (1 - WGS84_E2)) / (w * w * w); // радиус меридиана
+    var N = WGS84_A / w;                               // радиус первого вертикала
+    return {
+        lat: M * (Math.PI / 180),                     // точных метров в 1 градусе широты
+        lng: N * Math.cos(latRad) * (Math.PI / 180)   // точных метров в 1 градусе долготы
+    };
+}
+
 var KEY = 'bg_hns_abris_v2', KEY1 = 'bg_hns_abris_v1', HANDOFF = 'bg_hns_to_abris';
 var $ = function (id) { return document.getElementById(id); };
 function goal(n) { try { if (window.ym) ym(109130409, 'reachGoal', n); } catch (e) { } }
@@ -516,11 +532,11 @@ function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '
 function num(v) { var x = parseFloat(String(v).replace(',', '.')); return isFinite(x) ? x : NaN; }
 function f1(x) { return (Math.round(x * 10) / 10).toFixed(1); }
 function f2(x) { return (Math.round(x * 100) / 100).toFixed(2); }
-function cosd(l) { return Math.cos(l * Math.PI / 180); }
 function hyp(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 function normAz(a) { return ((a % 360) + 360) % 360; }
 var toastT;
 function toast(m) { var t = $('toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(function () { t.style.display = 'none'; }, 3500); }
+
 function parseCoord(str, isLat) {
     if (str === null || str === undefined) return NaN;
     var s = String(str).trim(); if (!s) return NaN;
@@ -533,7 +549,7 @@ function parseCoord(str, isLat) {
 function okp(p) { return !!p && typeof p.lat === 'number' && isFinite(p.lat) && typeof p.lng === 'number' && isFinite(p.lng); }
 function hasP0() { return okp(S.p0); }
 function polyArea(P) { var a = 0, m = P.length; for (var i = 0; i < m; i++) { var j = (i + 1) % m; a += P[i].x * P[j].y - P[j].x * P[i].y; } return Math.abs(a) / 2; }
-function plab(i) { return String(i); } // И в координатах, и в азимутах нумерация строго с 0
+function plab(i) { return String(i); }
 
 function azToRumb(az) {
     az = normAz(az);
@@ -551,35 +567,44 @@ function rumbStr(az) { var r = azToRumb(az); return r.q + ' ' + r.d + '°' + (r.
 
 function clampInt(v, lo, hi) { v = Math.round(v); return Math.max(lo, Math.min(hi, v)); }
 
-// ГЕОДЕЗИЧЕСКИЙ РАСЧЕТ ХОДА И ПОЛИГОНА
+// ГЕОДЕЗИЧЕСКИЙ РАСЧЕТ ХОДА И ПОЛИГОНА (WGS-84 БЕЗ ЛОЖНЫХ НЕВЯЗОК)
 function compute() {
     var i, R;
     if (S.kind === 'coords') {
         var cp = S.cp.filter(okp), m = cp.length;
         R = { kind: 'coords', n: Math.max(0, m - 1), pts: [{ x: 0, y: 0 }], poly: null, idx: [], area: 0, perim: 0, len: 0, gap: null, gapRel: null, s: 1, c: 1, mode: 'auto', warn: '', empty: m === 0, m: m };
         if (!m) return R;
-        var c0 = cp[0], kx = MPD * cosd(c0.lat);
-        R.pts = cp.map(function (p) { return { x: (p.lng - c0.lng) * kx, y: (p.lat - c0.lat) * MPD }; });
+
+        var c0 = cp[0];
+        var mpd = getMetersPerDeg(c0.lat);
+        R.pts = cp.map(function (p) {
+            return {
+                x: (p.lng - c0.lng) * mpd.lng,
+                y: (p.lat - c0.lat) * mpd.lat
+            };
+        });
+
         R.s = clampInt(S.s, 0, Math.max(0, m - 1));
         var c = (S.c === null || S.c === undefined || S.c === '') ? R.s : clampInt(S.c, R.s, Math.max(0, m - 1));
         R.c = c;
 
-        // Если точек делянки от точки начала (R.s) хотя бы 3:
+        // Полноценный контур делянки от точки начала (R.s) до конца (m-1) с замыканием на точку R.c:
         if (m - R.s >= 3) {
             for (i = R.s; i < m; i++) R.idx.push(i);
             R.poly = R.idx.map(function (k) { return R.pts[k]; });
             R.area = polyArea(R.poly);
+
             var per = 0;
             for (i = R.s; i < m - 1; i++) per += hyp(R.pts[i], R.pts[i + 1]);
-            per += hyp(R.pts[m - 1], R.pts[R.c]); // замыкание на выбранную точку (например на Т.1 или Т.2)
+            per += hyp(R.pts[m - 1], R.pts[R.c]); // фактическая замыкающая сторона
             R.perim = per;
-            R.gap = hyp(R.pts[m - 1], R.pts[R.c]);
+            R.gap = null; // По координатам GPS невязки нет — контур абсолютен
         } else if (m > 0) {
             R.warn = 'Для делянки нужно минимум 3 вершины после привязки.';
         }
         return R;
     }
-    
+
     // Режим Азимуты / Румбы
     var n = S.lines.length, pts = [{ x: 0, y: 0 }];
     for (i = 0; i < n; i++) {
@@ -633,9 +658,11 @@ function llPoints() {
     if (S.kind === 'coords') { var cp = S.cp.filter(okp); return cp.length ? cp.map(function (p) { return { lat: p.lat, lng: p.lng }; }) : null; }
     if (!hasP0()) return null;
     var out = [{ lat: S.p0.lat, lng: S.p0.lng }], lat = S.p0.lat, lng = S.p0.lng;
+    var mpd = getMetersPerDeg(lat);
     S.lines.forEach(function (l) {
         var r = (l.az || 0) * Math.PI / 180, d = l.d || 0;
-        lat += d * Math.cos(r) / MPD; lng += d * Math.sin(r) / (MPD * cosd(lat));
+        lat += d * Math.cos(r) / mpd.lat;
+        lng += d * Math.sin(r) / mpd.lng;
         out.push({ lat: lat, lng: lng });
     });
     return out;
@@ -648,6 +675,7 @@ function gapText(R) {
     return 'Невязка ' + f2(R.gap) + ' м' + (R.gapRel && isFinite(R.gapRel) ? ' (1:' + Math.round(R.gapRel) + ')' : '');
 }
 function gapStatus(R) {
+    if (R.kind === 'coords') return { cls: 'ok', txt: 'Контур по координатам GPS (WGS-84)' };
     if (R.gap === null) return { cls: '', txt: '' };
     if (R.gap < 0.005) return { cls: 'ok', txt: 'Замкнуто точно' };
     if (S.tol && R.gapRel) return R.gapRel >= S.tol ? { cls: 'ok', txt: 'Замкнуто, невязка в допуске (1:' + S.tol + ')' } : { cls: 'bad', txt: 'Невязка выше допуска (1:' + S.tol + ')' };
@@ -710,13 +738,13 @@ function niceStep(m) { var p = Math.pow(10, Math.floor(Math.log10(m))), f = m / 
 function fmtLen(m) { return m >= 1000 ? (m / 1000) + ' км' : Math.round(m * 100) / 100 + ' м'; }
 function fsScale() { return 1; }
 
-// --- ОТРИСОВКА ЧЕРТЕЖА: ЛИНИИ ПРИВЯЗКИ, ТОЧКА 0 И 8% ЗАЛИВКА ---
+// --- ОТРИСОВКА ЧЕРТЕЖА: ТОЧКА 0, ЛИНИИ ПРИВЯЗКИ И 8% ЗАЛИВКА ---
 function drawScene(g, W, H, v, u, forPrint, opts) {
     opts = opts || {};
     var R = compute();
     var X = function (x) { return W / 2 + v.k * (x - v.cx); }, Y = function (y) { return H / 2 - v.k * (y - v.cy); };
     g.fillStyle = forPrint ? '#fff' : '#E9EDE8'; g.fillRect(0, 0, W, H);
-    
+
     // 1. Скан планшета
     if (scanImg && S.scan.on && opts.scan !== false) {
         var a = S.scan.a, c = S.scan.c, k = v.k;
@@ -750,11 +778,11 @@ function drawScene(g, W, H, v, u, forPrint, opts) {
         g.beginPath();
         R.poly.forEach(function (p, j) { if (j === 0) g.moveTo(X(p.x), Y(p.y)); else g.lineTo(X(p.x), Y(p.y)); });
         g.closePath();
-        
+
         // Ровно 8% прозрачности
         g.fillStyle = 'rgba(45, 90, 39, 0.08)';
         g.fill();
-        
+
         g.lineJoin = 'round'; g.lineWidth = lw(3.8); g.strokeStyle = 'rgba(255,255,255,.85)'; g.stroke();
         g.lineWidth = lw(2.4); g.strokeStyle = strokeCol; g.stroke();
     } else if (P.length > 1 && tieEnd < P.length) {
@@ -762,12 +790,6 @@ function drawScene(g, W, H, v, u, forPrint, opts) {
         g.moveTo(X(P[tieEnd].x), Y(P[tieEnd].y));
         for (var k2 = tieEnd + 1; k2 < P.length; k2++) g.lineTo(X(P[k2].x), Y(P[k2].y));
         g.stroke();
-    }
-
-    // Линия невязки (разрыв при возврате)
-    if (R.kind === 'traverse' && R.gap !== null && R.gap >= 0.005) {
-        var pn = P[R.n], pc = P[R.c];
-        g.strokeStyle = '#DC2626'; g.lineWidth = lw(2.2); g.setLineDash([lw(4), lw(3)]); g.beginPath(); g.moveTo(X(pn.x), Y(pn.y)); g.lineTo(X(pc.x), Y(pc.y)); g.stroke(); g.setLineDash([]);
     }
 
     // 4. Отрисовка маркеров столбов — ТОЛЬКО НОМЕРА ТОЧЕК (Т.0, Т.1, Т.2...)
@@ -888,7 +910,7 @@ cv.addEventListener('pointermove', function (e) {
         if (!moved && Math.hypot(p.x - downPos.x, p.y - downPos.y) < 6) return;
         moved = true; ptrs[e.pointerId] = p;
         if (ui.tool === 'scan' && S.scan.on && !panBtn) { S.scan.c = { re: S.scan.c.re + dx / V.k, im: S.scan.c.im - dy / V.k }; scheduleSave(); }
-        else if (ui.tool === 'plot' && S.scan.on && !panBtn) { shiftPlot(dx / V.k, -dy / V.k); }
+        else if (ui.tool === 'plot' && !panBtn) { shiftPlot(dx / V.k, -dy / V.k); }
         else { V.cx -= dx / V.k; V.cy += dy / V.k; }
         draw();
     } else if (ids.length === 2) {
@@ -1080,7 +1102,9 @@ function setMethod(m) {
         if (!S.lines.length && pts.length > 1) {
             S.lines = [];
             for (var i = 1; i < pts.length; i++) {
-                var dy = (pts[i].lat - pts[i - 1].lat) * MPD, dx = (pts[i].lng - pts[i - 1].lng) * MPD * cosd(pts[i].lat);
+                var mpd = getMetersPerDeg((pts[i].lat + pts[i - 1].lat) / 2);
+                var dy = (pts[i].lat - pts[i - 1].lat) * mpd.lat;
+                var dx = (pts[i].lng - pts[i - 1].lng) * mpd.lng;
                 S.lines.push({ az: Math.round(normAz(Math.atan2(dx, dy) * 180 / Math.PI) * 100) / 100, d: Math.round(Math.hypot(dx, dy) * 100) / 100 });
             }
             S.p0 = { lat: pts[0].lat, lng: pts[0].lng };
@@ -1470,7 +1494,7 @@ $('prn-go').onclick = function () {
     setTimeout(function () { window.print(); }, 250);
 };
 
-// PDF
+// PDF генератор
 function makePdf(canvas) {
     var bin = atob(canvas.toDataURL('image/jpeg', 0.92).split(',')[1]), n = bin.length, img = new Uint8Array(n), i;
     for (i = 0; i < n; i++) img[i] = bin.charCodeAt(i);
@@ -1499,17 +1523,17 @@ $('b-help').onclick = function () { $('m-help').classList.add('on'); };
 $('h-close').onclick = function () { $('m-help').classList.remove('on'); };
 $('h-example').onclick = function () {
     S = newState(); S.name = 'Делянка 1 (Пример)'; S.kind = 'coords';
-    // Пример: Т.0 привязка, Т.1 начало делянки
     S.cp = [
         { lat: 61.480000, lng: 50.500000 }, // Т.0 столб
-        { lat: 61.481000, lng: 50.501500 }, // Т.1 начало делянки
-        { lat: 61.483000, lng: 50.501500 }, // Т.2
-        { lat: 61.483000, lng: 50.506500 }, // Т.3
-        { lat: 61.481000, lng: 50.506500 }  // Т.4
+        { lat: 61.481000, lng: 50.501500 }, // Т.1 пикет привязки
+        { lat: 61.482000, lng: 50.502000 }, // Т.2 начало делянки
+        { lat: 61.483500, lng: 50.502000 }, // Т.3
+        { lat: 61.483500, lng: 50.506500 }, // Т.4
+        { lat: 61.482000, lng: 50.506500 }  // Т.5
     ];
-    S.s = 1; S.c = 1;
+    S.s = 2; S.c = 2; // привязка Т.0->Т.1->Т.2, делянка замкнута на Т.2
     syncFields(); renderCoords(); fitView(true); $('m-help').classList.remove('on');
-    toast('Пример: Т.0 привязка, Т.1..Т.4 делянка');
+    toast('Пример: Т.0-Т.2 привязка, Т.2-Т.5 делянка');
 };
 
 // Связка со сквозным паспортом ядра Лесовик PRO
@@ -1559,7 +1583,7 @@ function init() {
     $('t-cal').onclick = function () { startPick('cal1'); };
     $('t-panel').onclick = function () { toggleDock(); };
 
-    // Слушатели кнопок зума под левой панелью
+    // Зум
     $('z-in').onclick = function () { zoomAt(W / 2, H / 2, 1.35); };
     $('z-out').onclick = function () { zoomAt(W / 2, H / 2, 1 / 1.35); };
 }
