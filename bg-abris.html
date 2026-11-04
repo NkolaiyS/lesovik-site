@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Абрис ПРО — геодезический чертёж делянки на скане планшета лесничества: масштаб по линейке, эллипсоид WGS-84, ввод по координатам GPS, азимутам или румбам, печать на А4. Входит в экосистему Лесовик PRO. Работает офлайн.">
+<meta name="description" content="Абрис ПРО — чертёж делянки на скане планшета лесничества: масштаб по линейке, эллипсоид WGS-84, ввод по координатам GPS, азимутам или румбам, печать на А4. Входит в экосистему Лесовик PRO. Работает без интернета.">
 <meta name="theme-color" content="#2D5A27">
 <title>Абрис ПРО | Лесовик PRO</title>
 
@@ -61,7 +61,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     .btn.on { background: var(--bento); border-color: var(--forest); color: var(--forest); }
     .btn:disabled { opacity: .45; cursor: default; }
 
-    /* ЛЕВАЯ КОЛОНКА: ИНСТРУМЕНТЫ ХОЛСТА И ЗУМ ПОД НИМИ */
+    /* ЛЕВАЯ ВЕРТИКАЛЬНАЯ ПАНЕЛЬ И ЗУМ ПОД НЕЙ */
     .left-controls {
         position: absolute; left: 10px; top: calc(var(--header-h) + 10px); z-index: 40;
         display: flex; flex-direction: column; gap: 6px; pointer-events: none;
@@ -372,9 +372,9 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
                 <div class="note" style="margin-top:6px">Поставьте точки на двух отметках линейки (или квартальных столбах) и впишите метраж с линейки.</div>
             </div>
             <div class="box">
-                <h4>3. Привязка и совмещение</h4>
+                <h4>3. Привязка, поворот и микро-подгонка</h4>
                 <button class="btn primary" id="b-tie" style="width:100%">📍 Привязать: указать на скане первую точку</button>
-                <div class="note" style="margin:6px 0">Коснитесь места на скане, где находится столб Т.0 (или первая точка делянки).</div>
+                <div class="note" style="margin:6px 0">Коснитесь места на скане, где находится столб Т.0.</div>
                 <div class="row" style="margin-bottom:6px"><button class="btn" id="b-plotmove">↔ Двигать делянку</button><button class="btn" id="b-scanmove">🧲 Двигать скан</button></div>
                 <label class="f" style="margin:6px 0 4px"><span>Поворот скана, ° (по часовой +)</span>
                     <input type="number" id="f-rot" step="0.1" value="0" inputmode="decimal"></label>
@@ -386,6 +386,16 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
                     <button class="btn" data-rot="-5">−5°</button><button class="btn" data-rot="5">+5°</button>
                     <button class="btn" data-rot="-90">↺ −90°</button><button class="btn" data-rot="90">↻ +90°</button>
                 </div>
+                
+                <!-- МИКРО-ПОДГОНКА МАСШТАБА СКАНА ПОД ДЕЛЯНКУ -->
+                <div style="margin-top:10px; border-top:1px dashed var(--border); padding-top:8px;">
+                    <span style="font-size:11px;font-weight:700;color:var(--forest);display:block;margin-bottom:4px;">Микро-подгонка размера скана под выдел:</span>
+                    <div class="row" style="gap:5px">
+                        <button class="btn" id="b-scale-down" style="flex:1">🔍 −1% мельче</button>
+                        <button class="btn" id="b-scale-up" style="flex:1">🔍 +1% крупнее</button>
+                    </div>
+                </div>
+
                 <label class="f" style="margin:10px 0 0"><span>Прозрачность скана: <b id="op-v">75%</b></span><input type="range" id="f-op" min="10" max="100" value="75"></label>
             </div>
             <div class="box po">
@@ -738,7 +748,7 @@ function niceStep(m) { var p = Math.pow(10, Math.floor(Math.log10(m))), f = m / 
 function fmtLen(m) { return m >= 1000 ? (m / 1000) + ' км' : Math.round(m * 100) / 100 + ' м'; }
 function fsScale() { return 1; }
 
-// --- ОТРИСОВКА ЧЕРТЕЖА: ТОЧКА 0, ЛИНИИ ПРИВЯЗКИ И 8% ЗАЛИВКА ---
+// --- ОТРИСОВКА ЧЕРТЕЖА: РАБОЧИЙ ПЕРЕКЛЮЧАТЕЛЬ ПОДПИСЕЙ И 8% ЗАЛИВКА ---
 function drawScene(g, W, H, v, u, forPrint, opts) {
     opts = opts || {};
     var R = compute();
@@ -792,16 +802,35 @@ function drawScene(g, W, H, v, u, forPrint, opts) {
         g.stroke();
     }
 
-    // 4. Отрисовка маркеров столбов — ТОЛЬКО НОМЕРА ТОЧЕК (Т.0, Т.1, Т.2...)
+    // 4. Отрисовка подписей линий (если выбрано S.labels === 1: "Номера и линии")
+    var lblMode = parseInt(S.labels, 10);
+    if (lblMode === 1) {
+        var segs = segments(R);
+        segs.forEach(function(sg) {
+            var pa = P[sg.a], pb = P[sg.b];
+            if (!pa || !pb) return;
+            var mx = (X(pa.x) + X(pb.x)) / 2, my = (Y(pa.y) + Y(pb.y)) / 2;
+            if (Math.hypot(X(pa.x) - X(pb.x), Y(pa.y) - Y(pb.y)) > lw(32)) {
+                var txt = rumbStr(sg.az) + ' · ' + f1(sg.d) + ' м';
+                halo(txt, mx, my - lw(5), '#14301A', 10.5, true, 'center');
+            }
+        });
+    }
+
+    // 5. Отрисовка маркеров столбов и их номеров (если S.labels !== 0)
     for (var i = 0; i < P.length; i++) {
         var px = X(P[i].x), py = Y(P[i].y), inPoly = R.idx.indexOf(i) >= 0, isT0 = (i === 0);
         g.beginPath(); g.arc(px, py, lw(isT0 ? 5.5 : 4.2), 0, 6.2832);
         g.fillStyle = isT0 ? '#DC2626' : (inPoly ? '#16A34A' : '#F0B4B0'); g.fill();
         g.lineWidth = lw(1.8); g.strokeStyle = isT0 ? '#7A2A26' : '#fff'; g.stroke();
-        halo('Т.' + i, px + lw(7), py - lw(6), isT0 ? '#7A2A26' : '#1D2A20', 11.5, true);
+        
+        // ПОДПИСИ ТОЧЕК ВЫВОДЯТСЯ ТОЛЬКО ПРИ РЕЖИМАХ 1 ИЛИ 2
+        if (lblMode === 1 || lblMode === 2) {
+            halo('Т.' + i, px + lw(7), py - lw(6), isT0 ? '#7A2A26' : '#1D2A20', 11.5, true);
+        }
     }
 
-    // 5. Площадь крупно в центре полигона
+    // 6. Площадь крупно в центре полигона (видна всегда)
     if (R.poly && R.poly.length >= 3) {
         var cx2 = 0, cy2 = 0; R.poly.forEach(function (p) { cx2 += p.x; cy2 += p.y; });
         cx2 = X(cx2 / R.poly.length); cy2 = Y(cy2 / R.poly.length);
@@ -1071,6 +1100,17 @@ $('b-apply-scale').onclick = function () {
     S.scan.a = { re: a.re * r, im: a.im * r }; S.scan.c = { re: S.scan.c.re * r, im: S.scan.c.im * r };
     syncScanUI(); scheduleSave(); draw(); toast('Масштаб применён.');
 };
+
+// МИКРО-ПОДГОНКА МАСШТАБА СКАНА В 1 КЛИК (+1% / -1%)
+function adjustScanScale(factor) {
+    if (!scanImg || !S.scan.on) return toast('Сначала загрузите скан');
+    var a = S.scan.a;
+    S.scan.a = { re: a.re * factor, im: a.im * factor };
+    syncScanUI(); scheduleSave(); draw();
+}
+$('b-scale-up').onclick = function () { adjustScanScale(1.01); };
+$('b-scale-down').onclick = function () { adjustScanScale(0.99); };
+
 $('f-pscale').onchange = function () { S.pscale = parseInt(this.value, 10) || 10000; scheduleSave(); };
 $('f-dpi').onchange = function () { S.dpi = num(this.value) || 96; scheduleSave(); };
 $('f-mpp').onchange = function () {
@@ -1232,7 +1272,13 @@ bindField('f-s', function (v) { S.s = Math.max(0, parseInt(v, 10) || 0); });
 bindField('f-tol', function (v) { var t = parseInt(v, 10); S.tol = t > 0 ? t : null; });
 bindField('f-mode', function (v) { S.mode = v; });
 bindField('f-c', function (v) { var c = parseInt(v, 10); S.c = isNaN(c) ? null : Math.max(0, c); });
-bindField('f-labels', function (v) { S.labels = parseInt(v, 10); });
+
+// СЛУШАТЕЛЬ ПЕРЕКЛЮЧЕНИЯ ПОДПИСЕЙ НА ЧЕРТЕЖЕ
+$('f-labels').addEventListener('change', function () {
+    S.labels = parseInt(this.value, 10);
+    afterChange();
+});
+
 ['region', 'les', 'uch', 'kv', 'author'].forEach(function (k) { bindField('s-' + k, function (v) { S.stamp[k] = v; }); });
 
 function renderInfo() {
@@ -1583,7 +1629,7 @@ function init() {
     $('t-cal').onclick = function () { startPick('cal1'); };
     $('t-panel').onclick = function () { toggleDock(); };
 
-    // Зум
+    // Слушатели кнопок зума под левой панелью
     $('z-in').onclick = function () { zoomAt(W / 2, H / 2, 1.35); };
     $('z-out').onclick = function () { zoomAt(W / 2, H / 2, 1 / 1.35); };
 }
@@ -1609,4 +1655,4 @@ window.yaContextCb.push(function () {
 });
 </script>
 </body>
-</html> 
+</html>
