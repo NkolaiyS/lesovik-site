@@ -61,9 +61,14 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     .btn.on { background: var(--bento); border-color: var(--forest); color: var(--forest); }
     .btn:disabled { opacity: .45; cursor: default; }
 
-    /* ЛЕВАЯ ВЕРТИКАЛЬНАЯ ПАНЕЛЬ ИНСТРУМЕНТОВ */
-    .left-toolbar {
+    /* ЛЕВАЯ КОЛОНКА: ИНСТРУМЕНТЫ И ЗУМ */
+    .left-controls {
         position: absolute; left: 10px; top: calc(var(--header-h) + 12px); z-index: 40;
+        display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+    }
+    .left-controls > * { pointer-events: auto; }
+
+    .left-toolbar {
         display: flex; flex-direction: column; gap: 6px; background: var(--card);
         padding: 6px; border-radius: 10px; border: 1px solid var(--border);
         box-shadow: 0 4px 16px rgba(0,0,0,0.12);
@@ -76,6 +81,19 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     .tool-btn:hover { border-color: var(--forest); }
     .tool-btn.active { background: var(--forest); color: #FFF; border-color: var(--forest); }
     [data-theme="dark"] .tool-btn.active { color: #0F1A14; }
+
+    /* КНОПКИ МАСШТАБА +/- РОВНО ПОД ВЕРТИКАЛЬНЫМ МЕНЮ */
+    .zoom {
+        display: flex; flex-direction: column; gap: 4px; background: var(--card);
+        padding: 4px; border-radius: 10px; border: 1px solid var(--border);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12); width: fit-content;
+    }
+    .zoom button {
+        width: 36px; height: 36px; font-size: 22px; font-weight: 700; border-radius: 6px; border: 1px solid var(--border);
+        background: var(--card); color: var(--forest); cursor: pointer; display: flex; align-items: center; justify-content: center;
+        transition: 0.15s;
+    }
+    .zoom button:hover { border-color: var(--forest); background: var(--bento); }
 
     /* ХОЛСТ */
     #view { position: absolute; top: var(--header-h); left: 0; right: 0; bottom: 85px; overflow: hidden; background: #E9EDE8; touch-action: none; cursor: grab; }
@@ -93,10 +111,6 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     #scanbar.on, #plotbar.on { display: flex; }
     #scanbar b { min-width: 64px; text-align: center; }
 
-    /* ЗУМ: СМЕЩЕН ВПРАВО, ЧТОБЫ НЕ ПЕРЕКРЫВАТЬ ПАНЕЛЬ */
-    .zoom { position: absolute; left: 74px; bottom: 20px; display: flex; flex-direction: column; gap: 6px; z-index: 35; }
-    .zoom button { width: 36px; height: 36px; font-size: 20px; font-weight: 700; border-radius: 8px; border: 1px solid var(--border);
-        background: var(--card); color: var(--forest); cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .status { position: fixed; left: 0; right: 0; bottom: 60px; height: 24px; z-index: 900; background: var(--card); border-top: 1px solid var(--border);
         display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-size: 11px; color: var(--muted); gap: 8px; overflow: hidden; white-space: nowrap; font-family: monospace; }
 
@@ -115,9 +129,13 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         #dock.collapsed { transform: translateY(calc(100% - 44px)); }
         #dock.hidden { display: none; }
         .dock-head { cursor: pointer; }
-        .left-toolbar { top: calc(var(--header-h) + 8px); left: 6px; padding: 4px; }
+        .left-controls { top: calc(var(--header-h) + 8px); left: 6px; gap: 6px; }
+        .left-toolbar { padding: 4px; gap: 4px; }
         .tool-btn span { display: none; }
-        .zoom { left: 52px; bottom: 12px; }
+        .tool-btn { padding: 6px; }
+        .zoom { padding: 3px; gap: 3px; }
+        .zoom button { width: 32px; height: 32px; font-size: 18px; }
+        .status span:last-child { display: none; }
         #scanbar, #plotbar { bottom: 12px; }
     }
     .tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 10px; }
@@ -215,16 +233,22 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     </div>
 </header>
 
-<!-- ЛЕВАЯ ВЕРТИКАЛЬНАЯ ПАНЕЛЬ ИНСТРУМЕНТОВ -->
-<div class="left-toolbar">
-    <button class="tool-btn active" id="t-pan" onclick="setTool('pan')">✋ <span>Панорама</span></button>
-    <button class="tool-btn" id="t-plot" onclick="toggleTool('plot')">📍 <span>Делянка</span></button>
-    <button class="tool-btn" id="t-scan" onclick="toggleTool('scan')">🗺 <span>Скан</span></button>
-    <button class="tool-btn" id="t-fit" onclick="fitView(false)">🎯 <span>Показать всё</span></button>
-    <button class="tool-btn" id="t-load" onclick="$('f-img').click()">🖼 <span>Скан</span></button>
-    <button class="tool-btn" id="t-cal" onclick="startPick('cal1')">📏 <span>Линейка</span></button>
-    <button class="tool-btn" id="t-panel" onclick="toggleDock()">📋 <span>Данные</span></button>
-    <button class="tool-btn" id="t-lens" style="display:none">🔍 <span>Линза</span></button>
+<!-- ЛЕВАЯ ВЕРТИКАЛЬНАЯ ПАНЕЛЬ ИНСТРУМЕНТОВ И КНОПКИ МАСШТАБА +/- РОВНО ПОД НЕЙ -->
+<div class="left-controls">
+    <div class="left-toolbar">
+        <button class="tool-btn active" id="t-pan" onclick="setTool('pan')">✋ <span>Панорама</span></button>
+        <button class="tool-btn" id="t-plot" onclick="toggleTool('plot')">📍 <span>Делянка</span></button>
+        <button class="tool-btn" id="t-scan" onclick="toggleTool('scan')">🗺 <span>Скан</span></button>
+        <button class="tool-btn" id="t-fit" onclick="fitView(false)">🎯 <span>Показать всё</span></button>
+        <button class="tool-btn" id="t-load" onclick="$('f-img').click()">🖼 <span>Скан</span></button>
+        <button class="tool-btn" id="t-cal" onclick="startPick('cal1')">📏 <span>Линейка</span></button>
+        <button class="tool-btn" id="t-panel" onclick="toggleDock()">📋 <span>Данные</span></button>
+        <button class="tool-btn" id="t-lens" style="display:none">🔍 <span>Линза</span></button>
+    </div>
+    <div class="zoom" id="zoomctl">
+        <button id="z-in" aria-label="Приблизить" title="Приблизить">+</button>
+        <button id="z-out" aria-label="Отдалить" title="Отдалить">−</button>
+    </div>
 </div>
 
 <div id="view">
@@ -249,11 +273,8 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         <select id="pb-step" style="width:auto"><option value="0.5">0,5 м</option><option value="1" selected>1 м</option><option value="5">5 м</option><option value="20">20 м</option></select>
         <button class="btn primary" id="pb-done">Готово</button>
     </div>
-    <div class="zoom" id="zoomctl">
-        <button id="z-in" aria-label="Приблизить">+</button>
-        <button id="z-out" aria-label="Отдалить">−</button>
-    </div>
 </div>
+
 <div class="status">
     <span>Масштаб скана: <b id="s-mpp">—</b> · чертёж: <b id="s-scale">авто</b></span>
     <span>Поворот скана: <b id="s-rot">0.0°</b> · зум: <b id="s-zoom">100%</b></span>
@@ -1031,7 +1052,6 @@ function renderCoords() {
     var tb = $('tb-c');
     if (!S.cp.length) { tb.innerHTML = '<tr><td colspan="4" style="padding:14px;color:var(--muted)">Нет точек. Нажмите «➕ Точка».</td></tr>'; return; }
     tb.innerHTML = S.cp.map(function (p, i) {
-        var ok = okp(p);
         return '<tr data-i="' + i + '"><td class="lbl"><b>Т.' + (i + 1) + '</b></td>' +
             '<td><input type="text" inputmode="decimal" data-f="lat" value="' + (p && typeof p.lat === 'number' ? fmtDeg(p.lat) : '') + '" placeholder="61.480000" onfocus="this.select()"></td>' +
             '<td><input type="text" inputmode="decimal" data-f="lng" value="' + (p && typeof p.lng === 'number' ? fmtDeg(p.lng) : '') + '" placeholder="50.501600" onfocus="this.select()"></td>' +
@@ -1072,7 +1092,7 @@ function renderTable() {
 }
 function refreshLabels() {
     if (S.kind === 'coords') return;
-    var R = compute(), ll = llPoints(), rows = $('tbody').querySelectorAll('tr[data-i]');
+    var R = compute(), rows = $('tbody').querySelectorAll('tr[data-i]');
     rows.forEach(function (tr) {
         var i = +tr.getAttribute('data-i'), td = tr.querySelector('.lbl');
         var tie = i < R.s, ret = R.gap !== null && i === R.n - 1;
@@ -1191,7 +1211,7 @@ $('b-theme').onclick = function () { var d = document.documentElement; if (d.get
 
 // Линза
 function lensArea() {
-    var R = compute(), st = gapStatus(R), h = '<div class="t">' + esc(S.name || 'Делянка') + '</div>';
+    var R = compute(), h = '<div class="t">' + esc(S.name || 'Делянка') + '</div>';
     if (R.empty) return h + '<div class="m">Нет данных</div>';
     if (R.poly) h += '<div class="b">' + (R.area / 10000).toFixed(4) + ' га</div><div class="m">Периметр ' + f1(R.perim) + ' м</div>';
     return h;
@@ -1364,7 +1384,6 @@ $('ex-gj').onclick = function () {
 };
 
 // Печать бланка А4
-var SCALES = [500, 1000, 2000, 5000, 10000, 25000, 50000];
 function renderSheet(opts) {
     var PX = 8, c = document.createElement('canvas'); c.width = 210 * PX; c.height = 297 * PX; var q = c.getContext('2d');
     q.fillStyle = '#fff'; q.fillRect(0, 0, c.width, c.height);
