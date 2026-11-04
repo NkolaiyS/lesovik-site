@@ -61,7 +61,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     .btn.on { background: var(--bento); border-color: var(--forest); color: var(--forest); }
     .btn:disabled { opacity: .45; cursor: default; }
 
-    /* ЛЕВАЯ ВЕРТИКАЛЬНАЯ ПАНЕЛЬ И ЗУМ ПОД НЕЙ */
+    /* ЛЕВАЯ ВЕРТИКАЛЬНАЯ ПАНЕЛЬ И ЗУМ */
     .left-controls {
         position: absolute; left: 10px; top: calc(var(--header-h) + 10px); z-index: 40;
         display: flex; flex-direction: column; gap: 6px; pointer-events: none;
@@ -82,7 +82,6 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     .tool-btn.active { background: var(--forest); color: #FFF; border-color: var(--forest); }
     [data-theme="dark"] .tool-btn.active { color: #0F1A14; }
 
-    /* КНОПКИ МАСШТАБА +/- */
     .zoom {
         display: flex; flex-direction: column; gap: 4px; background: var(--card);
         padding: 4px; border-radius: 10px; border: 1px solid var(--border);
@@ -114,7 +113,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     .status { position: fixed; left: 0; right: 0; bottom: 60px; height: 24px; z-index: 900; background: var(--card); border-top: 1px solid var(--border);
         display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-size: 11px; color: var(--muted); gap: 8px; overflow: hidden; white-space: nowrap; font-family: monospace; }
 
-    /* ПРАВЫЙ ДОК / ВЕДОМОСТЬ */
+    /* ПРАВЫЙ ДОК */
     #dock { position: absolute; z-index: 500; background: var(--card); border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
     .dock-head { padding: 8px 12px; background: var(--bento); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: move; }
     .dock-head b { color: var(--forest); font-size: .95em; }
@@ -504,7 +503,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
 (function () {
 'use strict';
 
-// ТОЧНЫЕ ПАРАМЕТРЫ ЭЛЛИПСОИДА WGS-84 ДЛЯ ВСЕХ ШИРОТ РОССИИ И МИРА
+// ТОЧНЫЕ ПАРАМЕТРЫ ЭЛЛИПСОИДА WGS-84
 var WGS84_A = 6378137.0;             // большая полуось
 var WGS84_E2 = 0.00669437999014;       // квадрат эксцентриситета
 
@@ -512,11 +511,11 @@ function getMetersPerDeg(latDeg) {
     var latRad = latDeg * Math.PI / 180;
     var sinLat = Math.sin(latRad);
     var w = Math.sqrt(1 - WGS84_E2 * sinLat * sinLat);
-    var M = (WGS84_A * (1 - WGS84_E2)) / (w * w * w); // радиус меридиана
-    var N = WGS84_A / w;                               // радиус первого вертикала
+    var M = (WGS84_A * (1 - WGS84_E2)) / (w * w * w);
+    var N = WGS84_A / w;
     return {
-        lat: M * (Math.PI / 180),                     // точных метров в 1 градусе широты
-        lng: N * Math.cos(latRad) * (Math.PI / 180)   // точных метров в 1 градусе долготы
+        lat: M * (Math.PI / 180),
+        lng: N * Math.cos(latRad) * (Math.PI / 180)
     };
 }
 
@@ -577,7 +576,6 @@ function rumbStr(az) { var r = azToRumb(az); return r.q + ' ' + r.d + '°' + (r.
 
 function clampInt(v, lo, hi) { v = Math.round(v); return Math.max(lo, Math.min(hi, v)); }
 
-// ГЕОДЕЗИЧЕСКИЙ РАСЧЕТ ХОДА И ПОЛИГОНА (WGS-84 БЕЗ ЛОЖНЫХ НЕВЯЗОК)
 function compute() {
     var i, R;
     if (S.kind === 'coords') {
@@ -598,7 +596,6 @@ function compute() {
         var c = (S.c === null || S.c === undefined || S.c === '') ? R.s : clampInt(S.c, R.s, Math.max(0, m - 1));
         R.c = c;
 
-        // Полноценный контур делянки от точки начала (R.s) до конца (m-1) с замыканием на точку R.c:
         if (m - R.s >= 3) {
             for (i = R.s; i < m; i++) R.idx.push(i);
             R.poly = R.idx.map(function (k) { return R.pts[k]; });
@@ -606,16 +603,15 @@ function compute() {
 
             var per = 0;
             for (i = R.s; i < m - 1; i++) per += hyp(R.pts[i], R.pts[i + 1]);
-            per += hyp(R.pts[m - 1], R.pts[R.c]); // фактическая замыкающая сторона
+            per += hyp(R.pts[m - 1], R.pts[R.c]);
             R.perim = per;
-            R.gap = null; // По координатам GPS невязки нет — контур абсолютен
+            R.gap = null;
         } else if (m > 0) {
             R.warn = 'Для делянки нужно минимум 3 вершины после привязки.';
         }
         return R;
     }
 
-    // Режим Азимуты / Румбы
     var n = S.lines.length, pts = [{ x: 0, y: 0 }];
     for (i = 0; i < n; i++) {
         var r = (S.lines[i].az || 0) * Math.PI / 180, d = S.lines[i].d || 0, p = pts[i];
@@ -748,14 +744,13 @@ function niceStep(m) { var p = Math.pow(10, Math.floor(Math.log10(m))), f = m / 
 function fmtLen(m) { return m >= 1000 ? (m / 1000) + ' км' : Math.round(m * 100) / 100 + ' м'; }
 function fsScale() { return 1; }
 
-// --- ОТРИСОВКА ЧЕРТЕЖА: РАБОЧИЙ ПЕРЕКЛЮЧАТЕЛЬ ПОДПИСЕЙ И 8% ЗАЛИВКА ---
+// --- ОТРИСОВКА ЧЕРТЕЖА ---
 function drawScene(g, W, H, v, u, forPrint, opts) {
     opts = opts || {};
     var R = compute();
     var X = function (x) { return W / 2 + v.k * (x - v.cx); }, Y = function (y) { return H / 2 - v.k * (y - v.cy); };
     g.fillStyle = forPrint ? '#fff' : '#E9EDE8'; g.fillRect(0, 0, W, H);
 
-    // 1. Скан планшета
     if (scanImg && S.scan.on && opts.scan !== false) {
         var a = S.scan.a, c = S.scan.c, k = v.k;
         g.save();
@@ -773,7 +768,6 @@ function drawScene(g, W, H, v, u, forPrint, opts) {
         g.strokeStyle = 'rgba(255,255,255,.92)'; g.lineWidth = lw(3.4); g.strokeText(txt, x, y); g.fillStyle = col; g.fillText(txt, x, y); g.textAlign = 'start';
     }
 
-    // 2. Линия привязки (от Т.0 до начала делянки Т.s) — красный пунктир
     var tieEnd = Math.min(R.s, P.length - 1);
     if (tieEnd > 0) {
         g.strokeStyle = '#DC2626'; g.lineWidth = lw(2.0); g.setLineDash([lw(6), lw(4)]); g.beginPath();
@@ -782,14 +776,12 @@ function drawScene(g, W, H, v, u, forPrint, opts) {
         g.stroke(); g.setLineDash([]);
     }
 
-    // 3. Замкнутый контур делянки и ПОЛУПРОЗРАЧНАЯ ЗАЛИВКА 8%
     var st = gapStatus(R), strokeCol = st.cls === 'bad' ? '#DC2626' : '#2D5A27';
     if (R.poly && R.poly.length >= 3) {
         g.beginPath();
         R.poly.forEach(function (p, j) { if (j === 0) g.moveTo(X(p.x), Y(p.y)); else g.lineTo(X(p.x), Y(p.y)); });
         g.closePath();
 
-        // Ровно 8% прозрачности
         g.fillStyle = 'rgba(45, 90, 39, 0.08)';
         g.fill();
 
@@ -802,7 +794,6 @@ function drawScene(g, W, H, v, u, forPrint, opts) {
         g.stroke();
     }
 
-    // 4. Отрисовка подписей линий (если выбрано S.labels === 1: "Номера и линии")
     var lblMode = parseInt(S.labels, 10);
     if (lblMode === 1) {
         var segs = segments(R);
@@ -811,33 +802,30 @@ function drawScene(g, W, H, v, u, forPrint, opts) {
             if (!pa || !pb) return;
             var mx = (X(pa.x) + X(pb.x)) / 2, my = (Y(pa.y) + Y(pb.y)) / 2;
             if (Math.hypot(X(pa.x) - X(pb.x), Y(pa.y) - Y(pb.y)) > lw(32)) {
-                var txt = rumbStr(sg.az) + ' · ' + f1(sg.d) + ' м';
+                var dirTxt = (S.viewMode === 'rumb') ? rumbStr(sg.az) : f1(sg.az) + '°';
+                var txt = (S.kind === 'coords') ? f1(sg.d) + ' м' : dirTxt + ' · ' + f1(sg.d) + ' м';
                 halo(txt, mx, my - lw(5), '#14301A', 10.5, true, 'center');
             }
         });
     }
 
-    // 5. Отрисовка маркеров столбов и их номеров (если S.labels !== 0)
     for (var i = 0; i < P.length; i++) {
         var px = X(P[i].x), py = Y(P[i].y), inPoly = R.idx.indexOf(i) >= 0, isT0 = (i === 0);
         g.beginPath(); g.arc(px, py, lw(isT0 ? 5.5 : 4.2), 0, 6.2832);
         g.fillStyle = isT0 ? '#DC2626' : (inPoly ? '#16A34A' : '#F0B4B0'); g.fill();
         g.lineWidth = lw(1.8); g.strokeStyle = isT0 ? '#7A2A26' : '#fff'; g.stroke();
         
-        // ПОДПИСИ ТОЧЕК ВЫВОДЯТСЯ ТОЛЬКО ПРИ РЕЖИМАХ 1 ИЛИ 2
         if (lblMode === 1 || lblMode === 2) {
             halo('Т.' + i, px + lw(7), py - lw(6), isT0 ? '#7A2A26' : '#1D2A20', 11.5, true);
         }
     }
 
-    // 6. Площадь крупно в центре полигона (видна всегда)
     if (R.poly && R.poly.length >= 3) {
         var cx2 = 0, cy2 = 0; R.poly.forEach(function (p) { cx2 += p.x; cy2 += p.y; });
         cx2 = X(cx2 / R.poly.length); cy2 = Y(cy2 / R.poly.length);
         halo((R.area / 10000).toFixed(4) + ' га', cx2, cy2 + lw(5), strokeCol, 15, true, 'center');
     }
 
-    // Масштабная планка и север
     var bar = niceStep(110 * u / v.k), px2 = bar * v.k;
     g.fillStyle = 'rgba(255,255,255,.88)'; g.fillRect(lw(10), H - lw(38), px2 + lw(24), lw(28));
     g.fillStyle = '#1E2A22'; g.fillRect(lw(22), H - lw(20), px2, lw(3)); g.font = font(11.5, true); g.fillText(fmtLen(bar), lw(22), H - lw(25));
@@ -1101,7 +1089,6 @@ $('b-apply-scale').onclick = function () {
     syncScanUI(); scheduleSave(); draw(); toast('Масштаб применён.');
 };
 
-// МИКРО-ПОДГОНКА МАСШТАБА СКАНА В 1 КЛИК (+1% / -1%)
 function adjustScanScale(factor) {
     if (!scanImg || !S.scan.on) return toast('Сначала загрузите скан');
     var a = S.scan.a;
@@ -1157,7 +1144,6 @@ document.querySelectorAll('#seg button').forEach(function (b) { b.onclick = func
 
 function fmtDeg(x) { return String(+x.toFixed(6)); }
 
-// ТАБЛИЦА КООРДИНАТ СТРОГО С Т.0 (КВАРТАЛЬНЫЙ СТОЛБ)
 function renderCoords() {
     var tb = $('tb-c');
     if (!S.cp.length) { tb.innerHTML = '<tr><td colspan="4" style="padding:14px;color:var(--muted)">Нет точек. Нажмите «➕ Точка».</td></tr>'; return; }
@@ -1273,7 +1259,6 @@ bindField('f-tol', function (v) { var t = parseInt(v, 10); S.tol = t > 0 ? t : n
 bindField('f-mode', function (v) { S.mode = v; });
 bindField('f-c', function (v) { var c = parseInt(v, 10); S.c = isNaN(c) ? null : Math.max(0, c); });
 
-// СЛУШАТЕЛЬ ПЕРЕКЛЮЧЕНИЯ ПОДПИСЕЙ НА ЧЕРТЕЖЕ
 $('f-labels').addEventListener('change', function () {
     S.labels = parseInt(this.value, 10);
     afterChange();
@@ -1333,7 +1318,7 @@ function setFs(px) { px = Math.max(12, Math.min(24, px)); document.documentEleme
 $('b-fp').onclick = function () { setFs(curFs() + 1); }; $('b-fm').onclick = function () { setFs(curFs() - 1); };
 $('b-theme').onclick = function () { var d = document.documentElement; if (d.getAttribute('data-theme') === 'dark') d.removeAttribute('data-theme'); else d.setAttribute('data-theme', 'dark'); };
 
-// Импорт данных
+// Импорт
 function parseCoordList(text) {
     var out = [];
     String(text).split(/\r?\n/).forEach(function (line) {
@@ -1497,36 +1482,110 @@ $('ex-gj').onclick = function () {
     download((S.name || 'делянка') + '.geojson', new Blob([JSON.stringify(gj, null, 2)], { type: 'application/json' }));
 };
 
-// Печать листа А4
+// --- ФОРМИРОВАНИЕ ЧИСТОВОГО ЛИСТА А4 (ФИКСИРОВАННЫЕ ПРОПОРЦИИ И ВЫБОРОЧНЫЕ ТАБЛИЦЫ) ---
 function renderSheet(opts) {
     var PX = 8, c = document.createElement('canvas'); c.width = 210 * PX; c.height = 297 * PX; var q = c.getContext('2d');
     q.fillStyle = '#fff'; q.fillRect(0, 0, c.width, c.height);
     var R = compute(), segs = segments(R), ll = llPoints();
-    function T(txt, x, y, size, bold, align) {
+
+    function T(txt, x, y, size, bold, align, maxW) {
         q.font = (bold ? 'bold ' : '') + Math.round(size * PX) + 'px sans-serif'; q.textAlign = align || 'left'; q.fillStyle = '#000';
+        if (maxW) { var w = q.measureText(txt).width / PX; if (w > maxW) q.font = (bold ? 'bold ' : '') + Math.max(6, Math.round(size * PX * maxW / w)) + 'px sans-serif'; }
         q.fillText(txt, x * PX, y * PX);
     }
-    q.lineWidth = 0.6 * PX; q.strokeStyle = '#000'; q.strokeRect(8 * PX, 8 * PX, 194 * PX, 281 * PX);
-    T('ЧЕРТЁЖ АБРИСА ДЕЛЯНКИ', 105, 17, 5.5, true, 'center');
-    var bx = 12, by = 47, bw = 128, bh = 190;
-    var N = opts.scale > 0 ? opts.scale : 10000, bb = ptsBounds(R);
+    function ln(x1, y1, x2, y2, w) { q.lineWidth = (w || 0.2) * PX; q.strokeStyle = '#000'; q.beginPath(); q.moveTo(x1 * PX, y1 * PX); q.lineTo(x2 * PX, y2 * PX); q.stroke(); }
+    function rc(x, y, w, h, lw) { q.lineWidth = (lw || 0.2) * PX; q.strokeStyle = '#000'; q.strokeRect(x * PX, y * PX, w * PX, h * PX); }
+
+    // Внешняя рамка листа
+    rc(8, 8, 194, 281, 0.6);
+    T('ЧЕРТЁЖ АБРИСА ДЕЛЯНКИ', 105, 17, 5.6, true, 'center');
+
+    var isCoordsOnly = (S.kind === 'coords');
+    var isRumb = (S.viewMode === 'rumb');
+
+    // 1. ЧЕРТЕЖ СЛЕВА (Ширина 126 мм, высота 155 мм)
+    var bx = 12, by = 47, bw = 126, bh = 155;
+    var N = opts.scale > 0 ? opts.scale : (S.pscale || 10000), bb = ptsBounds(R);
     var bc = document.createElement('canvas'); bc.width = bw * PX; bc.height = bh * PX;
     drawScene(bc.getContext('2d'), bc.width, bc.height, { k: PX * 1000 / N, cx: (bb.x0 + bb.x1) / 2, cy: (bb.y0 + bb.y1) / 2 }, PX * 0.264, true, { scan: opts.scan });
-    q.drawImage(bc, bx * PX, by * PX); q.lineWidth = 0.35 * PX; q.strokeRect(bx * PX, by * PX, bw * PX, bh * PX);
+    q.drawImage(bc, bx * PX, by * PX); rc(bx, by, bw, bh, 0.35);
 
-    T('Субъект: ' + (S.stamp.region || ''), 12, 26, 3.2, false);
-    T('Лесничество: ' + (S.stamp.les || ''), 12, 31, 3.2, false);
-    T('Участковое: ' + (S.stamp.uch || ''), 12, 36, 3.2, false);
-    T('Квартал / выдел: ' + (S.stamp.kv || ''), 12, 41, 3.2, false);
-    T('Делянка: ' + (S.name || ''), 108, 26, 3.2, true);
-    T('Площадь: ' + (R.area ? (R.area / 10000).toFixed(4) + ' га' : '—'), 108, 31, 3.2, true);
-    T('Масштаб: 1:' + N.toLocaleString('ru-RU'), 108, 36, 3.2, true);
+    // Паспорт лесосеки (шапка)
+    var left = [['Субъект:', S.stamp.region], ['Лесничество:', S.stamp.les], ['Участковое:', S.stamp.uch], ['Квартал / выдел:', S.stamp.kv]];
+    var right = [['Делянка:', S.name], ['Площадь:', (R.area ? (R.area / 10000).toFixed(4) + ' га' : '—')], ['Масштаб:', '1:' + N.toLocaleString('ru-RU')], ['Метод съемки:', isCoordsOnly ? 'Координаты GPS (WGS-84)' : (isRumb ? 'Буссоль (Румбы)' : 'Буссоль (Азимуты)')]];
+    left.forEach(function (r, i) { T(r[0], 12, 25 + i * 4.6, 3.3, true); T(String(r[1] || ''), 43, 25 + i * 4.6, 3.3, false, 'left', 58); });
+    right.forEach(function (r, i) { T(r[0], 108, 25 + i * 4.6, 3.3, true); T(String(r[1] || ''), 136, 25 + i * 4.6, 3.3, false, 'left', 65); });
+    ln(12, 43.5, 198, 43.5, 0.3);
 
-    T('Составил: ' + (S.stamp.author || ''), 12, 283, 3.2, false);
-    T('Дата: ' + new Date().toLocaleDateString('ru-RU'), 120, 283, 3.2, false);
-    T('Подпись: ____________', 160, 283, 3.2, false);
+    // 2. ВЕДОМОСТЬ ХОДОВ СПРАВА ОТ ЧЕРТЕЖА (Ширина 56 мм) — ТОЛЬКО ЕСЛИ ВЫБРАНЫ АЗИМУТЫ ИЛИ РУМБЫ
+    var tx = 142, tw = 56, n = segs.length;
+    if (!isCoordsOnly && n > 0) {
+        var rh = Math.min(5.2, (bh - 6) / (n + 1)), fs = Math.min(3.2, rh * 0.65), cols = [0, 18, 38, 56], ty = by, i;
+        q.fillStyle = '#EEE'; q.fillRect(tx * PX, ty * PX, tw * PX, rh * PX);
+        var dirTitle = isRumb ? 'Румб' : 'Азимут';
+        ['Линия', dirTitle, 'Длина, м'].forEach(function (h, k) { T(h, tx + (cols[k] + cols[k + 1]) / 2, ty + rh * 0.7, fs, true, 'center'); });
+        
+        segs.forEach(function (sg, k) {
+            var y = ty + rh * (k + 1), mid = function (j) { return tx + (cols[j] + cols[j + 1]) / 2; };
+            var dVal = (isRumb) ? rumbStr(sg.az) : f1(sg.az) + '°';
+            T('Т.' + sg.a + '–Т.' + sg.b + (sg.tie ? '*' : ''), mid(0), y + rh * 0.7, fs, false, 'center', 17);
+            T(dVal, mid(1), y + rh * 0.7, fs, false, 'center', 19);
+            T(f2(sg.d), mid(2), y + rh * 0.7, fs, false, 'center', 15);
+        });
+        for (i = 0; i <= n + 1; i++) ln(tx, ty + rh * i, tx + tw, ty + rh * i, 0.15);
+        cols.forEach(function (x) { ln(tx + x, ty, tx + x, ty + rh * (n + 1), 0.15); });
+        if (segs.some(function (s) { return s.tie; })) T('* — линия привязки', tx, ty + rh * (n + 1) + 3.6, 2.6, false);
+    } else if (isCoordsOnly) {
+        // Если только координаты — справа краткая сводка длин сторон делянки
+        var tx_c = 142, tw_c = 56, rh_c = Math.min(5.2, (bh - 6) / (segs.length + 1)), fs_c = 3.2, ty_c = by;
+        q.fillStyle = '#EEE'; q.fillRect(tx_c * PX, ty_c * PX, tw_c * PX, rh_c * PX);
+        ['Сторона', 'Длина, м'].forEach(function (h, k) { T(h, tx_c + (k === 0 ? 14 : 42), ty_c + rh_c * 0.7, fs_c, true, 'center'); });
+        segs.forEach(function (sg, k) {
+            var y_c = ty_c + rh_c * (k + 1);
+            T('Т.' + sg.a + '–Т.' + sg.b + (sg.tie ? '*' : ''), tx_c + 14, y_c + rh_c * 0.7, fs_c, false, 'center');
+            T(f2(sg.d), tx_c + 42, y_c + rh_c * 0.7, fs_c, false, 'center');
+        });
+        for (var i_c = 0; i_c <= segs.length + 1; i_c++) ln(tx_c, ty_c + rh_c * i_c, tx_c + tw_c, ty_c + rh_c * i_c, 0.15);
+        [0, 28, 56].forEach(function (x) { ln(tx_c + x, ty_c, tx_c + x, ty_c + rh_c * (segs.length + 1), 0.15); });
+        T('* — привязка', tx_c, ty_c + rh_c * (segs.length + 1) + 3.6, 2.6, false);
+    }
+
+    // 3. КАТАЛОГ КООРДИНАТ WGS-84 СНИЗУ ПОД ЧЕРТЕЖОМ (Ширина 186 мм)
+    if (ll && ll.length > 0) {
+        var y0 = by + bh + 4;
+        T('Каталог координат поворотных точек (WGS-84, градусы)', 12, y0 + 3, 3.4, true);
+        var ty2 = y0 + 5, avail = 273 - ty2, m = ll.length;
+        var g2 = m <= 12 ? 2 : 3;
+        var rows = Math.ceil(m / g2);
+        var rh2 = Math.min(5.0, avail / (rows + 1)), fs2 = Math.min(3.2, rh2 * 0.66), gw = 186 / g2;
+
+        for (var k2 = 0; k2 < g2; k2++) {
+            var gx = 12 + k2 * gw, w1 = gw * 0.16, w2 = (gw - w1) / 2, cnt = Math.min(rows, m - k2 * rows);
+            if (cnt <= 0) break;
+            q.fillStyle = '#EEE'; q.fillRect(gx * PX, ty2 * PX, (gw - 1.5) * PX, rh2 * PX);
+            T('Тчк', gx + w1 / 2, ty2 + rh2 * 0.7, fs2, true, 'center');
+            T('Широта (с.ш.)', gx + w1 + w2 / 2, ty2 + rh2 * 0.7, fs2, true, 'center');
+            T('Долгота (в.д.)', gx + w1 + w2 * 1.5, ty2 + rh2 * 0.7, fs2, true, 'center');
+            
+            for (var r2 = 0; r2 < cnt; r2++) {
+                var idx = k2 * rows + r2, yy = ty2 + rh2 * (r2 + 1), p = ll[idx];
+                T('Т.' + idx, gx + w1 / 2, yy + rh2 * 0.7, fs2, false, 'center');
+                T(p.lat.toFixed(6), gx + w1 + w2 / 2, yy + rh2 * 0.7, fs2, false, 'center');
+                T(p.lng.toFixed(6), gx + w1 + w2 * 1.5, yy + rh2 * 0.7, fs2, false, 'center');
+            }
+            for (var r_l = 0; r_l <= cnt + 1; r_l++) ln(gx, ty2 + rh2 * r_l, gx + gw - 1.5, ty2 + rh2 * r_l, 0.15);
+            [0, w1, w1 + w2, gw - 1.5].forEach(function (x) { ln(gx + x, ty2, gx + x, ty2 + rh2 * (cnt + 1), 0.15); });
+        }
+    }
+
+    // Подвал
+    ln(8, 276, 202, 276, 0.3);
+    T('Съёмку и чертёж составил: ' + (S.stamp.author || ''), 12, 283, 3.4, false, 'left', 96);
+    T('Дата: ' + new Date().toLocaleDateString('ru-RU'), 118, 283, 3.4, false);
+    T('Подпись: ____________', 150, 283, 3.4, false);
     return { canvas: c, N: N };
 }
+
 function openPrint() {
     var r = renderSheet({ scale: S.pscale, scan: $('prn-scan').checked && !!(scanImg && S.scan.on) });
     $('prn-img').src = r.canvas.toDataURL('image/png');
@@ -1570,19 +1629,18 @@ $('h-close').onclick = function () { $('m-help').classList.remove('on'); };
 $('h-example').onclick = function () {
     S = newState(); S.name = 'Делянка 1 (Пример)'; S.kind = 'coords';
     S.cp = [
-        { lat: 61.480000, lng: 50.500000 }, // Т.0 столб
-        { lat: 61.481000, lng: 50.501500 }, // Т.1 пикет привязки
-        { lat: 61.482000, lng: 50.502000 }, // Т.2 начало делянки
-        { lat: 61.483500, lng: 50.502000 }, // Т.3
-        { lat: 61.483500, lng: 50.506500 }, // Т.4
-        { lat: 61.482000, lng: 50.506500 }  // Т.5
+        { lat: 61.480000, lng: 50.500000 },
+        { lat: 61.481000, lng: 50.501500 },
+        { lat: 61.482000, lng: 50.502000 },
+        { lat: 61.483500, lng: 50.502000 },
+        { lat: 61.483500, lng: 50.506500 },
+        { lat: 61.482000, lng: 50.506500 }
     ];
-    S.s = 2; S.c = 2; // привязка Т.0->Т.1->Т.2, делянка замкнута на Т.2
+    S.s = 2; S.c = 2;
     syncFields(); renderCoords(); fitView(true); $('m-help').classList.remove('on');
     toast('Пример: Т.0-Т.2 привязка, Т.2-Т.5 делянка');
 };
 
-// Связка со сквозным паспортом ядра Лесовик PRO
 function syncFromCore() {
     if (window.LesovikCore && window.LesovikCore.getActiveProject) {
         var p = window.LesovikCore.getActiveProject();
@@ -1601,7 +1659,6 @@ function syncFromCore() {
     }
 }
 
-// ИНИЦИАЛИЗАЦИЯ И СЛУШАТЕЛИ КНОПОК
 function init() {
     restoreState();
     syncFields();
@@ -1616,7 +1673,6 @@ function init() {
     window.addEventListener('resize', resize);
     setTimeout(syncFromCore, 500);
 
-    // Слушатели кнопок левой вертикальной панели
     $('t-pan').onclick = function () { setTool('pan'); };
     $('t-plot').onclick = function () { toggleTool('plot'); };
     $('t-scan').onclick = function () { toggleTool('scan'); };
@@ -1629,7 +1685,6 @@ function init() {
     $('t-cal').onclick = function () { startPick('cal1'); };
     $('t-panel').onclick = function () { toggleDock(); };
 
-    // Слушатели кнопок зума под левой панелью
     $('z-in').onclick = function () { zoomAt(W / 2, H / 2, 1.35); };
     $('z-out').onclick = function () { zoomAt(W / 2, H / 2, 1 / 1.35); };
 }
