@@ -343,7 +343,7 @@
         { id: 'diameter', name: 'Вилка', file: 'diameter.html', icon: '🌲' },
         { id: 'bitterlich', name: 'Полнотомер', file: 'bitterlich.html', icon: '👁️' },
         { id: 'journal', name: 'Перечет', file: 'journal.html', icon: '📋' },
-        { id: 'mdo', name: 'МДО', file: 'mdo.html', icon: '📊' }
+        { id: 'abris', name: 'Абрис ПРО', file: 'bg-abris.html', icon: '📐' }
     ];
 
     window.LesovikCore = {
