@@ -71,9 +71,9 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; box-shadow: 0 4px 14px rgba(0,0,0,.16); gap: 8px; align-items: center; flex-wrap: wrap; }
     #calbar.on { display: flex; }
     #calbar input[type=number] { width: 110px; }
-    #scanbar, #plotbar { position: absolute; left: 50%; transform: translateX(-50%); bottom: 12px; z-index: 30; display: none; background: var(--card);
+    #scanbar, #plotbar, #drawbar { position: absolute; left: 50%; transform: translateX(-50%); bottom: 12px; z-index: 30; display: none; background: var(--card);
         border: 1px solid var(--border); border-radius: 12px; padding: 6px 8px; box-shadow: 0 4px 14px rgba(0,0,0,.16); gap: 5px; align-items: center; flex-wrap: wrap; justify-content: center; max-width: calc(100% - 20px); }
-    #scanbar.on, #plotbar.on { display: flex; }
+    #scanbar.on, #plotbar.on, #drawbar.on { display: flex; }
     #scanbar b { min-width: 64px; text-align: center; }
     .zoom { position: absolute; left: 10px; bottom: 62px; display: flex; flex-direction: column; gap: 6px; z-index: 20; }
     .zoom button { width: 40px; height: 40px; font-size: 22px; font-weight: 700; border-radius: 10px; border: 1px solid var(--border);
@@ -96,7 +96,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         #dock.hidden { display: none; }
         .dock-head { cursor: pointer; }
         .status span:last-child { display: none; }
-        #scanbar, #plotbar { bottom: 70px; }
+        #scanbar, #plotbar, #drawbar { bottom: 70px; }
     }
     .tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 10px; }
     .tab { flex: 1; padding: 8px 2px; background: none; border: none; border-bottom: 3px solid transparent; margin-bottom: -2px; font-weight: 700; font-size: .82em; text-transform: uppercase; color: var(--muted); cursor: pointer; }
@@ -179,6 +179,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     header { flex-direction: row; align-items: center; padding: 0 10px; gap: 8px; }
     .top-row { flex: 1; min-width: 0; gap: 10px; }
     .brand { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; font-size: 1.05em; }
+    .beta { font-style: normal; font-size: .6em; font-weight: 800; letter-spacing: .5px; background: #E67E22; color: #fff; padding: 2px 6px; border-radius: 6px; }
     .brand-logo { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--forest); }
     .top-actions { flex: 1 1 auto; min-width: 0; touch-action: pan-x; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; padding: 2px 0; }
     .top-actions > * { flex: 0 0 auto; }
@@ -203,7 +204,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     @media (min-width: 769px) { #dock { max-height: calc(100vh - var(--header-h) - 44px - var(--nav-h)); } }
     @media (max-width: 768px) {
         #dock { bottom: calc(26px + var(--nav-h)); }
-        #scanbar, #plotbar { bottom: calc(70px + var(--nav-h)); }
+        #scanbar, #plotbar, #drawbar { bottom: calc(70px + var(--nav-h)); }
         #view.scanmode .zoom { display: none; }
     }
 </style>
@@ -212,7 +213,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
 <noscript><div><img src="https://mc.yandex.ru/watch/109130409" style="position:absolute; left:-9999px;" alt=""></div></noscript>
 <header class="header">
     <div class="top-row">
-        <div class="brand"><img src="logo.jpeg" alt="Лесовик PRO" class="brand-logo" onerror="this.style.display='none'"><span>Абрис ПРО</span></div>
+        <div class="brand"><img src="logo.jpeg" alt="Лесовик PRO" class="brand-logo" onerror="this.style.display='none'"><span>Абрис ПРО</span><em class="beta">БЕТА</em></div>
         <div class="top-actions header-right">
             <button class="btn primary" id="b-import">📥 Из БГ-ХНС</button>
             <button class="btn" id="b-arch">📚 Архив</button>
@@ -231,6 +232,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         <button class="tool" id="t-cal" title="Масштаб по линейке"><i>📏</i>Масштаб</button>
         <button class="tool" id="t-tie" title="Привязать делянку к скану"><i>📍</i>Привязать</button>
         <button class="tool" id="t-plot" title="Двигать делянку по скану"><i>↔</i>Двигать делянку</button>
+        <button class="tool" id="t-draw" title="Ставить и двигать точки делянки на чертеже"><i>✏️</i>Рисовать точки</button>
         <button class="tool" id="t-scan" title="Двигать и поворачивать скан"><i>🧲</i>Двигать скан</button>
         <button class="tool" id="t-fit" title="Показать всё"><i>🎯</i>Всё</button>
         <button class="tool" id="t-panel" title="Панель данных"><i>📋</i>Данные</button>
@@ -256,6 +258,11 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         <button class="btn" data-pb="l">◀</button><button class="btn" data-pb="u">▲</button><button class="btn" data-pb="d">▼</button><button class="btn" data-pb="r">▶</button>
         <select id="pb-step" style="width:auto"><option value="0.5">0,5 м</option><option value="1" selected>1 м</option><option value="5">5 м</option><option value="20">20 м</option></select>
         <button class="btn primary" id="pb-done">Готово</button>
+    </div>
+    <div id="drawbar">
+        <span style="font-size:.88em" id="db-info">Коснитесь скана — встанет точка. Точку можно перетащить.</span>
+        <button class="btn" id="db-undo">↶ Убрать последнюю</button>
+        <button class="btn primary" id="db-done">Готово</button>
     </div>
     <div class="zoom" id="zoomctl">
         <button id="z-in" aria-label="Приблизить">+</button>
@@ -283,6 +290,17 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
                 <button data-m="coords">Координаты</button><button data-m="az">Азимут</button><button data-m="rumb">Румб</button>
             </div>
 
+            <div class="box" style="padding:8px 10px;margin:0 0 8px">
+                <label class="f" style="margin:0"><span>🧭 Склонение магнитной стрелки (с планшета), ° ′</span><input type="text" id="f-decl" inputmode="text" placeholder="например 17°24′ (без — оставьте пустым)"></label>
+                <div class="note" id="decl-note" style="margin-top:4px"></div>
+            </div>
+
+            <div class="row" style="margin-bottom:6px">
+                <button class="btn" id="b-pick-s">Начало делянки: <b id="v-s">Т.1</b></button>
+                <button class="btn" id="b-pick-c">Замкнуть на: <b id="v-c">Т.1</b></button>
+            </div>
+            <div class="note" style="margin-bottom:8px">Т.0 — квартальный столб (привязка), она рисуется красным пунктиром до начала делянки. Чтобы поменять начало или точку замыкания — нажмите кнопку и коснитесь нужной точки на чертеже.</div>
+
             <div id="ed-coords">
                 <div class="tbl-wrap"><table class="lines coords">
                     <thead><tr><th>Точка</th><th>Широта</th><th>Долгота</th><th></th></tr></thead>
@@ -296,11 +314,6 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
             </div>
 
             <div id="ed-trav">
-                <div class="row" style="margin-bottom:6px">
-                    <button class="btn" id="b-pick-s">Начало делянки: <b id="v-s">Т.1</b></button>
-                    <button class="btn" id="b-pick-c">Замкнуть на: <b id="v-c">Т.1</b></button>
-                </div>
-                <div class="note" style="margin-bottom:6px">Чтобы поменять — нажмите кнопку и коснитесь нужной точки на чертеже. Точка 0 — квартальный столб; до начала делянки идёт привязка (красным пунктиром).</div>
                 <div class="tbl-wrap show-az" id="tbl-wrap"><table class="lines">
                     <thead><tr><th>Линия</th><th class="col-az">Азимут, °</th><th class="col-rumb">Румб</th><th>Длина, м</th><th></th></tr></thead>
                     <tbody id="tbody"></tbody></table></div>
@@ -329,7 +342,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
                 <div class="row" style="margin-top:8px">
                     <label class="f" style="margin:0"><span>Допуск невязки, 1:</span><input type="number" id="f-tol" min="0" placeholder="не задан"></label>
                     <label class="f" style="margin:0"><span>Подписи на чертеже</span>
-                        <select id="f-labels"><option value="2">Только номера точек</option><option value="1">Номера и линии</option><option value="0">Без подписей</option></select></label>
+                        <select id="f-labels"><option value="2">Только номера точек</option><option value="3">Номера и площадь в центре</option><option value="1">Номера и линии</option><option value="0">Без подписей</option></select></label>
                 </div>
                 <div class="row" style="margin-top:8px">
                     <label class="f" style="margin:0"><span>Широта столба Т.0</span><input type="text" id="p0-lat" inputmode="decimal" placeholder="61.480000"></label>
@@ -402,10 +415,17 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         <div class="pane" id="p-final">
             <div class="box">
                 <h4>Бланк (для печати)</h4>
+                <label class="f"><span>Заголовок листа (любой текст; пусто — «Абрис делянки»)</span><textarea id="s-title" rows="2" placeholder="Абрис отвода площади под СЕВ&#10;или: Абрис расположения лесных насаждений ГУ «…» лесничество"></textarea></label>
+                <div class="note" style="margin:-4px 0 8px">Пустые поля бланка на листе не печатаются — лишнее просто очистите.</div>
                 <label class="f"><span>Субъект РФ / район</span><input type="text" id="s-region"></label>
                 <label class="f"><span>Лесничество</span><input type="text" id="s-les"></label>
                 <label class="f"><span>Участковое лесничество</span><input type="text" id="s-uch"></label>
                 <label class="f"><span>Квартал / выдел / делянка</span><input type="text" id="s-kv"></label>
+                <label class="f"><span>Выделы и площади (по строке: «10 5,0»)</span><textarea id="s-vyd" rows="3" placeholder="10 5,0&#10;12 0,2"></textarea></label>
+                <div class="row" style="margin-bottom:8px">
+                    <label class="f" style="margin:0"><span>Площадь на листе</span><select id="s-adec"><option value="4">до 0,0001 га</option><option value="2">до сотых (0,01)</option><option value="1">до десятых (0,1)</option></select></label>
+                    <label class="chk" style="margin:0;flex:0 0 auto"><input type="checkbox" id="s-gap"> показывать невязку</label>
+                </div>
                 <label class="f" style="margin:0"><span>Исполнитель съёмки</span><input type="text" id="s-author"></label>
             </div>
             <div class="row" style="margin-bottom:10px">
@@ -479,10 +499,14 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         <label class="f" style="margin:0"><span>Масштаб чертежа</span><select id="prn-scale"></select></label>
         <label class="chk" style="margin:0;flex:0 0 auto"><input type="checkbox" id="prn-scan" checked> со сканом</label>
     </div>
+    <div class="row" style="margin-top:6px">
+        <label class="f" style="margin:0"><span>Что выводить</span><select id="prn-mode"><option value="full">Полный абрис (чертёж, ходы, координаты)</option><option value="scheme">Схема расположения (без данных)</option></select></label>
+        <label class="chk" style="margin:0;flex:0 0 auto" id="prn-sarea-w"><input type="checkbox" id="prn-sarea" checked> площадь в шапке</label>
+    </div>
     <div class="note" id="prn-note" style="margin-top:4px"></div>
     <img id="prn-img" alt="Предпросмотр листа">
     <div class="row"><button class="btn primary" id="prn-go">🖨 Печать</button><button class="btn" id="prn-pdf">⬇ PDF</button><button class="btn" id="prn-png">⬇ Картинка</button><button class="btn" id="prn-share">Поделиться</button><button class="btn" id="prn-close">Закрыть</button></div>
-    <div class="note" style="margin-top:6px">Если окно печати не открывается (на телефоне), скачайте PDF и распечатайте из него.</div>
+    <div class="note" style="margin-top:6px">Если окно печати не открывается (на телефоне), скачайте PDF и распечатайте из него. Чтобы масштаб сохранился, печатайте «в натуральную величину» (100 %), без «по размеру страницы».</div>
 </div></div>
 
 <input type="file" id="f-any" accept=".abris,.json,.geojson,.csv,.gpx,.kml,.txt,text/*,application/json" style="display:none">
@@ -507,16 +531,16 @@ var cv = $('cv'), g = cv.getContext('2d');
 /* ---------- состояние ---------- */
 function newState() {
     return {
-        id: null, name: '', kind: 'coords', lines: [], cp: [], p0: { lat: null, lng: null }, s: 1, mode: 'return', c: null, tol: null,
-        stamp: { region: '', les: '', uch: '', kv: '', author: '' },
-        pscale: 10000, dpi: 96, viewMode: 'az', labels: 2,
+        id: null, name: '', kind: 'coords', lines: [], cp: [], p0: { lat: null, lng: null }, s: 1, mode: 'return', c: null, tol: null, ks: 0, kc: null, psheet: 'full', adec: 4, showGap: true,
+        stamp: { region: '', les: '', uch: '', kv: '', author: '', title: '', vyd: '' },
+        pscale: 10000, dpi: 96, viewMode: 'az', labels: 2, decl: 0,
         scan: { on: false, name: '', w: 0, h: 0, fix: 1, a: { re: 1, im: 0 }, c: { re: 0, im: 0 }, op: 0.75 }
     };
 }
 var S = newState();
 var scanImg = null, scanBlob = null, scanDirty = false;
 var V = { k: 1, cx: 0, cy: 0 }, W = 300, H = 300, dpr = 1;
-var ui = { tool: 'pan', pick: null, calA: null, calB: null, gA: null, gB: null, undoLines: null, aim: null, dragH: null };
+var ui = { tool: 'pan', pick: null, calA: null, calB: null, gA: null, gB: null, undoLines: null, aim: null, dragH: null, dragPt: null, t0set: false };
 
 function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 function num(v) { var x = parseFloat(String(v).replace(',', '.')); return isFinite(x) ? x : NaN; }
@@ -524,6 +548,18 @@ function f1(x) { return (Math.round(x * 10) / 10).toFixed(1); }
 function f2(x) { return (Math.round(x * 100) / 100).toFixed(2); }
 function cosd(l) { return Math.cos(l * Math.PI / 180); }
 function hyp(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+function dcl() { return (typeof S.decl === 'number' && isFinite(S.decl)) ? S.decl : 0; }   // склонение магнитной стрелки, ° (восточное +)
+function declStr(d) { var a = Math.abs(d), g = Math.floor(a + 1e-9), m = Math.round((a - g) * 60); if (m === 60) { g++; m = 0; } return (d < 0 ? '−' : '+') + g + '°' + (m < 10 ? '0' : '') + m + '′'; }
+function parseDecl(t) {   // «17,4», «17°24'», «17 24», «-3.5», «З 5°10'» (з/w/- = западное)
+    t = String(t || '').trim().toLowerCase().replace(',', '.'); if (!t) return 0;
+    var west = /^[-−–]|^[зw]|[зw]$/.test(t), nums = (t.match(/\d+(?:\.\d+)?/g) || []).map(parseFloat);
+    if (!nums.length) return NaN;
+    var v = nums[0] + (nums[1] || 0) / 60 + (nums[2] || 0) / 3600; return west ? -v : v;
+}
+function gammaDeg() {   // сближение меридианов (по первой точке и осевому меридиану 6° зоны)
+    var o = originLL(); if (!o) return null;
+    var zone = Math.floor(o.lng / 6) + 1; return { g: (o.lng - (6 * zone - 3)) * Math.sin(o.lat * Math.PI / 180), zone: zone, lm: 6 * zone - 3 };
+}
 function normAz(a) { return ((a % 360) + 360) % 360; }
 var toastT;
 function toast(m, ms) { var t = $('toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(function () { t.style.display = 'none'; }, ms || 3600); }
@@ -539,7 +575,7 @@ function parseCoord(str, isLat) {
 function okp(p) { return !!p && typeof p.lat === 'number' && isFinite(p.lat) && typeof p.lng === 'number' && isFinite(p.lng); }
 function hasP0() { return okp(S.p0); }
 function polyArea(P) { var a = 0, m = P.length; for (var i = 0; i < m; i++) { var j = (i + 1) % m; a += P[i].x * P[j].y - P[j].x * P[i].y; } return Math.abs(a) / 2; }
-function plab(i) { return S.kind === 'coords' ? String(i + 1) : String(i); }
+function plab(i) { return String(i); }
 
 /* ---------- румбы ---------- */
 function azToRumb(az) {
@@ -566,15 +602,21 @@ function compute() {
         if (!m) return R;
         var c0 = cp[0], ml = 0; cp.forEach(function (p) { ml += p.lat; }); var kk = mpd(ml / m);
         R.pts = cp.map(function (p) { return { x: (p.lng - c0.lng) * kk.lng, y: (p.lat - c0.lat) * kk.lat }; });
-        var per = 0; for (i = 1; i < m; i++) per += hyp(R.pts[i], R.pts[i - 1]);
+        R.s = clampInt(S.ks || 0, 0, m - 1);
+        R.c = (S.kc === null || S.kc === undefined || S.kc === '') ? R.s : clampInt(S.kc, R.s, m - 1);
+        var per = 0; for (i = R.c + 1; i < m; i++) per += hyp(R.pts[i], R.pts[i - 1]);
         R.len = per;
-        if (m >= 3) { per += hyp(R.pts[m - 1], R.pts[0]); R.perim = per; R.idx = R.pts.map(function (_, k) { return k; }); R.poly = R.pts; R.area = polyArea(R.pts); }
-        else if (m > 0) R.warn = 'Для контура нужно минимум 3 точки.';
+        if (m - R.c >= 3) {
+            per += hyp(R.pts[m - 1], R.pts[R.c]); R.perim = per;
+            for (i = R.c; i < m; i++) R.idx.push(i);
+            R.poly = R.idx.map(function (k) { return R.pts[k]; }); R.area = polyArea(R.poly);
+        }
+        else if (m > 0) R.warn = 'Для делянки нужно минимум 3 точки, начиная с точки ' + R.c + '.';
         return R;
     }
     var n = S.lines.length, pts = [{ x: 0, y: 0 }];
     for (i = 0; i < n; i++) {
-        var r = (S.lines[i].az || 0) * Math.PI / 180, d = S.lines[i].d || 0, p = pts[i];
+        var r = ((S.lines[i].az || 0) + dcl()) * Math.PI / 180, d = S.lines[i].d || 0, p = pts[i];
         pts.push({ x: p.x + d * Math.sin(r), y: p.y + d * Math.cos(r) });
     }
     R = { kind: 'traverse', n: n, pts: pts, poly: null, idx: [], area: 0, perim: 0, len: 0, gap: null, gapRel: null, s: 0, c: 0, mode: S.mode, warn: '', empty: n === 0 };
@@ -605,11 +647,13 @@ function segments(R) {   // список ходов для таблиц и пе�
     var out = [], i, P = R.pts;
     if (S.kind === 'coords') {
         var m = P.length;
-        for (i = 0; i < m; i++) {
-            if (m < 2) break;
-            if (i === m - 1 && m < 3) break;
-            var j = (i + 1) % m, dx = P[j].x - P[i].x, dy = P[j].y - P[i].y;
-            out.push({ a: i, b: j, az: normAz(Math.atan2(dx, dy) * 180 / Math.PI), d: Math.hypot(dx, dy), tie: false });
+        for (i = 0; i + 1 < m; i++) {
+            var dx = P[i + 1].x - P[i].x, dy = P[i + 1].y - P[i].y;
+            out.push({ a: i, b: i + 1, az: normAz(Math.atan2(dx, dy) * 180 / Math.PI - dcl()), d: Math.hypot(dx, dy), tie: i < R.s });
+        }
+        if (R.poly) {
+            var ex = P[R.c].x - P[m - 1].x, ey = P[R.c].y - P[m - 1].y;
+            out.push({ a: m - 1, b: R.c, az: normAz(Math.atan2(ex, ey) * 180 / Math.PI - dcl()), d: Math.hypot(ex, ey), tie: false });
         }
     } else S.lines.forEach(function (l, k) { out.push({ a: k, b: k + 1, az: l.az, d: l.d, tie: k < R.s }); });
     return out;
@@ -619,7 +663,7 @@ function llPoints() {
     if (!hasP0()) return null;
     var out = [{ lat: S.p0.lat, lng: S.p0.lng }], lat = S.p0.lat, lng = S.p0.lng;
     S.lines.forEach(function (l) {
-        var r = (l.az || 0) * Math.PI / 180, d = l.d || 0;
+        var r = ((l.az || 0) + dcl()) * Math.PI / 180, d = l.d || 0;
         var k0 = mpd(lat), lat2 = lat + d * Math.cos(r) / k0.lat, k1 = mpd((lat + lat2) / 2);
         lng += d * Math.sin(r) / k1.lng; lat = lat + d * Math.cos(r) / k1.lat;
         out.push({ lat: lat, lng: lng });
@@ -627,6 +671,7 @@ function llPoints() {
     return out;
 }
 function originLL() { if (S.kind === 'coords') { var c = S.cp.filter(okp); return c.length ? c[0] : null; } return hasP0() ? S.p0 : null; }
+function areaGa(R) { var d = [1, 2, 4].indexOf(S.adec) >= 0 ? S.adec : 4; return (R.area / 10000).toFixed(d); }
 function fmtArea(R) { return R.poly ? (R.area / 10000).toFixed(4) + ' га' : '—'; }
 function gapText(R) {
     if (R.gap === null) return '';
@@ -720,7 +765,7 @@ function drawScene(g, W, H, v, u, forPrint, opts) {
     }
     if (R.empty) return R;
     var P = R.pts, lw = function (x) { return x * u; };
-    var labelsMode = S.labels, font = function (px, bold) { return (bold ? 'bold ' : '') + Math.round(px * u) + 'px sans-serif'; };
+    var labelsMode = opts.scheme ? 2 : S.labels, font = function (px, bold) { return (bold ? 'bold ' : '') + Math.round(px * u) + 'px sans-serif'; };
     function halo(txt, x, y, col, size, bold, align) {
         g.font = font(size, bold); g.textAlign = align || 'start'; g.lineJoin = 'round';
         g.strokeStyle = 'rgba(255,255,255,.92)'; g.lineWidth = lw(3.4); g.strokeText(txt, x, y); g.fillStyle = col; g.fillText(txt, x, y); g.textAlign = 'start';
@@ -730,9 +775,10 @@ function drawScene(g, W, H, v, u, forPrint, opts) {
         g.strokeStyle = '#C0463F'; g.lineWidth = lw(1.6); g.setLineDash([lw(6), lw(5)]); g.beginPath();
         g.moveTo(X(P[0].x), Y(P[0].y)); for (i = 1; i <= tieEnd; i++) g.lineTo(X(P[i].x), Y(P[i].y)); g.stroke(); g.setLineDash([]);
     }
-    if (R.kind === 'traverse' && R.n > tieEnd) {   // измеренный ход
+    var pathEnd = R.kind === 'coords' ? R.c : R.n;
+    if (pathEnd > tieEnd) {   // измеренный ход (до точки замыкания)
         g.strokeStyle = 'rgba(30,45,35,.5)'; g.lineWidth = lw(1.1); g.beginPath();
-        g.moveTo(X(P[tieEnd].x), Y(P[tieEnd].y)); for (i = tieEnd + 1; i <= R.n; i++) g.lineTo(X(P[i].x), Y(P[i].y)); g.stroke();
+        g.moveTo(X(P[tieEnd].x), Y(P[tieEnd].y)); for (i = tieEnd + 1; i <= pathEnd; i++) g.lineTo(X(P[i].x), Y(P[i].y)); g.stroke();
     }
     var st = gapStatus(R), strokeCol = st.cls === 'bad' ? '#C0463F' : '#2F6B3A';
     if (R.poly) {
@@ -740,14 +786,14 @@ function drawScene(g, W, H, v, u, forPrint, opts) {
         g.fillStyle = st.cls === 'bad' ? 'rgba(192,70,63,.06)' : 'rgba(47,107,58,.07)'; g.fill();
         g.lineJoin = 'round'; g.lineWidth = lw(4.2); g.strokeStyle = 'rgba(255,255,255,.85)'; g.stroke();
         g.lineWidth = lw(2); g.strokeStyle = strokeCol; g.stroke();
-    } else if (R.kind === 'coords' && R.m > 1) {
+    } else if (R.kind === 'coords' && R.m > 1 && R.s === 0 && R.c === 0) {
         g.lineWidth = lw(2); g.strokeStyle = strokeCol; g.beginPath(); g.moveTo(X(P[0].x), Y(P[0].y)); for (i = 1; i < P.length; i++) g.lineTo(X(P[i].x), Y(P[i].y)); g.stroke();
     }
-    if (R.gap !== null && R.gap >= 0.005) {   // невязка: красный разрыв
+    if (R.gap !== null && R.gap >= 0.005 && !opts.scheme) {   // невязка: красный разрыв
         var pn = P[R.n], pc = P[R.c];
         g.strokeStyle = '#C0463F'; g.lineWidth = lw(2.2); g.setLineDash([lw(4), lw(3)]); g.beginPath(); g.moveTo(X(pn.x), Y(pn.y)); g.lineTo(X(pc.x), Y(pc.y)); g.stroke(); g.setLineDash([]);
     }
-    if (labelsMode === 1 && R.kind === 'traverse') {   // подписи линий — только по желанию
+    if (labelsMode === 1 && R.kind === 'traverse' && !opts.scheme) {   // подписи линий — только по желанию
         for (i = 0; i < R.n; i++) {
             var l = S.lines[i], mx = (X(P[i].x) + X(P[i + 1].x)) / 2, my = (Y(P[i].y) + Y(P[i + 1].y)) / 2;
             if (Math.hypot(X(P[i].x) - X(P[i + 1].x), Y(P[i].y) - Y(P[i + 1].y)) < lw(46)) continue;
@@ -756,13 +802,13 @@ function drawScene(g, W, H, v, u, forPrint, opts) {
     }
     var gapEnd = (R.gap !== null && R.gap >= 0.005) ? R.n : -1;
     for (i = 0; i < P.length; i++) {   // точки: кружок и номер
-        var px = X(P[i].x), py = Y(P[i].y), inPoly = R.idx.indexOf(i) >= 0, isT0 = (R.kind === 'traverse' && i === 0);
+        var px = X(P[i].x), py = Y(P[i].y), inPoly = R.idx.indexOf(i) >= 0, isT0 = ((R.kind === 'traverse' || R.s > 0) && i === 0);
         g.beginPath(); g.arc(px, py, lw(isT0 ? 5.5 : 3.8), 0, 6.2832);
         g.fillStyle = isT0 ? '#C0463F' : (i === gapEnd ? '#fff' : (inPoly ? '#fff' : '#F0B4B0')); g.fill();
         g.lineWidth = lw(1.8); g.strokeStyle = isT0 ? '#7A2A26' : (i === gapEnd ? '#C0463F' : (inPoly ? strokeCol : '#C0463F')); g.stroke();
         if (labelsMode) halo(plab(i), px + lw(7), py - lw(6), isT0 ? '#7A2A26' : '#1D2A20', 11.5, true);
     }
-    if (R.poly) {   // площадь в центре
+    if (R.poly && (labelsMode === 1 || labelsMode === 3) && !opts.scheme) {   // площадь в центре — только если выбрано
         var cx = 0, cy = 0; R.poly.forEach(function (p) { cx += p.x; cy += p.y; }); cx = X(cx / R.poly.length); cy = Y(cy / R.poly.length);
         halo((R.area / 10000).toFixed(4) + ' га', cx, cy + lw(5), strokeCol, 15, true, 'center');
     }
@@ -771,10 +817,21 @@ function drawScene(g, W, H, v, u, forPrint, opts) {
     var bx0 = opts.barX !== undefined ? opts.barX : 10;
     g.fillStyle = 'rgba(255,255,255,.88)'; g.fillRect(lw(bx0), H - lw(38), px2 + lw(24), lw(28));
     g.fillStyle = '#1E2A22'; g.fillRect(lw(bx0 + 12), H - lw(20), px2, lw(3)); g.font = font(11.5, true); g.fillText(fmtLen(bar), lw(bx0 + 12), H - lw(25));
-    g.save(); g.translate(W - lw(32), lw(34));
-    g.fillStyle = 'rgba(255,255,255,.88)'; g.beginPath(); g.arc(0, 0, lw(22), 0, 6.2832); g.fill();
-    g.fillStyle = '#B5413B'; g.beginPath(); g.moveTo(0, -lw(16)); g.lineTo(lw(6), lw(4)); g.lineTo(-lw(6), lw(4)); g.closePath(); g.fill();
-    g.fillStyle = '#1E2A22'; g.font = font(11.5, true); g.textAlign = 'center'; g.fillText('С', 0, lw(17)); g.restore();
+    g.save(); g.translate(W - lw(36), lw(40));
+    g.fillStyle = 'rgba(255,255,255,.9)'; g.beginPath(); g.arc(0, 0, lw(27), 0, 6.2832); g.fill();
+    var arrow = function (deg, len, wid, col, dash) {
+        g.save(); g.rotate(deg * Math.PI / 180); g.fillStyle = col; g.strokeStyle = col; g.lineWidth = lw(1.6);
+        if (dash) { g.setLineDash([lw(3), lw(2)]); g.beginPath(); g.moveTo(0, lw(6)); g.lineTo(0, -lw(len)); g.stroke(); g.setLineDash([]); g.beginPath(); g.moveTo(0, -lw(len) - lw(4)); g.lineTo(lw(wid), -lw(len) + lw(5)); g.lineTo(-lw(wid), -lw(len) + lw(5)); g.closePath(); g.fill(); }
+        else { g.beginPath(); g.moveTo(0, -lw(len)); g.lineTo(lw(wid), lw(5)); g.lineTo(0, lw(2)); g.lineTo(-lw(wid), lw(5)); g.closePath(); g.fill(); }
+        g.restore();
+    };
+    var dd = dcl(), sr = scanImg ? scanRotCW() : 0, sd = sr > 180 ? sr - 360 : sr;
+    if (Math.abs(sd) >= 0.3) arrow(sr, 21, 3.5, '#8A8F8B', true);   // «верх» скана
+    if (Math.abs(dd) >= 0.05 && !opts.scheme) arrow(dd, 21, 3.5, '#2B6CB0', true);   // магнитный север
+    arrow(0, 22, 6, '#B5413B', false);                                  // истинный север
+    g.fillStyle = '#1E2A22'; g.font = font(11, true); g.textAlign = 'center'; g.fillText('С', 0, -lw(29) + lw(1));
+    if (Math.abs(dd) >= 0.05 && !opts.scheme) { g.fillStyle = '#2B6CB0'; g.font = font(9.5, true); g.fillText('М ' + declStr(dd), 0, lw(40)); }
+    g.restore();
     return R;
 }
 var raf = 0;
@@ -811,6 +868,7 @@ function drawOverlays(g, u) {
     if (cur) drawRing(g, cur.x, cur.y, 11 * u, col, u);
     if (ui.gA) { var ga = pix2w(ui.gA.u, ui.gA.v), sa = w2s(ga.x, ga.y); drawRing(g, sa.x, sa.y, 10 * u, '#1565C0', u); }
     if (ui.gB) { var gb = pix2w(ui.gB.u, ui.gB.v), sb = w2s(gb.x, gb.y); drawRing(g, sb.x, sb.y, 10 * u, '#1565C0', u); }
+    if (ui.pick === 'draw' && S.kind === 'traverse' && !S.lines.length && ui.t0set) { var s0 = w2s(0, 0); drawRing(g, s0.x, s0.y, 10 * u, '#C0463F', u); }
     if (ui.pick && ui.aim && !(ui.pick === 'cal2')) {   // прицел
         var x = ui.aim.x, y = ui.aim.y;
         g.strokeStyle = col; g.lineWidth = 2 * u; g.beginPath(); g.arc(x, y, 14 * u, 0, 6.2832); g.moveTo(x - 22 * u, y); g.lineTo(x - 6 * u, y); g.moveTo(x + 6 * u, y); g.lineTo(x + 22 * u, y);
@@ -849,12 +907,13 @@ cv.addEventListener('pointerdown', function (e) {
         moved = false; downT = Date.now(); downPos = p; aiming = false; ui.dragH = null;
         panBtn = e.pointerType === 'mouse' && (e.button === 1 || e.button === 2);
         if (!panBtn) {
-            if (ui.pick) { aiming = true; ui.aim = p; draw(); }
+            if (ui.pick === 'draw') { var hp = hitPoint(p.x, p.y); if (hp >= 0) { ui.dragPt = hp; } else { aiming = true; ui.aim = p; draw(); } }
+            else if (ui.pick) { aiming = true; ui.aim = p; draw(); }
             else if (ui.calA && ui.calB) { var h = hitHandle(p); if (h) ui.dragH = h; }
         }
     }
     if (ids.length === 2) {
-        aiming = false; ui.dragH = null; moved = true;
+        aiming = false; ui.dragH = null; ui.dragPt = null; ui.aim = null; moved = true;
         var a = ptrs[ids[0]], b = ptrs[ids[1]]; lastD = Math.hypot(a.x - b.x, a.y - b.y); lastM = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; lastAng = Math.atan2(b.y - a.y, b.x - a.x);
     }
 });
@@ -863,6 +922,7 @@ cv.addEventListener('pointermove', function (e) {
     if (!ptrs[e.pointerId]) { if (ui.pick && e.pointerType === 'mouse') { ui.aim = p; draw(); } return; }
     var old = ptrs[e.pointerId], ids = Object.keys(ptrs);
     if (ids.length === 1) {
+        if (ui.dragPt !== null && ui.dragPt !== undefined) { ptrs[e.pointerId] = p; moved = true; dragDrawPoint(ui.dragPt, s2w(p.x, p.y)); return; }
         if (aiming) { ptrs[e.pointerId] = p; ui.aim = p; draw(); return; }
         if (ui.dragH) { ptrs[e.pointerId] = p; setHandle(ui.dragH, p); return; }
         var dx = p.x - old.x, dy = p.y - old.y;
@@ -891,6 +951,7 @@ function endPtr(e) {
     delete ptrs[e.pointerId];
     if (wasAim) { aiming = false; if (e.type === 'pointerup') pickAt(p.x, p.y); else if (ui.pick !== 'cal2') ui.aim = null; draw(); }
     if (ui.dragH) { ui.dragH = null; }
+    if (ui.dragPt !== null && ui.dragPt !== undefined) { ui.dragPt = null; renderTable(); renderCoords(); afterChange(); updateDrawInfo(); }
     var left = Object.keys(ptrs).length;
     if (left === 1) { lastD = 0; moved = true; }
     if (left === 0) aiming = false;
@@ -903,13 +964,14 @@ $('z-out').onclick = function () { zoomAt(W / 2, H / 2, 1 / 1.4); };
 /* ---------- выбор точек на чертеже / скане ---------- */
 function setHint(t) { var h = $('hint'); if (t) { h.textContent = t; h.classList.add('on'); } else h.classList.remove('on'); $('view').classList.toggle('pick', !!t); }
 function cancelPick() {
+    if (ui.pick === 'draw') { setTool('pan'); if (mobile()) showDock(); draw(); return; }
     ui.pick = null; ui.aim = null; if (!($('calbar').classList.contains('on'))) { ui.calA = ui.calB = null; }
     setHint(null); draw();
 }
 function startPick(kind) {
     var scanKinds = { cal1: 1, tie: 1, gA: 1, gB: 1 };
     if (scanKinds[kind] && !(scanImg && S.scan.on)) { toast('Сначала загрузите скан'); return; }
-    if ((kind === 'start' || kind === 'close') && !(S.kind === 'traverse' && S.lines.length)) { toast('Сначала введите линии'); return; }
+    if ((kind === 'start' || kind === 'close') && compute().empty) { toast('Сначала введите точки или линии'); return; }
     if (kind === 'tie' && compute().empty) { toast('Сначала введите точки делянки'); return; }
     closeCalBar(true); ui.pick = kind; ui.aim = null; setTool('pan');
     setHint({ cal1: 'Нажмите первую точку на линейке или столбе (можно тянуть, отпустите — точка встанет)', tie: (S.kind === 'traverse' ? 'Нажмите на скане, где находится квартальный столб (Т.0)' : 'Нажмите на скане, где находится первая точка делянки'), gA: 'Нажмите на скане точку А', gB: 'Нажмите на скане точку Б', start: 'Нажмите на точку, с которой начинается делянка', close: 'Нажмите на точку, на которую замыкается делянка' }[kind]);
@@ -921,15 +983,19 @@ function hitPoint(sx, sy) {
     R.pts.forEach(function (pt, i) { var s = w2s(pt.x, pt.y), d = Math.hypot(s.x - sx, s.y - sy); if (d < bd) { bd = d; best = i; } });
     return best;
 }
+function getSC() { return S.kind === 'coords' ? { s: S.ks || 0, c: S.kc } : { s: S.s, c: S.c }; }
+function setSC(s, c) { if (S.kind === 'coords') { S.ks = s; S.kc = c; } else { S.s = s; S.c = c; } }
 function pickAt(sx, sy) {
     var k = ui.pick; if (!k) return;
     if (k === 'start' || k === 'close') {
         var h = hitPoint(sx, sy); if (h < 0) { toast('Коснитесь ближе к нужной точке'); ui.aim = null; return; }
-        if (k === 'start') { S.s = h; if (S.c !== null && S.c < h) S.c = null; if (S.mode === 'open') S.mode = 'return'; }
-        else { S.c = h; if (h < S.s) S.s = h; S.mode = 'return'; }
+        var sc0 = getSC();
+        if (k === 'start') { setSC(h, (sc0.c !== null && sc0.c < h) ? null : sc0.c); if (S.kind !== 'coords' && S.mode === 'open') S.mode = 'return'; }
+        else { setSC(h < sc0.s ? h : sc0.s, h); if (S.kind !== 'coords') S.mode = 'return'; }
         ui.pick = null; ui.aim = null; setHint(null); syncFields(); afterChange();
         toast(k === 'start' ? 'Делянка начинается с точки ' + h : 'Делянка замыкается на точку ' + h); return;
     }
+    if (k === 'draw') { ui.aim = null; addDrawPoint(s2w(sx, sy)); return; }
     var w = s2w(sx, sy), q = w2pix(w.x, w.y);
     if (q.u < 0 || q.v < 0 || q.u > S.scan.w || q.v > S.scan.h) { toast('Точка за пределами скана'); return; }
     if (k === 'cal1') { ui.calA = q; ui.pick = 'cal2'; ui.aim = { x: sx, y: sy }; setHint('Теперь потяните нить ко второй точке и отпустите'); draw(); return; }
@@ -1052,9 +1118,10 @@ function shiftPlot(dwx, dwy) {   // сдвиг контура относител
     S.scan.c = { re: S.scan.c.re - dwx, im: S.scan.c.im - dwy }; V.cx -= dwx; V.cy -= dwy; scheduleSave(); draw();
 }
 function setTool(t) {
-    ui.tool = t; $('t-scan').classList.toggle('active', t === 'scan'); $('b-scanmove').classList.toggle('on', t === 'scan');
+    if (t !== 'draw' && ui.pick === 'draw') { ui.pick = null; ui.aim = null; setHint(null); }
+    ui.tool = t; $('t-draw').classList.toggle('active', t === 'draw'); $('drawbar').classList.toggle('on', t === 'draw'); $('t-scan').classList.toggle('active', t === 'scan'); $('b-scanmove').classList.toggle('on', t === 'scan');
     $('t-plot').classList.toggle('active', t === 'plot'); $('b-plotmove').classList.toggle('on', t === 'plot');
-    $('view').classList.toggle('scanmode', t === 'scan' || t === 'plot'); $('scanbar').classList.toggle('on', t === 'scan'); $('plotbar').classList.toggle('on', t === 'plot');
+    $('view').classList.toggle('scanmode', t === 'scan' || t === 'plot' || t === 'draw'); $('scanbar').classList.toggle('on', t === 'scan'); $('plotbar').classList.toggle('on', t === 'plot');
 }
 function toggleTool(t) {
     if (ui.tool === t) { setTool('pan'); return; }
@@ -1074,12 +1141,64 @@ document.querySelectorAll('[data-pb]').forEach(function (b) {
 });
 $('t-fit').onclick = function () { fitView(false); };
 
+/* ---------- рисование и перетаскивание точек ---------- */
+function startDraw() {
+    cancelPick(); closeCalBar(true); setTool('draw'); ui.pick = 'draw'; ui.aim = null; ui.dragPt = null; if (compute().empty) ui.t0set = false;
+    if (compute().empty && S.kind === 'coords') {   // нет данных — рисуем от Т.0 в азимутах и длинах
+        S.kind = 'traverse'; S.viewMode = 'az'; S.s = 0; S.c = null; S.mode = 'auto'; ui.t0set = false; syncFields(); renderTable(); renderCoords();
+    }
+    setHint('Коснитесь места — встанет точка (отпустите палец). Точку можно перетащить. Два пальца — сдвиг и масштаб.');
+    if (mobile()) hideDockMobile();
+    updateDrawInfo(); draw();
+}
+function updateDrawInfo() { var R = compute(); $('db-info').textContent = R.empty ? 'Первая точка — Т.0' : 'Точек: ' + R.pts.length + '. Касание — новая точка, перетяните точку — подвинуть'; }
+function okIndex(i) { var c = -1, idx = -1; S.cp.forEach(function (p, k) { if (okp(p)) { c++; if (c === i) idx = k; } }); return idx; }
+function addDrawPoint(w) {
+    var R = compute();
+    if (S.kind === 'coords') {
+        var ok = S.cp.filter(okp);
+        if (!ok.length) { toast('Введите координаты первой точки или выберите Азимут'); return; }
+        var ml = 0; ok.forEach(function (p) { ml += p.lat; }); var kk = mpd(ml / ok.length), c0 = ok[0];
+        S.cp.push({ lat: +(c0.lat + w.y / kk.lat).toFixed(7), lng: +(c0.lng + w.x / kk.lng).toFixed(7) });
+    } else {
+        if (!S.lines.length && !ui.t0set) {   // первая точка = Т.0
+            S.s = 0; S.c = null; S.mode = 'auto'; shiftPlot(w.x, w.y); ui.t0set = true; toast('Т.0 поставлена. Теперь ставьте точки по порядку.');
+            draw(); updateDrawInfo(); return;
+        }
+        var last = R.pts[R.pts.length - 1], dx = w.x - last.x, dy = w.y - last.y;
+        if (Math.hypot(dx, dy) < 0.05) return;
+        S.lines.push({ az: Math.round(normAz(Math.atan2(dx, dy) * 180 / Math.PI - dcl()) * 100) / 100, d: Math.round(Math.hypot(dx, dy) * 100) / 100 });
+    }
+    renderTable(); renderCoords(); afterChange(); updateDrawInfo();
+}
+function dragDrawPoint(i, w) {
+    var R = compute(), P = R.pts;
+    if (S.kind === 'coords') {
+        var ok = S.cp.filter(okp), ml = 0; ok.forEach(function (p) { ml += p.lat; }); var kk = mpd(ml / ok.length), c0 = ok[0], ki = okIndex(i);
+        if (ki < 0) return;
+        S.cp[ki] = { lat: +(c0.lat + w.y / kk.lat).toFixed(7), lng: +(c0.lng + w.x / kk.lng).toFixed(7) };
+        if (i === 0) shiftPlot(w.x, w.y);   // начало отсчёта переехало — скан остаётся на месте
+    } else {
+        if (i === 0) { shiftPlot(w.x - P[0].x, w.y - P[0].y); return; }   // Т.0: двигаем весь контур по скану
+        var mk = function (a, b) { var dx = b.x - a.x, dy = b.y - a.y; return { az: Math.round(normAz(Math.atan2(dx, dy) * 180 / Math.PI - dcl()) * 100) / 100, d: Math.round(Math.hypot(dx, dy) * 100) / 100 }; };
+        S.lines[i - 1] = mk(P[i - 1], w);
+        if (i < P.length - 1) S.lines[i] = mk(w, P[i + 1]);
+    }
+    draw();
+}
+$('t-draw').onclick = function () { if (ui.tool === 'draw') { setTool('pan'); if (mobile()) showDock(); draw(); } else startDraw(); };
+$('db-done').onclick = function () { setTool('pan'); if (mobile()) showDock(); draw(); };
+$('db-undo').onclick = function () {
+    if (S.kind === 'coords') { if (S.cp.length) S.cp.pop(); } else if (S.lines.length) S.lines.pop(); else ui.t0set = false;
+    renderTable(); renderCoords(); afterChange(); updateDrawInfo();
+};
+
 /* ---------- ввод: способ, поля ---------- */
 function linesFromLL(pts) {
     var out = [];
     for (var i = 1; i < pts.length; i++) {
         var kq = mpd((pts[i].lat + pts[i - 1].lat) / 2), dy = (pts[i].lat - pts[i - 1].lat) * kq.lat, dx = (pts[i].lng - pts[i - 1].lng) * kq.lng;
-        out.push({ az: Math.round(normAz(Math.atan2(dx, dy) * 180 / Math.PI) * 100) / 100, d: Math.round(Math.hypot(dx, dy) * 100) / 100 });
+        out.push({ az: Math.round(normAz(Math.atan2(dx, dy) * 180 / Math.PI - dcl()) * 100) / 100, d: Math.round(Math.hypot(dx, dy) * 100) / 100 });
     }
     return out;
 }
@@ -1088,13 +1207,13 @@ function setMethod(m) {
     if (toCoords && S.kind !== 'coords') {
         if (!S.cp.some(okp)) {
             var ll = llPoints();
-            if (ll) { var R = compute(); S.cp = ll.slice(R.s).map(function (p) { return { lat: +p.lat.toFixed(7), lng: +p.lng.toFixed(7) }; }); toast('Линии пересчитаны в координаты точек'); }
+            if (ll) { var R = compute(); S.cp = ll.map(function (p) { return { lat: +p.lat.toFixed(7), lng: +p.lng.toFixed(7) }; }); S.ks = R.s; S.kc = (S.mode === 'return' && R.c > R.s) ? R.c : null; toast('Линии пересчитаны в координаты точек'); }
             else toast('Для координат введите точки (или координаты столба Т.0 в «Профи»)');
         }
     }
     if (!toCoords && S.kind === 'coords') {
         var pts = S.cp.filter(okp);
-        if (!S.lines.length && pts.length > 1) { S.lines = linesFromLL(pts); S.p0 = { lat: pts[0].lat, lng: pts[0].lng }; S.s = 0; S.mode = 'auto'; ui.undoLines = null; toast('Точки пересчитаны в линии (азимут и длина)'); }
+        if (!S.lines.length && pts.length > 1) { S.lines = linesFromLL(pts); S.p0 = { lat: pts[0].lat, lng: pts[0].lng }; var rc0 = compute(); S.s = rc0.c; S.c = null; S.mode = 'auto'; ui.undoLines = null; toast('Точки пересчитаны в линии (азимут и длина)'); }
     }
     S.kind = toCoords ? 'coords' : 'traverse'; if (!toCoords) S.viewMode = m;
     syncFields(); renderTable(); renderCoords(); afterChange();
@@ -1102,20 +1221,23 @@ function setMethod(m) {
 document.querySelectorAll('#seg button').forEach(function (b) { b.onclick = function () { setMethod(b.getAttribute('data-m')); }; });
 
 function fmtDeg(x) { return String(+x.toFixed(7)); }
+function okNums() { var map = {}, cnt = 0; S.cp.forEach(function (p, i) { if (okp(p)) { map[i] = cnt; cnt++; } }); return map; }
+function coordRow(p, i, num, tie) {
+    var ok = num !== undefined;
+    return '<tr data-i="' + i + '"' + (tie ? ' class="tie"' : '') + '><td class="lbl"><b>Т.' + (ok ? num : '—') + '</b>' + (tie ? ' <span class="badge-t">' + (num === 0 ? 'столб' : 'привязка') + '</span>' : '') + '</td>' +
+        '<td><input type="text" inputmode="decimal" data-f="lat" value="' + (p && typeof p.lat === 'number' ? fmtDeg(p.lat) : '') + '" placeholder="61.480000"></td>' +
+        '<td><input type="text" inputmode="decimal" data-f="lng" value="' + (p && typeof p.lng === 'number' ? fmtDeg(p.lng) : '') + '" placeholder="50.501600"></td>' +
+        '<td><button class="btn" data-del="' + i + '" style="padding:2px 7px" aria-label="Удалить">✕</button></td></tr>';
+}
 function renderCoords() {
     var tb = $('tb-c');
-    if (!S.cp.length) { tb.innerHTML = '<tr><td colspan="4" style="padding:14px;color:var(--muted)">Нет точек. Нажмите «➕ Точка», вставьте список координат или загрузите данные.</td></tr>'; return; }
-    var cnt = 0;
-    tb.innerHTML = S.cp.map(function (p, i) {
-        var ok = okp(p); if (ok) cnt++;
-        return '<tr data-i="' + i + '"><td class="lbl"><b>Т.' + (ok ? cnt : '—') + '</b></td>' +
-            '<td><input type="text" inputmode="decimal" data-f="lat" value="' + (p && typeof p.lat === 'number' ? fmtDeg(p.lat) : '') + '" placeholder="61.480000"></td>' +
-            '<td><input type="text" inputmode="decimal" data-f="lng" value="' + (p && typeof p.lng === 'number' ? fmtDeg(p.lng) : '') + '" placeholder="50.501600"></td>' +
-            '<td><button class="btn" data-del="' + i + '" style="padding:2px 7px" aria-label="Удалить">✕</button></td></tr>';
-    }).join('');
+    if (!S.cp.length) { tb.innerHTML = '<tr><td colspan="4" style="padding:14px;color:var(--muted)">Нет точек. Нажмите «➕ Точка», «✏️ Рисовать точки», вставьте список координат или загрузите данные.</td></tr>'; return; }
+    var nm = okNums(), s = compute().s, main = [], tie = [];
+    S.cp.forEach(function (p, i) { var n = nm[i]; ((n !== undefined && n < s) ? tie : main).push(coordRow(p, i, n, n !== undefined && n < s)); });
+    tb.innerHTML = main.join('') + (tie.length ? '<tr class="sep"><td colspan="4" style="padding:6px 8px;background:var(--bento);font-size:.82em;color:var(--muted)">Привязка от столба (до начала делянки)</td></tr>' + tie.join('') : '');
 }
 function refreshCoordLabels() {
-    var cnt = 0; $('tb-c').querySelectorAll('tr[data-i]').forEach(function (tr) { var p = S.cp[+tr.getAttribute('data-i')], ok = okp(p); if (ok) cnt++; tr.querySelector('.lbl').innerHTML = '<b>Т.' + (ok ? cnt : '—') + '</b>'; });
+    var nm = okNums(); $('tb-c').querySelectorAll('tr[data-i]').forEach(function (tr) { var i = +tr.getAttribute('data-i'), n = nm[i]; tr.querySelector('.lbl b').textContent = 'Т.' + (n !== undefined ? n : '—'); });
 }
 $('tb-c').addEventListener('change', function (e) {
     var tr = e.target.closest('tr[data-i]'); if (!tr) return;
@@ -1206,8 +1328,8 @@ $('b-adj').onclick = function () {
     ui.undoLines = JSON.parse(JSON.stringify(S.lines));
     var gx = R.gapV.x, gy = R.gapV.y;
     for (i = from; i < R.n; i++) {
-        var l = S.lines[i], r = l.az * Math.PI / 180, dx = l.d * Math.sin(r) + gx * (l.d / tot), dy = l.d * Math.cos(r) + gy * (l.d / tot);
-        l.d = Math.round(Math.hypot(dx, dy) * 100) / 100; l.az = Math.round(normAz(Math.atan2(dx, dy) * 180 / Math.PI) * 100) / 100;
+        var l = S.lines[i], r = (l.az + dcl()) * Math.PI / 180, dx = l.d * Math.sin(r) + gx * (l.d / tot), dy = l.d * Math.cos(r) + gy * (l.d / tot);
+        l.d = Math.round(Math.hypot(dx, dy) * 100) / 100; l.az = Math.round(normAz(Math.atan2(dx, dy) * 180 / Math.PI - dcl()) * 100) / 100;
     }
     $('b-undo-adj').disabled = false; renderTable(); afterChange(); toast('Полигон увязан. Невязка теперь: ' + f2(compute().gap || 0) + ' м');
 };
@@ -1216,27 +1338,42 @@ $('b-undo-adj').onclick = function () { if (!ui.undoLines) return; S.lines = ui.
 /* поля */
 function syncFields() {
     var R = compute();
+    $('f-decl').value = dcl() ? declStr(dcl()) : ''; declNote();
     $('f-name').value = S.name; $('p0-lat').value = hasP0() ? S.p0.lat.toFixed(6) : ''; $('p0-lng').value = hasP0() ? S.p0.lng.toFixed(6) : '';
-    $('f-s').value = S.s; $('f-tol').value = S.tol || ''; $('f-mode').value = S.mode; $('f-c').value = (S.c === null || S.c === undefined) ? '' : S.c;
-    $('s-region').value = S.stamp.region; $('s-les').value = S.stamp.les; $('s-uch').value = S.stamp.uch; $('s-kv').value = S.stamp.kv; $('s-author').value = S.stamp.author;
+    var sc1 = getSC(); $('f-s').value = sc1.s; $('f-tol').value = S.tol || ''; $('f-mode').value = S.mode; $('f-c').value = (sc1.c === null || sc1.c === undefined) ? '' : sc1.c;
+    $('s-title').value = S.stamp.title || ''; $('s-vyd').value = S.stamp.vyd || ''; $('s-adec').value = String(S.adec || 4); $('s-gap').checked = S.showGap !== false; $('s-region').value = S.stamp.region; $('s-les').value = S.stamp.les; $('s-uch').value = S.stamp.uch; $('s-kv').value = S.stamp.kv; $('s-author').value = S.stamp.author;
     $('f-pscale').value = S.pscale; $('f-dpi').value = S.dpi; $('f-labels').value = String(S.labels);
     var m = S.kind === 'coords' ? 'coords' : (S.viewMode === 'rumb' ? 'rumb' : 'az');
     document.querySelectorAll('#seg button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-m') === m); });
     $('ed-coords').style.display = S.kind === 'coords' ? '' : 'none'; $('ed-trav').style.display = S.kind === 'coords' ? 'none' : '';
     $('tbl-wrap').className = 'tbl-wrap ' + (S.viewMode === 'rumb' ? 'show-rumb' : 'show-az');
-    $('v-s').textContent = 'Т.' + R.s; $('v-c').textContent = S.mode === 'return' ? 'Т.' + R.c : (S.mode === 'auto' ? 'авто' : 'нет');
+    scLabels(R);
 }
+function declNote() {
+    var d = dcl(), g = gammaDeg(), t = d
+        ? 'Азимуты считаются магнитными: истинный = магнитный ' + (d > 0 ? '+ ' : '− ') + declStr(Math.abs(d)).replace('+', '') + (d > 0 ? ' (восточное)' : ' (западное)') + '.'
+        : 'Если азимуты сняты буссолью — введите склонение с планшета (например 17°24′). Для координат с навигатора оно не нужно.';
+    if (g) t += ' Сближение меридианов здесь ≈ ' + g.g.toFixed(2).replace('.', ',') + '° (осевой ' + g.lm + '° в.д.).';
+    $('decl-note').textContent = t;
+}
+$('f-decl').addEventListener('change', function () {
+    var v = parseDecl(this.value);
+    if (isNaN(v) || Math.abs(v) > 60) { toast('Склонение: например 17°24′ или 17,4 (минус — западное)'); this.value = dcl() ? declStr(dcl()) : ''; return; }
+    S.decl = Math.round(v * 10000) / 10000; this.value = S.decl ? declStr(S.decl) : ''; declNote(); renderTable(); renderCoords(); afterChange();
+});
 function bindField(id, fn) { $(id).addEventListener('change', function () { fn(this.value); afterChange(); }); }
 bindField('f-name', function (v) { S.name = v.trim(); });
 function bindP0() { var la = parseCoord($('p0-lat').value, true), lo = parseCoord($('p0-lng').value, false); S.p0 = { lat: isNaN(la) ? null : la, lng: isNaN(lo) ? null : lo }; }
 $('p0-lat').addEventListener('change', function () { bindP0(); afterChange(); });
 $('p0-lng').addEventListener('change', function () { bindP0(); afterChange(); });
-bindField('f-s', function (v) { S.s = Math.max(0, parseInt(v, 10) || 0); });
+bindField('f-s', function (v) { var n = Math.max(0, parseInt(v, 10) || 0); if (S.kind === 'coords') S.ks = n; else S.s = n; renderCoords(); });
 bindField('f-tol', function (v) { var t = parseInt(v, 10); S.tol = t > 0 ? t : null; });
 bindField('f-mode', function (v) { S.mode = v; });
-bindField('f-c', function (v) { var c = parseInt(v, 10); S.c = isNaN(c) ? null : Math.max(0, c); });
+bindField('f-c', function (v) { var c = parseInt(v, 10), cc = isNaN(c) ? null : Math.max(0, c); if (S.kind === 'coords') S.kc = cc; else S.c = cc; });
 bindField('f-labels', function (v) { S.labels = parseInt(v, 10); });
-['region', 'les', 'uch', 'kv', 'author'].forEach(function (k) { bindField('s-' + k, function (v) { S.stamp[k] = v; }); });
+['region', 'les', 'uch', 'kv', 'author', 'title', 'vyd'].forEach(function (k) { bindField('s-' + k, function (v) { S.stamp[k] = v; }); });
+bindField('s-adec', function (v) { S.adec = parseInt(v, 10) || 4; });
+$('s-gap').addEventListener('change', function () { S.showGap = this.checked; scheduleSave(); });
 
 function renderInfo() {
     var R = compute(), el = $('info'), st = gapStatus(R);
@@ -1245,12 +1382,17 @@ function renderInfo() {
     if (!R.poly) { el.className = 'info'; el.innerHTML = '<div class="big">' + f1(R.len) + ' м</div><div class="st" style="color:var(--muted)">Длина хода (без замыкания)</div>'; return R; }
     var extra = '<div style="font-size:.88em;color:var(--muted);margin-top:3px">Периметр: ' + f1(R.perim) + ' м · вершин: ' + R.poly.length + '</div>';
     el.className = 'info ' + st.cls;
-    var mid = R.kind === 'coords' ? '<div class="st" style="color:var(--muted)">Контур по координатам точек</div>' : (R.gap !== null ? '<div class="st">' + esc(gapText(R)) + '<br>' + esc(st.txt) + '</div>' : '<div class="st" style="color:var(--muted)">Замкнуто автоматически — невязка не проверена</div>');
+    var mid = R.kind === 'coords' ? '<div class="st" style="color:var(--muted)">Замкнуто на Т.' + R.c + ' (площадь по точкам Т.' + R.c + '–Т.' + (R.m - 1) + ')</div>' : (R.gap !== null ? '<div class="st">' + esc(gapText(R)) + '<br>' + esc(st.txt) + '</div>' : '<div class="st" style="color:var(--muted)">Замкнуто автоматически — невязка не проверена</div>');
     el.innerHTML = '<div class="big">' + (R.area / 10000).toFixed(4) + ' га</div>' + mid + extra;
     return R;
 }
 var saveT = 0;
-function afterChange() { renderInfo(); refreshLabels(); $('v-s').textContent = 'Т.' + compute().s; var R = compute(); $('v-c').textContent = S.mode === 'return' ? 'Т.' + R.c : (S.mode === 'auto' ? 'авто' : 'нет'); draw(); scheduleSave(); }
+function scLabels(R) {
+    $('v-s').textContent = 'Т.' + R.s;
+    $('v-c').textContent = S.kind === 'coords' ? 'Т.' + R.c : (S.mode === 'return' ? 'Т.' + R.c : (S.mode === 'auto' ? 'авто' : 'нет'));
+}
+function afterChange() { renderInfo(); refreshLabels(); scLabels(compute()); refreshPassNote(); draw(); scheduleSave(); }
+function refreshPassNote() { }
 
 /* ---------- панели ---------- */
 function switchTab(id) {
@@ -1588,7 +1730,7 @@ function archOpen(id) {
 function hasData() { return !compute().empty; }
 function archNew() {
     var go = function () {
-        clearTimeout(archT); var st = S.stamp; S = newState(); S.stamp = { region: st.region, les: st.les, uch: st.uch, kv: '', author: st.author };
+        clearTimeout(archT); var st = S.stamp; S = newState(); S.stamp = { region: st.region, les: st.les, uch: st.uch, kv: '', author: st.author, title: st.title || '', vyd: '' };
         scanImg = null; scanBlob = null; scanDirty = false; delScanBlob(); ui.undoLines = null;
         applyPassport(false); syncFields(); renderTable(); renderCoords(); renderInfo(); syncScanUI(); fitView(true); saveState(); $('m-arch').classList.remove('on'); switchTab('p-data'); showDock(); toast('Новая делянка');
     };
@@ -1649,7 +1791,9 @@ function exportPolyLL() {
     if (!ll) { toast('Нужны координаты точек (при вводе азимутами — координаты столба в «Профи»)'); return null; }
     return R.idx.map(function (i) { return ll[i]; });
 }
+function schemeGuard() { return printMode === 'scheme' && !confirm('Для печати выбрана «Схема расположения» — данные отводчикам выдавать нельзя. Всё равно выгрузить файл с координатами?'); }
 $('ex-gpx').onclick = function () {
+    if (schemeGuard()) return;
     var pts = exportPolyLL(); if (!pts) return;
     var s = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Абрис ПРО" xmlns="http://www.topografix.com/GPX/1/1">\n';
     if ($('ex-t0').checked && hasP0()) s += '<wpt lat="' + S.p0.lat.toFixed(7) + '" lon="' + S.p0.lng.toFixed(7) + '"><name>Т.0 (столб)</name></wpt>\n';
@@ -1657,6 +1801,7 @@ $('ex-gpx').onclick = function () {
     download((S.name || 'делянка') + '.gpx', new Blob([s], { type: 'application/gpx+xml' }));
 };
 $('ex-gj').onclick = function () {
+    if (schemeGuard()) return;
     var pts = exportPolyLL(); if (!pts) return;
     var R = compute(), ring = pts.map(function (p) { return [+p.lng.toFixed(7), +p.lat.toFixed(7)]; }); ring.push(ring[0].slice());
     var ga = +(R.area / 10000).toFixed(4);
@@ -1676,7 +1821,8 @@ function autoScale(R, bw, bh) {
 function renderSheet(opts) {
     var PX = 8, c = document.createElement('canvas'); c.width = 210 * PX; c.height = 297 * PX; var q = c.getContext('2d');
     q.fillStyle = '#fff'; q.fillRect(0, 0, c.width, c.height);
-    var R = compute(), segs = segments(R), ll = llPoints(), has = !!ll;
+    var scheme = opts.mode === 'scheme';
+    var R = compute(), segs = scheme ? [] : segments(R), ll = scheme ? null : llPoints(), has = !!ll;
     function T(txt, x, y, size, bold, align, maxW) {
         q.font = (bold ? 'bold ' : '') + Math.round(size * PX) + 'px sans-serif'; q.textAlign = align || 'left'; q.fillStyle = '#000';
         if (maxW) { var w = q.measureText(txt).width / PX; if (w > maxW) q.font = (bold ? 'bold ' : '') + Math.max(6, Math.round(size * PX * maxW / w)) + 'px sans-serif'; }
@@ -1685,26 +1831,54 @@ function renderSheet(opts) {
     function ln(x1, y1, x2, y2, w) { q.lineWidth = (w || 0.2) * PX; q.strokeStyle = '#000'; q.beginPath(); q.moveTo(x1 * PX, y1 * PX); q.lineTo(x2 * PX, y2 * PX); q.stroke(); }
     function rc(x, y, w, h, lw) { q.lineWidth = (lw || 0.2) * PX; q.strokeStyle = '#000'; q.strokeRect(x * PX, y * PX, w * PX, h * PX); }
     rc(8, 8, 194, 281, 0.6);
-    T('ЧЕРТЁЖ АБРИСА ДЕЛЯНКИ', 105, 17, 5.6, true, 'center');
-    var bx = 12, by = 47, bw = 128, bh = 200;
-    if (has) { var mm = ll.length, gg = mm <= 14 ? 1 : (mm <= 28 ? 2 : 3), cH = 9 + (Math.ceil(mm / gg) + 1) * 4.6; bh = Math.max(110, Math.min(200, 273 - by - cH - 2)); }
+    function wrapT(txt, maxW, size, bold) {
+        q.font = (bold ? 'bold ' : '') + Math.round(size * PX) + 'px sans-serif'; var out = [];
+        String(txt).split(/\n/).forEach(function (par) {
+            var words = par.split(/\s+/).filter(Boolean), cur = '';
+            words.forEach(function (w) { var t = cur ? cur + ' ' + w : w; if (cur && q.measureText(t).width / PX > maxW) { out.push(cur); cur = w; } else cur = t; });
+            out.push(cur);
+        });
+        return out;
+    }
+    var title = (S.stamp.title || '').trim() || 'Абрис делянки', tsz = 5.6, tl = wrapT(title, 184, tsz, true);
+    if (tl.length > 2) { tsz = 4.6; tl = wrapT(title, 184, tsz, true); }
+    if (tl.length > 3) { tsz = 3.8; tl = wrapT(title, 184, tsz, true).slice(0, 4); }
+    var lh = tsz * 1.3; tl.forEach(function (t, k) { T(t, 105, 16.5 + k * lh, tsz, true, 'center'); });
+    var rowsY = 16.5 + (tl.length - 1) * lh + 8;
+    var area = R.poly ? areaGa(R) + ' га' : '—', st = gapStatus(R), adg = [1, 2, 4].indexOf(S.adec) >= 0 ? S.adec : 4;
+    var left = [['Субъект:', S.stamp.region], ['Лесничество:', S.stamp.les], ['Участковое:', S.stamp.uch], ['Квартал / выдел:', S.stamp.kv]].filter(function (r) { return String(r[1] || '').trim(); });
+    var right = [['Делянка:', S.name]].filter(function (r) { return String(r[1] || '').trim(); });
+    if (!scheme || opts.sarea !== false) right.push(['Площадь:', area]);
+    right.push(['Масштаб:', '@N']);
+    if (!scheme && R.gap !== null && S.showGap !== false) right.push(['Невязка:', gapText(R).replace('Невязка ', '')]);
+    var nrow = Math.max(left.length, right.length);
+    var yEnd = rowsY + Math.max(nrow - 1, 0) * 4.6;
+    var vl = String(S.stamp.vyd || '').split(/\n/).map(function (s) { return s.trim(); }).filter(Boolean).map(function (s) {
+        var m = s.match(/^([^\s=:—–-]+)\s*[=:—–-]?\s*([\d.,]+)\s*(?:га)?$/);
+        if (!m) return s; var a = parseFloat(m[2].replace(',', '.')); return isFinite(a) ? m[1] + ' — ' + a.toFixed(adg).replace('.', ',') : s;
+    });
+    if (vl.length && !scheme) {
+        var vt = wrapT('Выделы (площадь, га): ' + vl.join('; ') + '.   Общая площадь: ' + (R.poly ? areaGa(R).replace('.', ',') : '—') + ' га', 184, 3.3, false);
+        vt.forEach(function (t, k) { T(t, 12, yEnd + 5 + k * 4.2, 3.3, false); }); yEnd += 5 + (vt.length - 1) * 4.2;
+    }
+    var sepY = yEnd + 4.7; ln(12, sepY, 198, sepY, 0.3);
+    var by = sepY + 3.5, bx = 12, bw = scheme ? 186 : 128, bh = 200;
+    if (scheme) bh = 273 - by - 2;
+    else if (has) { var mm = ll.length, gg = mm <= 14 ? 1 : (mm <= 28 ? 2 : 3), cH = 9 + (Math.ceil(mm / gg) + 1) * 4.6; bh = Math.max(110, Math.min(273 - by - 2, 273 - by - cH - 2)); }
+    else bh = Math.max(110, Math.min(200, 273 - by - 2));
     var N = opts.scale > 0 ? opts.scale : autoScale(R, bw, bh), bb = ptsBounds(R);
     var fits = (bb.x1 - bb.x0) * 1000 / N <= bw * 0.96 && (bb.y1 - bb.y0) * 1000 / N <= bh * 0.96;
-    var st = gapStatus(R), area = R.poly ? (R.area / 10000).toFixed(4) + ' га' : '—';
-    var left = [['Субъект:', S.stamp.region], ['Лесничество:', S.stamp.les], ['Участковое:', S.stamp.uch], ['Квартал / выдел:', S.stamp.kv]];
-    var right = [['Делянка:', S.name], ['Площадь:', area], ['Масштаб:', '1:' + N.toLocaleString('ru-RU')], [R.gap !== null ? 'Невязка:' : 'Контур:', R.gap !== null ? gapText(R).replace('Невязка ', '') : (R.kind === 'coords' ? 'по координатам' : '—')]];
-    left.forEach(function (r, i) { T(r[0], 12, 25 + i * 4.6, 3.3, true); T(String(r[1] || ''), 12 + 31, 25 + i * 4.6, 3.3, false, 'left', 58); });
-    right.forEach(function (r, i) { T(r[0], 108, 25 + i * 4.6, 3.3, true); T(String(r[1] || ''), 108 + 22, 25 + i * 4.6, 3.3, false, 'left', 70); });
-    ln(12, 43.5, 198, 43.5, 0.3);
+    left.forEach(function (r, i) { T(r[0], 12, rowsY + i * 4.6, 3.3, true); T(String(r[1] || ''), 12 + 31, rowsY + i * 4.6, 3.3, false, 'left', 58); });
+    right.forEach(function (r, i) { T(r[0], 108, rowsY + i * 4.6, 3.3, true); T(String(r[1] === '@N' ? '1:' + N.toLocaleString('ru-RU') : (r[1] || '')), 108 + 22, rowsY + i * 4.6, 3.3, false, 'left', 70); });
     var bc = document.createElement('canvas'); bc.width = bw * PX; bc.height = bh * PX;
-    drawScene(bc.getContext('2d'), bc.width, bc.height, { k: PX * 1000 / N, cx: (bb.x0 + bb.x1) / 2, cy: (bb.y0 + bb.y1) / 2 }, PX * 0.264, true, { scan: opts.scan });
+    drawScene(bc.getContext('2d'), bc.width, bc.height, { k: PX * 1000 / N, cx: (bb.x0 + bb.x1) / 2, cy: (bb.y0 + bb.y1) / 2 }, PX * 0.264, true, { scan: opts.scan, scheme: scheme });
     q.drawImage(bc, bx * PX, by * PX); rc(bx, by, bw, bh, 0.35);
     // ходы — справа от чертежа
     var tx = 144, tw = 54, n = segs.length;
     if (n) {
         var rh = Math.min(5.4, (bh - 6) / (n + 1)), fs = Math.min(3.2, rh * 0.64), cols = [0, 19, 37, 54], ty = by, i;
         q.fillStyle = '#EEE'; q.fillRect(tx * PX, ty * PX, tw * PX, rh * PX);
-        ['Ход', 'Азимут', 'Длина, м'].forEach(function (h, k) { T(h, tx + (cols[k] + cols[k + 1]) / 2, ty + rh * 0.7, fs, true, 'center'); });
+        ['Ход', dcl() ? 'Азимут магн.' : 'Азимут', 'Длина, м'].forEach(function (h, k) { T(h, tx + (cols[k] + cols[k + 1]) / 2, ty + rh * 0.7, fs, true, 'center'); });
         segs.forEach(function (sg, k) {
             var y = ty + rh * (k + 1), mid = function (j) { return tx + (cols[j] + cols[j + 1]) / 2; };
             T(plab(sg.a) + '–' + plab(sg.b) + (sg.tie ? '*' : ''), mid(0), y + rh * 0.7, fs, false, 'center', 17);
@@ -1736,13 +1910,15 @@ function renderSheet(opts) {
     }
     ln(8, 276, 202, 276, 0.3);
     T('Съёмку и чертёж составил: ' + (S.stamp.author || ''), 12, 283, 3.4, false, 'left', 96);
+    if (dcl() && !scheme) T('Азимуты магнитные, склонение ' + declStr(dcl()) + (dcl() > 0 ? ' (В)' : ' (З)'), 118, 279.6, 2.8, false);
     T('Дата: ' + new Date().toLocaleDateString('ru-RU'), 118, 283, 3.4, false);
     T('Подпись: ______________', 150, 283, 3.4, false);
     return { canvas: c, N: N, fits: fits };
 }
-var lastSheet = null;
+var lastSheet = null, printMode = 'full';
 function refreshPreview() {
-    var sc = parseInt($('prn-scale').value, 10) || 0, r = renderSheet({ scale: sc, scan: $('prn-scan').checked && !!(scanImg && S.scan.on) });
+    printMode = $('prn-mode').value; $('prn-sarea-w').style.display = printMode === 'scheme' ? '' : 'none';
+    var sc = parseInt($('prn-scale').value, 10) || 0, r = renderSheet({ scale: sc, scan: $('prn-scan').checked && !!(scanImg && S.scan.on), mode: printMode, sarea: $('prn-sarea').checked });
     lastSheet = r; $('prn-img').src = r.canvas.toDataURL('image/png');
     $('prn-note').textContent = 'Чертёж в масштабе 1:' + r.N.toLocaleString('ru-RU') + (sc ? '' : ' (подобран автоматически)') + (r.fits ? '' : '. Не помещается на лист — выберите более мелкий масштаб.');
 }
@@ -1754,7 +1930,7 @@ function openPrint() {
     $('prn-share').style.display = (navigator.canShare && window.File) ? '' : 'none';
     $('m-prn').classList.add('on'); refreshPreview();
 }
-$('prn-scale').onchange = refreshPreview; $('prn-scan').onchange = refreshPreview;
+$('prn-scale').onchange = refreshPreview; $('prn-scan').onchange = refreshPreview; $('prn-mode').onchange = refreshPreview; $('prn-sarea').onchange = refreshPreview;
 $('prn-close').onclick = function () { $('m-prn').classList.remove('on'); };
 $('prn-go').onclick = function () { if (!lastSheet) return; $('ps-img').src = lastSheet.canvas.toDataURL('image/png'); setTimeout(function () { window.print(); }, 250); };
 $('prn-png').onclick = function () { if (lastSheet) lastSheet.canvas.toBlob(function (b) { if (b) download((S.name || 'абрис') + '.png', b); }, 'image/png'); };
@@ -1818,7 +1994,7 @@ function runExample() {
     S.scan = { on: true, name: 'учебный планшет', w: 1000, h: 1000, fix: 1, a: { re: mpp * Math.cos(th), im: mpp * Math.sin(th) }, c: { re: 0, im: 0 }, op: 0.75 };
     var a = S.scan.a, z = { re: d.u, im: -d.v }, c0 = { re: -(a.re * z.re - a.im * z.im), im: -(a.re * z.im + a.im * z.re) };
     S.scan.c = { re: c0.re - W0[0][0], im: c0.im - W0[0][1] };
-    S.stamp = { region: 'Учебный пример', les: '', uch: '', kv: 'кв. 12', author: '' };
+    S.stamp = { region: 'Учебный пример', les: '', uch: '', kv: 'кв. 12', author: '', title: '', vyd: '' };
     ui.undoLines = null; syncFields(); renderTable(); renderCoords(); syncScanUI(); renderInfo(); fitView(false); scheduleSave();
     $('m-help').classList.remove('on'); toast('Пример: 4 точки по координатам на учебном планшете (повёрнут на 3°). Попробуйте «↔ Двигать делянку» и «🖨 Печать».');
 }
