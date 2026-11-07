@@ -1383,7 +1383,8 @@
                 <div id="scan-bar" style="margin-top:12px;padding:10px;border:1px solid var(--border-color);border-radius:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
                     <b style="font-size:12px;color:var(--forest-green)">🗺️ Подложка:</b>
                     <select id="scan-select" class="select-traverse" style="padding:7px;min-width:150px" onchange="BgScan.select(this.value)"><option value="">без подложки</option></select>
-                    <label class="btn-action btn-reset-zero" style="width:auto;padding:7px 12px;cursor:pointer;border:1px solid var(--forest-green);color:var(--forest-green);display:inline-flex;align-items:center">＋ Скан листа<input type="file" id="scan-file" accept="image/*" style="display:none"></label>
+                    <button type="button" class="btn-action btn-reset-zero" style="width:auto;padding:7px 12px;border:1px solid var(--forest-green);color:var(--forest-green)" onclick="document.getElementById('scan-file').click()">＋ Скан листа</button>
+                    <input type="file" id="scan-file" accept="image/*" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0" tabindex="-1" aria-hidden="true">
                     <button class="btn-action btn-reset-zero" style="width:auto;padding:7px 12px" onclick="BgScan.openSettings()">⚙ Настройки скана</button>
                     <button class="btn-action btn-set-zero" id="scan-bind-btn" style="width:auto;padding:7px 12px" onclick="BgScan.toggleBind()">📍 Я здесь</button>
                     <button class="btn-action btn-reset-zero" style="width:auto;padding:7px 12px;border:1px solid var(--warning-alert);color:var(--warning-alert)" onclick="BgSheet.open()">🖨 Бланк А4 / Схема отвода</button>
@@ -4821,15 +4822,20 @@ const BgScan = (function () {
     function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
     function select(id) { active = sheets.some(s => s.id === id) ? id : ''; save(); const sh = cur(); if (sh) ensureImg(sh); if (!sh) mode = null; refreshSelect(); updateBindBtn(); redraw(); }
     function addFile(file) {
-        if (!file) return;
-        const url = URL.createObjectURL(file), im = new Image();
-        im.onload = () => {
-            const id = 's' + Date.now().toString(36), sh = { id, name: (file.name || 'Лист').replace(/\.[^.]+$/, '').slice(0, 40), w: im.naturalWidth, h: im.naturalHeight, scaleN: 10000, dpi: 300, a4: false, corr: 0, rot: 0, anchor: null, op: 0.8 };
-            idbDo('readwrite', st => st.put(file, id)).then(() => { sheets.push(sh); active = id; cache[id] = im; save(); refreshSelect(); updateBindBtn(); redraw(); openSettings(); showToast('Скан загружен. Укажите масштаб планшета и разрешение сканирования.'); })
-                .catch(() => showToast('Не удалось сохранить скан на устройстве'));
-        };
-        im.onerror = () => showToast('Не удалось открыть изображение (нужен JPG или PNG)');
-        im.src = url;
+        if (!file) return Promise.resolve();
+        // читаем файл целиком сразу (на iOS временный файл может исчезнуть после очистки поля выбора)
+        return file.arrayBuffer().then(buf => new Promise(resolve => {
+            const blob = new Blob([buf], { type: file.type || 'image/jpeg' }), url = URL.createObjectURL(blob), im = new Image();
+            im.onload = () => {
+                const id = 's' + Date.now().toString(36), sh = { id, name: (file.name || 'Лист').replace(/\.[^.]+$/, '').slice(0, 40), w: im.naturalWidth, h: im.naturalHeight, scaleN: 10000, dpi: 300, a4: false, corr: 0, rot: 0, anchor: null, op: 0.8 };
+                sheets.push(sh); active = id; cache[id] = im; save(); refreshSelect(); updateBindBtn(); redraw(); openSettings();
+                idbDo('readwrite', st => st.put(blob, id)).then(() => showToast('Скан загружен. Укажите масштаб планшета и разрешение сканирования.'))
+                    .catch(e => showToast('Скан открыт, но не сохранён на устройстве (' + ((e && e.name) || 'ошибка хранилища') + '). Он будет доступен, пока открыта страница.'));
+                resolve();
+            };
+            im.onerror = () => { showToast('Не удалось открыть изображение. Нужен JPG или PNG (не PDF и не HEIC).'); resolve(); };
+            im.src = url;
+        })).catch(e => showToast('Не удалось прочитать файл: ' + ((e && e.message) || 'ошибка')));
     }
     function origin() { const sh = cur(); return sh && sh.anchor ? { lat: sh.anchor.lat, lng: sh.anchor.lng } : null; }
     function minSpan() { const sh = cur(); if (!sh) return 0; return Math.max(60, Math.min(sh.w, sh.h) * mpp(sh) * 0.6); }
@@ -4911,7 +4917,7 @@ const BgScan = (function () {
         idbDo('readwrite', st => st.delete(sh.id)).catch(() => {}); sheets = sheets.filter(s => s.id !== sh.id); delete cache[sh.id]; active = ''; mode = null; save(); refreshSelect(); updateBindBtn(); closePopup('scan-popup'); redraw();
     }
     function init() {
-        refreshSelect(); updateBindBtn(); initTaps(); const f = $('scan-file'); if (f) f.addEventListener('change', function () { addFile(this.files && this.files[0]); this.value = ''; });
+        refreshSelect(); updateBindBtn(); initTaps(); const f = $('scan-file'); if (f) f.addEventListener('change', function () { const inp = this, file = inp.files && inp.files[0]; addFile(file).then(() => { try { inp.value = ''; } catch (e) {} }); });
         ['sc-name', 'sc-scale', 'sc-dpi', 'sc-a4', 'sc-corr', 'sc-rot', 'sc-op'].forEach(id => { const el = $(id); if (el) el.addEventListener('change', apply); });
         if (cur()) ensureImg(cur());
     }
