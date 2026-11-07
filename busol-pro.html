@@ -961,8 +961,8 @@
             <button class="popup-close" onclick="closePopup('gps-t1-popup')">&times;</button>
             <h3 id="t1-popup-title">📍 Точка 1 (Т1) Зафиксирована!</h3>
             <div style="background: rgba(45, 90, 39, 0.06); padding: 12px; border-radius: 8px; font-family: monospace; font-size: 12px; line-height: 1.6; margin: 10px 0;">
+                <b>Коорд.:</b> <span id="t1-dd-display">--</span><br>
                 <b>DMS:</b> <span id="t1-dms-display">--</span><br>
-                <b>DD:</b> <span id="t1-dd-display">--</span><br>
                 <b>Высота:</b> <span id="t1-alt-display">--</span><br>
                 <b>Точность GPS:</b> <span id="t1-acc-display">--</span>
             </div>
@@ -1030,6 +1030,99 @@
         </div>
     </div>
 
+    <!-- НАСТРОЙКИ СКАНА -->
+    <div id="scan-popup" class="popup-overlay" onclick="closePopupOuter('scan-popup', event)">
+        <div class="popup-window" style="max-height:90vh;overflow:auto">
+            <button class="popup-close" onclick="closePopup('scan-popup')">&times;</button>
+            <h3>🗺️ Скан листа планшета</h3>
+            <div style="font-size:13px;color:#64748B;margin-bottom:8px">Скан хранится только на этом устройстве и работает без интернета. Сканируйте участок в натуральную величину (100 %), без автоподгонки.</div>
+            <label style="font-size:12px;font-weight:700">Название листа</label><input type="text" id="sc-name" class="input-dist" style="width:100%;text-align:left;margin-bottom:8px">
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+                <div><label style="font-size:12px;font-weight:700;display:block">Масштаб планшета</label><select id="sc-scale" class="select-traverse" style="padding:8px"></select></div>
+                <div><label style="font-size:12px;font-weight:700;display:block">Разрешение скана, dpi</label><input type="number" id="sc-dpi" class="input-dist" style="width:100px" min="50" max="1200" step="10"></div>
+            </div>
+            <label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:8px"><input type="checkbox" id="sc-a4"> Не знаю dpi — считать, что длинная сторона скана = 297 мм (лист А4)</label>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+                <div><label style="font-size:12px;font-weight:700;display:block">Поправка масштаба, %</label><input type="number" id="sc-corr" class="input-dist" style="width:100px" step="0.1" min="-10" max="10"></div>
+                <div><label style="font-size:12px;font-weight:700;display:block">Прозрачность, %</label><input type="number" id="sc-op" class="input-dist" style="width:100px" step="5" min="10" max="100"></div>
+            </div>
+            <label style="font-size:12px;font-weight:700;display:block">Поворот скана, ° (по часовой)</label>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:4px">
+                <button class="btn-action btn-reset-zero" style="width:auto;padding:6px 10px" onclick="BgScan.rotBy(-1)">−1°</button>
+                <button class="btn-action btn-reset-zero" style="width:auto;padding:6px 10px" onclick="BgScan.rotBy(-0.1)">−0,1°</button>
+                <input type="number" id="sc-rot" class="input-dist" style="width:90px" step="0.1" min="-180" max="180">
+                <button class="btn-action btn-reset-zero" style="width:auto;padding:6px 10px" onclick="BgScan.rotBy(0.1)">+0,1°</button>
+                <button class="btn-action btn-reset-zero" style="width:auto;padding:6px 10px" onclick="BgScan.rotBy(1)">+1°</button>
+            </div>
+            <div style="font-size:12px;color:#64748B;margin-bottom:8px">Если на планшете север дан по магнитному меридиану (например, склонение 17°24′ в. = +17,4°), введите это значение: север скана совместится с истинным севером. Осевой меридиан листа — небольшая поправка по сходимости.</div>
+            <div id="sc-info" style="font-size:12px;background:#F1F5F9;border-radius:6px;padding:8px;margin-bottom:10px"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn-action btn-set-zero" style="width:auto;padding:8px 12px" onclick="closePopup('scan-popup');BgScan.toggleBind()">📍 Я здесь (привязать)</button>
+                <button class="btn-action btn-reset-zero" style="width:auto;padding:8px 12px" onclick="BgScan.rebindClear()">Сбросить привязку</button>
+                <button class="btn-action" style="width:auto;padding:8px 12px;background:var(--danger);color:#FFF" onclick="BgScan.remove()">🗑 Удалить скан</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- БЛАНК А4 / СХЕМА ОТВОДА -->
+    <div id="sheet-popup" class="popup-overlay" onclick="closePopupOuter('sheet-popup', event)">
+        <div class="popup-window" style="max-width:980px;width:96vw;max-height:94vh;overflow:auto">
+            <button class="popup-close" onclick="BgSheet.close()">&times;</button>
+            <h3>🖨 Бланк А4 · Схема отвода</h3>
+            <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
+                <div style="flex:1 1 300px;min-width:260px">
+                    <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+                        <button class="btn-action btn-set-zero" style="width:auto;padding:7px 10px" onclick="BgSheet.preset('full')">Полный абрис</button>
+                        <button class="btn-action btn-reset-zero" style="width:auto;padding:7px 10px;border:1px solid var(--forest-green);color:var(--forest-green)" onclick="BgSheet.preset('scheme')">Схема отвода (только чертёж)</button>
+                    </div>
+                    <label style="font-size:12px;font-weight:700">Заголовок (жирная только первая строка)</label>
+                    <textarea id="sh-title" rows="3" class="input-dist" style="width:100%;text-align:left;font-size:14px"></textarea>
+                    <label style="font-size:12px;font-weight:700">Лесничество</label><input type="text" id="sh-les" class="input-dist" style="width:100%;text-align:left;margin-bottom:6px">
+                    <label style="font-size:12px;font-weight:700">Квартал / выдел / делянка</label><input type="text" id="sh-kv" class="input-dist" style="width:100%;text-align:left;margin-bottom:6px">
+                    <label style="font-size:12px;font-weight:700">Составил</label><input type="text" id="sh-author" class="input-dist" style="width:100%;text-align:left;margin-bottom:6px">
+                    <label style="font-size:12px;font-weight:700">Масштаб чертежа</label><select id="sh-scale" class="select-traverse" style="padding:7px;margin-bottom:8px"></select>
+                    <div style="display:grid;grid-template-columns:1fr;gap:3px;font-size:13px">
+                        <label><input type="checkbox" id="sh-scan"> подложка (скан листа)</label>
+                        <label><input type="checkbox" id="sh-nums"> номера точек</label>
+                        <label><input type="checkbox" id="sh-ang"> азимуты и длины линий</label>
+                        <label><input type="checkbox" id="sh-area"> площадь</label>
+                        <label><input type="checkbox" id="sh-coords"> таблица координат</label>
+                        <label><input type="checkbox" id="sh-legend"> «Условные обозначения»</label>
+                        <label><input type="checkbox" id="sh-lines"> только линии (без кружков)</label>
+                        <label><input type="checkbox" id="sh-noscale"> не показывать масштаб</label>
+                        <label><input type="checkbox" id="sh-frame"> рамка по периметру листа</label>
+                    </div>
+                    <div id="sh-note" style="font-size:12px;color:#64748B;margin:8px 0"></div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap">
+                        <button class="btn-action btn-set-zero" style="width:auto;padding:8px 12px" onclick="BgSheet.pdf()">📄 PDF</button>
+                        <button class="btn-action btn-reset-zero" style="width:auto;padding:8px 12px" onclick="BgSheet.png()">🖼 PNG</button>
+                        <button class="btn-action btn-reset-zero" style="width:auto;padding:8px 12px" onclick="BgSheet.share()">📤 Поделиться</button>
+                    </div>
+                </div>
+                <div style="flex:1 1 340px;min-width:260px;text-align:center"><img id="sh-img" alt="Предпросмотр листа" style="max-width:100%;max-height:78vh;border:1px solid #CBD5E1;box-shadow:0 2px 10px rgba(0,0,0,.15)"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ПАКЕТ ДЕЛЯНОК ДЛЯ АБРИСА ПРО -->
+    <div id="pack-popup" class="popup-overlay" onclick="closePopupOuter('pack-popup', event)">
+        <div class="popup-window">
+            <button class="popup-close" onclick="closePopup('pack-popup')">&times;</button>
+            <h3>📦 Пакет делянок в Абрис ПРО</h3>
+            <div style="font-size:13px;color:#64748B;margin-bottom:8px">Отметьте делянки. Всё уйдёт одним файлом: координаты, ходы, паспорт и склонение. В Абрисе ПРО откройте «Архив → Импорт» — появятся все делянки сразу.</div>
+            <div style="display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap;align-items:center">
+                <button class="btn-action btn-reset-zero" style="width:auto;padding:6px 12px" onclick="bgPackAll(true)">Выбрать все</button>
+                <button class="btn-action btn-reset-zero" style="width:auto;padding:6px 12px" onclick="bgPackAll(false)">Снять все</button>
+                <span id="pack-count" style="font-size:13px;color:#64748B"></span>
+            </div>
+            <div id="pack-list" style="max-height:42vh;overflow:auto;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:10px"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn-action btn-set-zero" style="width:auto;padding:9px 14px" onclick="bgPackShare()">📤 Поделиться (почта, мессенджер, облако)</button>
+                <button class="btn-action btn-reset-zero" style="width:auto;padding:9px 14px;border:1px solid var(--forest-green);color:var(--forest-green)" onclick="bgPackDownload()">💾 Скачать файл</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ВСПЛЫВАЮЩАЯ ИНСТРУКЦИЯ ПО МАГНИТНОМУ СКЛОНЕНИЮ / ЮСТИРОВКЕ -->
     <div id="offset-info-popup" class="popup-overlay" onclick="closePopupOuter('offset-info-popup', event)">
         <div class="popup-window">
@@ -1090,7 +1183,8 @@
                     <button class="btn-action btn-reset-zero" style="padding: 8px 15px; border: 1px solid var(--forest-green); color: var(--forest-green); width: auto;" onclick="exportArchiveToCSV()">📊 Экспорт CSV (Excel)</button>
                     <button class="btn-action btn-reset-zero" style="padding: 8px 15px; border: 1px solid var(--warning-alert); color: var(--warning-alert); width: auto;" onclick="exportToKML()">🗺️ Экспорт KML (ГИС)</button>
                     <button class="btn-action btn-reset-zero" style="padding: 8px 15px; border: 1px solid var(--forest-green); color: var(--forest-green); width: auto;" onclick="sendToAbris()">📐 В Абрис (копировать)</button>
-                    <a class="btn-action btn-reset-zero" href="busol-abris.html" target="_blank" rel="noopener" style="padding: 8px 15px; border: 1px solid var(--forest-green); color: var(--forest-green); width: auto; text-decoration: none; display: inline-flex; align-items: center;">↗ Открыть Абрис</a>
+                    <button class="btn-action btn-reset-zero" style="padding: 8px 15px; border: 1px solid var(--forest-green); color: var(--forest-green); width: auto;" onclick="openArchivePack()">📦 Пакет делянок в Абрис (файл)</button>
+                    <a class="btn-action btn-reset-zero" href="bg-abris.html" target="_blank" rel="noopener" style="padding: 8px 15px; border: 1px solid var(--forest-green); color: var(--forest-green); width: auto; text-decoration: none; display: inline-flex; align-items: center;">↗ Открыть Абрис</a>
                 </div>
             </div>
         </div>
@@ -1286,6 +1380,14 @@
                     <div id="area-display" class="area-badge">Площадь: 0.0000 га</div>
                 </div>
                 
+                <div id="scan-bar" style="margin-top:12px;padding:10px;border:1px solid var(--border-color);border-radius:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                    <b style="font-size:12px;color:var(--forest-green)">🗺️ Подложка:</b>
+                    <select id="scan-select" class="select-traverse" style="padding:7px;min-width:150px" onchange="BgScan.select(this.value)"><option value="">без подложки</option></select>
+                    <label class="btn-action btn-reset-zero" style="width:auto;padding:7px 12px;cursor:pointer;border:1px solid var(--forest-green);color:var(--forest-green);display:inline-flex;align-items:center">＋ Скан листа<input type="file" id="scan-file" accept="image/*" style="display:none"></label>
+                    <button class="btn-action btn-reset-zero" style="width:auto;padding:7px 12px" onclick="BgScan.openSettings()">⚙ Настройки скана</button>
+                    <button class="btn-action btn-set-zero" id="scan-bind-btn" style="width:auto;padding:7px 12px" onclick="BgScan.toggleBind()">📍 Я здесь</button>
+                    <button class="btn-action btn-reset-zero" style="width:auto;padding:7px 12px;border:1px solid var(--warning-alert);color:var(--warning-alert)" onclick="BgSheet.open()">🖨 Бланк А4 / Схема отвода</button>
+                </div>
                 <div style="margin-top: 15px; background: rgba(45, 90, 39, 0.04); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
                     <span style="font-weight: 700; color: var(--forest-green); display: block; font-size: 12px; margin-bottom: 6px;">⚠️ РУКОВОДСТВО ТАКСАТОРУ ПО ИНСТРУМЕНТАМ БУССОЛИ:</span>
                     <ul style="font-size: 11px; line-height: 1.5; padding-left: 14px; margin: 0; opacity: 0.9; color: var(--text-graphite);">
@@ -1540,12 +1642,14 @@
     }
 
     // --- ФОРМАТИРОВАНИЕ GPS-ДАННЫХ (с учётом отсутствия фиксации) ---
+    // Основной формат координат: десятичные градусы, до 6 знаков после запятой («61.777, 51.428»)
+    function ddText(lat, lng) { return `${+Number(lat).toFixed(6)}, ${+Number(lng).toFixed(6)}`; }
     function coordsDMSText() {
         return gpsFixed ? `${decimalToDMS(currentLat, true)} ${decimalToDMS(currentLng, false)}` : 'GPS: нет фиксации';
     }
     function coordsFullText() {
         return gpsFixed
-            ? `${decimalToDMS(currentLat, true)} ${decimalToDMS(currentLng, false)} (${currentLat.toFixed(6)}, ${currentLng.toFixed(6)})`
+            ? `${ddText(currentLat, currentLng)} (${decimalToDMS(currentLat, true)} ${decimalToDMS(currentLng, false)})`
             : 'GPS: поиск спутников...';
     }
     function altitudeText() {
@@ -2118,8 +2222,9 @@
 
     function zoomCanvas(factor) {
         canvasZoomMultiplier *= factor;
-        if (canvasZoomMultiplier < 0.2) canvasZoomMultiplier = 0.2;
-        if (canvasZoomMultiplier > 8.0) canvasZoomMultiplier = 8.0;
+        const zMin = (window.BgScan && BgScan.active()) ? 0.01 : 0.2, zMax = (window.BgScan && BgScan.active()) ? 60.0 : 8.0;
+        if (canvasZoomMultiplier < zMin) canvasZoomMultiplier = zMin;
+        if (canvasZoomMultiplier > zMax) canvasZoomMultiplier = zMax;
         drawPolygon();
     }
 
@@ -2414,7 +2519,7 @@
         let seconds = Math.floor((minutesNotTruncated - minutes) * 60);
 
         let direction = isLat ? (deg >= 0 ? "с.ш." : "ю.ш.") : (deg >= 0 ? "в.д." : "з.д.");
-        return `${degrees}° ${minutes}' ${seconds}" ${direction}`;
+        return `${degrees}°${minutes}′${seconds}″ ${direction}`;
     }
 
     function decimalAngleToDMS(deg) {
@@ -2581,8 +2686,9 @@
         const az = currentAzimuth.toFixed(1);
         
         hudTitle.innerText = `Ход Т${prevPt} ➔ Т${nextPt} • Азимут: ${az}°`;
+        hudCoords.style.whiteSpace = 'pre-line';
         hudCoords.innerText = gpsFixed
-            ? `${coordsDMSText()} (±${currentAccuracy}м)`
+            ? `${ddText(currentLat, currentLng)} (±${currentAccuracy}м)\n${coordsDMSText()}`
             : 'GPS: нет фиксации (координаты не будут записаны)';
     }
 
@@ -2647,7 +2753,7 @@
         }
 
         const dmsStr = gpsFixed ? `${decimalToDMS(currentLat, true)}   ${decimalToDMS(currentLng, false)}` : 'GPS: НЕТ ФИКСАЦИИ';
-        const ddStr = gpsFixed ? `${currentLat.toFixed(6)}°,  ${currentLng.toFixed(6)}°` : '—';
+        const ddStr = gpsFixed ? ddText(currentLat, currentLng) : '—';
         const azStr = `${currentAzimuth.toFixed(1)}° (${getCardinalDirection(currentAzimuth)})`;
         const altStr = (currentAltitude !== null && currentAltitude !== undefined) ? `${currentAltitude} м` : 'н/д';
         const accStr = gpsFixed ? `±${currentAccuracy} м` : 'н/д';
@@ -2668,12 +2774,12 @@
         currentY += lineSpacing;
         ctx.fillStyle = '#FFFFFF';
         ctx.font = `bold ${baseSize}px monospace`;
-        ctx.fillText(`DMS: ${dmsStr}`, paddingLeft, currentY);
+        ctx.fillText(`КООРД: ${ddStr}`, paddingLeft, currentY);
 
         currentY += lineSpacing;
         ctx.fillStyle = '#E2E8F0';
-        ctx.font = `bold ${baseSize}px monospace`;
-        ctx.fillText(`DD:  ${ddStr}`, paddingLeft, currentY);
+        ctx.font = `bold ${Math.round(baseSize * 0.94)}px monospace`;
+        ctx.fillText(`DMS: ${dmsStr}`, paddingLeft, currentY);
 
         currentY += lineSpacing;
         ctx.fillStyle = '#FBBF24';
@@ -2744,7 +2850,7 @@
             
             document.getElementById('t1-popup-title').innerText = `📍 Точка ${ptNum} (Т${ptNum}) Зафиксирована!`;
             document.getElementById('t1-dms-display').innerText = `${decimalToDMS(lat, true)} ${decimalToDMS(lng, false)}`;
-            document.getElementById('t1-dd-display').innerText = `(${lat.toFixed(6)}, ${lng.toFixed(6)})`;
+            document.getElementById('t1-dd-display').innerText = ddText(lat, lng);
             document.getElementById('t1-alt-display').innerText = (alt !== null && alt !== undefined) ? `${alt} м` : 'н/д';
             document.getElementById('t1-acc-display').innerText = `±${acc} м`;
             
@@ -2954,7 +3060,7 @@
     // Координаты для панели лимба: DMS крупно, DD мельче; без фиксации — прежний текст
     function limbCoordsHtml() {
         if (!gpsFixed) return coordsFullText();
-        return `${decimalToDMS(currentLat, true)} ${decimalToDMS(currentLng, false)}<br><span class="limb-dd">(${currentLat.toFixed(6)}, ${currentLng.toFixed(6)})</span>`;
+        return `${ddText(currentLat, currentLng)}<br><span class="limb-dd">(${decimalToDMS(currentLat, true)} ${decimalToDMS(currentLng, false)})</span>`;
     }
 
     // Румб, обратный азимут, источник, цвет пузырька уровня и данные для линзы
@@ -4140,7 +4246,7 @@
 
         let spanX = Math.max(maxX - minX, 10.0);
         let spanY = Math.max(maxY - minY, 10.0);
-        let maxSpan = Math.max(spanX, spanY);
+        let maxSpan = Math.max(spanX, spanY, (measurementsLog.length === 0 && window.BgScan) ? BgScan.minSpan() : 0);
 
         let baseScale = Math.max(10, Math.min(width, height) - 100) / maxSpan;
         let scale = baseScale * canvasZoomMultiplier;
@@ -4154,6 +4260,9 @@
                 y: height / 2 - (pt.y - centerCenterY) * scale + panOffsetY
             };
         }
+
+        // Подложка: скан листа планшета (под сеткой и чертежом)
+        if (window.BgScan) BgScan.draw(ctx, toPixel, scale, gisOrigin || BgScan.origin(), canvas.id);
 
         // Фоновая сетка
         ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
@@ -4230,8 +4339,9 @@
         }
 
         // Маркер текущей позиции таксатора
-        if (gpsFixed && traverseOrigin) {
-            let userLocal = latLngToLocal(traverseOrigin, currentLat, currentLng);
+        const markOrigin = traverseOrigin || (window.BgScan && BgScan.origin());
+        if (gpsFixed && markOrigin) {
+            let userLocal = latLngToLocal(markOrigin, currentLat, currentLng);
             let userPixel = toPixel(userLocal);
 
             if (userPixel.x >= 0 && userPixel.x <= width && userPixel.y >= 0 && userPixel.y <= height) {
@@ -4307,7 +4417,9 @@
             systemMode: currentSystemMode,
             traverseDirection: currentTraverseDirection,
             baseAzimuth: baseAzimuth,
-            distMethod: globalDistanceMethod
+            distMethod: globalDistanceMethod,
+            passport: bgCurPassport(),
+            decl: (currentSystemMode === 'theodolite') ? offsetTheodolite : offsetMagnetic
         };
         
         savedProjects.push(projectSnapshot);
@@ -4596,5 +4708,390 @@
   }
 </script>
 <div id="lens-cloud" class="lens-cloud" aria-live="polite"></div>
+<script>
+/* ===== Пакет делянок для Абриса ПРО ===== */
+function bgNormAz(a) { a = a % 360; return a < 0 ? a + 360 : a; }
+function bgCurPassport() {
+    try { const ap = window.LesovikCore && window.LesovikCore.getActiveProject && window.LesovikCore.getActiveProject();
+        if (ap && ap.passport) return { lesnichestvo: ap.passport.lesnichestvo || '', kvartal: ap.passport.kvartal || '', vydel: ap.passport.vydel || '', delyanka: ap.passport.delyanka || '' }; } catch (e) {}
+    return null;
+}
+// Делянка из журнала БГ-ХНС -> элемент архива Абриса ('abris-archive')
+function bgAbrisItem(name, log, passport, sysMode, declOverride, ts) {
+    const rows = (log || []).filter(m => isFinite(parseFloat(m.azimuth)) && isFinite(parseFloat(m.distance)));
+    if (!rows.length) return null;
+    const noGps = rows.every(m => m.systemMode !== 'gps_heading');
+    let decl = declOverride !== undefined && declOverride !== null ? parseFloat(declOverride) : ((sysMode === 'theodolite') ? offsetTheodolite : offsetMagnetic);
+    if (!noGps || !isFinite(decl)) decl = 0;
+    const lines = rows.map(m => ({ az: Math.round(bgNormAz(parseFloat(m.azimuth) - decl) * 100) / 100, d: parseFloat(m.distance) }));
+    let p0 = { lat: null, lng: null };
+    for (const m of rows) { if (hasCoords(m) && (m.lat !== 0 || m.lng !== 0)) { p0 = { lat: m.lat, lng: m.lng }; break; } }
+    let s = 1; if (lines.length <= s + 2) s = Math.max(0, Math.min(s, lines.length - 3));
+    // замыкание: возвращается ли ход в точку начала (как в Абрисе)
+    let x = 0, y = 0; const P = [{ x: 0, y: 0 }];
+    lines.forEach(l => { const r = (l.az + decl) * Math.PI / 180; x += l.d * Math.sin(r); y += l.d * Math.cos(r); P.push({ x, y }); });
+    let perim = 0; for (let i = s + 1; i < P.length; i++) perim += Math.hypot(P[i].x - P[i - 1].x, P[i].y - P[i - 1].y);
+    const gap = Math.hypot(P[P.length - 1].x - P[s].x, P[P.length - 1].y - P[s].y);
+    const closed = P.length - s >= 4 && gap <= Math.max(5, perim * 0.05);
+    let area = 0;
+    if (closed) { for (let i = s; i < P.length - 1; i++) area += P[i].x * P[i + 1].y - P[i + 1].x * P[i].y; area = Math.abs(area) / 2; }
+    const pp = passport || {};
+    const kv = [pp.kvartal ? 'кв. ' + pp.kvartal : '', pp.vydel ? 'выд. ' + pp.vydel : '', pp.delyanka ? 'дел. ' + pp.delyanka : ''].filter(Boolean).join(', ');
+    const state = { id: null, name: name, kind: 'traverse', lines: lines, cp: [], p0: p0, s: s, mode: closed ? 'return' : 'auto', c: null, decl: decl,
+        stamp: { region: '', les: pp.lesnichestvo || '', uch: '', kv: kv, author: '', title: '', vyd: '' }, viewMode: 'az' };
+    state.id = 'hns' + (ts || Date.now()).toString(36) + Math.random().toString(36).slice(2, 8);
+    return { id: state.id, name: name, upd: ts || Date.now(), area: area, kind: 'traverse', npts: P.length, les: pp.lesnichestvo || '', kv: kv, state: state };
+}
+function bgPackCandidates() {
+    const out = [], saved = safeJSON('bg_hns_projects_archive', []);
+    if (measurementsLog.length) out.push({ key: 'cur', name: (document.getElementById('project-name').value || 'Текущая делянка').trim() + ' (текущая)', log: measurementsLog, sys: currentSystemMode, pass: bgCurPassport(), decl: undefined, when: 'не сохранена' });
+    if (Array.isArray(saved)) saved.forEach((p, i) => out.push({ key: 'a' + i, name: p.name, log: p.log || [], sys: p.systemMode, pass: p.passport || bgCurPassport(), decl: p.decl, when: p.timestamp || '' }));
+    return out;
+}
+let bgPackList = [];
+function openArchivePack() {
+    if (window.LesovikCore && !window.LesovikCore.isPro()) { window.showProPromoModal("Перенос делянок в Абрис ПРО доступен только в профессиональной версии БГ-ХНС PRO."); return; }
+    bgPackList = bgPackCandidates();
+    const box = document.getElementById('pack-list');
+    if (!bgPackList.length) { box.innerHTML = '<div style="padding:10px;color:#64748B">Архив пуст и журнал не заполнен.</div>'; }
+    else box.innerHTML = bgPackList.map((c, i) => `<label style="display:flex;gap:8px;align-items:center;padding:7px 4px;border-bottom:1px solid #E2E8F0;cursor:pointer"><input type="checkbox" class="pack-chk" data-i="${i}" ${i === 0 ? 'checked' : ''} onchange="bgPackCount()"><span style="flex:1"><b>${escapeHtmlPack(c.name)}</b><br><small style="color:#64748B">${escapeHtmlPack(c.when)} · линий: ${(c.log || []).length}</small></span></label>`).join('');
+    bgPackCount(); openPopup('pack-popup');
+}
+function escapeHtmlPack(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function bgPackAll(v) { document.querySelectorAll('.pack-chk').forEach(c => c.checked = v); bgPackCount(); }
+function bgPackCount() { const n = document.querySelectorAll('.pack-chk:checked').length; const el = document.getElementById('pack-count'); if (el) el.innerText = 'Выбрано: ' + n + ' из ' + bgPackList.length; }
+function bgBuildPack() {
+    const items = [], ts = Date.now();
+    document.querySelectorAll('.pack-chk:checked').forEach((c, k) => {
+        const e = bgPackList[parseInt(c.dataset.i, 10)]; if (!e) return;
+        const it = bgAbrisItem(e.name.replace(/ \(текущая\)$/, ''), e.log, e.pass, e.sys, e.decl, ts + k);
+        if (it) items.push(it);
+    });
+    return items.length ? { format: 'abris-archive', version: 1, items: items } : null;
+}
+function bgPackFile() {
+    const pack = bgBuildPack(); if (!pack) { showToast('Отметьте хотя бы одну делянку с линиями'); return null; }
+    const d = new Date(), stamp = d.toISOString().slice(0, 10);
+    return { pack, file: new File([JSON.stringify(pack)], 'БГ-ХНС-делянки-' + stamp + '.json', { type: 'application/json' }) };
+}
+function bgPackDownload() {
+    const r = bgPackFile(); if (!r) return;
+    const a = document.createElement('a'); a.href = URL.createObjectURL(r.file); a.download = r.file.name; document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    showToast('Файл скачан: делянок ' + r.pack.items.length + '. В Абрисе: Архив → Импорт.');
+}
+async function bgPackShare() {
+    const r = bgPackFile(); if (!r) return;
+    try {
+        if (navigator.canShare && navigator.canShare({ files: [r.file] })) { await navigator.share({ files: [r.file], title: 'Делянки из БГ-ХНС PRO', text: 'Делянок: ' + r.pack.items.length + '. В Абрисе ПРО: Архив → Импорт.' }); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    bgPackDownload();
+}
+
+/* ===== Подложка: скан листа планшета (офлайн, хранится на устройстве) ===== */
+const BgScan = (function () {
+    const KEY = 'bg_hns_scans', AKEY = 'bg_hns_scan_active', SCALES = [1000, 5000, 10000, 25000, 50000, 100000];
+    let sheets = [], active = '', mode = null, cache = {}, lastT = {}, db = null;
+    try { sheets = JSON.parse(localStorage.getItem(KEY) || '[]'); if (!Array.isArray(sheets)) sheets = []; } catch (e) { sheets = []; }
+    try { active = localStorage.getItem(AKEY) || ''; } catch (e) {}
+    if (!sheets.some(s => s.id === active)) active = '';
+    const $ = id => document.getElementById(id);
+    function save() { try { localStorage.setItem(KEY, JSON.stringify(sheets)); localStorage.setItem(AKEY, active); } catch (e) {} }
+    function idb() {
+        if (db) return Promise.resolve(db);
+        return new Promise((res, rej) => { const r = indexedDB.open('bg_hns_scans_db', 1); r.onupgradeneeded = () => r.result.createObjectStore('img'); r.onsuccess = () => { db = r.result; res(db); }; r.onerror = () => rej(r.error); });
+    }
+    function idbDo(mode_, fn) { return idb().then(d => new Promise((res, rej) => { const t = d.transaction('img', mode_), rq = fn(t.objectStore('img')); t.oncomplete = () => res(rq && rq.result); t.onerror = () => rej(t.error); })); }
+    function cur() { return sheets.find(s => s.id === active) || null; }
+    function mpp(sh) { const mmpx = sh.a4 ? 297 / Math.max(sh.w, sh.h) : 25.4 / (sh.dpi > 0 ? sh.dpi : 300); return mmpx * sh.scaleN / 1000 * (1 + (sh.corr || 0) / 100); }
+    function ensureImg(sh) {
+        if (!sh || cache[sh.id]) return;
+        cache[sh.id] = 'load';
+        idbDo('readonly', st => st.get(sh.id)).then(b => {
+            if (!b) { cache[sh.id] = null; return; }
+            const im = new Image(); im.onload = () => { cache[sh.id] = im; redraw(); }; im.onerror = () => { cache[sh.id] = null; }; im.src = URL.createObjectURL(b);
+        }).catch(() => { cache[sh.id] = null; });
+    }
+    function redraw() { try { drawPolygon(); } catch (e) {} if (window.BgSheet && BgSheet.isOpen()) BgSheet.render(); }
+    function refreshSelect() {
+        const sel = $('scan-select'); if (!sel) return;
+        sel.innerHTML = '<option value="">без подложки</option>' + sheets.map(s => `<option value="${s.id}">${esc(s.name)} · 1:${s.scaleN}</option>`).join('');
+        sel.value = active;
+    }
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+    function select(id) { active = sheets.some(s => s.id === id) ? id : ''; save(); const sh = cur(); if (sh) ensureImg(sh); if (!sh) mode = null; refreshSelect(); updateBindBtn(); redraw(); }
+    function addFile(file) {
+        if (!file) return;
+        const url = URL.createObjectURL(file), im = new Image();
+        im.onload = () => {
+            const id = 's' + Date.now().toString(36), sh = { id, name: (file.name || 'Лист').replace(/\.[^.]+$/, '').slice(0, 40), w: im.naturalWidth, h: im.naturalHeight, scaleN: 10000, dpi: 300, a4: false, corr: 0, rot: 0, anchor: null, op: 0.8 };
+            idbDo('readwrite', st => st.put(file, id)).then(() => { sheets.push(sh); active = id; cache[id] = im; save(); refreshSelect(); updateBindBtn(); redraw(); openSettings(); showToast('Скан загружен. Укажите масштаб планшета и разрешение сканирования.'); })
+                .catch(() => showToast('Не удалось сохранить скан на устройстве'));
+        };
+        im.onerror = () => showToast('Не удалось открыть изображение (нужен JPG или PNG)');
+        im.src = url;
+    }
+    function origin() { const sh = cur(); return sh && sh.anchor ? { lat: sh.anchor.lat, lng: sh.anchor.lng } : null; }
+    function minSpan() { const sh = cur(); if (!sh) return 0; return Math.max(60, Math.min(sh.w, sh.h) * mpp(sh) * 0.6); }
+    // Нарисовать скан: map(x,y) -> пиксель, ppm — пикселей на метр, o — начало локальной системы (lat/lng)
+    function paint(ctx, map, ppm, o, alpha, key) {
+        const sh = cur(); if (!sh) return false;
+        ensureImg(sh); const im = cache[sh.id]; if (!im || im === 'load') return false;
+        const k = mpp(sh) * ppm; if (!(k > 0)) return false;
+        let aLoc = { x: 0, y: 0 }, au = sh.w / 2, av = sh.h / 2;
+        if (sh.anchor && o) { aLoc = latLngToLocal(o, sh.anchor.lat, sh.anchor.lng); au = sh.anchor.u; av = sh.anchor.v; }
+        const ap = map(aLoc.x, aLoc.y), r = (sh.rot || 0) * Math.PI / 180;
+        ctx.save(); ctx.globalAlpha = alpha === undefined ? (sh.op || 0.8) : alpha;
+        ctx.translate(ap.x, ap.y); ctx.rotate(r); ctx.scale(k, k); ctx.translate(-au, -av);
+        ctx.imageSmoothingEnabled = true; ctx.drawImage(im, 0, 0);
+        ctx.globalAlpha = 1; ctx.strokeStyle = 'rgba(180,90,0,.7)'; ctx.lineWidth = 1.5 / k; ctx.strokeRect(0, 0, sh.w, sh.h);
+        ctx.restore();
+        if (key) lastT[key] = { ax: ap.x, ay: ap.y, k, r, au, av };
+        return true;
+    }
+    function draw(ctx, toPixel, scale, o, key) {
+        const sh = cur(); if (!sh) return;
+        const ok = paint(ctx, (x, y) => toPixel({ x, y }), scale, o, undefined, key);
+        const w = ctx.canvas.clientWidth;
+        ctx.save(); ctx.font = 'bold 11px Inter, sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = '#B45309';
+        if (!ok) ctx.fillText('Загрузка скана…', 10, 34);
+        else if (!sh.anchor) ctx.fillText('Скан не привязан — нажмите «📍 Я здесь»', 10, 34);
+        else if (mode === 'bind') ctx.fillText('Коснитесь на скане места, где вы стоите', 10, 34);
+        ctx.restore();
+    }
+    function updateBindBtn() { const b = $('scan-bind-btn'); if (!b) return; b.style.opacity = cur() ? '' : '.5'; b.style.outline = mode === 'bind' ? '3px solid #F59E0B' : ''; b.innerText = mode === 'bind' ? '📍 Коснитесь точки на скане…' : '📍 Я здесь'; }
+    function toggleBind() {
+        const sh = cur(); if (!sh) { showToast('Сначала загрузите скан и выберите его в списке «Подложка».'); return; }
+        if (!gpsFixed) { showToast('Нет GPS-фиксации. Выйдите на открытое место и дождитесь координат.'); return; }
+        mode = mode === 'bind' ? null : 'bind'; updateBindBtn(); redraw();
+        if (mode === 'bind') showToast('Встаньте на известную точку (столб, перекрёсток) и коснитесь этого места на скане.');
+    }
+    function bindAt(px, py, key) {
+        const sh = cur(), T = lastT[key]; if (!sh || !T || !gpsFixed) return;
+        const dx = px - T.ax, dy = py - T.ay, c = Math.cos(-T.r), s = Math.sin(-T.r);
+        const u = T.au + (dx * c - dy * s) / T.k, v = T.av + (dx * s + dy * c) / T.k;
+        sh.anchor = { u, v, lat: currentLat, lng: currentLng }; mode = null; save(); updateBindBtn(); redraw();
+        showToast('Скан привязан к вашей позиции (GPS ±' + currentAccuracy + ' м). Для уточнения встаньте на другую известную точку и снова нажмите «Я здесь».');
+    }
+    function initTaps() {
+        ['polygon-canvas', 'fs-polygon-canvas'].forEach(id => {
+            const cv = $(id); if (!cv) return; let d = null;
+            cv.addEventListener('pointerdown', e => { d = { x: e.clientX, y: e.clientY }; });
+            cv.addEventListener('pointerup', e => {
+                if (!d || mode !== 'bind') { d = null; return; }
+                if (Math.hypot(e.clientX - d.x, e.clientY - d.y) < 8) { const r = cv.getBoundingClientRect(); bindAt(e.clientX - r.left, e.clientY - r.top, id); }
+                d = null;
+            });
+        });
+    }
+    /* ---- окно настроек ---- */
+    function openSettings() {
+        const sh = cur(); if (!sh) { showToast('Сначала загрузите скан листа (кнопка «＋ Скан листа»).'); return; }
+        const sc = $('sc-scale'); sc.innerHTML = SCALES.map(n => `<option value="${n}">1:${n}</option>`).join(''); sc.value = String(sh.scaleN);
+        $('sc-name').value = sh.name; $('sc-dpi').value = sh.dpi; $('sc-a4').checked = !!sh.a4; $('sc-corr').value = sh.corr || 0; $('sc-rot').value = sh.rot || 0; $('sc-op').value = Math.round((sh.op || 0.8) * 100);
+        info(); openPopup('scan-popup');
+    }
+    function info() {
+        const sh = cur(); if (!sh) return;
+        $('sc-info').innerText = 'Размер скана ' + sh.w + '×' + sh.h + ' px · 1 пиксель = ' + (mpp(sh)).toFixed(3) + ' м · лист на местности ≈ ' + (sh.w * mpp(sh) / 1000).toFixed(2) + '×' + (sh.h * mpp(sh) / 1000).toFixed(2) + ' км · ' + (sh.anchor ? 'привязан (точка «Я здесь»)' : 'не привязан');
+    }
+    function apply() {
+        const sh = cur(); if (!sh) return;
+        sh.name = $('sc-name').value.trim() || sh.name; sh.scaleN = parseInt($('sc-scale').value, 10) || 10000;
+        sh.dpi = Math.max(50, Math.min(1200, parseFloat($('sc-dpi').value) || 300)); sh.a4 = $('sc-a4').checked;
+        sh.corr = Math.max(-10, Math.min(10, parseFloat(String($('sc-corr').value).replace(',', '.')) || 0));
+        sh.rot = Math.max(-180, Math.min(180, parseFloat(String($('sc-rot').value).replace(',', '.')) || 0));
+        sh.op = Math.max(0.1, Math.min(1, (parseInt($('sc-op').value, 10) || 80) / 100));
+        save(); refreshSelect(); info(); redraw();
+    }
+    function rotBy(d) { const sh = cur(); if (!sh) return; sh.rot = Math.round(Math.max(-180, Math.min(180, (sh.rot || 0) + d)) * 100) / 100; $('sc-rot').value = sh.rot; save(); redraw(); }
+    function rebindClear() { const sh = cur(); if (!sh) return; sh.anchor = null; save(); info(); redraw(); }
+    function remove() {
+        const sh = cur(); if (!sh || !confirm('Удалить скан «' + sh.name + '» с устройства?')) return;
+        idbDo('readwrite', st => st.delete(sh.id)).catch(() => {}); sheets = sheets.filter(s => s.id !== sh.id); delete cache[sh.id]; active = ''; mode = null; save(); refreshSelect(); updateBindBtn(); closePopup('scan-popup'); redraw();
+    }
+    function init() {
+        refreshSelect(); updateBindBtn(); initTaps(); const f = $('scan-file'); if (f) f.addEventListener('change', function () { addFile(this.files && this.files[0]); this.value = ''; });
+        ['sc-name', 'sc-scale', 'sc-dpi', 'sc-a4', 'sc-corr', 'sc-rot', 'sc-op'].forEach(id => { const el = $(id); if (el) el.addEventListener('change', apply); });
+        if (cur()) ensureImg(cur());
+    }
+    return { init, select, addFile, toggleBind, openSettings, rotBy, rebindClear, remove, draw, paint, origin, minSpan, active: cur, mpp, isBind: () => mode === 'bind' };
+})();
+
+/* ===== Бланк А4: абрис / схема отвода (PDF, PNG) ===== */
+const BgSheet = (function () {
+    const OK = 'bg_hns_sheet_opts', MM = 300 / 25.4, W = 2480, H = 3508, SCALES = [500, 1000, 2000, 5000, 10000, 25000, 50000, 100000];
+    const $ = id => document.getElementById(id);
+    let opts = { title: 'Абрис делянки', les: '', kv: '', author: '', scale: 'auto', scan: true, nums: true, ang: true, area: true, coords: false, legend: false, frame: false, noscale: false, lines: false };
+    try { Object.assign(opts, JSON.parse(localStorage.getItem(OK) || '{}')); } catch (e) {}
+    let canvas = null, openFlag = false;
+    function save() { try { localStorage.setItem(OK, JSON.stringify(opts)); } catch (e) {} }
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+    function passportDefaults() {
+        const p = (typeof bgCurPassport === 'function') ? bgCurPassport() : null; if (!p) return;
+        if (!opts.les && p.lesnichestvo) opts.les = p.lesnichestvo;
+        if (!opts.kv) opts.kv = [p.kvartal ? 'кв. ' + p.kvartal : '', p.vydel ? 'выд. ' + p.vydel : '', p.delyanka ? 'дел. ' + p.delyanka : ''].filter(Boolean).join(', ');
+    }
+    function readUI() {
+        opts.title = $('sh-title').value; opts.les = $('sh-les').value; opts.kv = $('sh-kv').value; opts.author = $('sh-author').value;
+        const sc = $('sh-scale').value; opts.scale = sc === 'auto' ? 'auto' : parseInt(sc, 10);
+        ['scan', 'nums', 'ang', 'area', 'coords', 'legend', 'frame', 'noscale', 'lines'].forEach(k => { opts[k] = $('sh-' + k).checked; });
+        save();
+    }
+    function writeUI() {
+        $('sh-title').value = opts.title; $('sh-les').value = opts.les; $('sh-kv').value = opts.kv; $('sh-author').value = opts.author;
+        $('sh-scale').innerHTML = '<option value="auto">авто</option>' + SCALES.map(n => `<option value="${n}">1:${n}</option>`).join(''); $('sh-scale').value = String(opts.scale);
+        ['scan', 'nums', 'ang', 'area', 'coords', 'legend', 'frame', 'noscale', 'lines'].forEach(k => { $('sh-' + k).checked = !!opts[k]; });
+    }
+    function preset(kind) {
+        const full = kind === 'full', defaults = ['Абрис делянки', 'Схема отвода', ''];
+        if (defaults.indexOf(opts.title.trim()) >= 0) opts.title = full ? 'Абрис делянки' : 'Схема отвода';
+        opts.nums = full; opts.ang = full; opts.area = full; opts.coords = false; opts.legend = !full; opts.lines = false;
+        writeUI(); save(); render();
+    }
+    function wrap(ctx, text, maxW) {
+        const out = []; String(text).split(/\n/).forEach(par => {
+            const words = par.split(/\s+/).filter(Boolean); let cur = '';
+            if (!words.length) { out.push(''); return; }
+            words.forEach(w => { const t = cur ? cur + ' ' + w : w; if (ctx.measureText(t).width > maxW && cur) { out.push(cur); cur = w; } else cur = t; });
+            out.push(cur);
+        }); return out;
+    }
+    function pointLL(trav, i, o) {
+        const m = measurementsLog[i]; if (m && hasCoords(m)) return { lat: m.lat, lng: m.lng };
+        if (!o) return null; const p = trav.points[i];
+        return { lat: o.lat + p.y / M_PER_DEG, lng: o.lng + p.x / (M_PER_DEG * Math.cos(o.lat * Math.PI / 180)) };
+    }
+    function render() {
+        const trav = computeTraverse(), pts = trav.points, hasLine = measurementsLog.length > 0;
+        const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+        const mm = v => v * MM;
+        g.fillStyle = '#fff'; g.fillRect(0, 0, W, H); g.textBaseline = 'alphabetic';
+        const font = (sz, b) => (b ? 'bold ' : '') + Math.round(mm(sz)) + 'px Arial, Helvetica, sans-serif';
+        const T = (t, x, y, sz, b, al) => { g.font = font(sz, b); g.textAlign = al || 'left'; g.fillStyle = '#000'; g.fillText(t, mm(x), mm(y)); };
+        if (opts.frame) { g.strokeStyle = '#000'; g.lineWidth = mm(0.5); g.strokeRect(mm(5), mm(5), mm(200), mm(287)); }
+        // --- заголовок: жирная только первая строка
+        let y = 16; const title = (opts.title || '').trim() || 'Абрис делянки';
+        const lines = []; title.split(/\n/).forEach((par, pi) => { g.font = font(5.6, pi === 0); wrap(g, par, mm(188)).forEach(t => lines.push({ t, b: pi === 0 })); });
+        const tsz = lines.length > 2 ? 4.4 : 5.6;
+        lines.slice(0, 5).forEach(o => { if (o.t) T(o.t, 105, y, tsz, o.b, 'center'); y += tsz * 1.35; });
+        y += 2;
+        // --- паспорт
+        const rows = []; if (opts.les.trim()) rows.push(['Лесничество:', opts.les.trim()]); if (opts.kv.trim()) rows.push(['Квартал / выдел:', opts.kv.trim()]);
+        if (opts.area && trav.closed) rows.push(['Площадь:', (trav.area / 10000).toFixed(4) + ' га']);
+        else if (opts.area && hasLine && !trav.closed) rows.push(['Длина хода:', trav.perimeter.toFixed(1) + ' м']);
+        let nScale = opts.scale;
+        // --- область чертежа
+        const fx = 12, fw = 186; let fy = y + rows.length * 5.2 + 3, bottom = 280;
+        const o = (typeof getTraverseOrigin === 'function') ? getTraverseOrigin() : null;
+        const ptsAll = hasLine ? pts : [];
+        let tblRows = 0, idxs = []; if (opts.coords && hasLine && o) { for (let i = 0; i < pts.length; i++) { if (trav.closed && i === pts.length - 1) continue; idxs.push(i); } tblRows = Math.ceil(idxs.length / 2); bottom -= tblRows * 5 + 12; }
+        const legendH = opts.legend ? 30 : 0; const fh = bottom - fy; 
+        // масштаб
+        let minX = 0, maxX = 0, minY = 0, maxY = 0;
+        if (ptsAll.length) { minX = Math.min(...ptsAll.map(p => p.x)); maxX = Math.max(...ptsAll.map(p => p.x)); minY = Math.min(...ptsAll.map(p => p.y)); maxY = Math.max(...ptsAll.map(p => p.y)); }
+        const spanX = Math.max(maxX - minX, 5), spanY = Math.max(maxY - minY, 5);
+        if (nScale === 'auto') { nScale = SCALES[SCALES.length - 1]; for (const n of SCALES) { if (spanX * 1000 / n <= fw * 0.82 && spanY * 1000 / n <= (fh - 8) * 0.82) { nScale = n; break; } } }
+        const ppm = mm(1000 / nScale), cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+        const X0 = fx + fw / 2, Y0 = fy + fh / 2;
+        const map = (x, yy) => ({ x: mm(X0) + (x - cx) * ppm, y: mm(Y0) - (yy - cy) * ppm });
+        g.save(); g.beginPath(); g.rect(mm(fx), mm(fy), mm(fw), mm(fh)); g.clip();
+        // скан
+        let scanNote = '';
+        if (opts.scan && BgScan.active()) { if (o || BgScan.origin()) { const done = BgScan.paint(g, map, ppm, o || BgScan.origin(), 0.7); if (!done) scanNote = 'скан не загружен'; } else scanNote = 'нет координат для привязки скана'; }
+        // контур
+        const col = '#1F5A2B';
+        if (hasLine) {
+            g.lineJoin = 'round'; g.lineCap = 'round'; g.strokeStyle = col; g.lineWidth = mm(0.55);
+            g.beginPath(); pts.forEach((p, i) => { const q = map(p.x, p.y); if (i) g.lineTo(q.x, q.y); else g.moveTo(q.x, q.y); }); if (trav.closed) g.closePath();
+            if (trav.closed) { g.fillStyle = 'rgba(31,90,43,.07)'; g.fill(); } g.stroke();
+            const halo = (t, x, yy, sz, b, colr) => { g.font = font(sz, b); g.textAlign = 'center'; g.lineWidth = mm(0.9); g.strokeStyle = '#fff'; g.lineJoin = 'round'; g.strokeText(t, x, yy); g.fillStyle = colr || '#000'; g.fillText(t, x, yy); };
+            if (opts.ang) {
+                for (let i = 0; i < pts.length - 1; i++) {
+                    const a = map(pts[i].x, pts[i].y), b = map(pts[i + 1].x, pts[i + 1].y), m = measurementsLog[i];
+                    const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy) || 1, off = mm(2.6), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, cp = map(cx, cy);
+                    let nx = -dy / L, ny = dx / L;
+                    if ((mx + nx * off - cp.x) ** 2 + (my + ny * off - cp.y) ** 2 < (mx - cp.x) ** 2 + (my - cp.y) ** 2) { nx = -nx; ny = -ny; }   // подпись — снаружи от центра
+                    halo(`${Number(m.azimuth).toFixed(1)}°  ${Number(m.distance).toFixed(1)} м`, mx + nx * off, my + ny * off + mm(1), 2.6, false, '#222');
+                }
+            }
+            if (opts.nums) {
+                pts.forEach((p, i) => { if (trav.closed && i === pts.length - 1) return; const q = map(p.x, p.y); g.beginPath(); g.arc(q.x, q.y, mm(i === 0 ? 1.3 : 1), 0, 7); g.fillStyle = i === 0 ? '#C0392B' : '#fff'; g.fill(); g.lineWidth = mm(0.35); g.strokeStyle = col; g.stroke(); halo(String(i + 1), q.x + mm(2.6), q.y - mm(1.8), 3.2, true, '#000'); });
+            } else if (!opts.lines) {
+                pts.forEach((p, i) => { if (trav.closed && i === pts.length - 1) return; const q = map(p.x, p.y); g.beginPath(); g.arc(q.x, q.y, mm(i === 0 ? 1.3 : 0.9), 0, 7); g.fillStyle = i === 0 ? '#C0392B' : col; g.fill(); });
+            }
+            if (opts.area && trav.closed) { let sx = 0, sy = 0; pts.slice(0, -1).forEach(p => { sx += p.x; sy += p.y; }); const q = map(sx / (pts.length - 1), sy / (pts.length - 1)); halo((trav.area / 10000).toFixed(4) + ' га', q.x, q.y, 3.4, true, '#1F5A2B'); }
+        }
+        g.restore();
+        g.strokeStyle = '#000'; g.lineWidth = mm(0.4); g.strokeRect(mm(fx), mm(fy), mm(fw), mm(fh));
+        // север
+        const nx0 = mm(fx + fw - 10), ny0 = mm(fy + 20);
+        g.fillStyle = '#B03A2E'; g.beginPath(); g.moveTo(nx0, ny0 - mm(12)); g.lineTo(nx0 + mm(3.2), ny0 + mm(2)); g.lineTo(nx0, ny0 - mm(1.6)); g.lineTo(nx0 - mm(3.2), ny0 + mm(2)); g.closePath(); g.fill();
+        T('С', fx + fw - 10, fy + 6.5, 4, true, 'center');
+        // масштаб
+        if (!opts.noscale) {
+            const nice = [5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000]; let bar = nice[0]; for (const v of nice) { if (v * ppm <= mm(45)) bar = v; }
+            const bx = fx + fw - 6 - bar * ppm / MM, by = fy + fh - 8;
+            g.fillStyle = '#fff'; g.fillRect(mm(bx - 3), mm(by - 6), bar * ppm + mm(6), mm(11)); g.fillStyle = '#000'; g.fillRect(mm(bx), mm(by + 1), bar * ppm, mm(0.9));
+            T(bar >= 1000 ? (bar / 1000) + ' км' : bar + ' м', bx, by - 1.2, 3.2, true);
+        }
+        // легенда
+        if (opts.legend) {
+            const lx = fx + 3, ly = fy + fh - legendH - 2; g.fillStyle = 'rgba(255,255,255,.93)'; g.fillRect(mm(lx), mm(ly), mm(78), mm(legendH)); g.strokeStyle = '#000'; g.lineWidth = mm(0.25); g.strokeRect(mm(lx), mm(ly), mm(78), mm(legendH));
+            T('Условные обозначения', lx + 2.5, ly + 5, 3.3, true);
+            const dot = (xx, yy, cc, rr, st) => { g.beginPath(); g.arc(mm(xx), mm(yy), mm(rr), 0, 7); g.fillStyle = cc; g.fill(); if (st) { g.strokeStyle = col; g.lineWidth = mm(0.3); g.stroke(); } };
+            dot(lx + 4, ly + 10, '#C0392B', 1.3); T('начало отвода (столб, Т.1)', lx + 9, ly + 11.2, 3);
+            dot(lx + 4, ly + 15.5, '#fff', 1, true); T('поворотная точка отвода', lx + 9, ly + 16.7, 3);
+            g.strokeStyle = col; g.lineWidth = mm(0.55); g.beginPath(); g.moveTo(mm(lx + 2), mm(ly + 21)); g.lineTo(mm(lx + 6), mm(ly + 21)); g.stroke(); T('граница отвода', lx + 9, ly + 22.2, 3);
+            g.fillStyle = '#B03A2E'; g.beginPath(); g.moveTo(mm(lx + 4), mm(ly + 24.4)); g.lineTo(mm(lx + 5.3), mm(ly + 28.4)); g.lineTo(mm(lx + 4), mm(ly + 27.4)); g.lineTo(mm(lx + 2.7), mm(ly + 28.4)); g.closePath(); g.fill(); T('направление на север', lx + 9, ly + 28, 3);
+        }
+        // шапка: паспорт + масштаб
+        let yy = y; rows.forEach(r => { T(r[0], 12, yy, 3.6, true); T(r[1], 52, yy, 3.6, false); yy += 5.2; });
+        if (!opts.noscale) T('Масштаб: 1:' + nScale, 198, y, 3.6, true, 'right');
+        // таблица координат
+        if (tblRows) {
+            let ty = fy + fh + 4; T('Координаты поворотных точек (WGS-84, градусы)', 12, ty + 3.2, 3.2, true); ty += 5;
+            for (let k = 0; k < tblRows; k++) for (let col2 = 0; col2 < 2; col2++) {
+                const i = idxs[k + col2 * tblRows]; if (i === undefined) continue; const ll = pointLL(trav, i, o); if (!ll) continue;
+                T(`${i + 1}.  ${ll.lat.toFixed(6)}, ${ll.lng.toFixed(6)}`, 12 + col2 * 93, ty + 3 + k * 5, 3.2, false);
+            }
+        }
+        // подвал
+        g.strokeStyle = '#000'; g.lineWidth = mm(0.3); g.beginPath(); g.moveTo(mm(12), mm(284)); g.lineTo(mm(198), mm(284)); g.stroke();
+        T('Составил: ' + (opts.author || ''), 12, 290, 3.6, false); T('Дата: ' + new Date().toLocaleDateString('ru-RU'), 120, 290, 3.6, false); T('Подпись: ____________', 198, 290, 3.6, false, 'right');
+        canvas = c;
+        const prev = $('sh-img'); if (prev) prev.src = c.toDataURL('image/jpeg', 0.85);
+        const note = $('sh-note'); if (note) note.innerText = 'Масштаб листа 1:' + nScale + (scanNote ? ' · ' + scanNote : '') + (hasLine ? '' : ' · журнал пуст');
+    }
+    function open() { passportDefaults(); writeUI(); openPopup('sheet-popup'); openFlag = true; render(); }
+    function close() { openFlag = false; closePopup('sheet-popup'); }
+    function makePdf(cv) {
+        const bin = atob(cv.toDataURL('image/jpeg', 0.92).split(',')[1]), n = bin.length, img = new Uint8Array(n); for (let i = 0; i < n; i++) img[i] = bin.charCodeAt(i);
+        const parts = [], offs = []; let len = 0; const push = u8 => { parts.push(u8); len += u8.length; }, pushS = s => { const a = new Uint8Array(s.length); for (let k = 0; k < s.length; k++) a[k] = s.charCodeAt(k) & 255; push(a); };
+        pushS('%PDF-1.4\n'); offs[1] = len; pushS('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n'); offs[2] = len; pushS('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n');
+        offs[3] = len; pushS('3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>\nendobj\n');
+        const cs = 'q 595.28 0 0 841.89 0 0 cm /Im0 Do Q'; offs[4] = len; pushS('4 0 obj\n<< /Length ' + cs.length + ' >>\nstream\n' + cs + '\nendstream\nendobj\n');
+        offs[5] = len; pushS('5 0 obj\n<< /Type /XObject /Subtype /Image /Width ' + cv.width + ' /Height ' + cv.height + ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + img.length + ' >>\nstream\n'); push(img); pushS('\nendstream\nendobj\n');
+        const xr = len; let x = 'xref\n0 6\n0000000000 65535 f \n'; for (let i = 1; i <= 5; i++) x += ('0000000000' + offs[i]).slice(-10) + ' 00000 n \n';
+        pushS(x + 'trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n' + xr + '\n%%EOF'); return new Blob(parts, { type: 'application/pdf' });
+    }
+    function baseName() { return ((document.getElementById('project-name') || {}).value || 'делянка').trim().replace(/[\\/:*?"<>|]+/g, '_') || 'делянка'; }
+    function dl(name, blob) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
+    function pdf() { readUI(); render(); dl(baseName() + (opts.nums || opts.ang ? '-абрис' : '-схема') + '.pdf', makePdf(canvas)); showToast('PDF сохранён'); }
+    function png() { readUI(); render(); canvas.toBlob(b => { dl(baseName() + '.png', b); showToast('PNG сохранён'); }, 'image/png'); }
+    async function share() {
+        readUI(); render(); const f = new File([makePdf(canvas)], baseName() + '.pdf', { type: 'application/pdf' });
+        try { if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: opts.title.split('\n')[0] }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+        dl(f.name, f); showToast('Поделиться файлом нельзя на этом устройстве — PDF сохранён');
+    }
+    function init() {
+        ['sh-title', 'sh-les', 'sh-kv', 'sh-author', 'sh-scale', 'sh-scan', 'sh-nums', 'sh-ang', 'sh-area', 'sh-coords', 'sh-legend', 'sh-frame', 'sh-noscale', 'sh-lines'].forEach(id => { const el = $(id); if (el) el.addEventListener(el.tagName === 'TEXTAREA' || el.type === 'text' ? 'input' : 'change', () => { readUI(); render(); }); });
+    }
+    return { open, close, render, pdf, png, share, preset, init, isOpen: () => openFlag };
+})();
+
+window.BgScan = BgScan; window.BgSheet = BgSheet;
+try { BgScan.init(); BgSheet.init(); } catch (e) { console.error(e); }
+</script>
 </body>
 </html>
