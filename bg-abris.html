@@ -74,6 +74,12 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     #scanbar, #plotbar, #drawbar { position: absolute; left: 50%; transform: translateX(-50%); bottom: 12px; z-index: 30; display: none; background: var(--card);
         border: 1px solid var(--border); border-radius: 12px; padding: 6px 8px; box-shadow: 0 4px 14px rgba(0,0,0,.16); gap: 5px; align-items: center; flex-wrap: wrap; justify-content: center; max-width: calc(100% - 20px); }
     #scanbar.on, #plotbar.on, #drawbar.on { display: flex; }
+    .gapb.on { background: #B5651D; color: #fff; border-color: #B5651D; }
+    tr.gap td { opacity: .6; }
+    tr.gap .lbl { text-decoration: line-through; text-decoration-color: rgba(181,101,29,.6); }
+    .ochip { border: 1px solid var(--border); border-radius: 14px; padding: 4px 10px; font-weight: 600; background: var(--card); cursor: pointer; margin: 0 4px 4px 0; font-size: .9em; }
+    .ochip.on { background: var(--forest); color: #fff; }
+    .ochip i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; border: 1px solid rgba(0,0,0,.25); }
     #scanbar b { min-width: 64px; text-align: center; }
     .zoom { position: absolute; left: 10px; bottom: 62px; display: flex; flex-direction: column; gap: 6px; z-index: 20; }
     .zoom button { width: 40px; height: 40px; font-size: 22px; font-weight: 700; border-radius: 10px; border: 1px solid var(--border);
@@ -234,6 +240,8 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         <button class="tool" id="t-plot" title="Двигать делянку по скану"><i>↔</i>Двигать делянку</button>
         <button class="tool" id="t-draw" title="Ставить и двигать точки делянки на чертеже"><i>✏️</i>Рисовать точки</button>
         <button class="tool" id="t-scan" title="Двигать и поворачивать скан"><i>🧲</i>Двигать скан</button>
+        <button class="tool" id="t-undo" title="Отменить последнее действие (Ctrl+Z)"><i>↶</i>Отменить</button>
+        <button class="tool" id="t-redo" title="Вернуть отменённое (Ctrl+Y)"><i>↷</i>Вернуть</button>
         <button class="tool" id="t-fit" title="Показать всё"><i>🎯</i>Всё</button>
         <button class="tool" id="t-panel" title="Панель данных"><i>📋</i>Данные</button>
         <button class="tool" id="t-lens" title="Линза: удерживайте"><i>🔍</i>Линза</button>
@@ -251,6 +259,9 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         <button class="btn" data-sb="-1">↺ 1°</button><button class="btn" data-sb="-0.1">↺ 0,1°</button>
         <b id="sb-rot">0.0°</b>
         <button class="btn" data-sb="0.1">0,1° ↻</button><button class="btn" data-sb="1">1° ↻</button>
+        <span style="flex-basis:100%;text-align:center;font-size:.82em">Сдвиг скана:
+        <button class="btn" data-ss="l">◀</button><button class="btn" data-ss="u">▲</button><button class="btn" data-ss="d">▼</button><button class="btn" data-ss="r">▶</button>
+        <select id="sb-step" style="width:auto"><option value="0.5">0,5 м</option><option value="1" selected>1 м</option><option value="2">2 м</option><option value="5">5 м</option><option value="20">20 м</option></select></span>
         <button class="btn primary" id="sb-done">Готово</button>
     </div>
     <div id="plotbar">
@@ -261,6 +272,10 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     </div>
     <div id="drawbar">
         <span style="font-size:.88em" id="db-info">Коснитесь скана — встанет точка. Точку можно перетащить.</span>
+        <label class="chk" style="margin:0;font-size:.85em"><input type="checkbox" id="db-close" checked> замкнуть контур</label>
+        <button class="btn" id="db-gap" title="Следующая точка начнёт новый кусок: отрезок до неё не рисуется и не считается">⏸ Пропуск</button>
+        <button class="btn" id="db-rev" title="Первая точка станет последней — рисуйте дальше с другого конца">⇄ С другого конца</button>
+        <button class="btn" id="db-newobj">＋ Объект</button>
         <button class="btn" id="db-undo">↶ Убрать последнюю</button>
         <button class="btn primary" id="db-done">Готово</button>
     </div>
@@ -285,7 +300,15 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
 
         <!-- ===== ДАННЫЕ ===== -->
         <div class="pane active" id="p-data">
-            <label class="f"><span>Название делянки</span><input type="text" id="f-name" placeholder="например: Делянка 1, кв. 12"></label>
+            <label class="f"><span>Название делянки / объекта</span><input type="text" id="f-name" placeholder="например: Делянка 1, кв. 12"></label>
+            <div id="obj-chips" style="display:none;margin:0 0 6px"></div>
+            <div class="row" style="margin-bottom:6px">
+                <button class="btn" id="o-add" title="Ещё одна делянка или полоса на этом же абрисе">＋ Новый объект</button>
+                <button class="btn" id="o-rev" title="Первая точка станет последней — удобно рисовать с другого конца">⇄ Развернуть</button>
+                <button class="btn danger" id="o-del" style="flex:0 0 auto" aria-label="Удалить объект">🗑</button>
+            </div>
+            <div class="note" id="obj-note" style="margin:0 0 8px">Можно нарисовать несколько полос или делянок на одном листе. Каждый объект рисуется и считается отдельно.</div>
+            <div id="wid-row" style="display:none;margin:0 0 8px"><label class="f" style="margin:0"><span>Ширина полосы этого объекта, м</span><input type="number" id="f-wid" min="0" step="0.1" inputmode="decimal" placeholder="например 4"></label></div>
             <div class="seg" id="seg">
                 <button data-m="coords">Координаты</button><button data-m="az">Азимут</button><button data-m="rumb">Румб</button>
             </div>
@@ -329,6 +352,10 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
 
             <div class="box po" style="margin-top:10px">
                 <h4>Профи: замыкание и привязка от столба</h4>
+                <div class="row" style="margin-bottom:8px">
+                    <label class="f" style="margin:0"><span>Длина линий в единицах</span><select id="f-lunit"><option value="m">метры</option><option value="km">километры</option></select></label>
+                    <label class="chk" style="margin:0;flex:0 0 auto"><input type="checkbox" id="f-strip"> считать площадь полос</label>
+                </div>
                 <div class="row">
                     <label class="f" style="margin:0"><span>Делянка с точки №</span><input type="number" id="f-s" min="0" value="1"></label>
                     <label class="f" style="margin:0"><span>Замкнуть на точку №</span><input type="number" id="f-c" min="0" placeholder="как начало"></label>
@@ -428,6 +455,12 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
                 </div>
                 <label class="f" style="margin:0"><span>Исполнитель съёмки</span><input type="text" id="s-author"></label>
             </div>
+            <div class="box">
+                <h4>Вид чертежа (экран и лист)</h4>
+                <label class="chk"><input type="checkbox" id="v-lonly"> только линии (без номеров, названий, кружков и площади)</label>
+                <label class="chk"><input type="checkbox" id="v-noscale"> не показывать масштаб (линейку и строку «Масштаб»)</label>
+                <label class="f" style="margin:6px 0 0"><span>Сгладить переходы между точками (только на рисунке)</span><select id="v-smooth"><option value="0">нет</option><option value="1">слабо</option><option value="2">средне</option><option value="3">сильно</option></select></label>
+            </div>
             <div class="row" style="margin-bottom:10px">
                 <button class="btn primary" id="b-print2">🖨 Печать А4 / PDF</button>
                 <button class="btn" id="b-tosave2">💾 В архив</button>
@@ -464,6 +497,18 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     <div class="row"><button class="btn primary" id="imp-go">Загрузить</button><button class="btn" id="imp-cancel">Отмена</button></div>
 </div></div>
 
+<!-- удаление отрезка -->
+<div class="overlay" id="m-del"><div class="modal">
+    <h3 id="del-h">Удалить отрезок</h3>
+    <p class="note" id="del-p" style="margin:0 0 10px"></p>
+    <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn primary" id="del-gap">⏸ Сделать пропуском (остальные точки на месте)</button>
+        <button class="btn" id="del-join">✂️ Удалить точку (соседние соединить напрямую)</button>
+        <button class="btn" id="del-shift">↦ Удалить и сдвинуть остальные</button>
+        <button class="btn" id="del-cancel">Отмена</button>
+    </div>
+</div></div>
+
 <!-- инструкция -->
 <div class="overlay" id="m-help"><div class="modal wide">
     <h3>Как пользоваться Абрисом</h3>
@@ -498,6 +543,11 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     <div class="row">
         <label class="f" style="margin:0"><span>Масштаб чертежа</span><select id="prn-scale"></select></label>
         <label class="chk" style="margin:0;flex:0 0 auto"><input type="checkbox" id="prn-scan" checked> со сканом</label>
+        <label class="chk" style="margin:0;flex:0 0 auto"><input type="checkbox" id="prn-frame"> рамка листа</label>
+        <label class="chk" style="margin:0;flex:0 0 auto"><input type="checkbox" id="prn-lonly"> только линии</label>
+        <label class="chk" style="margin:0;flex:0 0 auto"><input type="checkbox" id="prn-noscale"> без масштаба</label>
+        <label class="f" style="margin:0"><span>Сглаживание</span><select id="prn-smooth"><option value="0">нет</option><option value="1">слабо</option><option value="2">средне</option><option value="3">сильно</option></select></label>
+        <label class="f" style="margin:0"><span>Длины</span><select id="prn-lunit"><option value="m">в метрах</option><option value="km">в километрах</option></select></label>
     </div>
     <div class="row" style="margin-top:6px">
         <label class="f" style="margin:0"><span>Что выводить</span><select id="prn-mode"><option value="full">Полный абрис (чертёж, ходы, координаты)</option><option value="scheme">Схема расположения (без данных)</option></select></label>
@@ -531,7 +581,7 @@ var cv = $('cv'), g = cv.getContext('2d');
 /* ---------- состояние ---------- */
 function newState() {
     return {
-        id: null, name: '', kind: 'coords', lines: [], cp: [], p0: { lat: null, lng: null }, s: 1, mode: 'return', c: null, tol: null, ks: 0, kc: null, psheet: 'full', adec: 4, showGap: true,
+        id: null, name: '', kind: 'coords', lines: [], cp: [], p0: { lat: null, lng: null }, s: 1, mode: 'return', c: null, tol: null, ks: 0, kc: null, psheet: 'full', adec: 4, showGap: true, objs: [], act: 0, org: { x: 0, y: 0 }, gref: null, wid: 0, lunit: 'm', frame: false, strip: false, lonly: false, noScale: false, smooth: 0,
         stamp: { region: '', les: '', uch: '', kv: '', author: '', title: '', vyd: '' },
         pscale: 10000, dpi: 96, viewMode: 'az', labels: 2, decl: 0,
         scan: { on: false, name: '', w: 0, h: 0, fix: 1, a: { re: 1, im: 0 }, c: { re: 0, im: 0 }, op: 0.75 }
@@ -598,14 +648,17 @@ function compute() {
     var i, R;
     if (S.kind === 'coords') {
         var cp = S.cp.filter(okp), m = cp.length;
-        R = { kind: 'coords', n: Math.max(0, m - 1), pts: [{ x: 0, y: 0 }], poly: null, idx: [], area: 0, perim: 0, len: 0, gap: null, gapRel: null, s: 0, c: 0, mode: 'auto', warn: '', empty: m === 0, m: m };
+        R = { kind: 'coords', n: Math.max(0, m - 1), pts: [{ x: 0, y: 0 }], poly: null, idx: [], area: 0, perim: 0, len: 0, gap: null, gapRel: null, s: 0, c: 0, mode: 'auto', warn: '', empty: m === 0, m: m, gaps: [], hasGap: false };
         if (!m) return R;
         var c0 = cp[0], ml = 0; cp.forEach(function (p) { ml += p.lat; }); var kk = mpd(ml / m);
         R.pts = cp.map(function (p) { return { x: (p.lng - c0.lng) * kk.lng, y: (p.lat - c0.lat) * kk.lat }; });
         R.s = clampInt(S.ks || 0, 0, m - 1);
         R.c = (S.kc === null || S.kc === undefined || S.kc === '') ? R.s : clampInt(S.kc, R.s, m - 1);
-        var per = 0; for (i = R.c + 1; i < m; i++) per += hyp(R.pts[i], R.pts[i - 1]);
+        for (i = 0; i < m - 1; i++) R.gaps.push(!!cp[i + 1].g);
+        for (i = R.s; i < m - 1; i++) if (R.gaps[i]) R.hasGap = true;
+        var per = 0; for (i = R.c + 1; i < m; i++) if (!R.gaps[i - 1]) per += hyp(R.pts[i], R.pts[i - 1]);
         R.len = per;
+        if (S.mode === 'open' || R.hasGap) { R.c = R.s; var pl0 = 0; for (i = R.s + 1; i < m; i++) if (!R.gaps[i - 1]) pl0 += hyp(R.pts[i], R.pts[i - 1]); R.len = pl0; return R; }
         if (m - R.c >= 3) {
             per += hyp(R.pts[m - 1], R.pts[R.c]); R.perim = per;
             for (i = R.c; i < m; i++) R.idx.push(i);
@@ -619,11 +672,12 @@ function compute() {
         var r = ((S.lines[i].az || 0) + dcl()) * Math.PI / 180, d = S.lines[i].d || 0, p = pts[i];
         pts.push({ x: p.x + d * Math.sin(r), y: p.y + d * Math.cos(r) });
     }
-    R = { kind: 'traverse', n: n, pts: pts, poly: null, idx: [], area: 0, perim: 0, len: 0, gap: null, gapRel: null, s: 0, c: 0, mode: S.mode, warn: '', empty: n === 0 };
+    R = { kind: 'traverse', n: n, pts: pts, poly: null, idx: [], area: 0, perim: 0, len: 0, gap: null, gapRel: null, s: 0, c: 0, mode: S.mode, warn: '', empty: n === 0, gaps: S.lines.map(function (l) { return !!l.g; }), hasGap: false };
     if (n === 0) return R;
     R.s = clampInt(S.s, 0, Math.max(0, n - 1));
-    var sumFrom = function (a) { var t = 0; for (var j = a; j < n; j++) t += S.lines[j].d || 0; return t; };
-    if (S.mode === 'open') { R.len = sumFrom(R.s); return R; }
+    var sumFrom = function (a) { var t = 0; for (var j = a; j < n; j++) if (!S.lines[j].g) t += S.lines[j].d || 0; return t; };
+    for (i = R.s; i < n; i++) if (R.gaps[i]) R.hasGap = true;
+    if (S.mode === 'open' || R.hasGap) { R.len = sumFrom(R.s); return R; }
     if (S.mode === 'return') {
         var c = (S.c === null || S.c === undefined || S.c === '') ? R.s : clampInt(S.c, R.s, n);
         R.c = c;
@@ -649,13 +703,13 @@ function segments(R) {   // список ходов для таблиц и пе�
         var m = P.length;
         for (i = 0; i + 1 < m; i++) {
             var dx = P[i + 1].x - P[i].x, dy = P[i + 1].y - P[i].y;
-            out.push({ a: i, b: i + 1, az: normAz(Math.atan2(dx, dy) * 180 / Math.PI - dcl()), d: Math.hypot(dx, dy), tie: i < R.s });
+            out.push({ a: i, b: i + 1, az: normAz(Math.atan2(dx, dy) * 180 / Math.PI - dcl()), d: Math.hypot(dx, dy), tie: i < R.s, gap: !!R.gaps[i] });
         }
         if (R.poly) {
             var ex = P[R.c].x - P[m - 1].x, ey = P[R.c].y - P[m - 1].y;
             out.push({ a: m - 1, b: R.c, az: normAz(Math.atan2(ex, ey) * 180 / Math.PI - dcl()), d: Math.hypot(ex, ey), tie: false });
         }
-    } else S.lines.forEach(function (l, k) { out.push({ a: k, b: k + 1, az: l.az, d: l.d, tie: k < R.s }); });
+    } else S.lines.forEach(function (l, k) { out.push({ a: k, b: k + 1, az: l.az, d: l.d, tie: k < R.s, gap: !!l.g }); });
     return out;
 }
 function llPoints() {
@@ -672,6 +726,38 @@ function llPoints() {
 }
 function originLL() { if (S.kind === 'coords') { var c = S.cp.filter(okp); return c.length ? c[0] : null; } return hasP0() ? S.p0 : null; }
 function areaGa(R) { var d = [1, 2, 4].indexOf(S.adec) >= 0 ? S.adec : 4; return (R.area / 10000).toFixed(d); }
+/* ---------- несколько объектов (полосы, делянки) на одном абрисе ---------- */
+var OBJF = ['name', 'kind', 'lines', 'cp', 'p0', 's', 'mode', 'c', 'ks', 'kc', 'tol', 'viewMode', 'org', 'wid'];
+var OBJDEF = { name: '', kind: 'traverse', lines: [], cp: [], p0: { lat: null, lng: null }, s: 0, mode: 'auto', c: null, ks: 0, kc: null, tol: null, viewMode: 'az', org: { x: 0, y: 0 }, wid: 0 };
+var PAL = ['#2F6B3A', '#B5651D', '#1F5FA8', '#8A2BA6', '#C0463F', '#0F8B8D', '#6B6B00', '#5A3E85'];
+function snapObj() { var o = {}; OBJF.forEach(function (k) { o[k] = JSON.parse(JSON.stringify(S[k] === undefined ? OBJDEF[k] : S[k])); }); return o; }
+function loadObj(o) { OBJF.forEach(function (k) { S[k] = JSON.parse(JSON.stringify(o[k] === undefined ? OBJDEF[k] : o[k])); }); }
+function packActive() { if (S.objs && S.objs.length > 1 && S.act >= 0 && S.act < S.objs.length) S.objs[S.act] = snapObj(); }
+function withObj(o, fn) {   // временно «надеть» объект o на S (только для чтения)
+    var bak = {}; OBJF.forEach(function (k) { bak[k] = S[k]; });
+    OBJF.forEach(function (k) { S[k] = o[k] !== undefined ? o[k] : OBJDEF[k]; });
+    try { return fn(); } finally { OBJF.forEach(function (k) { S[k] = bak[k]; }); }
+}
+function objOrg(o) {   // положение начала объекта в общей системе (м)
+    if (o.kind === 'coords' && S.gref) {
+        var f = null, cp = o.cp || []; for (var i = 0; i < cp.length; i++) if (okp(cp[i])) { f = cp[i]; break; }
+        if (f) { var k = mpd(S.gref.lat); return { x: (f.lng - S.gref.lng) * k.lng + S.gref.ox, y: (f.lat - S.gref.lat) * k.lat + S.gref.oy }; }
+    }
+    return o.org || { x: 0, y: 0 };
+}
+function ensureGref() {
+    if (S.gref || S.kind !== 'coords') return;
+    var f = S.cp.filter(okp)[0]; if (f) S.gref = { lat: f.lat, lng: f.lng, ox: (S.org && S.org.x) || 0, oy: (S.org && S.org.y) || 0 };
+}
+function otherObjs() {
+    var out = []; if (!(S.objs && S.objs.length > 1)) return out;
+    var oa = objOrg(S);
+    S.objs.forEach(function (o, i) { if (i === S.act) return; var og = objOrg(o); out.push({ o: o, idx: i, dx: og.x - oa.x, dy: og.y - oa.y }); });
+    return out;
+}
+function fmtL(m) { return S.lunit === 'km' ? (m / 1000).toFixed(3) + ' км' : f1(m) + ' м'; }
+function stripGa(len, wid) { var d = [1, 2, 4].indexOf(S.adec) >= 0 ? S.adec : 4; return (len * wid / 10000).toFixed(d); }
+function stripNote(R) { return (S.strip && S.wid > 0 && R.len > 0) ? '<br>Площадь полосы шириной ' + String(S.wid).replace('.', ',') + ' м: <b>' + stripGa(R.len, S.wid) + ' га</b>' : ''; }
 function fmtArea(R) { return R.poly ? (R.area / 10000).toFixed(4) + ' га' : '—'; }
 function gapText(R) {
     if (R.gap === null) return '';
@@ -717,7 +803,10 @@ function resize() {
     draw();
 }
 function ptsBounds(R) {
-    var xs = R.pts.map(function (p) { return p.x; }), ys = R.pts.map(function (p) { return p.y; });
+    var xs = [], ys = [];
+    if (!R.empty || !(S.objs && S.objs.length > 1)) R.pts.forEach(function (p) { xs.push(p.x); ys.push(p.y); });
+    otherObjs().forEach(function (it) { withObj(it.o, function () { var Ro = compute(); if (!Ro.empty) Ro.pts.forEach(function (p) { xs.push(p.x + it.dx); ys.push(p.y + it.dy); }); }); });
+    if (!xs.length) { xs = [0]; ys = [0]; }
     return { x0: Math.min.apply(null, xs), x1: Math.max.apply(null, xs), y0: Math.min.apply(null, ys), y1: Math.max.apply(null, ys) };
 }
 function fitView(onlyPlot) {
@@ -752,7 +841,7 @@ function fsScale() { return (parseFloat(getComputedStyle(document.documentElemen
 /* ---------- отрисовка (экран и печать) ---------- */
 function drawScene(g, W, H, v, u, forPrint, opts) {
     opts = opts || {};
-    var R = compute();
+    var R = compute(), multi = !!(S.objs && S.objs.length > 1);
     var X = function (x) { return W / 2 + v.k * (x - v.cx); }, Y = function (y) { return H / 2 - v.k * (y - v.cy); };
     g.fillStyle = forPrint ? '#fff' : '#E9EDE8'; g.fillRect(0, 0, W, H);
     if (scanImg && S.scan.on && opts.scan !== false) {
@@ -763,60 +852,89 @@ function drawScene(g, W, H, v, u, forPrint, opts) {
         g.drawImage(scanImg, 0, 0);
         g.restore(); g.globalAlpha = 1;
     }
-    if (R.empty) return R;
-    var P = R.pts, lw = function (x) { return x * u; };
-    var labelsMode = opts.scheme ? 2 : S.labels, font = function (px, bold) { return (bold ? 'bold ' : '') + Math.round(px * u) + 'px sans-serif'; };
+    var lw = function (x) { return x * u; }, font = function (px, bold) { return (bold ? 'bold ' : '') + Math.round(px * u) + 'px sans-serif'; };
     function halo(txt, x, y, col, size, bold, align) {
         g.font = font(size, bold); g.textAlign = align || 'start'; g.lineJoin = 'round';
         g.strokeStyle = 'rgba(255,255,255,.92)'; g.lineWidth = lw(3.4); g.strokeText(txt, x, y); g.fillStyle = col; g.fillText(txt, x, y); g.textAlign = 'start';
     }
-    var tieEnd = Math.min(R.s, R.n), i;
-    if (tieEnd > 0) {   // привязка от столба
-        g.strokeStyle = '#C0463F'; g.lineWidth = lw(1.6); g.setLineDash([lw(6), lw(5)]); g.beginPath();
-        g.moveTo(X(P[0].x), Y(P[0].y)); for (i = 1; i <= tieEnd; i++) g.lineTo(X(P[i].x), Y(P[i].y)); g.stroke(); g.setLineDash([]);
-    }
-    var pathEnd = R.kind === 'coords' ? R.c : R.n;
-    if (pathEnd > tieEnd) {   // измеренный ход (до точки замыкания)
-        g.strokeStyle = 'rgba(30,45,35,.5)'; g.lineWidth = lw(1.1); g.beginPath();
-        g.moveTo(X(P[tieEnd].x), Y(P[tieEnd].y)); for (i = tieEnd + 1; i <= pathEnd; i++) g.lineTo(X(P[i].x), Y(P[i].y)); g.stroke();
-    }
-    var st = gapStatus(R), strokeCol = st.cls === 'bad' ? '#C0463F' : '#2F6B3A';
-    if (R.poly) {
-        g.beginPath(); R.poly.forEach(function (p, j) { if (j === 0) g.moveTo(X(p.x), Y(p.y)); else g.lineTo(X(p.x), Y(p.y)); }); g.closePath();
-        g.fillStyle = st.cls === 'bad' ? 'rgba(192,70,63,.06)' : 'rgba(47,107,58,.07)'; g.fill();
-        g.lineJoin = 'round'; g.lineWidth = lw(4.2); g.strokeStyle = 'rgba(255,255,255,.85)'; g.stroke();
-        g.lineWidth = lw(2); g.strokeStyle = strokeCol; g.stroke();
-    } else if (R.kind === 'coords' && R.m > 1 && R.s === 0 && R.c === 0) {
-        g.lineWidth = lw(2); g.strokeStyle = strokeCol; g.beginPath(); g.moveTo(X(P[0].x), Y(P[0].y)); for (i = 1; i < P.length; i++) g.lineTo(X(P[i].x), Y(P[i].y)); g.stroke();
-    }
-    if (R.gap !== null && R.gap >= 0.005 && !opts.scheme) {   // невязка: красный разрыв
-        var pn = P[R.n], pc = P[R.c];
-        g.strokeStyle = '#C0463F'; g.lineWidth = lw(2.2); g.setLineDash([lw(4), lw(3)]); g.beginPath(); g.moveTo(X(pn.x), Y(pn.y)); g.lineTo(X(pc.x), Y(pc.y)); g.stroke(); g.setLineDash([]);
-    }
-    if (labelsMode === 1 && R.kind === 'traverse' && !opts.scheme) {   // подписи линий — только по желанию
-        for (i = 0; i < R.n; i++) {
-            var l = S.lines[i], mx = (X(P[i].x) + X(P[i + 1].x)) / 2, my = (Y(P[i].y) + Y(P[i + 1].y)) / 2;
-            if (Math.hypot(X(P[i].x) - X(P[i + 1].x), Y(P[i].y) - Y(P[i + 1].y)) < lw(46)) continue;
-            halo(rumbStr(l.az) + ' · ' + f1(l.d) + ' м', mx, my - lw(5), '#14301A', 11, true, 'center');
+    function layer(R, ox, oy, idx) {
+        var X = function (x) { return W / 2 + v.k * (x + ox - v.cx); }, Y = function (y) { return H / 2 - v.k * (y + oy - v.cy); };
+        var trace = function (pts, closed) {
+            var n = pts.length, q = pts.map(function (p) { return { x: X(p.x), y: Y(p.y) }; }), tk = [0, 0.5, 1, 1.5][S.smooth | 0] || 0, k;
+            if (!n) return; g.moveTo(q[0].x, q[0].y);
+            if (!tk || n < 3) { for (k = 1; k < n; k++) g.lineTo(q[k].x, q[k].y); if (closed) g.closePath(); return; }
+            var segs = closed ? n : n - 1;
+            for (k = 0; k < segs; k++) {
+                var p0 = q[closed ? (k - 1 + n) % n : Math.max(k - 1, 0)], p1 = q[k], p2 = q[(k + 1) % n], p3 = q[closed ? (k + 2) % n : Math.min(k + 2, n - 1)], f = tk / 6;
+                g.bezierCurveTo(p1.x + (p2.x - p0.x) * f, p1.y + (p2.y - p0.y) * f, p2.x - (p3.x - p1.x) * f, p2.y - (p3.y - p1.y) * f, p2.x, p2.y);
+            }
+            if (closed) g.closePath();
+        };
+        var traceRuns = function (a, b) {   // линия по кускам: пропуски не рисуются
+            var run = [P[a]], q; for (q = a; q < b; q++) { if (R.gaps && R.gaps[q]) { if (run.length > 1) trace(run, false); run = [P[q + 1]]; } else run.push(P[q + 1]); }
+            if (run.length > 1) trace(run, false);
+        };
+        var pl = function (i) { return multi ? (idx + 1) + '-' + i : plab(i); };
+        var st = gapStatus(R), strokeCol = multi ? PAL[idx % PAL.length] : (st.cls === 'bad' ? '#C0463F' : '#2F6B3A'), isOpen = !R.poly && R.len > 0 && (S.mode === 'open' || R.hasGap);
+        var P = R.pts;
+        var labelsMode = opts.scheme ? 2 : S.labels;
+        var tieEnd = Math.min(R.s, R.n), i;
+        if (tieEnd > 0) {   // привязка от столба
+            g.strokeStyle = '#C0463F'; g.lineWidth = lw(1.6); g.setLineDash([lw(6), lw(5)]); g.beginPath();
+            g.moveTo(X(P[0].x), Y(P[0].y)); for (i = 1; i <= tieEnd; i++) g.lineTo(X(P[i].x), Y(P[i].y)); g.stroke(); g.setLineDash([]);
+        }
+        var pathEnd = (R.kind === 'coords' && S.mode !== 'open' && !R.hasGap) ? R.c : R.n;
+        if (pathEnd > tieEnd) {   // измеренный ход (до точки замыкания)
+            if (isOpen) { g.lineJoin = 'round'; g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = lw(4.4); g.beginPath(); traceRuns(tieEnd, pathEnd); g.stroke(); g.strokeStyle = strokeCol; g.lineWidth = lw(2.4); } else { g.strokeStyle = 'rgba(30,45,35,.5)'; g.lineWidth = lw(1.1); }
+            g.beginPath();
+            if (isOpen) traceRuns(tieEnd, pathEnd); else if (!(S.smooth && R.poly)) { g.moveTo(X(P[tieEnd].x), Y(P[tieEnd].y)); for (i = tieEnd + 1; i <= pathEnd; i++) { if (R.gaps && R.gaps[i - 1]) g.moveTo(X(P[i].x), Y(P[i].y)); else g.lineTo(X(P[i].x), Y(P[i].y)); } } g.stroke();
+        }
+        if (R.poly) {
+            g.beginPath(); trace(R.poly, true);
+            g.fillStyle = st.cls === 'bad' ? 'rgba(192,70,63,.06)' : 'rgba(47,107,58,.07)'; g.fill();
+            g.lineJoin = 'round'; g.lineWidth = lw(4.2); g.strokeStyle = 'rgba(255,255,255,.85)'; g.stroke();
+            g.lineWidth = lw(2); g.strokeStyle = strokeCol; g.stroke();
+        } else if (R.kind === 'coords' && R.m > 1 && R.s === 0 && R.c === 0) {
+            g.lineWidth = lw(2); g.strokeStyle = strokeCol; g.beginPath(); traceRuns(0, P.length - 1); g.stroke();
+        }
+        if (R.gap !== null && R.gap >= 0.005 && !opts.scheme && !S.lonly) {   // невязка: красный разрыв
+            var pn = P[R.n], pc = P[R.c];
+            g.strokeStyle = '#C0463F'; g.lineWidth = lw(2.2); g.setLineDash([lw(4), lw(3)]); g.beginPath(); g.moveTo(X(pn.x), Y(pn.y)); g.lineTo(X(pc.x), Y(pc.y)); g.stroke(); g.setLineDash([]);
+        }
+        if (labelsMode === 1 && R.kind === 'traverse' && !opts.scheme && !S.lonly) {   // подписи линий — только по желанию
+            for (i = 0; i < R.n; i++) {
+                var l = S.lines[i], mx = (X(P[i].x) + X(P[i + 1].x)) / 2, my = (Y(P[i].y) + Y(P[i + 1].y)) / 2;
+                if (Math.hypot(X(P[i].x) - X(P[i + 1].x), Y(P[i].y) - Y(P[i + 1].y)) < lw(46)) continue;
+                halo(rumbStr(l.az) + ' · ' + f1(l.d) + ' м', mx, my - lw(5), '#14301A', 11, true, 'center');
+            }
+        }
+        var gapEnd = (R.gap !== null && R.gap >= 0.005) ? R.n : -1;
+        for (i = 0; !S.lonly && i < P.length; i++) {   // точки: кружок и номер
+            var px = X(P[i].x), py = Y(P[i].y), inPoly = R.idx.indexOf(i) >= 0, isT0 = ((R.kind === 'traverse' || R.s > 0) && i === 0);
+            g.beginPath(); g.arc(px, py, lw(isT0 ? 5.5 : 3.8), 0, 6.2832);
+            g.fillStyle = isT0 ? '#C0463F' : (i === gapEnd ? '#fff' : (inPoly ? '#fff' : '#F0B4B0')); g.fill();
+            g.lineWidth = lw(1.8); g.strokeStyle = isT0 ? '#7A2A26' : (i === gapEnd ? '#C0463F' : (inPoly ? strokeCol : '#C0463F')); g.stroke();
+            if (labelsMode) halo(pl(i), px + lw(7), py - lw(6), isT0 ? '#7A2A26' : '#1D2A20', 11.5, true);
+        }
+        if (R.poly && (labelsMode === 1 || labelsMode === 3) && !opts.scheme && !S.lonly) {   // площадь в центре — только если выбрано
+            var cx = 0, cy = 0; R.poly.forEach(function (p) { cx += p.x; cy += p.y; }); cx = X(cx / R.poly.length); cy = Y(cy / R.poly.length);
+            halo((R.area / 10000).toFixed(4) + ' га', cx, cy + lw(5), strokeCol, 15, true, 'center');
+        }
+        if (multi && !S.lonly) {   // имя объекта рядом с ним
+            var nx = 0, ny = 0; R.pts.forEach(function (p) { nx += p.x; ny += p.y; }); nx = X(nx / R.pts.length); ny = Y(ny / R.pts.length);
+            halo(S.name || ('Объект ' + (idx + 1)), nx, ny - lw(11), strokeCol, 12, true, 'center');
         }
     }
-    var gapEnd = (R.gap !== null && R.gap >= 0.005) ? R.n : -1;
-    for (i = 0; i < P.length; i++) {   // точки: кружок и номер
-        var px = X(P[i].x), py = Y(P[i].y), inPoly = R.idx.indexOf(i) >= 0, isT0 = ((R.kind === 'traverse' || R.s > 0) && i === 0);
-        g.beginPath(); g.arc(px, py, lw(isT0 ? 5.5 : 3.8), 0, 6.2832);
-        g.fillStyle = isT0 ? '#C0463F' : (i === gapEnd ? '#fff' : (inPoly ? '#fff' : '#F0B4B0')); g.fill();
-        g.lineWidth = lw(1.8); g.strokeStyle = isT0 ? '#7A2A26' : (i === gapEnd ? '#C0463F' : (inPoly ? strokeCol : '#C0463F')); g.stroke();
-        if (labelsMode) halo(plab(i), px + lw(7), py - lw(6), isT0 ? '#7A2A26' : '#1D2A20', 11.5, true);
-    }
-    if (R.poly && (labelsMode === 1 || labelsMode === 3) && !opts.scheme) {   // площадь в центре — только если выбрано
-        var cx = 0, cy = 0; R.poly.forEach(function (p) { cx += p.x; cy += p.y; }); cx = X(cx / R.poly.length); cy = Y(cy / R.poly.length);
-        halo((R.area / 10000).toFixed(4) + ' га', cx, cy + lw(5), strokeCol, 15, true, 'center');
-    }
+    var anyData = !R.empty;
+    otherObjs().forEach(function (it) { withObj(it.o, function () { var Ro = compute(); if (!Ro.empty) { anyData = true; layer(Ro, it.dx, it.dy, it.idx); } }); });
+    if (!R.empty) layer(R, 0, 0, S.act);
+    if (!anyData) return R;
     // линейка масштаба и север
-    var bar = niceStep(110 * u / v.k), px2 = bar * v.k;
-    var bx0 = opts.barX !== undefined ? opts.barX : 10;
+    var bar = niceStep(110 * u / v.k), px2 = bar * v.k, bx0 = opts.barX !== undefined ? opts.barX : 10;
+    if (!S.noScale) {
     g.fillStyle = 'rgba(255,255,255,.88)'; g.fillRect(lw(bx0), H - lw(38), px2 + lw(24), lw(28));
     g.fillStyle = '#1E2A22'; g.fillRect(lw(bx0 + 12), H - lw(20), px2, lw(3)); g.font = font(11.5, true); g.fillText(fmtLen(bar), lw(bx0 + 12), H - lw(25));
+    }
     g.save(); g.translate(W - lw(36), lw(40));
     g.fillStyle = 'rgba(255,255,255,.9)'; g.beginPath(); g.arc(0, 0, lw(27), 0, 6.2832); g.fill();
     var arrow = function (deg, len, wid, col, dash) {
@@ -1115,6 +1233,7 @@ $('b-pick-s').onclick = function () { startPick('start'); }; $('b-pick-c').oncli
 
 /* ---------- инструменты ---------- */
 function shiftPlot(dwx, dwy) {   // сдвиг контура относительно скана: скан и вид уходят в обратную сторону
+    S.org = { x: ((S.org && S.org.x) || 0) + dwx, y: ((S.org && S.org.y) || 0) + dwy };
     S.scan.c = { re: S.scan.c.re - dwx, im: S.scan.c.im - dwy }; V.cx -= dwx; V.cy -= dwy; scheduleSave(); draw();
 }
 function setTool(t) {
@@ -1159,30 +1278,33 @@ function addDrawPoint(w) {
         var ok = S.cp.filter(okp);
         if (!ok.length) { toast('Введите координаты первой точки или выберите Азимут'); return; }
         var ml = 0; ok.forEach(function (p) { ml += p.lat; }); var kk = mpd(ml / ok.length), c0 = ok[0];
-        S.cp.push({ lat: +(c0.lat + w.y / kk.lat).toFixed(7), lng: +(c0.lng + w.x / kk.lng).toFixed(7) });
+        var np = { lat: +(c0.lat + w.y / kk.lat).toFixed(7), lng: +(c0.lng + w.x / kk.lng).toFixed(7) }; if (ui.nextGap) { np.g = true; ui.nextGap = false; gapBtn(); }
+        S.cp.push(np);
     } else {
         if (!S.lines.length && !ui.t0set) {   // первая точка = Т.0
-            S.s = 0; S.c = null; S.mode = 'auto'; shiftPlot(w.x, w.y); ui.t0set = true; toast('Т.0 поставлена. Теперь ставьте точки по порядку.');
+            S.s = 0; S.c = null; S.mode = $('db-close').checked ? 'auto' : 'open'; shiftPlot(w.x, w.y); ui.t0set = true; toast('Т.0 поставлена. Теперь ставьте точки по порядку.');
             draw(); updateDrawInfo(); return;
         }
         var last = R.pts[R.pts.length - 1], dx = w.x - last.x, dy = w.y - last.y;
         if (Math.hypot(dx, dy) < 0.05) return;
-        S.lines.push({ az: Math.round(normAz(Math.atan2(dx, dy) * 180 / Math.PI - dcl()) * 100) / 100, d: Math.round(Math.hypot(dx, dy) * 100) / 100 });
+        var nl = { az: Math.round(normAz(Math.atan2(dx, dy) * 180 / Math.PI - dcl()) * 100) / 100, d: Math.round(Math.hypot(dx, dy) * 100) / 100 }; if (ui.nextGap) { nl.g = true; ui.nextGap = false; gapBtn(); }
+        S.lines.push(nl);
     }
-    renderTable(); renderCoords(); afterChange(); updateDrawInfo();
+    renderTable(); renderCoords(); afterChange(); histPush(); updateDrawInfo();
 }
 function dragDrawPoint(i, w) {
     var R = compute(), P = R.pts;
     if (S.kind === 'coords') {
         var ok = S.cp.filter(okp), ml = 0; ok.forEach(function (p) { ml += p.lat; }); var kk = mpd(ml / ok.length), c0 = ok[0], ki = okIndex(i);
         if (ki < 0) return;
-        S.cp[ki] = { lat: +(c0.lat + w.y / kk.lat).toFixed(7), lng: +(c0.lng + w.x / kk.lng).toFixed(7) };
+        var og = S.cp[ki].g; S.cp[ki] = { lat: +(c0.lat + w.y / kk.lat).toFixed(7), lng: +(c0.lng + w.x / kk.lng).toFixed(7) }; if (og) S.cp[ki].g = true;
         if (i === 0) shiftPlot(w.x, w.y);   // начало отсчёта переехало — скан остаётся на месте
     } else {
         if (i === 0) { shiftPlot(w.x - P[0].x, w.y - P[0].y); return; }   // Т.0: двигаем весь контур по скану
         var mk = function (a, b) { var dx = b.x - a.x, dy = b.y - a.y; return { az: Math.round(normAz(Math.atan2(dx, dy) * 180 / Math.PI - dcl()) * 100) / 100, d: Math.round(Math.hypot(dx, dy) * 100) / 100 }; };
-        S.lines[i - 1] = mk(P[i - 1], w);
-        if (i < P.length - 1) S.lines[i] = mk(w, P[i + 1]);
+        var g1 = S.lines[i - 1].g, g2 = i < P.length - 1 ? S.lines[i].g : false;
+        S.lines[i - 1] = mk(P[i - 1], w); if (g1) S.lines[i - 1].g = true;
+        if (i < P.length - 1) { S.lines[i] = mk(w, P[i + 1]); if (g2) S.lines[i].g = true; }
     }
     draw();
 }
@@ -1224,10 +1346,10 @@ function fmtDeg(x) { return String(+x.toFixed(7)); }
 function okNums() { var map = {}, cnt = 0; S.cp.forEach(function (p, i) { if (okp(p)) { map[i] = cnt; cnt++; } }); return map; }
 function coordRow(p, i, num, tie) {
     var ok = num !== undefined;
-    return '<tr data-i="' + i + '"' + (tie ? ' class="tie"' : '') + '><td class="lbl"><b>Т.' + (ok ? num : '—') + '</b>' + (tie ? ' <span class="badge-t">' + (num === 0 ? 'столб' : 'привязка') + '</span>' : '') + '</td>' +
+    return '<tr data-i="' + i + '"' + (tie ? ' class="tie"' : (p && p.g ? ' class="gap"' : '')) + '><td class="lbl"><b>Т.' + (ok ? num : '—') + '</b>' + (tie ? ' <span class="badge-t">' + (num === 0 ? 'столб' : 'привязка') + '</span>' : '') + '</td>' +
         '<td><input type="text" inputmode="decimal" data-f="lat" value="' + (p && typeof p.lat === 'number' ? fmtDeg(p.lat) : '') + '" placeholder="61.480000"></td>' +
         '<td><input type="text" inputmode="decimal" data-f="lng" value="' + (p && typeof p.lng === 'number' ? fmtDeg(p.lng) : '') + '" placeholder="50.501600"></td>' +
-        '<td><button class="btn" data-del="' + i + '" style="padding:2px 7px" aria-label="Удалить">✕</button></td></tr>';
+        '<td style="white-space:nowrap"><button class="btn gapb' + (p && p.g ? ' on' : '') + '" data-gap="' + i + '" style="padding:2px 6px" title="Пропуск: отрезок до этой точки не рисуется и не считается" aria-label="Пропуск">⏸</button> <button class="btn" data-del="' + i + '" style="padding:2px 7px" aria-label="Удалить">✕</button></td></tr>';
 }
 function renderCoords() {
     var tb = $('tb-c');
@@ -1248,6 +1370,8 @@ $('tb-c').addEventListener('change', function (e) {
     refreshCoordLabels(); afterChange();
 });
 $('tb-c').addEventListener('click', function (e) {
+    var gb = e.target.closest('[data-gap]');
+    if (gb) { var p = S.cp[+gb.getAttribute('data-gap')]; if (p) { if (p.g) delete p.g; else p.g = true; renderCoords(); afterChange(); } return; }
     var b = e.target.closest('[data-del]'); if (!b) return;
     S.cp.splice(+b.getAttribute('data-del'), 1); renderCoords(); afterChange();
 });
@@ -1275,7 +1399,7 @@ function rowHtml(i) {
         '<td class="col-rumb"><div style="display:flex;gap:1px"><select data-f="rq">' + ['СВ', 'ЮВ', 'ЮЗ', 'СЗ'].map(function (q) { return '<option' + (q === r.q ? ' selected' : '') + '>' + q + '</option>'; }).join('') + '</select>' +
         '<input type="number" data-f="rd" min="0" max="90" value="' + r.d + '" style="min-width:40px"><input type="number" data-f="rm" min="0" max="59" value="' + r.m + '" style="min-width:40px"></div></td>' +
         '<td><input type="number" data-f="d" step="0.01" inputmode="decimal" value="' + (+(+l.d).toFixed(3)) + '"></td>' +
-        '<td><button class="btn" data-del="' + i + '" style="padding:2px 7px" aria-label="Удалить">✕</button></td></tr>';
+        '<td style="white-space:nowrap"><button class="btn gapb' + (l.g ? ' on' : '') + '" data-gap="' + i + '" style="padding:2px 6px" title="Пропуск: отрезок не рисуется и не считается" aria-label="Пропуск">⏸</button> <button class="btn" data-del="' + i + '" style="padding:2px 7px" aria-label="Удалить">✕</button></td></tr>';
 }
 function renderTable() {
     var tb = $('tbody');
@@ -1289,9 +1413,9 @@ function refreshLabels() {
     rows.forEach(function (tr) {
         var i = +tr.getAttribute('data-i'), td = tr.querySelector('.lbl'), cls = [];
         var tie = i < R.s, ret = R.gap !== null && i === R.n - 1;
-        if (tie) cls.push('tie'); if (ret) cls.push('ret');
+        if (tie) cls.push('tie'); if (ret) cls.push('ret'); if (S.lines[i] && S.lines[i].g) cls.push('gap');
         tr.className = cls.join(' ');
-        var tag = tie ? '<span class="badge-t">привязка</span> ' : (ret ? '<span class="badge-r">возврат</span> ' : '');
+        var tag = tie ? '<span class="badge-t">привязка</span> ' : (ret ? '<span class="badge-r">возврат</span> ' : (S.lines[i] && S.lines[i].g ? '<span class="badge-t" style="background:#B5651D">пропуск</span> ' : ''));
         td.innerHTML = '<b>Т.' + i + '→Т.' + (i + 1) + '</b> ' + tag + (ll ? '<span class="sub">' + ll[i + 1].lat.toFixed(6) + ', ' + ll[i + 1].lng.toFixed(6) + '</span>' : '');
     });
 }
@@ -1309,8 +1433,10 @@ $('tbody').addEventListener('change', function (e) {
     syncRow(i); afterChange();
 });
 $('tbody').addEventListener('click', function (e) {
+    var gb = e.target.closest('[data-gap]');
+    if (gb) { var l = S.lines[+gb.getAttribute('data-gap')]; if (l) { if (l.g) delete l.g; else l.g = true; renderTable(); afterChange(); } return; }
     var b = e.target.closest('[data-del]'); if (!b) return;
-    S.lines.splice(+b.getAttribute('data-del'), 1); ui.undoLines = null; $('b-undo-adj').disabled = true; renderTable(); afterChange();
+    askDel(+b.getAttribute('data-del'));
 });
 $('b-add').onclick = function () {
     var last = S.lines[S.lines.length - 1]; S.lines.push({ az: last ? last.az : 0, d: 0 }); renderTable(); afterChange();
@@ -1347,7 +1473,7 @@ function syncFields() {
     document.querySelectorAll('#seg button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-m') === m); });
     $('ed-coords').style.display = S.kind === 'coords' ? '' : 'none'; $('ed-trav').style.display = S.kind === 'coords' ? 'none' : '';
     $('tbl-wrap').className = 'tbl-wrap ' + (S.viewMode === 'rumb' ? 'show-rumb' : 'show-az');
-    scLabels(R);
+    syncObjFields(); scLabels(R);
 }
 function declNote() {
     var d = dcl(), g = gammaDeg(), t = d
@@ -1379,7 +1505,7 @@ function renderInfo() {
     var R = compute(), el = $('info'), st = gapStatus(R);
     if (R.empty) { el.className = 'info'; el.innerHTML = '<div class="big">—</div><div class="st" style="color:var(--muted)">Введите точки делянки или загрузите данные</div>'; return R; }
     if (R.warn) { el.className = 'info mid'; el.innerHTML = '<div class="big">—</div><div class="st">' + esc(R.warn) + '</div>'; return R; }
-    if (!R.poly) { el.className = 'info'; el.innerHTML = '<div class="big">' + f1(R.len) + ' м</div><div class="st" style="color:var(--muted)">Длина хода (без замыкания)</div>'; return R; }
+    if (!R.poly) { el.className = 'info'; el.innerHTML = '<div class="big">' + fmtL(R.len) + '</div><div class="st" style="color:var(--muted)">Длина хода (без замыкания)' + stripNote(R) + '</div>'; return R; }
     var extra = '<div style="font-size:.88em;color:var(--muted);margin-top:3px">Периметр: ' + f1(R.perim) + ' м · вершин: ' + R.poly.length + '</div>';
     el.className = 'info ' + st.cls;
     var mid = R.kind === 'coords' ? '<div class="st" style="color:var(--muted)">Замкнуто на Т.' + R.c + ' (площадь по точкам Т.' + R.c + '–Т.' + (R.m - 1) + ')</div>' : (R.gap !== null ? '<div class="st">' + esc(gapText(R)) + '<br>' + esc(st.txt) + '</div>' : '<div class="st" style="color:var(--muted)">Замкнуто автоматически — невязка не проверена</div>');
@@ -1391,7 +1517,7 @@ function scLabels(R) {
     $('v-s').textContent = 'Т.' + R.s;
     $('v-c').textContent = S.kind === 'coords' ? 'Т.' + R.c : (S.mode === 'return' ? 'Т.' + R.c : (S.mode === 'auto' ? 'авто' : 'нет'));
 }
-function afterChange() { renderInfo(); refreshLabels(); scLabels(compute()); refreshPassNote(); draw(); scheduleSave(); }
+function afterChange() { renderObjBar(); renderInfo(); refreshLabels(); scLabels(compute()); refreshPassNote(); draw(); scheduleSave(); }
 function refreshPassNote() { }
 
 /* ---------- панели ---------- */
@@ -1482,6 +1608,147 @@ function lensHide() { $('lens').classList.remove('on'); }
     hold($('tbody'), lensLine);
     hold($('tb-c'), function (i) { var cnt = -1, idx = -1; S.cp.forEach(function (p, k) { if (okp(p)) { cnt++; if (k === i) idx = cnt; } }); return idx >= 0 ? lensPoint(idx) : ''; });
 })();
+
+/* ---------- несколько объектов: панель, переключение, «развернуть» ---------- */
+function objLabel(i) { var nm = (i === S.act) ? S.name : (S.objs[i] && S.objs[i].name); return nm || ('Объект ' + (i + 1)); }
+function renderObjBar() {
+    var box = $('obj-chips'), n = S.objs.length;
+    if (n < 2) { box.style.display = 'none'; box.innerHTML = ''; return; }
+    box.style.display = '';
+    var h = ''; for (var i = 0; i < n; i++) h += '<button class="ochip' + (i === S.act ? ' on' : '') + '" data-o="' + i + '"><i style="background:' + PAL[i % PAL.length] + '"></i>' + (i + 1) + '. ' + esc(objLabel(i)) + '</button>';
+    box.innerHTML = h;
+}
+$('obj-chips').addEventListener('click', function (e) { var b = e.target.closest('[data-o]'); if (b) switchObj(parseInt(b.getAttribute('data-o'), 10)); });
+function syncObjFields() {
+    $('f-lunit').value = S.lunit === 'km' ? 'km' : 'm'; $('prn-lunit').value = $('f-lunit').value; $('f-strip').checked = !!S.strip;
+    $('wid-row').style.display = S.strip ? '' : 'none'; $('f-wid').value = S.wid > 0 ? S.wid : '';
+    $('v-lonly').checked = $('prn-lonly').checked = !!S.lonly; $('v-noscale').checked = $('prn-noscale').checked = !!S.noScale; $('v-smooth').value = $('prn-smooth').value = String(S.smooth | 0);
+    $('db-close').checked = S.mode !== 'open'; $('prn-frame').checked = !!S.frame;
+    $('o-del').style.opacity = S.objs.length > 1 ? '' : '.45';
+    renderObjBar();
+}
+function frameShift(oOld, oNew) {
+    var dx = oOld.x - oNew.x, dy = oOld.y - oNew.y;
+    S.scan.c = { re: S.scan.c.re + dx, im: S.scan.c.im + dy }; V.cx += dx; V.cy += dy;
+}
+function switchObj(i) {
+    if (i === S.act || i < 0 || i >= S.objs.length) return;
+    packActive(); ensureGref();
+    var oOld = objOrg(S); S.act = i; loadObj(S.objs[i]);
+    frameShift(oOld, objOrg(S)); ui.t0set = false; ui.undoLines = null;
+    syncFields(); renderTable(); renderCoords(); afterChange(); if (ui.tool === 'draw') updateDrawInfo();
+}
+function addObj() {
+    packActive(); ensureGref();
+    if (S.objs.length < 2) { S.objs = [snapObj()]; S.act = 0; }
+    var oa = objOrg(S);
+    var nu = JSON.parse(JSON.stringify(OBJDEF)); nu.name = 'Объект ' + (S.objs.length + 1); nu.viewMode = S.viewMode; nu.org = { x: oa.x + V.cx, y: oa.y + V.cy };
+    S.objs.push(nu);
+    if (S.objs.length === 2 && !S.objs[0].name) S.objs[0].name = '';
+    switchObj(S.objs.length - 1);
+    toast('Новый объект. Включите «✏️ Рисовать точки» и коснитесь места, где он начинается.');
+}
+function delObj() {
+    if (S.objs.length < 2) { toast('Это единственный объект. Очистить точки можно кнопкой 🗑 у списка точек.'); return; }
+    if (!confirm('Удалить объект «' + objLabel(S.act) + '» с абриса?')) return;
+    packActive(); ensureGref();
+    var oOld = objOrg(S); S.objs.splice(S.act, 1); S.act = Math.min(S.act, S.objs.length - 1); loadObj(S.objs[S.act]);
+    frameShift(oOld, objOrg(S));
+    if (S.objs.length < 2) { S.objs = []; S.act = 0; }
+    ui.t0set = false; syncFields(); renderTable(); renderCoords(); afterChange(); fitView(false);
+}
+function reverseObj() {
+    var R = compute(); if (R.empty || R.pts.length < 2) { toast('Сначала поставьте хотя бы две точки'); return; }
+    var P = R.pts, last = P[P.length - 1], ll = llPoints();
+    if (S.kind === 'coords') { var okc = S.cp.filter(okp), gs = okc.map(function (p, k) { return k + 1 < okc.length ? !!okc[k + 1].g : false; }); S.cp = okc.slice().reverse().map(function (p, j) { var np = { lat: p.lat, lng: p.lng }; var oi = okc.length - 1 - j; if (j > 0 && gs[oi]) np.g = true; return np; }); S.ks = 0; S.kc = null; }
+    else {
+        S.lines = S.lines.slice().reverse().map(function (l) { var nl2 = { az: Math.round(normAz((l.az || 0) + 180) * 100) / 100, d: l.d }; if (l.g) nl2.g = true; return nl2; });
+        S.s = 0; S.c = null; if (S.mode === 'return') S.mode = 'auto';
+        if (hasP0() && ll) S.p0 = { lat: ll[ll.length - 1].lat, lng: ll[ll.length - 1].lng };
+    }
+    shiftPlot(last.x, last.y);
+    ui.undoLines = null; syncFields(); renderTable(); renderCoords(); afterChange(); if (ui.tool === 'draw') updateDrawInfo();
+    toast('Объект развёрнут: рисуйте дальше с другого конца');
+}
+$('o-add').onclick = addObj; $('o-del').onclick = delObj; $('o-rev').onclick = reverseObj;
+$('db-newobj').onclick = function () { addObj(); startDraw(); };
+$('db-rev').onclick = reverseObj;
+$('db-close').addEventListener('change', function () { S.mode = this.checked ? 'auto' : 'open'; syncFields(); afterChange(); });
+function setLunit(v) { S.lunit = v === 'km' ? 'km' : 'm'; syncObjFields(); afterChange(); if ($('m-prn').classList.contains('on')) refreshPreview(); }
+$('f-lunit').onchange = function () { setLunit(this.value); }; $('prn-lunit').onchange = function () { setLunit(this.value); };
+$('f-strip').onchange = function () { S.strip = this.checked; syncObjFields(); afterChange(); };
+$('f-wid').onchange = function () { var w = num(this.value); S.wid = (w > 0) ? w : 0; afterChange(); };
+document.querySelectorAll('[data-ss]').forEach(function (b) {
+    b.onclick = function () {
+        var st = parseFloat($('sb-step').value) || 1, k = b.getAttribute('data-ss'), dx = k === 'l' ? -st : k === 'r' ? st : 0, dy = k === 'u' ? st : k === 'd' ? -st : 0;
+        S.scan.c = { re: S.scan.c.re + dx, im: S.scan.c.im + dy }; scheduleSave(); draw();
+    };
+});
+function setView(k, v) { S[k] = v; syncObjFields(); afterChange(); if ($('m-prn').classList.contains('on')) refreshPreview(); }
+['lonly', 'noscale'].forEach(function (n) { var key = n === 'lonly' ? 'lonly' : 'noScale'; ['v-', 'prn-'].forEach(function (p) { $(p + n).onchange = function () { setView(key, this.checked); }; }); });
+['v-smooth', 'prn-smooth'].forEach(function (id) { $(id).onchange = function () { setView('smooth', parseInt(this.value, 10) || 0); }; });
+
+/* ---------- пропуск участка, безопасное удаление, история ---------- */
+function gapBtn() { $('db-gap').style.outline = ui.nextGap ? '3px solid #B5651D' : ''; $('db-gap').style.background = ui.nextGap ? '#FCE8D4' : ''; }
+$('db-gap').onclick = function () {
+    var R = compute();
+    if (R.empty || (S.kind !== 'coords' && !S.lines.length)) { toast('Сначала поставьте начало и хотя бы одну точку.'); return; }
+    ui.nextGap = !ui.nextGap; gapBtn();
+    if (ui.nextGap) toast('Пропуск включён: следующая точка начнёт новый кусок (отрезок до неё не рисуется и не считается).');
+};
+function askDel(i) {
+    var l = S.lines[i]; if (!l) return;
+    ui.delI = i; $('del-h').textContent = 'Удалить отрезок Т.' + i + '→Т.' + (i + 1);
+    $('del-p').textContent = 'Точки после этого отрезка в ходе задаются от предыдущих. Выберите, что сделать, чтобы форма не поплыла. Любое действие можно отменить кнопкой «↶ Отменить».';
+    $('del-join').style.display = i < S.lines.length - 1 ? '' : 'none'; $('m-del').classList.add('on');
+}
+function delApply(kind) {
+    var i = ui.delI; $('m-del').classList.remove('on'); if (i === null || i === undefined || !S.lines[i]) return;
+    var R = compute(), P = R.pts;
+    if (kind === 'gap') S.lines[i].g = true;
+    else if (kind === 'join' && i < S.lines.length - 1) {
+        var a = P[i], b = P[i + 2], dx = b.x - a.x, dy = b.y - a.y, both = S.lines[i].g || S.lines[i + 1].g;   // пропуск сохраняется, если один из двух отрезков был пропуском
+        var nl = { az: Math.round(normAz(Math.atan2(dx, dy) * 180 / Math.PI - dcl()) * 100) / 100, d: Math.round(Math.hypot(dx, dy) * 100) / 100 }; if (both) nl.g = true;
+        S.lines.splice(i, 2, nl);
+    } else S.lines.splice(i, 1);
+    ui.delI = null; ui.undoLines = null; $('b-undo-adj').disabled = true; renderTable(); afterChange(); histPush(); updateDrawInfo();
+}
+$('del-gap').onclick = function () { delApply('gap'); }; $('del-join').onclick = function () { delApply('join'); };
+$('del-shift').onclick = function () { delApply('shift'); }; $('del-cancel').onclick = function () { $('m-del').classList.remove('on'); };
+
+var hist = [], hkeys = [], hpos = -1, hTimer = 0, hBusy = false;
+function histSnap() {
+    packActive();
+    var core = { o: S.objs, a: S.act, g: S.gref, c: snapObj() };
+    return { key: JSON.stringify(core), str: JSON.stringify({ o: core.o, a: core.a, g: core.g, c: core.c, sc: S.scan && S.scan.c, org: S.org }) };
+}
+function histBtns() {
+    var u = $('t-undo'), r = $('t-redo'); if (!u || !r) return;
+    u.style.opacity = hpos > 0 ? '' : '.4'; r.style.opacity = hpos < hist.length - 1 ? '' : '.4';
+}
+function histReset() { clearTimeout(hTimer); hTimer = 0; var s = histSnap(); hist = [s.str]; hkeys = [s.key]; hpos = 0; histBtns(); }
+function histPush() {
+    clearTimeout(hTimer); hTimer = 0; if (hBusy) return;
+    var s = histSnap(); if (hpos >= 0 && hkeys[hpos] === s.key) { hist[hpos] = s.str; return; }
+    hist = hist.slice(0, hpos + 1); hkeys = hkeys.slice(0, hpos + 1); hist.push(s.str); hkeys.push(s.key);
+    if (hist.length > 60) { hist.shift(); hkeys.shift(); } hpos = hist.length - 1; histBtns();
+}
+function histSchedule() { if (hBusy) return; clearTimeout(hTimer); hTimer = setTimeout(histPush, 250); }
+function histGo(d) {
+    if (hTimer) histPush();
+    var np = hpos + d; if (np < 0 || np >= hist.length) { toast(d < 0 ? 'Больше нечего отменять' : 'Нечего возвращать'); return; }
+    hpos = np; var o = JSON.parse(hist[hpos]); hBusy = true;
+    S.objs = o.o || []; S.act = o.a || 0; S.gref = o.g || null; loadObj(o.c); if (o.sc && S.scan) S.scan.c = o.sc;
+    ui.undoLines = null; ui.t0set = !!S.lines.length; ui.nextGap = false; gapBtn();
+    syncFields(); renderTable(); renderCoords(); afterChange(); if (ui.tool === 'draw') updateDrawInfo();
+    hBusy = false; hkeys[hpos] = histSnap().key; histBtns(); toast(d < 0 ? '↶ Отменено' : '↷ Возвращено');
+}
+$('t-undo').onclick = function () { histGo(-1); }; $('t-redo').onclick = function () { histGo(1); };
+document.addEventListener('keydown', function (e) {
+    var tg = e.target && e.target.tagName; if (tg === 'INPUT' || tg === 'TEXTAREA' || tg === 'SELECT') return;
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); histGo(-1); }
+    else if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) { e.preventDefault(); histGo(1); }
+});
 
 /* ---------- импорт ---------- */
 function distLL(a, b) { var k = mpd((a.lat + b.lat) / 2); return Math.hypot((b.lng - a.lng) * k.lng, (b.lat - a.lat) * k.lat); }
@@ -1642,11 +1909,14 @@ function checkHandoff() {
 window.addEventListener('storage', function (e) { if (e.key === HANDOFF && e.newValue) checkHandoff(); });
 
 /* ---------- файл проекта ---------- */
-function projectObject() { var o = JSON.parse(JSON.stringify(S)); o.format = 'abris'; o.version = 2; delete o.id; return o; }
+function projectObject() { packActive(); var o = JSON.parse(JSON.stringify(S)); o.format = 'abris'; o.version = 2; delete o.id; return o; }
 function adoptState(o) {
     var n = newState(); S = Object.assign(n, o); S.stamp = Object.assign(n.stamp, o.stamp || {}); S.scan = Object.assign(n.scan, o.scan || {});
     if (!S.kind) S.kind = 'traverse'; if (!Array.isArray(S.cp)) S.cp = []; if (!Array.isArray(S.lines)) S.lines = [];
+    if (!Array.isArray(S.objs) || S.objs.length < 2) { S.objs = []; S.act = 0; } else S.act = Math.max(0, Math.min(S.objs.length - 1, S.act | 0));
+    if (!S.org || typeof S.org.x !== 'number') S.org = { x: 0, y: 0 };
     delete S.format; delete S.version;
+    if (typeof histReset === 'function' && $('t-undo')) histReset();
 }
 function openProject(o) {
     var embedded = o.scanData; delete o.scanData; adoptState(o); S.id = null;
@@ -1694,9 +1964,9 @@ function restoreScan() {
     return Promise.race([idbDo('scan', 'readonly', function (st) { return st.get('img'); }).then(function (b) { if (b) return loadScanBlob(b, S.scan.name, true).then(function () { return true; }); S.scan.on = false; return false; }), new Promise(function (r) { setTimeout(function () { r(false); }, 2500); })]).catch(function () { return false; });
 }
 var archT = 0;
-function saveState() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { } if (S.id) { clearTimeout(archT); archT = setTimeout(function () { archSave(true); }, 1200); } }
+function saveState() { packActive(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { } if (S.id) { clearTimeout(archT); archT = setTimeout(function () { archSave(true); }, 1200); } }
 var saveTmr = 0;
-function scheduleSave() { clearTimeout(saveTmr); saveTmr = setTimeout(saveState, 400); }
+function scheduleSave() { clearTimeout(saveTmr); saveTmr = setTimeout(saveState, 400); histSchedule(); }
 function restoreState() {
     try {
         var raw = localStorage.getItem(KEY), legacy = false;
@@ -1714,7 +1984,7 @@ function archMeta() {
 }
 function archSave(silent) {
     if (!S.id) { if (silent) return Promise.resolve(); S.id = guid(); }
-    var item = archMeta(); item.state = JSON.parse(JSON.stringify(S));
+    packActive(); var item = archMeta(); item.state = JSON.parse(JSON.stringify(S));
     var p = idbDo('items', 'readwrite', function (st) { return st.put(item); });
     if (scanDirty) { var b = scanBlob, id = item.id; scanDirty = false; p = p.then(function () { return idbDo('iscan', 'readwrite', function (st) { return b ? st.put(b, id) : st.delete(id); }); }); }
     return p.then(function () { if (!silent) { toast('Сохранено в архив: «' + item.name + '»'); goal('abris_archive'); } archRefreshIfOpen(); }).catch(function () { toast('Не удалось сохранить в архив: хранилище браузера недоступно'); });
@@ -1792,22 +2062,38 @@ function exportPolyLL() {
     return R.idx.map(function (i) { return ll[i]; });
 }
 function schemeGuard() { return printMode === 'scheme' && !confirm('Для печати выбрана «Схема расположения» — данные отводчикам выдавать нельзя. Всё равно выгрузить файл с координатами?'); }
+function exportLayers() {   // все объекты с координатами: замкнутые — контуры, остальные — линии
+    var out = [];
+    layersAll().forEach(function (L) {
+        if (L.R.empty || !L.ll) return;
+        var R = L.R, closed = !!R.poly, pts = closed ? R.idx.map(function (i) { return L.ll[i]; }) : L.ll.slice(R.s), parts = [];
+        if (!closed) { var cur = [L.ll[R.s]], k; for (k = R.s; k < L.ll.length - 1; k++) { if (R.gaps && R.gaps[k]) { if (cur.length > 1) parts.push(cur); cur = [L.ll[k + 1]]; } else cur.push(L.ll[k + 1]); } if (cur.length > 1) parts.push(cur); }
+        if ((!closed && parts.length) || (closed && pts.length > 2)) out.push({ name: L.name, pts: pts, parts: parts, closed: closed, area: closed ? R.area : 0, len: R.len });
+    });
+    if (!out.length) toast('Нет объектов с координатами (при вводе азимутами — координаты столба в «Профи»)');
+    return out;
+}
 $('ex-gpx').onclick = function () {
     if (schemeGuard()) return;
-    var pts = exportPolyLL(); if (!pts) return;
+    var L = exportLayers(); if (!L.length) return;
     var s = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Абрис ПРО" xmlns="http://www.topografix.com/GPX/1/1">\n';
-    if ($('ex-t0').checked && hasP0()) s += '<wpt lat="' + S.p0.lat.toFixed(7) + '" lon="' + S.p0.lng.toFixed(7) + '"><name>Т.0 (столб)</name></wpt>\n';
-    s += '<trk><name>' + esc(S.name || 'Делянка') + '</name><trkseg>\n' + pts.map(function (p) { return '<trkpt lat="' + p.lat.toFixed(7) + '" lon="' + p.lng.toFixed(7) + '"></trkpt>'; }).join('\n') + '\n</trkseg></trk>\n</gpx>\n';
-    download((S.name || 'делянка') + '.gpx', new Blob([s], { type: 'application/gpx+xml' }));
+    if ($('ex-t0').checked && hasP0() && S.objs.length < 2) s += '<wpt lat="' + S.p0.lat.toFixed(7) + '" lon="' + S.p0.lng.toFixed(7) + '"><name>Т.0 (столб)</name></wpt>\n';
+    L.forEach(function (o) {
+        var segsX = o.closed ? [o.pts.concat([o.pts[0]])] : o.parts;
+        s += '<trk><name>' + esc(o.name) + '</name>' + segsX.map(function (pp) { return '<trkseg>\n' + pp.map(function (p) { return '<trkpt lat="' + p.lat.toFixed(7) + '" lon="' + p.lng.toFixed(7) + '"></trkpt>'; }).join('\n') + '\n</trkseg>'; }).join('\n') + '</trk>\n';
+    });
+    download((S.name || 'абрис') + '.gpx', new Blob([s + '</gpx>\n'], { type: 'application/gpx+xml' }));
 };
 $('ex-gj').onclick = function () {
     if (schemeGuard()) return;
-    var pts = exportPolyLL(); if (!pts) return;
-    var R = compute(), ring = pts.map(function (p) { return [+p.lng.toFixed(7), +p.lat.toFixed(7)]; }); ring.push(ring[0].slice());
-    var ga = +(R.area / 10000).toFixed(4);
-    var gj = { type: 'FeatureCollection', features: [{ type: 'Feature', geometry: { type: 'GeometryCollection', geometries: [{ type: 'Polygon', coordinates: [ring] }] },
-        properties: { 'stroke': '#000000', 'stroke-width': 1, 'stroke-opacity': 1, 'fill': '#b3b3b3', 'fill-opacity': 0.6, 'id': guid(), 'name': S.name || 'Делянка', 'area': ga, 'areaexploitation': ga, 'nonexploitationarea': false } }] };
-    download('Poligons.json', new Blob([JSON.stringify(gj, null, '\t')], { type: 'application/json' }));
+    var L = exportLayers().filter(function (o) { return o.closed; }); if (!L.length) { toast('Нет замкнутого контура'); return; }
+    var feats = L.map(function (o) {
+        var ring = o.pts.map(function (p) { return [+p.lng.toFixed(7), +p.lat.toFixed(7)]; }); ring.push(ring[0].slice());
+        var ga = +(o.area / 10000).toFixed(4);
+        return { type: 'Feature', geometry: { type: 'GeometryCollection', geometries: [{ type: 'Polygon', coordinates: [ring] }] },
+            properties: { 'stroke': '#000000', 'stroke-width': 1, 'stroke-opacity': 1, 'fill': '#b3b3b3', 'fill-opacity': 0.6, 'id': guid(), 'name': o.name, 'area': ga, 'areaexploitation': ga, 'nonexploitationarea': false } };
+    });
+    download('Poligons.json', new Blob([JSON.stringify({ type: 'FeatureCollection', features: feats }, null, '\t')], { type: 'application/json' }));
 };
 $('ex-png').onclick = function () { paint(); cv.toBlob(function (b) { if (b) download((S.name || 'абрис') + '.png', b); }, 'image/png'); };
 
@@ -1818,11 +2104,26 @@ function autoScale(R, bw, bh) {
     for (var i = 0; i < SCALES.length; i++) if (w * 1000 / SCALES[i] <= bw * 0.88 && h * 1000 / SCALES[i] <= bh * 0.88) return SCALES[i];
     return SCALES[SCALES.length - 1];
 }
+function layersAll() {
+    var multi = S.objs.length > 1;
+    function mk(idx) { var R = compute(); return { idx: idx, pre: multi ? (idx + 1) + '-' : '', name: S.name || ('Объект ' + (idx + 1)), R: R, segs: R.empty ? [] : segments(R), ll: R.empty ? null : llPoints(), wid: S.wid, strip: S.strip, unit: S.lunit }; }
+    if (!multi) return [mk(S.act)];
+    var out = []; S.objs.forEach(function (o, i) { out.push(i === S.act ? mk(i) : withObj(o, function () { return mk(i); })); }); return out;
+}
+function objSumm(L) {
+    var R = L.R; if (R.poly) return areaGa(R) + ' га';
+    var t = fmtL(R.len); if (S.strip && L.wid > 0) t += ', пл. ' + stripGa(R.len, L.wid) + ' га'; return t;
+}
 function renderSheet(opts) {
     var PX = 8, c = document.createElement('canvas'); c.width = 210 * PX; c.height = 297 * PX; var q = c.getContext('2d');
     q.fillStyle = '#fff'; q.fillRect(0, 0, c.width, c.height);
     var scheme = opts.mode === 'scheme';
-    var R = compute(), segs = scheme ? [] : segments(R), ll = scheme ? null : llPoints(), has = !!ll;
+    var R = compute(), LY = layersAll(), segs = [], ll = [], multiL = LY.length > 1;
+    if (!scheme) LY.forEach(function (L) {
+        L.segs.forEach(function (s0) { if (s0.gap) return; segs.push({ la: L.pre + plab(s0.a), lb: L.pre + plab(s0.b), az: s0.az, d: s0.d, tie: s0.tie }); });
+        if (L.ll) L.ll.forEach(function (p0, i0) { ll.push({ lab: L.pre + plab(i0), lat: p0.lat, lng: p0.lng }); });
+    });
+    var has = ll.length > 0;
     function T(txt, x, y, size, bold, align, maxW) {
         q.font = (bold ? 'bold ' : '') + Math.round(size * PX) + 'px sans-serif'; q.textAlign = align || 'left'; q.fillStyle = '#000';
         if (maxW) { var w = q.measureText(txt).width / PX; if (w > maxW) q.font = (bold ? 'bold ' : '') + Math.max(6, Math.round(size * PX * maxW / w)) + 'px sans-serif'; }
@@ -1830,7 +2131,7 @@ function renderSheet(opts) {
     }
     function ln(x1, y1, x2, y2, w) { q.lineWidth = (w || 0.2) * PX; q.strokeStyle = '#000'; q.beginPath(); q.moveTo(x1 * PX, y1 * PX); q.lineTo(x2 * PX, y2 * PX); q.stroke(); }
     function rc(x, y, w, h, lw) { q.lineWidth = (lw || 0.2) * PX; q.strokeStyle = '#000'; q.strokeRect(x * PX, y * PX, w * PX, h * PX); }
-    rc(8, 8, 194, 281, 0.6);
+    if (opts.frame) rc(8, 8, 194, 281, 0.6);
     function wrapT(txt, maxW, size, bold) {
         q.font = (bold ? 'bold ' : '') + Math.round(size * PX) + 'px sans-serif'; var out = [];
         String(txt).split(/\n/).forEach(function (par) {
@@ -1840,17 +2141,28 @@ function renderSheet(opts) {
         });
         return out;
     }
-    var title = (S.stamp.title || '').trim() || 'Абрис делянки', tsz = 5.6, tl = wrapT(title, 184, tsz, true);
-    if (tl.length > 2) { tsz = 4.6; tl = wrapT(title, 184, tsz, true); }
-    if (tl.length > 3) { tsz = 3.8; tl = wrapT(title, 184, tsz, true).slice(0, 4); }
-    var lh = tsz * 1.3; tl.forEach(function (t, k) { T(t, 105, 16.5 + k * lh, tsz, true, 'center'); });
+    var title = (S.stamp.title || '').trim() || 'Абрис делянки', tsz = 5.6;
+    function titleLines(sz) {   // жирная только первая строка (абзац), остальные — обычным шрифтом
+        var out = []; title.split(/\n/).forEach(function (par, pi) {
+            if (!par.trim()) { if (pi) out.push({ t: '', b: false }); return; }
+            wrapT(par, 184, sz, pi === 0).forEach(function (t) { out.push({ t: t, b: pi === 0 }); });
+        }); return out;
+    }
+    var tl = titleLines(tsz);
+    if (tl.length > 2) { tsz = 4.6; tl = titleLines(tsz); }
+    if (tl.length > 3) { tsz = 3.8; tl = titleLines(tsz).slice(0, 5); }
+    var lh = tsz * 1.3; tl.forEach(function (o, k) { if (o.t) T(o.t, 105, 16.5 + k * lh, tsz, o.b, 'center'); });
     var rowsY = 16.5 + (tl.length - 1) * lh + 8;
     var area = R.poly ? areaGa(R) + ' га' : '—', st = gapStatus(R), adg = [1, 2, 4].indexOf(S.adec) >= 0 ? S.adec : 4;
     var left = [['Субъект:', S.stamp.region], ['Лесничество:', S.stamp.les], ['Участковое:', S.stamp.uch], ['Квартал / выдел:', S.stamp.kv]].filter(function (r) { return String(r[1] || '').trim(); });
-    var right = [['Делянка:', S.name]].filter(function (r) { return String(r[1] || '').trim(); });
-    if (!scheme || opts.sarea !== false) right.push(['Площадь:', area]);
-    right.push(['Масштаб:', '@N']);
-    if (!scheme && R.gap !== null && S.showGap !== false) right.push(['Невязка:', gapText(R).replace('Невязка ', '')]);
+    var right = multiL ? [] : [['Делянка:', S.name]].filter(function (r) { return String(r[1] || '').trim(); });
+    if (!multiL && (!scheme || opts.sarea !== false)) {
+        if (R.poly) right.push(['Площадь:', area]);
+        else if (R.len > 0) { right.push(['Длина:', fmtL(R.len)]); if (S.strip && S.wid > 0) right.push(['Пл. полосы:', stripGa(R.len, S.wid) + ' га']); }
+        else right.push(['Площадь:', '—']);
+    }
+    if (!S.noScale) right.push(['Масштаб:', '@N']);
+    if (!scheme && !multiL && R.gap !== null && S.showGap !== false) right.push(['Невязка:', gapText(R).replace('Невязка ', '')]);
     var nrow = Math.max(left.length, right.length);
     var yEnd = rowsY + Math.max(nrow - 1, 0) * 4.6;
     var vl = String(S.stamp.vyd || '').split(/\n/).map(function (s) { return s.trim(); }).filter(Boolean).map(function (s) {
@@ -1860,6 +2172,12 @@ function renderSheet(opts) {
     if (vl.length && !scheme) {
         var vt = wrapT('Выделы (площадь, га): ' + vl.join('; ') + '.   Общая площадь: ' + (R.poly ? areaGa(R).replace('.', ',') : '—') + ' га', 184, 3.3, false);
         vt.forEach(function (t, k) { T(t, 12, yEnd + 5 + k * 4.2, 3.3, false); }); yEnd += 5 + (vt.length - 1) * 4.2;
+    }
+    if (multiL) {
+        var showV = !scheme || opts.sarea !== false;
+        var ob = LY.filter(function (L) { return !L.R.empty; }).map(function (L) { return L.pre.replace('-', '') + ' — ' + L.name + (showV ? ' (' + objSumm(L) + ')' : ''); });
+        var ot = wrapT('Объекты (номер точки: объект-точка): ' + ob.join('; ') + '.', 184, 3.3, false);
+        ot.forEach(function (t, k) { T(t, 12, yEnd + 5 + k * 4.2, 3.3, false); }); yEnd += 5 + (ot.length - 1) * 4.2;
     }
     var sepY = yEnd + 4.7; ln(12, sepY, 198, sepY, 0.3);
     var by = sepY + 3.5, bx = 12, bw = scheme ? 186 : 128, bh = 200;
@@ -1881,7 +2199,7 @@ function renderSheet(opts) {
         ['Ход', dcl() ? 'Азимут магн.' : 'Азимут', 'Длина, м'].forEach(function (h, k) { T(h, tx + (cols[k] + cols[k + 1]) / 2, ty + rh * 0.7, fs, true, 'center'); });
         segs.forEach(function (sg, k) {
             var y = ty + rh * (k + 1), mid = function (j) { return tx + (cols[j] + cols[j + 1]) / 2; };
-            T(plab(sg.a) + '–' + plab(sg.b) + (sg.tie ? '*' : ''), mid(0), y + rh * 0.7, fs, false, 'center', 17);
+            T(sg.la + '–' + sg.lb + (sg.tie ? '*' : ''), mid(0), y + rh * 0.7, fs, false, 'center', 17);
             T(f1(sg.az) + '°', mid(1), y + rh * 0.7, fs, false, 'center', 17); T(f2(sg.d), mid(2), y + rh * 0.7, fs, false, 'center', 15);
         });
         for (i = 0; i <= n + 1; i++) ln(tx, ty + rh * i, tx + tw, ty + rh * i, 0.15);
@@ -1902,7 +2220,7 @@ function renderSheet(opts) {
             T('№', gx + w1 / 2, ty2 + rh2 * 0.7, fs2, true, 'center'); T('Широта', gx + w1 + w2 / 2, ty2 + rh2 * 0.7, fs2, true, 'center'); T('Долгота', gx + w1 + w2 * 1.5, ty2 + rh2 * 0.7, fs2, true, 'center');
             for (r2 = 0; r2 < cnt; r2++) {
                 var idx = k2 * rows + r2, yy = ty2 + rh2 * (r2 + 1), p = ll[idx];
-                T(plab(idx), gx + w1 / 2, yy + rh2 * 0.7, fs2, false, 'center'); T(p.lat.toFixed(6), gx + w1 + w2 / 2, yy + rh2 * 0.7, fs2, false, 'center'); T(p.lng.toFixed(6), gx + w1 + w2 * 1.5, yy + rh2 * 0.7, fs2, false, 'center');
+                T(p.lab, gx + w1 / 2, yy + rh2 * 0.7, fs2, false, 'center'); T(p.lat.toFixed(6), gx + w1 + w2 / 2, yy + rh2 * 0.7, fs2, false, 'center'); T(p.lng.toFixed(6), gx + w1 + w2 * 1.5, yy + rh2 * 0.7, fs2, false, 'center');
             }
             for (r2 = 0; r2 <= cnt + 1; r2++) ln(gx, ty2 + rh2 * r2, gx + gw - 1.5, ty2 + rh2 * r2, 0.15);
             [0, w1, w1 + w2, gw - 1.5].forEach(function (x) { ln(gx + x, ty2, gx + x, ty2 + rh2 * (cnt + 1), 0.15); });
@@ -1918,7 +2236,7 @@ function renderSheet(opts) {
 var lastSheet = null, printMode = 'full';
 function refreshPreview() {
     printMode = $('prn-mode').value; $('prn-sarea-w').style.display = printMode === 'scheme' ? '' : 'none';
-    var sc = parseInt($('prn-scale').value, 10) || 0, r = renderSheet({ scale: sc, scan: $('prn-scan').checked && !!(scanImg && S.scan.on), mode: printMode, sarea: $('prn-sarea').checked });
+    var sc = parseInt($('prn-scale').value, 10) || 0, r = renderSheet({ scale: sc, scan: $('prn-scan').checked && !!(scanImg && S.scan.on), mode: printMode, sarea: $('prn-sarea').checked, frame: $('prn-frame').checked });
     lastSheet = r; $('prn-img').src = r.canvas.toDataURL('image/png');
     $('prn-note').textContent = 'Чертёж в масштабе 1:' + r.N.toLocaleString('ru-RU') + (sc ? '' : ' (подобран автоматически)') + (r.fits ? '' : '. Не помещается на лист — выберите более мелкий масштаб.');
 }
@@ -1930,6 +2248,7 @@ function openPrint() {
     $('prn-share').style.display = (navigator.canShare && window.File) ? '' : 'none';
     $('m-prn').classList.add('on'); refreshPreview();
 }
+$('prn-frame').onchange = function () { S.frame = this.checked; scheduleSave(); refreshPreview(); };
 $('prn-scale').onchange = refreshPreview; $('prn-scan').onchange = refreshPreview; $('prn-mode').onchange = refreshPreview; $('prn-sarea').onchange = refreshPreview;
 $('prn-close').onclick = function () { $('m-prn').classList.remove('on'); };
 $('prn-go').onclick = function () { if (!lastSheet) return; $('ps-img').src = lastSheet.canvas.toDataURL('image/png'); setTimeout(function () { window.print(); }, 250); };
@@ -2025,7 +2344,7 @@ function init() {
         var th = localStorage.getItem(KEY + '_theme'); if (th) document.documentElement.setAttribute('data-theme', th);
         if (localStorage.getItem(KEY + '_pro') === '1') setPro(true);
     } catch (e) { }
-    restoreState(); syncFields(); renderTable(); renderCoords(); renderInfo(); syncScanUI(); resize();
+    restoreState(); syncFields(); renderTable(); renderCoords(); renderInfo(); syncScanUI(); resize(); histReset();
     if (mobile()) $('dock').classList.add('collapsed');
     fitView(true);
     restoreScan().then(function (ok) { if (ok) { syncScanUI(); fitView(false); } });
