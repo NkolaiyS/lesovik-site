@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SERVICE WORKER — АВТОНОМНЫЙ ОФФЛАЙН-КЕШ «ЛЕСОВИК PRO» (v3.2.0)
+ * SERVICE WORKER — АВТОНОМНЫЙ ОФФЛАЙН-КЕШ «ЛЕСОВИК PRO» (v3.2.1)
  * (c) 2026 ИП Худяков Николай Сергеевич. Все права защищены.
  * ============================================================================
  *
@@ -16,7 +16,7 @@
  */
 'use strict';
 
-const VERSION = 'v3.2.0';
+const VERSION = 'v3.2.1';
 const CACHE_PREFIX = 'busol-pro-';
 const PRO_CACHE = CACHE_PREFIX + VERSION;
 
@@ -40,6 +40,8 @@ const OPTIONAL_ASSETS = [
   '/diameter.html',
   '/bitterlich.html',
   '/journal.html',
+  '/bg-abris.html',
+  '/bg-abris-plus.html',
   '/mdo.html',
   '/tools.html',
   '/logo.jpeg',
