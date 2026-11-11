@@ -221,7 +221,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     <div class="top-row">
         <div class="brand"><img src="logo.jpeg" alt="Лесовик PRO" class="brand-logo" onerror="this.style.display='none'"><span>Абрис ПРО</span><em class="beta">БЕТА</em></div>
         <div class="top-actions header-right">
-            <button class="btn" id="b-plus" title="Абрис ПРО+: скоро" style="color:#E67E22;border-color:#E67E22">✨ ПРО+</button>
+            <button class="btn" id="b-plus" title="Абрис ПРО+" style="color:#E67E22;border-color:#E67E22">✨ ПРО+</button>
             <button class="btn primary" id="b-import">📥 Из БГ-ХНС</button>
             <button class="btn" id="b-arch">📚 Архив</button>
             <button class="btn" id="b-tosave">💾 В архив</button>
@@ -2411,23 +2411,23 @@ window.yaContextCb.push(function () {
         <li>👆 <b>Линза на смартфоне:</b> палец не закрывает место, куда ставите точку.</li>
     </ul>
     <div class="plus-how"><b>Как это работает:</b> загрузили скан → указали столб и его координаты → нарисовали делянку, полосу или дорогу → координаты и лист готовы.<br><span style="color:var(--muted)">Точность та же, что у бумажного плана: зависит от масштаба планшета и качества скана — поэтому программа и показывает ошибку.</span></div>
-    <div class="plus-state"><b>Скоро.</b> Доступ откроется в этом окне — вы увидите кнопки оплаты. Обычный «Абрис ПРО» остаётся бесплатным.</div>
+    <div class="plus-state"><span id="plus-st"><b>Оплата через Т-Банк.</b> Доступ привязан к этому устройству и работает без интернета до конца срока. Обычный «Абрис ПРО» остаётся бесплатным.</span></div>
     <div class="plus-tar">
-        <div class="plus-card"><span class="pt">1 день</span><b>10 ₽</b><span class="ps">попробовать</span><button class="btn" data-plus="day">Скоро</button></div>
-        <div class="plus-card hot"><span class="pt">Рабочая неделя</span><b>49 ₽</b><span class="ps">5 дней + 2 в подарок<br>7 ₽ в день</span><button class="btn primary" data-plus="week">Скоро</button></div>
-        <div class="plus-card"><span class="pt">30 дней</span><b>199 ₽</b><span class="ps">6,6 ₽ в день</span><button class="btn" data-plus="month">Скоро</button></div>
+        <div class="plus-card"><span class="pt">1 день</span><b>10 ₽</b><span class="ps">попробовать</span><button class="btn" data-plus="day">Купить</button></div>
+        <div class="plus-card hot"><span class="pt">Рабочая неделя</span><b>49 ₽</b><span class="ps">5 дней + 2 в подарок<br>7 ₽ в день</span><button class="btn primary" data-plus="week">Купить</button></div>
+        <div class="plus-card"><span class="pt">30 дней</span><b>199 ₽</b><span class="ps">6,6 ₽ в день</span><button class="btn" data-plus="month">Купить</button></div>
     </div>
-    <div class="plus-pro" id="plus-pro">🌲 Владельцам <b>БГ-ХНС ПРО</b> Абрис ПРО+ будет открыт бесплатно.</div>
-    <div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="plus-want">🔔 Жду ПРО+</button><button class="btn" id="plus-close">Закрыть</button></div>
+    <div class="plus-pro" id="plus-pro">🌲 Владельцам <b>БГ-ХНС ПРО</b> Абрис ПРО+ открыт бесплатно.</div>
+    <div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn primary" href="bg-abris-plus.html" style="text-decoration:none">Открыть ПРО+</a><button class="btn" id="plus-close">Закрыть</button></div>
 </div></div>
 <div id="plus-toast"></div>
 <script>
 (function () {
-    var PLUS_API = '';   // адрес функции оплаты Абриса (пока пусто — работает заглушка)
+    var PLUS_API = 'https://functions.yandexcloud.net/d4eistl296r5pgstsku2';
     function goalP(n) { try { if (window.ym) ym(109130409, 'reachGoal', n); } catch (e) { } }
     function say(t) { var e = document.getElementById('plus-toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(say.t); say.t = setTimeout(function () { e.style.display = 'none'; }, 4500); }
     function devId() { try { var d = localStorage.getItem('abris_plus_dev'); if (!d) { d = 'A' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); localStorage.setItem('abris_plus_dev', d); } return d; } catch (e) { return ''; } }
-    function wantMark() { var w = false; try { w = localStorage.getItem('abris_plus_want') === '1'; } catch (e) { } var b = document.getElementById('plus-want'); b.textContent = w ? '✓ Ваш интерес учтён' : '🔔 Жду ПРО+'; }
+    function wantMark() { var w = false; try { w = localStorage.getItem('abris_plus_want') === '1'; } catch (e) { } }
     function pay(product) {
         goalP('plus_tariff_' + product);
         if (!PLUS_API) { say('Спасибо! Оплата откроется совсем скоро — ваш интерес учтён.'); return; }
@@ -2438,12 +2438,11 @@ window.yaContextCb.push(function () {
     }
     function open() {
         var pro = false; try { pro = !!(window.LesovikCore && LesovikCore.isPro && LesovikCore.isPro()); } catch (e) { }
-        document.getElementById('plus-pro').innerHTML = pro ? '✅ У вас <b>БГ-ХНС ПРО</b> — Абрис ПРО+ для вас будет открыт бесплатно.' : '🌲 Владельцам <b>БГ-ХНС ПРО</b> Абрис ПРО+ будет открыт бесплатно.';
-        wantMark(); document.getElementById('m-plus').classList.add('on'); goalP('plus_modal_open');
+        document.getElementById('plus-pro').innerHTML = pro ? '✅ У вас <b>БГ-ХНС ПРО</b> — Абрис ПРО+ для вас открыт бесплатно.' : '🌲 Владельцам <b>БГ-ХНС ПРО</b> Абрис ПРО+ открыт бесплатно.';
+        try { var ex = localStorage.getItem('abris_plus_expiry'); if (ex && Date.parse(ex) > Date.now()) document.getElementById('plus-st').innerHTML = '✅ <b>Доступ активен до ' + new Date(ex).toLocaleDateString('ru-RU') + '.</b> Можно продлить — срок добавится.'; } catch (e) { } document.getElementById('m-plus').classList.add('on'); goalP('plus_modal_open');
     }
     var b = document.getElementById('b-plus'); if (b) b.onclick = open;
     document.getElementById('plus-close').onclick = function () { document.getElementById('m-plus').classList.remove('on'); };
-    document.getElementById('plus-want').onclick = function () { try { localStorage.setItem('abris_plus_want', '1'); } catch (e) { } goalP('plus_want'); wantMark(); say('Спасибо! Интерес учтён — когда доступ откроется, в этом окне появятся рабочие кнопки оплаты.'); };
     document.getElementById('m-plus').addEventListener('click', function (e) { if (e.target.id === 'm-plus') e.target.classList.remove('on'); var t = e.target.closest('[data-plus]'); if (t) pay(t.dataset.plus); });
 })();
 </script>
