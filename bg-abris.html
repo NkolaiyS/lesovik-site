@@ -221,6 +221,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     <div class="top-row">
         <div class="brand"><img src="logo.jpeg" alt="Лесовик PRO" class="brand-logo" onerror="this.style.display='none'"><span>Абрис ПРО</span><em class="beta">БЕТА</em></div>
         <div class="top-actions header-right">
+            <button class="btn" id="b-plus" title="Абрис ПРО+: скоро" style="color:#E67E22;border-color:#E67E22">✨ ПРО+</button>
             <button class="btn primary" id="b-import">📥 Из БГ-ХНС</button>
             <button class="btn" id="b-arch">📚 Архив</button>
             <button class="btn" id="b-tosave">💾 В архив</button>
@@ -2375,6 +2376,76 @@ window.yaContextCb.push(function () {
     Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-4", "type": "floorAd", "platform": "desktop" });
     Ya.Context.AdvManager.render({ "blockId": "R-A-19250236-3", "type": "fullscreen", "platform": "desktop" });
 });
+</script>
+
+<style>
+    #m-plus .plus-lead { margin: 0 0 8px; color: var(--muted); font-size: .92em; }
+    #m-plus .plus-list { margin: 0 0 10px; padding-left: 0; list-style: none; font-size: .9em; line-height: 1.5; }
+    #m-plus .plus-list li { margin-bottom: 3px; }
+    #m-plus .plus-how { font-size: .86em; line-height: 1.45; margin-bottom: 10px; padding: 8px 10px; border-left: 3px solid #E67E22; background: var(--bento); border-radius: 0 8px 8px 0; }
+    #m-plus .plus-state { background: var(--bento); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; font-size: .88em; margin-bottom: 10px; }
+    #m-plus .plus-tar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+    #m-plus .plus-card { border: 1px solid var(--border); border-radius: 12px; padding: 10px 6px; text-align: center; background: var(--card); display: flex; flex-direction: column; gap: 4px; align-items: center; }
+    #m-plus .plus-card.hot { border: 2px solid var(--forest); background: var(--bento); }
+    #m-plus .plus-card b { font-size: 1.5em; color: var(--forest); line-height: 1.1; }
+    #m-plus .plus-card .pt { font-weight: 700; font-size: .86em; }
+    #m-plus .plus-card .ps { font-size: .76em; color: var(--muted); line-height: 1.3; min-height: 2.6em; }
+    #m-plus .plus-card .btn { width: 100%; padding: 6px 4px; }
+    #m-plus .plus-pro { font-size: .86em; margin-bottom: 10px; }
+    @media (max-width: 460px) { #m-plus .plus-tar { grid-template-columns: 1fr; } #m-plus .plus-card { flex-direction: row; flex-wrap: wrap; justify-content: space-between; text-align: left; } #m-plus .plus-card .ps { min-height: 0; flex: 1 1 100%; order: 3; } #m-plus .plus-card .btn { width: auto; padding: 6px 12px; } }
+    #m-plus a.btn { color: var(--text); }
+    #m-plus a.btn.primary { color: #fff; }
+    [data-theme="dark"] #m-plus a.btn.primary { color: #0F1A14; }
+    #plus-toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: #223; color: #fff; padding: 9px 14px; border-radius: 10px; z-index: 5000; font-size: .9em; max-width: 90vw; display: none; text-align: center; }
+</style>
+
+<!-- ✨ Абрис ПРО+: заглушка с тарифами (оплата подключается позже) -->
+<div class="overlay" id="m-plus"><div class="modal">
+    <h3>✨ Абрис ПРО+ — координаты там, где их нет</h3>
+    <p class="plus-lead">Есть планшет лесничества и один известный столб, а нужны координаты всей делянки, минполосы или трассы? В ПРО+ это пара касаний.</p>
+    <ul class="plus-list">
+        <li>🛰 <b>Координаты любой точки — касанием.</b> Привяжите скан по одному квартальному или деляночному столбу (его координаты — со спутниковой карты или из навигатора). Коснитесь угла, точки, любого места на чертеже — и вот широта и долгота. Копируются в карту одним нажатием.</li>
+        <li>✏️ <b>Рисуете на скане — координаты считаются сами.</b> Не нужно идти и снимать каждую точку, если она уже есть на планшете. И наоборот: ввели координаты — чертёж сам встал на планшет.</li>
+        <li>📐 <b>Одной точки достаточно.</b> Две и больше — скан сам выровняется по масштабу и северу, а программа покажет ошибку в метрах, чтобы вы видели, можно ли ей верить.</li>
+        <li>📄 <b>Лист А4 с координатами поворотных точек</b>, площадью или длиной, условными обозначениями и нужной датой — или пустой строкой для подписи от руки.</li>
+        <li>👆 <b>Линза на смартфоне:</b> палец не закрывает место, куда ставите точку.</li>
+    </ul>
+    <div class="plus-how"><b>Как это работает:</b> загрузили скан → указали столб и его координаты → нарисовали делянку, полосу или дорогу → координаты и лист готовы.<br><span style="color:var(--muted)">Точность та же, что у бумажного плана: зависит от масштаба планшета и качества скана — поэтому программа и показывает ошибку.</span></div>
+    <div class="plus-state"><b>Скоро.</b> Доступ откроется в этом окне — вы увидите кнопки оплаты. Обычный «Абрис ПРО» остаётся бесплатным.</div>
+    <div class="plus-tar">
+        <div class="plus-card"><span class="pt">1 день</span><b>10 ₽</b><span class="ps">попробовать</span><button class="btn" data-plus="day">Скоро</button></div>
+        <div class="plus-card hot"><span class="pt">Рабочая неделя</span><b>49 ₽</b><span class="ps">5 дней + 2 в подарок<br>7 ₽ в день</span><button class="btn primary" data-plus="week">Скоро</button></div>
+        <div class="plus-card"><span class="pt">30 дней</span><b>199 ₽</b><span class="ps">6,6 ₽ в день</span><button class="btn" data-plus="month">Скоро</button></div>
+    </div>
+    <div class="plus-pro" id="plus-pro">🌲 Владельцам <b>БГ-ХНС ПРО</b> Абрис ПРО+ будет открыт бесплатно.</div>
+    <div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="plus-want">🔔 Жду ПРО+</button><button class="btn" id="plus-close">Закрыть</button></div>
+</div></div>
+<div id="plus-toast"></div>
+<script>
+(function () {
+    var PLUS_API = '';   // адрес функции оплаты Абриса (пока пусто — работает заглушка)
+    function goalP(n) { try { if (window.ym) ym(109130409, 'reachGoal', n); } catch (e) { } }
+    function say(t) { var e = document.getElementById('plus-toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(say.t); say.t = setTimeout(function () { e.style.display = 'none'; }, 4500); }
+    function devId() { try { var d = localStorage.getItem('abris_plus_dev'); if (!d) { d = 'A' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); localStorage.setItem('abris_plus_dev', d); } return d; } catch (e) { return ''; } }
+    function wantMark() { var w = false; try { w = localStorage.getItem('abris_plus_want') === '1'; } catch (e) { } var b = document.getElementById('plus-want'); b.textContent = w ? '✓ Ваш интерес учтён' : '🔔 Жду ПРО+'; }
+    function pay(product) {
+        goalP('plus_tariff_' + product);
+        if (!PLUS_API) { say('Спасибо! Оплата откроется совсем скоро — ваш интерес учтён.'); return; }
+        fetch(PLUS_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'abris_plus_create_payment', product: product, device: devId() }) })
+            .then(function (r) { return r.json(); })
+            .then(function (res) { if (res && res.paymentUrl) window.location.href = res.paymentUrl; else say('Не удалось создать платёж: ' + ((res && res.error) || 'попробуйте позже')); })
+            .catch(function () { say('Нет связи с платёжной системой. Попробуйте позже.'); });
+    }
+    function open() {
+        var pro = false; try { pro = !!(window.LesovikCore && LesovikCore.isPro && LesovikCore.isPro()); } catch (e) { }
+        document.getElementById('plus-pro').innerHTML = pro ? '✅ У вас <b>БГ-ХНС ПРО</b> — Абрис ПРО+ для вас будет открыт бесплатно.' : '🌲 Владельцам <b>БГ-ХНС ПРО</b> Абрис ПРО+ будет открыт бесплатно.';
+        wantMark(); document.getElementById('m-plus').classList.add('on'); goalP('plus_modal_open');
+    }
+    var b = document.getElementById('b-plus'); if (b) b.onclick = open;
+    document.getElementById('plus-close').onclick = function () { document.getElementById('m-plus').classList.remove('on'); };
+    document.getElementById('plus-want').onclick = function () { try { localStorage.setItem('abris_plus_want', '1'); } catch (e) { } goalP('plus_want'); wantMark(); say('Спасибо! Интерес учтён — когда доступ откроется, в этом окне появятся рабочие кнопки оплаты.'); };
+    document.getElementById('m-plus').addEventListener('click', function (e) { if (e.target.id === 'm-plus') e.target.classList.remove('on'); var t = e.target.closest('[data-plus]'); if (t) pay(t.dataset.plus); });
+})();
 </script>
 </body>
 </html>
