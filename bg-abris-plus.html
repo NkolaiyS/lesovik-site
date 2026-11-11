@@ -612,6 +612,65 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
 
 <script src="lesovik-core.js"></script>
 <script>
+/* Вход в Абрис ПРО+: БГ-ХНС ПРО — бесплатно; иначе нужен оплаченный доступ. После проверки срок хранится на устройстве — работает без интернета. */
+(function () {
+    var API = 'https://functions.yandexcloud.net/d4eistl296r5pgstsku2', PAYWALL = true, KEY = 'abris_plus_expiry';
+    if (!PAYWALL) return;
+    try { if (window.LesovikCore && LesovikCore.isPro && LesovikCore.isPro()) return; } catch (e) { }
+    function dev() { try { var d = localStorage.getItem('abris_plus_dev'); if (!d) { d = 'A' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); localStorage.setItem('abris_plus_dev', d); } return d; } catch (e) { return ''; } }
+    function cached() { try { var v = localStorage.getItem(KEY); return v && Date.parse(v) > Date.now() ? v : ''; } catch (e) { return ''; } }
+    var ov = document.createElement('div');
+    ov.id = 'plus-gate';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:var(--bg,#F3F5F2);color:var(--text,#1c2a22);overflow:auto;padding:18px 14px;box-sizing:border-box;font-family:inherit';
+    function show(h) { ov.innerHTML = '<div style="max-width:460px;margin:0 auto">' + h + '</div>'; if (!ov.parentNode) document.body.appendChild(ov); }
+    // у оплативших ядро не должно закрывать экран надписью «Требуется подключение к сети»
+    function allowOffline(on) { var st = document.getElementById('plus-offline-ok'); if (on && !st) { st = document.createElement('style'); st.id = 'plus-offline-ok'; st.textContent = '#offline-blocker-screen{display:none!important}'; document.head.appendChild(st); } else if (!on && st) st.remove(); }
+    function hide() { if (ov.parentNode) ov.parentNode.removeChild(ov); allowOffline(true); }
+    function check(cb) {
+        var done = false, t = setTimeout(function () { if (!done) { done = true; cb(null); } }, 9000);
+        fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'check_access', device: dev() }) })
+            .then(function (r) { return r.json(); })
+            .then(function (r) { if (!done) { done = true; clearTimeout(t); cb(r); } })
+            .catch(function () { if (!done) { done = true; clearTimeout(t); cb(null); } });
+    }
+    function apply(r, quiet) {
+        if (r && r.access && r.valid_until) { try { localStorage.setItem(KEY, r.valid_until); } catch (e) { } hide(); return; }
+        if (r && r.access === false) { try { localStorage.removeItem(KEY); } catch (e) { } allowOffline(false); paywall(r.expired ? 'Срок доступа закончился.' : ''); return; }
+        // нет связи или сбой сервера
+        if (cached()) { hide(); return; }
+        paywall(navigator.onLine ? 'Не удалось проверить доступ. Попробуйте ещё раз.' : 'Для первой проверки доступа нужен интернет.');
+    }
+    function pay(p, btn) {
+        btn.disabled = true;
+        fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'abris_plus_create_payment', product: p, device: dev() }) })
+            .then(function (r) { return r.json(); })
+            .then(function (r) { if (r && r.paymentUrl) location.href = r.paymentUrl; else { btn.disabled = false; msg('Не удалось создать платёж: ' + ((r && r.error) || 'попробуйте позже')); } })
+            .catch(function () { btn.disabled = false; msg('Нет связи с платёжной системой.'); });
+    }
+    function msg(t) { var m = document.getElementById('pg-msg'); if (m) m.textContent = t; }
+    function paywall(note) {
+        var c = 'border:1px solid var(--border,#cfd8d2);border-radius:12px;padding:10px;margin-bottom:8px;background:var(--card,#fff);display:flex;align-items:center;justify-content:space-between;gap:8px';
+        show('<h2 style="margin:6px 0 4px">✨ Абрис ПРО+</h2>' +
+            '<p style="margin:0 0 10px;font-size:.92em;opacity:.85">Координаты любой точки по скану планшета и одному известному столбу, лист А4 с координатами, знаки и условные обозначения.</p>' +
+            (note ? '<p style="margin:0 0 10px;padding:8px 10px;border-left:3px solid #E67E22;background:var(--bento,#eef2ee);font-size:.9em">' + note + '</p>' : '') +
+            '<div style="' + c + '"><div><b>1 день</b><div style="font-size:.8em;opacity:.7">попробовать</div></div><button class="btn" data-p="day">10 ₽ · Купить</button></div>' +
+            '<div style="' + c + ';border:2px solid #2D5A27"><div><b>Рабочая неделя</b><div style="font-size:.8em;opacity:.7">5 дней + 2 в подарок · 7 ₽ в день</div></div><button class="btn primary" data-p="week">49 ₽ · Купить</button></div>' +
+            '<div style="' + c + '"><div><b>30 дней</b><div style="font-size:.8em;opacity:.7">6,6 ₽ в день</div></div><button class="btn" data-p="month">199 ₽ · Купить</button></div>' +
+            '<p id="pg-msg" style="min-height:1.2em;font-size:.88em;margin:6px 0"></p>' +
+            '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><button class="btn" id="pg-chk">Я оплатил — проверить</button><a class="btn" href="bg-abris.html" style="text-decoration:none;color:inherit">← Обычный Абрис ПРО</a></div>' +
+            '<p style="font-size:.8em;opacity:.7;margin:0">Оплата через Т-Банк. Доступ привязан к этому устройству и после проверки работает без интернета до конца срока. Владельцам БГ-ХНС ПРО — бесплатно. ID устройства: ' + dev() + '</p>');
+        ov.querySelectorAll('[data-p]').forEach(function (b) { b.onclick = function () { pay(b.dataset.p, b); }; });
+        document.getElementById('pg-chk').onclick = function () { msg('Проверяем…'); check(function (r) { if (r && r.access) apply(r); else msg(r ? 'Оплата пока не найдена. Подождите минуту и нажмите снова.' : 'Нет связи.'); }); };
+    }
+    if (cached()) { allowOffline(true); if (navigator.onLine) check(function (r) { if (r) apply(r); }); return; }   // доступ есть: освежаем срок в фоне
+    show('<p style="text-align:center;margin-top:30vh;opacity:.7">Проверяем доступ…</p>');
+    if (!navigator.onLine) { apply(null); return; }
+    check(apply);
+    // вернулись на вкладку после оплаты — перепроверить
+    document.addEventListener('visibilitychange', function () { if (!document.hidden && ov.parentNode && navigator.onLine) check(function (r) { if (r && r.access) apply(r); }); });
+})();
+</script>
+<script>
 (function () {
 'use strict';
 var WA = 6378137.0, WE2 = 0.00669437999014;   // эллипсоид WGS-84
