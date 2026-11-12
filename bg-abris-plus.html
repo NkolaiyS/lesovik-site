@@ -645,9 +645,9 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         var em = mail();
         btn.disabled = true;
         fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'abris_plus_create_payment', product: p, device: dev(), email: em }) })
-            .then(function (r) { return r.json(); })
+            .then(function (r) { return r.text().then(function (t) { try { return JSON.parse(t); } catch (e) { throw new Error('ответ сервера: HTTP ' + r.status + ' ' + t.slice(0, 80)); } }); })
             .then(function (r) { if (r && r.paymentUrl) location.href = r.paymentUrl; else { btn.disabled = false; msg('Не удалось создать платёж: ' + ((r && r.error) || 'попробуйте позже')); } })
-            .catch(function () { btn.disabled = false; msg('Нет связи с платёжной системой.'); });
+            .catch(function (e) { btn.disabled = false; msg('Нет связи с платёжной системой (' + ((e && e.message) || 'сбой') + ').'); });
     }
     function msg(t) { var m = document.getElementById('pg-msg'); if (m) m.textContent = t; }
     function paywall(note) {
