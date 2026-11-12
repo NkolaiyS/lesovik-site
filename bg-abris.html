@@ -2428,10 +2428,12 @@ window.yaContextCb.push(function () {
     function say(t) { var e = document.getElementById('plus-toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(say.t); say.t = setTimeout(function () { e.style.display = 'none'; }, 4500); }
     function devId() { try { var d = localStorage.getItem('abris_plus_dev'); if (!d) { d = 'A' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); localStorage.setItem('abris_plus_dev', d); } return d; } catch (e) { return ''; } }
     function wantMark() { var w = false; try { w = localStorage.getItem('abris_plus_want') === '1'; } catch (e) { } }
+    function mail() { var e = ''; try { e = localStorage.getItem('abris_plus_mail') || ''; } catch (x) { } if (!/^\S+@\S+\.\S+$/.test(e)) { e = (prompt('E-mail для электронного чека об оплате:', '') || '').trim(); if (!/^\S+@\S+\.\S+$/.test(e)) return ''; try { localStorage.setItem('abris_plus_mail', e); } catch (x) { } } return e; }
     function pay(product) {
         goalP('plus_tariff_' + product);
         if (!PLUS_API) { say('Спасибо! Оплата откроется совсем скоро — ваш интерес учтён.'); return; }
-        fetch(PLUS_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'abris_plus_create_payment', product: product, device: devId() }) })
+        var em = mail(); if (!em) { say('Для электронного чека нужен e-mail.'); return; }
+        fetch(PLUS_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'abris_plus_create_payment', product: product, device: devId(), email: em }) })
             .then(function (r) { return r.json(); })
             .then(function (res) { if (res && res.paymentUrl) window.location.href = res.paymentUrl; else say('Не удалось создать платёж: ' + ((res && res.error) || 'попробуйте позже')); })
             .catch(function () { say('Нет связи с платёжной системой. Попробуйте позже.'); });
