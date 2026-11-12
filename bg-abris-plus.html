@@ -614,7 +614,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
 <script>
 /* Вход в Абрис ПРО+: БГ-ХНС ПРО — бесплатно; иначе нужен оплаченный доступ. После проверки срок хранится на устройстве — работает без интернета. */
 (function () {
-    var API = 'https://functions.yandexcloud.net/d4eistl296r5pgstsku2?integration=raw', PAYWALL = true, KEY = 'abris_plus_expiry';
+    var API = 'https://functions.yandexcloud.net/d4eistl296r5pgstsku2', PAYWALL = true, KEY = 'abris_plus_expiry';
     if (!PAYWALL) return;
     try { if (window.LesovikCore && LesovikCore.isPro && LesovikCore.isPro()) return; } catch (e) { }
     function dev() { try { var d = localStorage.getItem('abris_plus_dev'); if (!d) { d = 'A' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); localStorage.setItem('abris_plus_dev', d); } return d; } catch (e) { return ''; } }
@@ -640,9 +640,9 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         if (cached()) { hide(); return; }
         paywall(navigator.onLine ? 'Не удалось проверить доступ. Попробуйте ещё раз.' : 'Для первой проверки доступа нужен интернет.');
     }
-    function mail() { var e = ''; try { e = localStorage.getItem('abris_plus_mail') || ''; } catch (x) { } var re = /^\S+@\S+\.\S+$/; if (!re.test(e)) { e = (prompt('E-mail для электронного чека об оплате:', '') || '').trim(); if (!re.test(e)) return ''; try { localStorage.setItem('abris_plus_mail', e); } catch (x) { } } return e; }
+    function mail() { try { return localStorage.getItem('abris_plus_mail') || ''; } catch (x) { return ''; } }
     function pay(p, btn) {
-        var em = mail(); if (!em) { msg('Для электронного чека нужен e-mail.'); return; }
+        var em = mail();
         btn.disabled = true;
         fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'abris_plus_create_payment', product: p, device: dev(), email: em }) })
             .then(function (r) { return r.json(); })
