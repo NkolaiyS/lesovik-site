@@ -2434,16 +2434,47 @@ window.yaContextCb.push(function () {
         if (!PLUS_API) { say('Спасибо! Оплата откроется совсем скоро — ваш интерес учтён.'); return; }
         var em = mail();
         fetch(PLUS_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'abris_plus_create_payment', product: product, device: devId(), email: em }) })
-            .then(function (r) { return r.json(); })
+            .then(function (r) { return r.text().then(function (t) { try { return JSON.parse(t); } catch (e) { throw new Error('ответ сервера: HTTP ' + r.status + ' ' + t.slice(0, 80)); } }); })
             .then(function (res) { if (res && res.paymentUrl) window.location.href = res.paymentUrl; else say('Не удалось создать платёж: ' + ((res && res.error) || 'попробуйте позже')); })
-            .catch(function () { say('Нет связи с платёжной системой. Попробуйте позже.'); });
+            .catch(function (e) { say('Нет связи с платёжной системой (' + ((e && e.message) || 'сбой') + '). Попробуйте позже.'); });
     }
     function open() {
         var pro = false; try { pro = !!(window.LesovikCore && LesovikCore.isPro && LesovikCore.isPro()); } catch (e) { }
         document.getElementById('plus-pro').innerHTML = pro ? '✅ У вас <b>БГ-ХНС ПРО</b> — Абрис ПРО+ для вас открыт бесплатно.' : '🌲 Владельцам <b>БГ-ХНС ПРО</b> Абрис ПРО+ открыт бесплатно.';
         try { var ex = localStorage.getItem('abris_plus_expiry'); if (ex && Date.parse(ex) > Date.now()) document.getElementById('plus-st').innerHTML = '✅ <b>Доступ активен до ' + new Date(ex).toLocaleDateString('ru-RU') + '.</b> Можно продлить — срок добавится.'; } catch (e) { } document.getElementById('m-plus').classList.add('on'); goalP('plus_modal_open');
     }
+
     var b = document.getElementById('b-plus'); if (b) b.onclick = open;
+    // плавающая плашка: раз за визит, не мешает работе, закрывается крестиком
+    (function () {
+        var seen = false; try { seen = sessionStorage.getItem('abris_promo_seen') === '1'; } catch (e) { }
+        var pro = false; try { pro = !!(window.LesovikCore && LesovikCore.isPro && LesovikCore.isPro()); } catch (e) { }
+        var paid = false; try { var ex = localStorage.getItem('abris_plus_expiry'); paid = !!(ex && Date.parse(ex) > Date.now()); } catch (e) { }
+        if (pro || paid) return;
+        var tries = 0;
+        function show() {
+            if (document.querySelector('.overlay.on') && tries++ < 5) { setTimeout(show, 4000); return; }
+            if (document.querySelector('.overlay.on')) return;
+            var st = document.createElement('style');
+            st.textContent = '#ap-promo{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9000;width:min(400px,calc(100vw - 24px));box-sizing:border-box;background:var(--card,#fff);color:var(--text,#1c2a22);border:1px solid var(--border,#cfd8d2);border-radius:14px;padding:16px 16px 14px;box-shadow:0 14px 44px rgba(0,0,0,.28);text-align:center;font-size:13.5px;line-height:1.5}' +
+                '#ap-promo h3{margin:0 0 6px;font-size:16px;color:#2D5A27}#ap-promo p{margin:0 0 10px}#ap-promo .x{position:absolute;right:6px;top:2px;background:none;border:0;font-size:24px;line-height:1;cursor:pointer;color:#7b8a80;padding:4px 8px}' +
+                '#ap-promo .btn{width:100%;justify-content:center;box-sizing:border-box}';
+            document.head.appendChild(st);
+            var p = document.createElement('div'); p.id = 'ap-promo';
+            p.innerHTML = '<button class="x" title="Закрыть">×</button><h3>✨ Абрис ПРО+</h3>' +
+                '<p>Координаты любой точки делянки — по скану планшета и одному известному столбу. Лист А4 с координатами, знаки и условные обозначения.</p>' +
+                '<p style="font-size:12.5px;opacity:.8">Для владельцев БГ-ХНС ПРО — бесплатно.</p>' +
+                '<button class="btn primary" id="ap-promo-go">Тарифы и подробности</button>' +
+                '<a class="btn" id="ap-promo-tip" href="https://pay.cloudtips.ru/p/e2f31c62" target="_blank" rel="noopener noreferrer" style="margin-top:8px;text-decoration:none;color:#2D5A27">🤝 Поблагодарить разработчика</a>';
+            document.body.appendChild(p);
+            
+            goalP('plus_promo_show');
+            p.querySelector('.x').onclick = function () { p.remove(); };
+            document.getElementById('ap-promo-go').onclick = function () { p.remove(); goalP('plus_promo_go'); open(); };
+            document.getElementById('ap-promo-tip').onclick = function () { goalP('plus_promo_tip'); };
+        }
+        setTimeout(show, 6000);
+    })();
     document.getElementById('plus-close').onclick = function () { document.getElementById('m-plus').classList.remove('on'); };
     document.getElementById('m-plus').addEventListener('click', function (e) { if (e.target.id === 'm-plus') e.target.classList.remove('on'); var t = e.target.closest('[data-plus]'); if (t) pay(t.dataset.plus); });
 })();
