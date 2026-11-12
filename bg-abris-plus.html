@@ -640,9 +640,11 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         if (cached()) { hide(); return; }
         paywall(navigator.onLine ? 'Не удалось проверить доступ. Попробуйте ещё раз.' : 'Для первой проверки доступа нужен интернет.');
     }
+    function mail() { var e = ''; try { e = localStorage.getItem('abris_plus_mail') || ''; } catch (x) { } var re = /^\S+@\S+\.\S+$/; if (!re.test(e)) { e = (prompt('E-mail для электронного чека об оплате:', '') || '').trim(); if (!re.test(e)) return ''; try { localStorage.setItem('abris_plus_mail', e); } catch (x) { } } return e; }
     function pay(p, btn) {
+        var em = mail(); if (!em) { msg('Для электронного чека нужен e-mail.'); return; }
         btn.disabled = true;
-        fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'abris_plus_create_payment', product: p, device: dev() }) })
+        fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'abris_plus_create_payment', product: p, device: dev(), email: em }) })
             .then(function (r) { return r.json(); })
             .then(function (r) { if (r && r.paymentUrl) location.href = r.paymentUrl; else { btn.disabled = false; msg('Не удалось создать платёж: ' + ((r && r.error) || 'попробуйте позже')); } })
             .catch(function () { btn.disabled = false; msg('Нет связи с платёжной системой.'); });
