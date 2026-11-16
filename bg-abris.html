@@ -1812,6 +1812,7 @@ function llContours(text, name) {
         var d = new DOMParser().parseFromString(t, 'application/xml');
         [].forEach.call(d.getElementsByTagName('trk'), function (trk) { var n = trk.getElementsByTagName('name')[0]; [].forEach.call(trk.getElementsByTagName('trkseg'), function (sg) { var pts = [].map.call(sg.getElementsByTagName('trkpt'), ll).filter(ok); if (pts.length > 1) out.push({ name: n ? n.textContent.trim() : '', pts: pts }); }); });
         [].forEach.call(d.getElementsByTagName('rte'), function (rt) { var n = rt.getElementsByTagName('name')[0], pts = [].map.call(rt.getElementsByTagName('rtept'), ll).filter(ok); if (pts.length > 1) out.push({ name: n ? n.textContent.trim() : '', pts: pts }); });
+        if (!out.length) { var wp = [].map.call(d.getElementsByTagName('wpt'), ll).filter(ok); if (wp.length > 1) out.push({ name: 'Путевые точки', pts: wp, wpt: true }); }
     } else if (/<kml[\s>]/i.test(t.slice(0, 800)) || /\.kml$/i.test(name)) {
         var dk = new DOMParser().parseFromString(t, 'application/xml');
         [].forEach.call(dk.getElementsByTagName('Placemark'), function (pm) {
@@ -1820,6 +1821,7 @@ function llContours(text, name) {
             var pts = ce.textContent.trim().split(/\s+/).map(function (s) { var a = s.split(','); return { lat: parseFloat(a[1]), lng: parseFloat(a[0]) }; }).filter(ok);
             if (pts.length > 1) out.push({ name: n ? n.textContent.trim() : '', pts: pts });
         });
+        if (!out.length) { var kp = []; [].forEach.call(dk.getElementsByTagName('Placemark'), function (pm) { var pe = pm.getElementsByTagName('Point')[0]; if (!pe) return; var ce = pe.getElementsByTagName('coordinates')[0]; if (!ce) return; var a = ce.textContent.trim().split(','); var p = { lat: parseFloat(a[1]), lng: parseFloat(a[0]) }; if (ok(p)) kp.push(p); }); if (kp.length > 1) out.push({ name: 'Путевые точки', pts: kp, wpt: true }); }
     } else if (t[0] === '{') {
         var obj = JSON.parse(t), geo = function (gm, nm) {
             if (!gm) return;
@@ -1848,7 +1850,7 @@ function hasPt(r) { return r.p0 && typeof r.p0.lat === 'number' && isFinite(r.p0
 function fromContour(list) {
     var c = list.slice().sort(function (a, b) { return b.pts.length - a.pts.length; })[0], pts = c.pts.slice();
     if (pts.length > 3 && distLL(pts[0], pts[pts.length - 1]) < 0.5) pts.pop();
-    loadResult({ kind: 'coords', name: c.name || '', cp: pts.map(function (p) { return { lat: +p.lat.toFixed(7), lng: +p.lng.toFixed(7) }; }) }, 'Контур загружен по координатам: точек ' + pts.length + '.' + (list.length > 1 ? ' В файле ещё контуров: ' + (list.length - 1) + ' (взят самый подробный).' : ''));
+    loadResult({ kind: 'coords', name: c.name || '', cp: pts.map(function (p) { return { lat: +p.lat.toFixed(7), lng: +p.lng.toFixed(7) }; }) }, (c.wpt ? 'Путевые точки загружены по порядку из файла: ' + pts.length + '. Проверьте, что порядок точек нужный.' : 'Контур загружен по координатам: точек ' + pts.length + '.') + (list.length > 1 ? ' В файле ещё контуров: ' + (list.length - 1) + ' (взят самый подробный).' : ''));
 }
 function importText(text, fname) {
     goal('abris_import');
@@ -1869,7 +1871,7 @@ function importText(text, fname) {
             if (obj.type) { var c0 = llContours(t, fname); if (c0.length) return fromContour(c0); }
             return toast('Формат данных не распознан');
         }
-        if (/<gpx|<kml/i.test(t.slice(0, 800)) || /\.(gpx|kml)$/i.test(fname)) { var c1 = llContours(t, fname); return c1.length ? fromContour(c1) : toast('В файле нет линий или контуров'); }
+        if (/<gpx|<kml/i.test(t.slice(0, 800)) || /\.(gpx|kml)$/i.test(fname)) { var c1 = llContours(t, fname); return c1.length ? fromContour(c1) : toast('В файле нет линий, контуров или путевых точек'); }
         var csv = parseCSV(t);
         if (csv) {
             var nm = csv.names[0], rr = fromRows(csv.groups[nm], { name: nm });
