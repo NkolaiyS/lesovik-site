@@ -54,7 +54,6 @@
     </script>
 
     <style>
-        /* Заменены Google Fonts на системные шрифты для максимальной скорости загрузки */
         :root {
             --bg-main: #0B120E;
             --bg-card: #131E18;
@@ -458,31 +457,31 @@
     <section id="comparison">
         <div class="section-header">
             <span class="section-tag">Экономика и надежность оборудования</span>
-            <h2 class="section-title">Финская буссоль Suunto KB-14 против смартфона БГ-ХНС PRO</h2>
+            <h2 class="section-title">Классические приборы против смартфона БГ-ХНС PRO</h2>
         </div>
         <div class="comparison-table-wrap">
             <table class="comparison-table">
                 <thead>
                     <tr>
                         <th>Параметр съемки</th>
-                        <th>Финская буссоль (Suunto KB-14)</th>
+                        <th>Классический набор (Буссоль, вилка, высотомер)</th>
                         <th class="col-pro">Электронная буссоль БГ-ХНС PRO</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td><b>Функциональный охват</b></td>
-                        <td class="col-bad">Только замер азимута. Все остальные приборы (вилка, высотомер, полнотомер) нужно покупать отдельно</td>
+                        <td class="col-bad">Разрозненные приборы, каждый нужно покупать и носить отдельно (минимум 3 инструмента)</td>
                         <td class="col-pro"><b>Комплекс 6-в-1 в одном смартфоне:</b> буссоль, мерная вилка, высотомер, полнотомер, перечет и МДО</td>
                     </tr>
                     <tr>
                         <td><b>Стоимость владения</b></td>
-                        <td class="col-bad"><b>от 25 000 до 30 000 ₽</b> (разово за 1 оптический прибор)</td>
+                        <td class="col-bad"><b>От 68 000 ₽</b> (разово за комплект базовых приборов Suunto и Haglof)</td>
                         <td class="col-pro"><b>от 1 000 ₽ / 3 недели</b>. Быстрый старт и прозрачные цены</td>
                     </tr>
                     <tr>
                         <td><b>Надежность в тайге</b></td>
-                        <td class="col-bad">Боится ударов, падений, перегрева и резких электромагнитных импульсов</td>
+                        <td class="col-bad">Механика боится ударов, падений, перегрева и резких электромагнитных импульсов</td>
                         <td class="col-pro">Всегда с вами на любом современном смартфоне в защитном чехле</td>
                     </tr>
                     <tr>
@@ -596,12 +595,12 @@
                 </div>
 
                 <div class="res-item">
-                    <span>Затраты на покупку физических Suunto (28к за шт):</span>
-                    <b class="res-highlight-blue" id="res-hardware-cost">28 000 ₽</b>
+                    <span>Традиционный комплект (буссоль + высотомер + вилка):</span>
+                    <b class="res-highlight-blue" id="res-hardware-cost">68 000 ₽</b>
                 </div>
 
                 <div class="res-item" style="margin-top: 10px;">
-                    <span>Прямая экономия только на покупке приборов:</span>
+                    <span id="profit-label">Прямая экономия на отказе от физических приборов:</span>
                     <b class="res-highlight-green" id="res-net-profit">+0 ₽</b>
                 </div>
 
@@ -830,23 +829,28 @@
 
             document.getElementById('res-tariff-cost').innerText = `${baseTariffPrice.toLocaleString('ru-RU')} ₽`;
 
-            // Затраты на покупку физической оптики Suunto KB-14 (28 000 руб за 1 прибор на каждое устройство)
-            const hardwareCost = users * 28000;
+            // Затраты на покупку полного железного комплекта: Буссоль (28к) + Высотомер (25к) + Вилка (15к) = 68 000 руб
+            const hardwareCost = users * 68000;
             document.getElementById('res-hardware-cost').innerText = `${hardwareCost.toLocaleString('ru-RU')} ₽`;
 
             // Экономия
             const totalBenefit = hardwareCost - baseTariffPrice;
             const profitEl = document.getElementById('res-net-profit');
+            const profitLabel = document.getElementById('profit-label');
             
             if (totalBenefit > 0) {
                 profitEl.innerText = `+${totalBenefit.toLocaleString('ru-RU')} ₽`;
                 profitEl.style.color = '#2ECC71';
+                profitLabel.innerText = 'Прямая экономия на отказе от физических приборов:';
             } else if (totalBenefit < 0) {
-                profitEl.innerText = `${totalBenefit.toLocaleString('ru-RU')} ₽`;
-                profitEl.style.color = '#E74C3C'; // Если вдруг минус (для бессрочных)
+                // Страховка на случай изменения цен в будущем: убираем минус и меняем формулировку
+                profitEl.innerText = `${Math.abs(totalBenefit).toLocaleString('ru-RU')} ₽`;
+                profitEl.style.color = '#E67E22'; // Оранжевый вместо агрессивного красного
+                profitLabel.innerText = 'Доплата за удобство 6-в-1 и экспорт ФГИС ЛК:';
             } else {
                 profitEl.innerText = `0 ₽`;
                 profitEl.style.color = '#FFF';
+                profitLabel.innerText = 'Стоимость равна классическим приборам:';
             }
 
             // Формирование ссылки mailto для Андрея
@@ -857,7 +861,7 @@
                 `Сделал расчёт на сайте по тарифу «${tariffNameStr}»:\n` +
                 `• Количество устройств / специалистов: ${users}\n` +
                 `• Стоимость выбранного тарифа БГ-ХНС PRO: ${baseTariffPrice.toLocaleString('ru-RU')} руб.\n` +
-                `• Альтернативные затраты на Suunto: ${hardwareCost.toLocaleString('ru-RU')} руб.\n\n` +
+                `• Затраты на покупку классических приборов (буссоль+высотомер+вилка): ${hardwareCost.toLocaleString('ru-RU')} руб.\n\n` +
                 `Прошу связаться со мной для выставления счета и предоставления доступа.\n\n` +
                 `Мои контактные данные: `
             );
