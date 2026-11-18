@@ -5166,9 +5166,9 @@ try { BgScan.init(); BgSheet.init(); } catch (e) { console.error(e); }
       <button class="btn-action btn-set-zero" onclick="document.getElementById('stk-file').click()">📂 Загрузить файл</button>
       <button class="btn-action btn-reset-zero" onclick="BgStake.openText()">📋 Вставить список</button>
       <button class="btn-action btn-reset-zero" onclick="BgStake.newManual()">＋ Вручную</button>
-      <input type="file" id="stk-file" accept=".json,.abris,application/json,text/plain" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" tabindex="-1" aria-hidden="true">
+      <input type="file" id="stk-file" accept=".json,.abris,.gpx,.kml,application/json,text/plain,application/xml,text/xml" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" tabindex="-1" aria-hidden="true">
     </div>
-    <div style="font-size:11.5px;opacity:.75">Файл: архив делянок из Абриса ПРО/ПРО+ или одиночный проект .abris (в нём может быть сразу весь квартал).</div>
+    <div style="font-size:11.5px;opacity:.75">Подходят: файл проекта <b>.abris</b> из Абриса (ПРОЕКТ → сохранить; все делянки/объекты файла), «Экспорт» из «Архива» Абриса, а также <b>GPX/KML</b> с навигатора (точки идут по порядку файла).</div>
     <div id="stk-body"></div>
   </div>
 </div>
@@ -5269,28 +5269,84 @@ const BgStake = (function () {
     function mkProject(o) {
         return Object.assign({ id: uid(), name: 'Делянка', pack: '', kind: 'mag', decl: 0, lines: [], closed: true, start: 0, p0: null, scan: null }, o);
     }
-    function collectStates(o, out, depth) {
-        if (!o || typeof o !== 'object' || depth > 4) return;
-        if (Array.isArray(o)) { o.forEach(x => collectStates(x, out, depth + 1)); return; }
-        if (Array.isArray(o.lines) && o.lines.length && o.lines.every(l => l && isFinite(parseFloat(l.az)) && isFinite(parseFloat(l.d)))) { out.push(o); return; }
-        ['state', 'items', 'objs', 'objects', 'projects'].forEach(k => { if (o[k]) collectStates(o[k], out, depth + 1); });
+    function mpdLatL(lat) { const p = lat * Math.PI / 180; return 111132.92 - 559.82 * Math.cos(2 * p) + 1.175 * Math.cos(4 * p); }
+    function mpdLngL(lat) { const p = lat * Math.PI / 180; return 111412.84 * Math.cos(p) - 93.5 * Math.cos(3 * p); }
+    // цепочка географических точек -> линии «истинный азимут + длина»
+    function linesFromLL(pts) {
+        const L = [];
+        for (let i = 1; i < pts.length; i++) {
+            const a = pts[i - 1], b = pts[i], la = (a.lat + b.lat) / 2;
+            const dx = (b.lng - a.lng) * mpdLngL(la), dy = (b.lat - a.lat) * mpdLatL(la), d = Math.hypot(dx, dy);
+            if (d < 0.5) continue;
+            L.push({ az: Math.round(norm(Math.atan2(dx, dy) * 180 / Math.PI) * 100) / 100, d: Math.round(d * 10) / 10, t: 'bound' });
+        }
+        return L;
     }
-    function importJson(txt) {
-        let o; try { o = JSON.parse(txt); } catch (e) { showToast('Файл не распознан: это не JSON'); return 0; }
-        const sts = []; collectStates(o, sts, 0);
-        if (!sts.length) { showToast('В файле не найдено ни одной делянки с линиями (азимут + длина).'); return 0; }
-        const pack = uid(); let first = null;
-        sts.forEach((st, k) => {
-            const s = Math.max(0, parseInt(st.s, 10) || 0), nm = st.name || (st.stamp && st.stamp.kv) || ('Делянка ' + (db.projects.length + 1));
-            const full = (st.stamp && st.stamp.kv && nm.indexOf(st.stamp.kv) < 0) ? nm + ' · ' + st.stamp.kv : nm;
-            const p = mkProject({ name: full, pack, kind: 'mag', decl: parseFloat(st.decl) || 0, closed: st.mode !== 'open',
-                lines: st.lines.map((l, i) => ({ az: norm(parseFloat(l.az)), d: parseFloat(l.d), t: i < s ? 'ref' : 'bound' })),
-                p0: (st.p0 && isFinite(st.p0.lat) && isFinite(st.p0.lng)) ? { lat: st.p0.lat, lng: st.p0.lng } : null });
-            db.projects.push(p); if (!first) first = p;
+    function okLines(a) { return Array.isArray(a) && a.length && a.every(l => l && isFinite(parseFloat(l.az)) && isFinite(parseFloat(l.d)) && parseFloat(l.d) > 0); }
+    // Любой файл Абриса: .abris (одна или несколько делянок в objs), архив abris-archive
+    function collectObjs(o, out, depth) {
+        if (!o || typeof o !== 'object' || depth > 4) return;
+        if (Array.isArray(o)) { o.forEach(x => collectObjs(x, out, depth + 1)); return; }
+        if (Array.isArray(o.items)) { o.items.forEach(it => collectObjs(it && (it.state || it), out, depth + 1)); return; }
+        if (o.state && typeof o.state === 'object') { collectObjs(o.state, out, depth + 1); return; }
+        if (Array.isArray(o.lines) || Array.isArray(o.cp) || Array.isArray(o.objs)) {
+            const objs = (Array.isArray(o.objs) && o.objs.length >= 2) ? o.objs : [o];
+            objs.forEach((ob, k) => out.push({ ob, decl: parseFloat(o.decl) || 0, stamp: o.stamp || {}, top: o.name || '', k, many: objs.length > 1 }));
+        }
+    }
+    function projFromObj(r, pack) {
+        const ob = r.ob; let lines = null, kind = 'mag', decl = r.decl, s = Math.max(0, parseInt(ob.s, 10) || 0), p0 = null, closed = ob.mode !== 'open';
+        if (okLines(ob.lines)) lines = ob.lines.map((l, i) => ({ az: norm(parseFloat(l.az)), d: parseFloat(l.d), t: i < s ? 'ref' : 'bound' }));
+        else if (Array.isArray(ob.cp) && ob.cp.length >= 2 && ob.cp.every(c => c && isFinite(c.lat) && isFinite(c.lng))) {
+            lines = linesFromLL(ob.cp).map(l => ({ az: l.az, d: l.d, t: 'bound' })); kind = 'true'; decl = offNow(); s = 0;
+            p0 = { lat: ob.cp[0].lat, lng: ob.cp[0].lng };
+            // замкнутый контур: последняя точка → первая
+            if (closed && ob.cp.length >= 3) { const e = linesFromLL([ob.cp[ob.cp.length - 1], ob.cp[0]]); if (e.length) { /* возврат учитывается замыканием площади */ } }
+        }
+        if (!lines || !lines.length) return null;
+        if (ob.p0 && isFinite(ob.p0.lat) && isFinite(ob.p0.lng)) p0 = { lat: ob.p0.lat, lng: ob.p0.lng };
+        let nm = ob.name || r.top || ('Делянка ' + (db.projects.length + 1));
+        if (r.top && ob.name && r.many && nm.indexOf(r.top) < 0) nm = r.top + ' · ' + nm;
+        if (r.stamp && r.stamp.kv && nm.indexOf(r.stamp.kv) < 0) nm += ' · ' + r.stamp.kv;
+        return mkProject({ name: nm, pack, kind, decl, closed, lines, p0 });
+    }
+    // GPX / KML с навигатора: точки по порядку файла -> ход
+    function importXml(txt) {
+        let d; try { d = new DOMParser().parseFromString(txt, 'text/xml'); } catch (e) { showToast('Файл не распознан'); return 0; }
+        if (d.getElementsByTagName('parsererror').length) { showToast('Файл не распознан (ошибка XML)'); return 0; }
+        const out = [], q = n => Array.from(d.getElementsByTagNameNS('*', n));
+        const ll = e => ({ lat: parseFloat(e.getAttribute('lat')), lng: parseFloat(e.getAttribute('lon')) });
+        const thin = pts => { if (pts.length <= 120) return pts; const st = Math.ceil(pts.length / 120), r = pts.filter((_, i) => i % st === 0); if (r[r.length - 1] !== pts[pts.length - 1]) r.push(pts[pts.length - 1]); return r; };
+        // GPX
+        const wpts = q('wpt').map(ll).filter(p => isFinite(p.lat) && isFinite(p.lng));
+        if (wpts.length >= 2) out.push({ name: 'Путевые точки (' + wpts.length + ')', pts: wpts, closed: false });
+        q('trk').forEach((t, i) => { const pts = Array.from(t.getElementsByTagNameNS('*', 'trkpt')).map(ll).filter(p => isFinite(p.lat) && isFinite(p.lng)); if (pts.length >= 2) { const nm = (t.getElementsByTagNameNS('*', 'name')[0] || {}).textContent; out.push({ name: 'Трек ' + (nm || (i + 1)), pts: thin(pts), closed: false }); } });
+        q('rte').forEach((t, i) => { const pts = Array.from(t.getElementsByTagNameNS('*', 'rtept')).map(ll).filter(p => isFinite(p.lat) && isFinite(p.lng)); if (pts.length >= 2) out.push({ name: 'Маршрут ' + (i + 1), pts, closed: false }); });
+        // KML
+        const kpts = []; 
+        q('Placemark').forEach((pm, i) => {
+            const nm = ((pm.getElementsByTagNameNS('*', 'name')[0] || {}).textContent || '').trim();
+            const co = Array.from(pm.getElementsByTagNameNS('*', 'coordinates')).map(c => String(c.textContent).trim().split(/\s+/).map(t => t.split(',').map(Number)).filter(a => isFinite(a[0]) && isFinite(a[1])).map(a => ({ lat: a[1], lng: a[0] })));
+            const poly = pm.getElementsByTagNameNS('*', 'Polygon').length > 0;
+            co.forEach(pts => { if (pts.length >= 2) { if (poly && pts.length > 2) { const f = pts[0], l = pts[pts.length - 1]; if (Math.abs(f.lat - l.lat) < 1e-9 && Math.abs(f.lng - l.lng) < 1e-9) pts = pts.slice(0, -1); } out.push({ name: nm || ('Контур ' + (i + 1)), pts: thin(pts), closed: poly }); } else if (pts.length === 1) kpts.push(pts[0]); });
         });
+        if (kpts.length >= 2) out.push({ name: 'Точки KML (' + kpts.length + ')', pts: kpts, closed: false });
+        const pack = uid(); let first = null, n = 0;
+        out.forEach(o => { const L = linesFromLL(o.pts); if (!L.length) return; const p = mkProject({ name: o.name, pack, kind: 'true', decl: offNow(), closed: o.closed, lines: L, p0: { lat: o.pts[0].lat, lng: o.pts[0].lng } }); db.projects.push(p); if (!first) first = p; n++; });
+        if (!n) { showToast('В файле нет цепочки из двух и более точек'); return 0; }
+        db.active = first.id; db.li = 0; save(); render(); redraw(); showToast('Загружено: ' + n + ' (точки идут в порядке файла)');
+        return n;
+    }
+    function importText(txt) { return /^\s*</.test(txt) ? importXml(txt) : importJson(txt); }
+    function importJson(txt) {
+        let o; try { o = JSON.parse(txt); } catch (e) { showToast('Файл не распознан: это не файл Абриса (.abris / архив) и не GPX/KML'); return 0; }
+        const rs = []; collectObjs(o, rs, 0);
+        const pack = uid(); let first = null, n = 0;
+        rs.forEach(r => { const p = projFromObj(r, pack); if (p) { db.projects.push(p); if (!first) first = p; n++; } });
+        if (!n) { showToast('В файле нет делянок с линиями (азимут+длина) или точками-координатами.'); return 0; }
         db.active = first.id; db.li = 0; save(); render(); redraw();
-        showToast('Загружено делянок: ' + sts.length);
-        return sts.length;
+        showToast('Загружено делянок: ' + n);
+        return n;
     }
 
     /* ---- список из текста (строгий формат) ---- */
@@ -5515,11 +5571,11 @@ const BgStake = (function () {
 
     function init() {
         const f = $('stk-file');
-        if (f) f.addEventListener('change', function () { const inp = this, file = inp.files && inp.files[0]; if (!file) return; file.text().then(t => { importJson(t); try { inp.value = ''; } catch (e) {} }).catch(() => showToast('Не удалось прочитать файл')); });
+        if (f) f.addEventListener('change', function () { const inp = this, file = inp.files && inp.files[0]; if (!file) return; file.text().then(t => { importText(t); try { inp.value = ''; } catch (e) {} }).catch(() => showToast('Не удалось прочитать файл')); });
         initPick(); render();
         if (db.hud && cur()) hud(true);
     }
-    return { init, framePts, draw, scanAnchor, openPanel, openText, previewText, addText, newManual, select, del, edit, rem, remLast, addLine, setp, setTol, go, fit, hud, step, record, undo, startPick, cancelPick, resetCal, importJson, parseList, parseAngle, _db: () => db, _rt: rt, _planPts: planPts };
+    return { init, framePts, draw, scanAnchor, openPanel, openText, previewText, addText, newManual, select, del, edit, rem, remLast, addLine, setp, setTol, go, fit, hud, step, record, undo, startPick, cancelPick, resetCal, importJson, importText, importXml, parseList, parseAngle, _db: () => db, _rt: rt, _planPts: planPts };
 })();
 window.BgStake = BgStake;
 try { BgStake.init(); } catch (e) { console.error(e); }
