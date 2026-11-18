@@ -72,9 +72,10 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; box-shadow: 0 4px 14px rgba(0,0,0,.16); gap: 8px; align-items: center; flex-wrap: wrap; }
     #calbar.on { display: flex; }
     #calbar input[type=number] { width: 110px; }
-    #scanbar, #plotbar, #drawbar, #markbar { position: absolute; left: 50%; transform: translateX(-50%); bottom: 12px; z-index: 30; display: none; background: var(--card);
+    #scanbar, #plotbar, #drawbar, #markbar, #linkbar { position: absolute; left: 50%; transform: translateX(-50%); bottom: 12px; z-index: 30; display: none; background: var(--card);
         border: 1px solid var(--border); border-radius: 12px; padding: 6px 8px; box-shadow: 0 4px 14px rgba(0,0,0,.16); gap: 5px; align-items: center; flex-wrap: wrap; justify-content: center; max-width: calc(100% - 20px); }
-    #scanbar.on, #plotbar.on, #drawbar.on, #markbar.on { display: flex; }
+    #scanbar.on, #plotbar.on, #drawbar.on, #markbar.on, #linkbar.on { display: flex; }
+    .lkm.on { background: var(--forest); color: #fff; border-color: var(--forest); } [data-theme="dark"] .lkm.on { color: #0F1A14; }
     .gapb.on { background: #B5651D; color: #fff; border-color: #B5651D; }
     tr.gap td { opacity: .6; }
     tr.gap .lbl { text-decoration: line-through; text-decoration-color: rgba(181,101,29,.6); }
@@ -103,7 +104,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         #dock.hidden { display: none; }
         .dock-head { cursor: pointer; }
         .status span:last-child { display: none; }
-        #scanbar, #plotbar, #drawbar, #markbar { bottom: 70px; }
+        #scanbar, #plotbar, #drawbar, #markbar, #linkbar { bottom: 70px; }
     }
     .tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 10px; }
     .tab { flex: 1; padding: 8px 2px; background: none; border: none; border-bottom: 3px solid transparent; margin-bottom: -2px; font-weight: 700; font-size: .82em; text-transform: uppercase; color: var(--muted); cursor: pointer; }
@@ -204,7 +205,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     [data-theme="dark"] .tool { background: rgba(27,36,32,.95); }
     [data-theme="dark"] .tool.active { color: #0F1A14; }
     #t-lens { touch-action: none; }
-    #view.aimhold #drawbar, #view.aimhold #markbar, #view.aimhold #hint, #view.aimhold #calbar, #view.aimhold #scanbar, #view.aimhold #plotbar { visibility: hidden; }
+    #view.aimhold #drawbar, #view.aimhold #markbar, #view.aimhold #linkbar, #view.aimhold #hint, #view.aimhold #calbar, #view.aimhold #scanbar, #view.aimhold #plotbar { visibility: hidden; }
     #hint, #calbar { left: calc(var(--tb-w) + 18px); }
     #hint { max-width: min(520px, calc(100% - var(--tb-w) - 90px)); }
     #calbar { max-width: min(620px, calc(100% - var(--tb-w) - 30px)); }
@@ -214,10 +215,11 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     .overlay { padding-bottom: calc(14px + var(--nav-h)); }
     .modal { max-height: calc(100vh - 28px - var(--nav-h)); }
     #toast { bottom: calc(74px + var(--nav-h)); }
+    @media (min-width: 769px) { #linkbar { left: calc(var(--tb-w) + 18px); transform: none; justify-content: flex-start; max-width: calc(100% - var(--tb-w) - 480px); } }
     @media (min-width: 769px) { #dock { max-height: calc(100vh - var(--header-h) - 44px - var(--nav-h)); } }
     @media (max-width: 768px) {
         #dock { bottom: calc(26px + var(--nav-h)); }
-        #scanbar, #plotbar, #drawbar, #markbar { bottom: calc(70px + var(--nav-h)); }
+        #scanbar, #plotbar, #drawbar, #markbar, #linkbar { bottom: calc(70px + var(--nav-h)); }
         #view.scanmode .zoom { display: none; }
     }
 </style>
@@ -253,6 +255,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         <button class="tool" id="t-panel" title="Панель данных"><i>📋</i>Данные</button>
         <button class="tool" id="t-lens" title="Линза: удерживайте"><i>🔍</i>Линза</button>
         <button class="tool" id="t-mark" title="Знаки: аншлаг, шлагбаум, мост, водоём, беседка…"><i>📌</i>Знаки</button>
+        <button class="tool" id="t-link" title="Соединить точки в контуры и линии, убрать лишние связи"><i>🔗</i>Соединить</button>
     </nav>
     <div id="hint"></div>
     <div id="probe"><span id="pr-t"></span> <button class="btn" id="pr-copy">Копировать</button> <button class="btn" id="pr-mark">📌 Знак</button> <button class="btn" id="pr-x" aria-label="Закрыть">✕</button></div>
@@ -294,6 +297,12 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         <input type="text" id="mb-t" placeholder="подпись (не обязательно)" style="width:150px" maxlength="40">
         <button class="btn danger" id="mb-del" title="Удалить выбранный знак">🗑</button>
         <button class="btn primary" id="mb-done">Готово</button>
+    </div>
+    <div id="linkbar">
+        <span style="font-size:.88em" id="lk-info">Касайтесь точек по очереди — между ними встанет линия.</span>
+        <button class="btn" id="lk-all" title="Соединить все точки по порядку; лишние линии потом убираются касанием">⛓ Все по порядку</button>
+        <button class="btn" id="lk-clear" title="Убрать все линии, точки останутся">🧹 Убрать все линии</button>
+        <button class="btn primary" id="lk-done">Готово</button>
     </div>
     <div class="zoom" id="zoomctl">
         <button id="z-in" aria-label="Приблизить">+</button>
@@ -688,7 +697,7 @@ var cv = $('cv'), g = cv.getContext('2d');
 /* ---------- состояние ---------- */
 function newState() {
     return {
-        id: null, name: '', kind: 'coords', lines: [], cp: [], p0: { lat: null, lng: null }, s: 1, mode: 'return', c: null, tol: null, ks: 0, kc: null, psheet: 'full', adec: 4, showGap: true, objs: [], act: 0, org: { x: 0, y: 0 }, gref: null, wid: 0, marks: [], legend: { on: true, extra: '' }, dateMode: 'today', dateVal: '', typ: '', lunit: 'm', frame: false, strip: false, lonly: false, noScale: false, smooth: 0,
+        id: null, name: '', kind: 'coords', lines: [], cp: [], p0: { lat: null, lng: null }, s: 1, mode: 'return', c: null, tol: null, ks: 0, kc: null, psheet: 'full', adec: 4, showGap: true, objs: [], act: 0, org: { x: 0, y: 0 }, gref: null, wid: 0, marks: [], links: [], legend: { on: true, extra: '' }, dateMode: 'today', dateVal: '', typ: '', lunit: 'm', frame: false, strip: false, lonly: false, noScale: false, smooth: 0,
         stamp: { region: '', les: '', uch: '', kv: '', author: '', title: '', vyd: '' },
         pscale: 10000, dpi: 96, viewMode: 'az', labels: 2, decl: 0,
         scan: { on: false, name: '', w: 0, h: 0, fix: 1, a: { re: 1, im: 0 }, c: { re: 0, im: 0 }, op: 0.75 }
@@ -890,8 +899,8 @@ function worldOfLL(lat, lng) {
 }
 function areaGa(R) { var d = [1, 2, 4].indexOf(S.adec) >= 0 ? S.adec : 4; return (R.area / 10000).toFixed(d); }
 /* ---------- несколько объектов (полосы, делянки) на одном абрисе ---------- */
-var OBJF = ['name', 'kind', 'lines', 'cp', 'p0', 's', 'mode', 'c', 'ks', 'kc', 'tol', 'viewMode', 'org', 'wid', 'typ'];
-var OBJDEF = { name: '', kind: 'traverse', lines: [], cp: [], p0: { lat: null, lng: null }, s: 0, mode: 'auto', c: null, ks: 0, kc: null, tol: null, viewMode: 'az', org: { x: 0, y: 0 }, wid: 0, typ: '' };
+var OBJF = ['name', 'kind', 'lines', 'cp', 'p0', 's', 'mode', 'c', 'ks', 'kc', 'tol', 'viewMode', 'org', 'wid', 'typ', 'lk'];
+var OBJDEF = { name: '', kind: 'traverse', lines: [], cp: [], p0: { lat: null, lng: null }, s: 0, mode: 'auto', c: null, ks: 0, kc: null, tol: null, viewMode: 'az', org: { x: 0, y: 0 }, wid: 0, typ: '', lk: false };
 var PAL = ['#2F6B3A', '#B5651D', '#1F5FA8', '#8A2BA6', '#C0463F', '#0F8B8D', '#6B6B00', '#5A3E85'];
 function snapObj() { var o = {}; OBJF.forEach(function (k) { o[k] = JSON.parse(JSON.stringify(S[k] === undefined ? OBJDEF[k] : S[k])); }); return o; }
 function loadObj(o) { OBJF.forEach(function (k) { S[k] = JSON.parse(JSON.stringify(o[k] === undefined ? OBJDEF[k] : o[k])); }); }
@@ -1086,7 +1095,7 @@ function drawScene(g, W, H, v, u, forPrint, opts) {
             if (run.length > 1) trace(run, false);
         };
         var pl = function (i) { return multi ? (idx + 1) + '-' + i : plab(i); };
-        var st = gapStatus(R), strokeCol = multi ? PAL[idx % PAL.length] : (st.cls === 'bad' ? '#C0463F' : '#2F6B3A'), isOpen = !R.poly && R.len > 0 && (S.mode === 'open' || R.hasGap);
+        var st = gapStatus(R), strokeCol = S.lk ? (R.poly ? '#2F6B3A' : '#B5651D') : multi ? PAL[idx % PAL.length] : (st.cls === 'bad' ? '#C0463F' : '#2F6B3A'), isOpen = !R.poly && R.len > 0 && (S.mode === 'open' || R.hasGap);
         var P = R.pts;
         var labelsMode = opts.scheme ? 2 : S.labels;
         var tieEnd = Math.min(R.s, R.n), i;
@@ -1120,18 +1129,18 @@ function drawScene(g, W, H, v, u, forPrint, opts) {
             }
         }
         var gapEnd = (R.gap !== null && R.gap >= 0.005) ? R.n : -1;
-        for (i = 0; !S.lonly && i < P.length; i++) {   // точки: кружок и номер
+        for (i = 0; !S.lonly && !S.lk && i < P.length; i++) {   // точки: кружок и номер
             var px = X(P[i].x), py = Y(P[i].y), inPoly = R.idx.indexOf(i) >= 0, isT0 = ((R.kind === 'traverse' || R.s > 0) && i === 0);
             g.beginPath(); g.arc(px, py, lw(isT0 ? 5.5 : 3.8), 0, 6.2832);
             g.fillStyle = isT0 ? '#C0463F' : (i === gapEnd ? '#fff' : (inPoly ? '#fff' : '#F0B4B0')); g.fill();
             g.lineWidth = lw(1.8); g.strokeStyle = isT0 ? '#7A2A26' : (i === gapEnd ? '#C0463F' : (inPoly ? strokeCol : '#C0463F')); g.stroke();
             if (labelsMode) halo(pl(i), px + lw(7), py - lw(6), isT0 ? '#7A2A26' : '#1D2A20', 11.5, true);
         }
-        if (R.poly && (labelsMode === 1 || labelsMode === 3) && !opts.scheme && !S.lonly) {   // площадь в центре — только если выбрано
+        if (R.poly && (labelsMode === 1 || labelsMode === 3 || S.lk) && !opts.scheme && !S.lonly) {   // площадь в центре — только если выбрано
             var cx = 0, cy = 0; R.poly.forEach(function (p) { cx += p.x; cy += p.y; }); cx = X(cx / R.poly.length); cy = Y(cy / R.poly.length);
             halo((R.area / 10000).toFixed(4) + ' га', cx, cy + lw(5), strokeCol, 15, true, 'center');
         }
-        if (multi && !S.lonly) {   // имя объекта рядом с ним
+        if (multi && !S.lonly && !S.lk) {   // имя объекта рядом с ним
             var nx = 0, ny = 0; R.pts.forEach(function (p) { nx += p.x; ny += p.y; }); nx = X(nx / R.pts.length); ny = Y(ny / R.pts.length);
             halo(S.name || ('Объект ' + (idx + 1)), nx, ny - lw(11), strokeCol, 12, true, 'center');
         }
@@ -1223,6 +1232,7 @@ function drawOverlays(g, u) {
     });
     if (ui.probe) { var sp = w2s(ui.probe.x, ui.probe.y); drawRing(g, sp.x, sp.y, 9 * u, '#E65100', u); g.beginPath(); g.arc(sp.x, sp.y, 2.5 * u, 0, 6.2832); g.fillStyle = '#E65100'; g.fill(); }
     if (ui.pick === 'draw' && S.kind === 'traverse' && !S.lines.length && ui.t0set) { var s0 = w2s(0, 0); drawRing(g, s0.x, s0.y, 10 * u, '#C0463F', u); }
+    if (ui.tool === 'link' && ui.lk) lkOverlay(g, u);
     var vw = $('view'); if (vw) vw.classList.toggle('aimhold', !!(ui.pick && ui.aim && aiming));
     if (ui.pick && ui.aim && aiming) { aimLens(g, u); }
     if (ui.pick && ui.aim && !(ui.pick === 'cal2')) {   // прицел
@@ -1283,22 +1293,24 @@ cv.addEventListener('pointerdown', function (e) {
         if (!panBtn) {
             if (ui.pick === 'draw') { var hp = hitPoint(p.x, p.y); if (hp >= 0) { ui.dragPt = hp; } else { aiming = true; ui.aim = p; draw(); } }
             else if (ui.pick === 'mark') { var hm = hitMark(p.x, p.y); if (hm >= 0) { ui.dragMk = hm; ui.selMk = hm; mbSync(); draw(); } else { aiming = true; ui.aim = p; draw(); } }
+            else if (ui.pick === 'link') { var hl = hitMark(p.x, p.y); ui.lkDrag = hl; }
             else if (ui.pick) { aiming = true; ui.aim = p; draw(); }
             else if (ui.calA && ui.calB) { var h = hitHandle(p); if (h) ui.dragH = h; }
         }
     }
     if (ids.length === 2) {
-        aiming = false; ui.dragH = null; ui.dragPt = null; ui.aim = null; moved = true;
+        aiming = false; ui.dragH = null; ui.dragPt = null; ui.aim = null; ui.lkDrag = -1; moved = true;
         var a = ptrs[ids[0]], b = ptrs[ids[1]]; lastD = Math.hypot(a.x - b.x, a.y - b.y); lastM = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; lastAng = Math.atan2(b.y - a.y, b.x - a.x);
     }
 });
 cv.addEventListener('pointermove', function (e) {
     var p = evPos(e);
-    if (!ptrs[e.pointerId]) { if (ui.pick && e.pointerType === 'mouse') { ui.aim = p; draw(); } return; }
+    if (!ptrs[e.pointerId]) { if (ui.pick === 'link') { if (e.pointerType === 'mouse') { ui.lkAim = p; draw(); } return; } if (ui.pick && e.pointerType === 'mouse') { ui.aim = p; draw(); } return; }
     var old = ptrs[e.pointerId], ids = Object.keys(ptrs);
     if (ids.length === 1) {
         if (ui.dragPt !== null && ui.dragPt !== undefined) { ptrs[e.pointerId] = p; moved = true; dragDrawPoint(ui.dragPt, s2w(p.x, p.y)); return; }
         if (ui.dragMk !== null && ui.dragMk !== undefined && ui.dragMk >= 0) { ptrs[e.pointerId] = p; moved = true; var wm = s2w(p.x, p.y), om = objOrg(S), mm = S.marks[ui.dragMk]; if (mm) { mm.x = wm.x + om.x; mm.y = wm.y + om.y; } scheduleSave(); draw(); return; }
+        if (ui.lkDrag >= 0) { ptrs[e.pointerId] = p; if (!moved && Math.hypot(p.x - downPos.x, p.y - downPos.y) < 6) return; moved = true; ui.lkAim = p; draw(); return; }
         if (aiming) { ptrs[e.pointerId] = p; ui.aim = p; draw(); return; }
         if (ui.dragH) { ptrs[e.pointerId] = p; setHandle(ui.dragH, p); return; }
         var dx = p.x - old.x, dy = p.y - old.y;
@@ -1327,10 +1339,17 @@ function endPtr(e) {
     delete ptrs[e.pointerId];
     if (wasAim) { aiming = false; if (e.type === 'pointerup') pickAt(p.x, p.y); else if (ui.pick !== 'cal2') ui.aim = null; draw(); }
     if (ui.dragH) { ui.dragH = null; }
-    if (ui.dragMk !== null && ui.dragMk !== undefined && ui.dragMk >= 0) { ui.dragMk = -1; renderMarks(); scheduleSave(); }
+    if (ui.dragMk !== null && ui.dragMk !== undefined && ui.dragMk >= 0) { ui.dragMk = -1; renderMarks(); scheduleSave(); lkRefresh(); }
     if (ui.dragPt !== null && ui.dragPt !== undefined) { ui.dragPt = null; renderTable(); renderCoords(); afterChange(); updateDrawInfo(); }
     var left = Object.keys(ptrs).length;
     if (left === 1) { lastD = 0; moved = true; }
+    if (left === 0 && ui.pick === 'link') {
+        var df = ui.lkDrag; ui.lkDrag = -1;
+        if (e.type === 'pointerup' && !panBtn) {
+            if (df >= 0 && moved) { var to = hitMark(p.x, p.y); if (to >= 0 && to !== df) { ui.lk.sel = to; lkLink(df, to); } else { ui.lk.sel = -1; } lkSync(); draw(); }
+            else if (!moved) lkClick(p);
+        } else draw();
+    }
     if (left === 0) { aiming = false; if (e.type === 'pointerup' && !moved && !wasAim && !ui.pick && ui.tool === 'pan' && !panBtn && !ui.dragH) probeAt(p.x, p.y); }
 }
 cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', endPtr);
@@ -1341,7 +1360,7 @@ $('z-out').onclick = function () { zoomAt(W / 2, H / 2, 1 / 1.4); };
 /* ---------- выбор точек на чертеже / скане ---------- */
 function setHint(t) { var h = $('hint'); if (t) { h.textContent = t; h.classList.add('on'); } else h.classList.remove('on'); $('view').classList.toggle('pick', !!t); }
 function cancelPick() {
-    if (ui.pick === 'draw') { setTool('pan'); if (mobile()) showDock(); draw(); return; }
+    if (ui.pick === 'draw' || ui.pick === 'link') { setTool('pan'); if (mobile()) showDock(); draw(); return; }
     ui.pick = null; ui.aim = null; if (!($('calbar').classList.contains('on'))) { ui.calA = ui.calB = null; }
     setHint(null); draw();
 }
@@ -1590,10 +1609,12 @@ function shiftPlot(dwx, dwy) {   // сдвиг контура относител
 function setTool(t) {
     if (t !== 'draw' && ui.pick === 'draw') { ui.pick = null; ui.aim = null; setHint(null); }
     if (t !== 'mark' && ui.pick === 'mark') { ui.pick = null; ui.aim = null; setHint(null); }
+    if (t !== 'link' && ui.pick === 'link') { ui.pick = null; ui.aim = null; ui.lkAim = null; ui.lkDrag = -1; if (ui.lk) ui.lk.sel = -1; setHint(null); }
+    $('t-link').classList.toggle('active', t === 'link'); $('linkbar').classList.toggle('on', t === 'link');
     $('t-mark').classList.toggle('active', t === 'mark'); $('markbar').classList.toggle('on', t === 'mark'); if (t !== 'mark') ui.selMk = -1;
     ui.tool = t; $('t-draw').classList.toggle('active', t === 'draw'); $('drawbar').classList.toggle('on', t === 'draw'); $('t-scan').classList.toggle('active', t === 'scan'); $('b-scanmove').classList.toggle('on', t === 'scan');
     $('t-plot').classList.toggle('active', t === 'plot'); $('b-plotmove').classList.toggle('on', t === 'plot');
-    $('view').classList.toggle('scanmode', t === 'scan' || t === 'plot' || t === 'draw' || t === 'mark'); $('scanbar').classList.toggle('on', t === 'scan'); $('plotbar').classList.toggle('on', t === 'plot');
+    $('view').classList.toggle('scanmode', t === 'scan' || t === 'plot' || t === 'draw' || t === 'mark' || t === 'link'); $('scanbar').classList.toggle('on', t === 'scan'); $('plotbar').classList.toggle('on', t === 'plot');
 }
 function toggleTool(t) {
     if (ui.tool === t) { setTool('pan'); return; }
@@ -2073,8 +2094,8 @@ $('del-shift').onclick = function () { delApply('shift'); }; $('del-cancel').onc
 var hist = [], hkeys = [], hpos = -1, hTimer = 0, hBusy = false;
 function histSnap() {
     packActive();
-    var core = { o: S.objs, a: S.act, g: S.gref, c: snapObj(), m: S.marks };
-    return { key: JSON.stringify(core), str: JSON.stringify({ o: core.o, a: core.a, g: core.g, c: core.c, m: core.m, sc: S.scan && S.scan.c, org: S.org }) };
+    var core = { o: S.objs, a: S.act, g: S.gref, c: snapObj(), m: S.marks, l: S.links || [] };
+    return { key: JSON.stringify(core), str: JSON.stringify({ o: core.o, a: core.a, g: core.g, c: core.c, m: core.m, l: core.l, sc: S.scan && S.scan.c, org: S.org }) };
 }
 function histBtns() {
     var u = $('t-undo'), r = $('t-redo'); if (!u || !r) return;
@@ -2092,7 +2113,7 @@ function histGo(d) {
     if (hTimer) histPush();
     var np = hpos + d; if (np < 0 || np >= hist.length) { toast(d < 0 ? 'Больше нечего отменять' : 'Нечего возвращать'); return; }
     hpos = np; var o = JSON.parse(hist[hpos]); hBusy = true;
-    S.objs = o.o || []; S.act = o.a || 0; S.gref = o.g || null; S.marks = o.m || []; loadObj(o.c); if (o.sc && S.scan) S.scan.c = o.sc;
+    S.objs = o.o || []; S.act = o.a || 0; S.gref = o.g || null; S.marks = o.m || []; S.links = o.l || []; loadObj(o.c); if (o.sc && S.scan) S.scan.c = o.sc;
     ui.undoLines = null; ui.t0set = !!S.lines.length; ui.nextGap = false; gapBtn();
     syncFields(); renderTable(); renderCoords(); afterChange(); if (ui.tool === 'draw') updateDrawInfo();
     hBusy = false; hkeys[hpos] = histSnap().key; histBtns(); toast(d < 0 ? '↶ Отменено' : '↷ Возвращено');
@@ -2161,7 +2182,7 @@ $('mk-draw').onclick = startMark;
 $('mb-done').onclick = function () { setTool('pan'); if (mobile()) showDock(); draw(); };
 $('mb-k').onchange = function () { if (ui.selMk >= 0 && S.marks[ui.selMk]) { S.marks[ui.selMk].k = this.value; afterChange(); } else ui.mk.k = this.value; ui.mk.k = this.value; mbSync(); };
 $('mb-t').onchange = function () { if (ui.selMk >= 0 && S.marks[ui.selMk]) { S.marks[ui.selMk].t = this.value.trim(); afterChange(); } else ui.mk.t = this.value.trim(); };
-$('mb-del').onclick = function () { if (ui.selMk >= 0) { S.marks.splice(ui.selMk, 1); ui.selMk = -1; histPush(); afterChange(); mbSync(); } };
+$('mb-del').onclick = function () { if (ui.selMk >= 0) { var di = ui.selMk; S.marks.splice(di, 1); ui.selMk = -1; lkFixDel(di); histPush(); afterChange(); mbSync(); } };
 $('mk-add').onclick = function () {
     var o = objOrg(S), c = s2w(W / 2, H / 2);
     S.marks.push({ k: 'sign', t: '', x: c.x + o.x, y: c.y + o.y }); histPush(); afterChange();
@@ -2192,7 +2213,7 @@ $('mk-list').addEventListener('change', function (e) {
     histPush(); afterChange();
 });
 $('mk-list').addEventListener('click', function (e) {
-    var t = e.target.closest('[data-mf="del"]'); if (!t) return; var row = t.closest('.mkrow'); S.marks.splice(+row.dataset.i, 1); histPush(); afterChange();
+    var t = e.target.closest('[data-mf="del"]'); if (!t) return; var row = t.closest('.mkrow'); var dj = +row.dataset.i; S.marks.splice(dj, 1); lkFixDel(dj); histPush(); afterChange();
 });
 
 renderGcp();
@@ -2217,6 +2238,147 @@ document.addEventListener('paste', function (e) {
     if (!a || !b) return;
     a.value = sp.lat; b.value = sp.lng; a.dispatchEvent(new Event('change', { bubbles: true })); b.dispatchEvent(new Event('change', { bubbles: true }));
 }, true);
+
+/* ---------- линии между точками: тянем от точки к точке, касание линии убирает её ---------- */
+ui.lk = { sel: -1 }; ui.lkDrag = -1;
+function lkLinks() { if (!Array.isArray(S.links)) S.links = []; S.links = S.links.filter(function (l) { return l && S.marks[l[0]] && S.marks[l[1]] && l[0] !== l[1]; }); return S.links; }
+function lkSync() {
+    var n = lkLinks().length, inf = $('lk-info');
+    inf.textContent = ui.lk.sel >= 0 ? 'Точка выбрана. Коснитесь другой точки — между ними встанет линия. Линию можно убрать касанием.' : 'Протяните линию от точки к точке (или коснитесь двух точек). Коснитесь линии — она уберётся.' + (n ? ' Линий: ' + n + '.' : '');
+    $('lk-clear').disabled = !n;
+}
+function startLink() {
+    if (ui.tool === 'link') { lkSync(); draw(); return; }
+    cancelPick(); closeCalBar(true); setTool('link'); ui.pick = 'link'; ui.aim = null; ui.lk.sel = -1; ui.lkDrag = -1; lkSync();
+    setHint('Протяните линию от точки к точке. Коснитесь линии — она уберётся. Площадь считается сама, когда линии замкнутся.');
+    if (mobile()) hideDockMobile(); draw();
+}
+function lkHas(a, b) { return lkLinks().some(function (l) { return (l[0] === a && l[1] === b) || (l[0] === b && l[1] === a); }); }
+function lkGraph() {   // из линий — замкнутые площади и открытые цепочки
+    var L = lkLinks(), M = S.marks, adj = {}, i;
+    L.forEach(function (l) { (adj[l[0]] = adj[l[0]] || []).push(l[1]); (adj[l[1]] = adj[l[1]] || []).push(l[0]); });
+    var ang = function (a, b) { return Math.atan2(M[b].y - M[a].y, M[b].x - M[a].x); };
+    var core = {}, deg = {}, q = [], gone = {};
+    Object.keys(adj).forEach(function (k) { core[k] = adj[k].slice(); deg[k] = adj[k].length; if (deg[k] === 1) q.push(+k); });
+    while (q.length) {   // обрезаем «хвосты»: они площади не образуют
+        var v = q.pop(); if (gone[v]) continue; gone[v] = 1;
+        core[v].forEach(function (w) { if (gone[w]) return; core[w] = core[w].filter(function (x) { return x !== v; }); deg[w]--; if (deg[w] === 1) q.push(w); });
+        core[v] = [];
+    }
+    Object.keys(core).forEach(function (k) { core[k].sort(function (a, b) { return ang(+k, a) - ang(+k, b); }); });
+    var seen = {}, faces = [], inFace = {}, ks = Object.keys(core);
+    ks.forEach(function (ku) {
+        core[ku].forEach(function (v0) {
+            var u0 = +ku; if (seen[u0 + '>' + v0]) return;
+            var vs = [], cu = u0, cv = v0, guard = 0;
+            do {
+                seen[cu + '>' + cv] = 1; vs.push(cu);
+                var nb = core[cv], ix = nb.indexOf(cu), nx = nb[(ix - 1 + nb.length) % nb.length]; cu = cv; cv = nx;
+            } while (!(cu === u0 && cv === v0) && ++guard < 20000);
+            var ar = 0; for (i = 0; i < vs.length; i++) { var a = M[vs[i]], b = M[vs[(i + 1) % vs.length]]; ar += a.x * b.y - b.x * a.y; }
+            if (ar / 2 > 1e-6 && vs.length >= 3) { faces.push(vs); for (i = 0; i < vs.length; i++) { var p = vs[i], r = vs[(i + 1) % vs.length]; inFace[Math.min(p, r) + '-' + Math.max(p, r)] = 1; } }
+        });
+    });
+    var rest = L.filter(function (l) { return !inFace[Math.min(l[0], l[1]) + '-' + Math.max(l[0], l[1])]; }), ra = {}, used = {}, chains = [];
+    rest.forEach(function (l) { (ra[l[0]] = ra[l[0]] || []).push(l[1]); (ra[l[1]] = ra[l[1]] || []).push(l[0]); });
+    var ek = function (a, b) { return Math.min(a, b) + '-' + Math.max(a, b); };
+    var walk = function (s, n) {
+        var path = [s, n]; used[ek(s, n)] = 1; var prev = s, cur = n;
+        while (ra[cur].length === 2) { var nx = ra[cur][0] === prev ? ra[cur][1] : ra[cur][0]; if (used[ek(cur, nx)]) break; used[ek(cur, nx)] = 1; path.push(nx); prev = cur; cur = nx; }
+        chains.push(path);
+    };
+    Object.keys(ra).forEach(function (k) { if (ra[k].length !== 2) ra[k].forEach(function (n) { if (!used[ek(+k, n)]) walk(+k, n); }); });
+    Object.keys(ra).forEach(function (k) { ra[k].forEach(function (n) { if (!used[ek(+k, n)]) walk(+k, n); }); });
+    return { faces: faces, chains: chains };
+}
+function lkRebuild() {   // объекты чертежа пересобираются из линий; чужие объекты (не из точек) не трогаем
+    var G = lkGraph(), M = S.marks, built = [], i, bad = false;
+    var mk = function (vs, closed, nm) {
+        var cp = []; for (var k = 0; k < vs.length; k++) { var l = markLL(M[vs[k]]); if (!l) { bad = true; return null; } cp.push({ lat: +l.lat.toFixed(7), lng: +l.lng.toFixed(7) }); }
+        var o = JSON.parse(JSON.stringify(OBJDEF)); o.kind = 'coords'; o.cp = cp; o.mode = closed ? 'auto' : 'open'; o.name = nm; o.lk = true; o.viewMode = S.viewMode; return o;
+    };
+    G.faces.forEach(function (vs, k) { var o = mk(vs, true, 'Площадь ' + (k + 1)); if (o) built.push(o); });
+    G.chains.forEach(function (vs, k) { var o = mk(vs, false, 'Линия ' + (k + 1)); if (o) built.push(o); });
+    if (bad) { toast('У точки нет координат — привяжите чертёж'); return false; }
+    packActive();
+    var cur = (S.objs && S.objs.length > 1) ? S.objs.slice() : (compute().empty ? [] : [snapObj()]);
+    var all = cur.filter(function (o) { return !o.lk; }).concat(built), oOld = objOrg(S);
+    if (!S.gref && built.length) { var l0 = markLL(M[G.chains.length ? G.chains[0][0] : G.faces[0][0]]); if (l0) S.gref = { lat: l0.lat, lng: l0.lng, ox: 0, oy: 0 }; }
+    if (!all.length) { var e = JSON.parse(JSON.stringify(OBJDEF)); e.kind = 'coords'; S.objs = []; S.act = 0; loadObj(e); }
+    else if (all.length === 1) { S.objs = []; S.act = 0; loadObj(all[0]); }
+    else { S.objs = all; S.act = 0; loadObj(S.objs[0]); }
+    frameShift(oOld, objOrg(S)); ui.t0set = false; syncFields(); renderTable(); renderCoords();
+    return G.faces.length;
+}
+function lkApply(msg) {
+    var before = lkFaceCount, nf = lkRebuild(); if (nf === false) return;
+    lkFaceCount = nf; histPush(); afterChange(); lkSync(); draw();
+    if (msg) toast(msg); else if (nf > before) { var ar = 0, G = lkGraph(); G.faces.forEach(function (vs) { var s = 0; for (var i = 0; i < vs.length; i++) { var a = S.marks[vs[i]], b = S.marks[vs[(i + 1) % vs.length]]; s += a.x * b.y - b.x * a.y; } ar += Math.abs(s) / 2; }); toast('Площадь замкнулась. Всего площадей: ' + nf + ', ' + (ar / 10000).toFixed(4) + ' га.'); }
+}
+var lkFaceCount = 0;
+function lkLink(a, b) {
+    if (a === b) return;
+    if (lkHas(a, b)) { toast('Такая линия уже есть. Чтобы убрать — коснитесь её.'); return; }
+    S.links.push([Math.min(a, b), Math.max(a, b)]); lkApply();
+}
+function lkUnlink(a, b) {
+    S.links = lkLinks().filter(function (l) { return !((l[0] === a && l[1] === b) || (l[0] === b && l[1] === a)); }); lkApply('Линия убрана');
+}
+function lkFixDel(i) {   // удалили точку — её линии уходят, номера сдвигаются
+    if (!S.links || !S.links.length) return;
+    S.links = S.links.filter(function (l) { return l[0] !== i && l[1] !== i; }).map(function (l) { return [l[0] > i ? l[0] - 1 : l[0], l[1] > i ? l[1] - 1 : l[1]]; });
+    lkApply();
+}
+function lkRefresh() { if (S.links && S.links.length) lkApply(); }
+function lkHitEdge(sx, sy) {
+    var best = null, bd = 11 * fsScale(), o = objOrg(S);
+    lkLinks().forEach(function (l) {
+        var A = S.marks[l[0]], B = S.marks[l[1]], a = w2s(A.x - o.x, A.y - o.y), b = w2s(B.x - o.x, B.y - o.y), vx = b.x - a.x, vy = b.y - a.y, L2 = vx * vx + vy * vy, t = L2 > 0 ? ((sx - a.x) * vx + (sy - a.y) * vy) / L2 : 0;
+        t = Math.max(0, Math.min(1, t)); var d = Math.hypot(a.x + t * vx - sx, a.y + t * vy - sy);
+        if (d < bd) { bd = d; best = { a: l[0], b: l[1], pa: a, pb: b }; }
+    });
+    return best;
+}
+function lkClick(p) {
+    var mi = hitMark(p.x, p.y);
+    if (mi >= 0) {
+        if (ui.lk.sel < 0) ui.lk.sel = mi;
+        else if (ui.lk.sel === mi) ui.lk.sel = -1;
+        else { var from = ui.lk.sel; ui.lk.sel = mi; lkLink(from, mi); }
+        lkSync(); draw(); return;
+    }
+    var h = lkHitEdge(p.x, p.y);
+    if (h) { lkUnlink(h.a, h.b); return; }
+    if (ui.lk.sel >= 0) { ui.lk.sel = -1; lkSync(); draw(); }
+}
+function lkOverlay(g, u) {
+    var o = objOrg(S), pt = function (i) { var m = S.marks[i]; return w2s(m.x - o.x, m.y - o.y); }, from = ui.lkDrag >= 0 ? ui.lkDrag : ui.lk.sel;
+    g.save(); g.lineCap = 'round';
+    if (from >= 0 && S.marks[from]) {
+        var f = pt(from); g.beginPath(); g.arc(f.x, f.y, 13 * u, 0, 6.2832); g.lineWidth = 3 * u; g.strokeStyle = '#E65100'; g.stroke();
+        if (ui.lkAim) { g.setLineDash([7 * u, 5 * u]); g.lineWidth = 2.4 * u; g.strokeStyle = '#E65100'; g.beginPath(); g.moveTo(f.x, f.y); g.lineTo(ui.lkAim.x, ui.lkAim.y); g.stroke(); g.setLineDash([]); }
+    }
+    if (ui.lkAim && ui.lkDrag < 0) {
+        var hm = hitMark(ui.lkAim.x, ui.lkAim.y);
+        if (hm >= 0) { var s = pt(hm); g.beginPath(); g.arc(s.x, s.y, 11 * u, 0, 6.2832); g.lineWidth = 2.5 * u; g.strokeStyle = '#2E7D46'; g.stroke(); }
+        else { var h = lkHitEdge(ui.lkAim.x, ui.lkAim.y); if (h) { g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 9 * u; g.beginPath(); g.moveTo(h.pa.x, h.pa.y); g.lineTo(h.pb.x, h.pb.y); g.stroke(); g.strokeStyle = '#C62828'; g.lineWidth = 4.5 * u; g.beginPath(); g.moveTo(h.pa.x, h.pa.y); g.lineTo(h.pb.x, h.pb.y); g.stroke(); } }
+    }
+    g.restore();
+}
+$('t-link').onclick = function () { if (ui.tool === 'link') lkDone(); else startLink(); };
+function lkDone() { ui.lk.sel = -1; ui.lkDrag = -1; setTool('pan'); if (mobile()) showDock(); draw(); }
+$('lk-done').onclick = lkDone;
+$('lk-all').onclick = function () {
+    var all = []; (S.marks || []).forEach(function (m, i) { if (m.k === 'dot') all.push(i); });
+    if (all.length < 3) { toast('Для контура нужно минимум 3 точки'); return; }
+    for (var i = 0; i < all.length; i++) { var a = all[i], b = all[(i + 1) % all.length]; if (!lkHas(a, b)) S.links.push([Math.min(a, b), Math.max(a, b)]); }
+    ui.lk.sel = -1; lkApply('Точки соединены по порядку. Лишние линии уберите касанием.');
+};
+$('lk-clear').onclick = function () { if (!lkLinks().length) return; S.links = []; ui.lk.sel = -1; lkApply('Все линии убраны, точки остались'); };
+document.addEventListener('keydown', function (e) {
+    if (ui.tool !== 'link' || e.key !== 'Escape') return; var tg = e.target && e.target.tagName; if (tg === 'INPUT' || tg === 'TEXTAREA' || tg === 'SELECT') return;
+    if (ui.lk.sel >= 0) { ui.lk.sel = -1; lkSync(); draw(); } else lkDone();
+});
 
 /* ---------- импорт ---------- */
 function distLL(a, b) { var k = mpd((a.lat + b.lat) / 2); return Math.hypot((b.lng - a.lng) * k.lng, (b.lat - a.lat) * k.lat); }
@@ -2279,7 +2441,7 @@ function llContours(text, name) {
         var d = new DOMParser().parseFromString(t, 'application/xml');
         [].forEach.call(d.getElementsByTagName('trk'), function (trk) { var n = trk.getElementsByTagName('name')[0]; [].forEach.call(trk.getElementsByTagName('trkseg'), function (sg) { var pts = [].map.call(sg.getElementsByTagName('trkpt'), ll).filter(ok); if (pts.length > 1) out.push({ name: n ? n.textContent.trim() : '', pts: pts }); }); });
         [].forEach.call(d.getElementsByTagName('rte'), function (rt) { var n = rt.getElementsByTagName('name')[0], pts = [].map.call(rt.getElementsByTagName('rtept'), ll).filter(ok); if (pts.length > 1) out.push({ name: n ? n.textContent.trim() : '', pts: pts }); });
-        if (!out.length) { var wp = [].map.call(d.getElementsByTagName('wpt'), ll).filter(ok); if (wp.length > 1) out.push({ name: 'Путевые точки', pts: wp, wpt: true }); }   // файлы навигаторов Garmin и др.: только путевые точки
+        if (!out.length) { var wp = [].map.call(d.getElementsByTagName('wpt'), function (el) { var p = ll(el), nn = el.getElementsByTagName('name')[0]; p.nm = nn ? nn.textContent.trim() : ''; return p; }).filter(ok); if (wp.length > 1) out.push({ name: 'Путевые точки', pts: wp, wpt: true }); }   // файлы навигаторов Garmin и др.: только путевые точки
     } else if (/<kml[\s>]/i.test(t.slice(0, 800)) || /\.kml$/i.test(name)) {
         var dk = new DOMParser().parseFromString(t, 'application/xml');
         [].forEach.call(dk.getElementsByTagName('Placemark'), function (pm) {
@@ -2288,7 +2450,7 @@ function llContours(text, name) {
             var pts = ce.textContent.trim().split(/\s+/).map(function (s) { var a = s.split(','); return { lat: parseFloat(a[1]), lng: parseFloat(a[0]) }; }).filter(ok);
             if (pts.length > 1) out.push({ name: n ? n.textContent.trim() : '', pts: pts });
         });
-        if (!out.length) { var kp = []; [].forEach.call(dk.getElementsByTagName('Placemark'), function (pm) { var pe = pm.getElementsByTagName('Point')[0]; if (!pe) return; var ce = pe.getElementsByTagName('coordinates')[0]; if (!ce) return; var a = ce.textContent.trim().split(','); var p = { lat: parseFloat(a[1]), lng: parseFloat(a[0]) }; if (ok(p)) kp.push(p); }); if (kp.length > 1) out.push({ name: 'Путевые точки', pts: kp, wpt: true }); }
+        if (!out.length) { var kp = []; [].forEach.call(dk.getElementsByTagName('Placemark'), function (pm) { var pe = pm.getElementsByTagName('Point')[0]; if (!pe) return; var ce = pe.getElementsByTagName('coordinates')[0]; if (!ce) return; var a = ce.textContent.trim().split(','); var p = { lat: parseFloat(a[1]), lng: parseFloat(a[0]) }, nn = pm.getElementsByTagName('name')[0]; p.nm = nn ? nn.textContent.trim() : ''; if (ok(p)) kp.push(p); }); if (kp.length > 1) out.push({ name: 'Путевые точки', pts: kp, wpt: true }); }
     } else if (t[0] === '{') {
         var obj = JSON.parse(t), geo = function (gm, nm) {
             if (!gm) return;
@@ -2316,8 +2478,28 @@ function loadResult(res, msg) {
 function hasPt(r) { return r.p0 && typeof r.p0.lat === 'number' && isFinite(r.p0.lat); }
 function fromContour(list) {
     var c = list.slice().sort(function (a, b) { return b.pts.length - a.pts.length; })[0], pts = c.pts.slice();
+    if (c.wpt && importWaypoints(pts)) return;   // путевые точки — отдельными точками, соединять их можно самому
     if (pts.length > 3 && distLL(pts[0], pts[pts.length - 1]) < 0.5) pts.pop();
     loadResult({ kind: 'coords', name: c.name || '', cp: pts.map(function (p) { return { lat: +p.lat.toFixed(7), lng: +p.lng.toFixed(7) }; }) }, (c.wpt ? 'Путевые точки загружены по порядку из файла: ' + pts.length + '. Проверьте, что порядок точек нужный.' : 'Контур загружен по координатам: точек ' + pts.length + '.') + (list.length > 1 ? ' В файле ещё контуров: ' + (list.length - 1) + ' (взят самый подробный).' : ''));
+}
+function importWaypoints(pts) {   // путевые точки навигатора → отдельные точки на чертеже (с именами из файла)
+    var first = pts[0], w0 = worldOfLL(first.lat, first.lng);
+    if (!w0) {
+        if (!compute().empty) return false;   // чертёж уже есть, но без координат — по-старому, одним контуром
+        var la = 0, lo = 0; pts.forEach(function (p) { la += p.lat; lo += p.lng; });
+        S.gref = { lat: +(la / pts.length).toFixed(7), lng: +(lo / pts.length).toFixed(7), ox: 0, oy: 0 };
+    }
+    if (S.id) { S.id = null; scanDirty = true; }
+    var o = objOrg(S), added = 0, dup = 0;
+    pts.forEach(function (p) {
+        var w = worldOfLL(p.lat, p.lng); if (!w) return; var mx = w.x + o.x, my = w.y + o.y, nm = p.nm || '';
+        if (S.marks.some(function (m) { return m.k === 'dot' && (m.t || '') === nm && Math.hypot(m.x - mx, m.y - my) < 0.05; })) { dup++; return; }
+        S.marks.push({ k: 'dot', t: nm, x: mx, y: my }); added++;
+    });
+    if (!added) { toast('Эти точки уже есть на чертеже' + (dup ? ' (' + dup + ')' : '')); return true; }
+    histPush(); afterChange(); fitView(false); scheduleSave(); startLink();
+    toast('Загружено точек: ' + added + (dup ? ' (повторов пропущено: ' + dup + ')' : '') + '. Соединяйте их по очереди: коснитесь одной точки, потом следующей.', 6000);
+    return true;
 }
 function importText(text, fname) {
     goal('abris_import');
@@ -2952,7 +3134,7 @@ window.__abris = {
     llPoints: llPoints, azToRumb: azToRumb, rumbToAz: rumbToAz, scanScale: scanScale, scanRotSigned: scanRotSigned, newState: newState, fromRows: fromRows,
     w2s: w2s, s2w: s2w, pix2w: pix2w, w2pix: w2pix, ui: ui, get V() { return V; }, setMethod: setMethod, archSave: archSave, archOpen: archOpen, archNew: archNew,
     renderSheet: renderSheet, makePdf: makePdf, runExample: runExample, afterChange: afterChange, renderCoords: renderCoords, renderTable: renderTable, syncFields: syncFields,
-    startPick: startPick, pickAt: pickAt, setTool: setTool, hitPoint: hitPoint, get scanImg() { return scanImg; }
+    objOrg: objOrg, startPick: startPick, pickAt: pickAt, setTool: setTool, hitPoint: hitPoint, get scanImg() { return scanImg; }
 };
 init();
 })();
