@@ -1388,6 +1388,7 @@
                     <button class="btn-action btn-reset-zero" style="width:auto;padding:7px 12px" onclick="BgScan.openSettings()">⚙ Настройки скана</button>
                     <button class="btn-action btn-set-zero" id="scan-bind-btn" style="width:auto;padding:7px 12px" onclick="BgScan.toggleBind()">📍 Я здесь</button>
                     <button class="btn-action btn-reset-zero" style="width:auto;padding:7px 12px;border:1px solid var(--warning-alert);color:var(--warning-alert)" onclick="BgSheet.open()">🖨 Бланк А4 / Схема отвода</button>
+                    <button class="btn-action btn-set-zero" style="width:auto;padding:7px 12px" onclick="BgStake.openPanel()">🎯 Вынос в натуру</button>
                 </div>
                 <div style="margin-top: 15px; background: rgba(45, 90, 39, 0.04); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
                     <span style="font-weight: 700; color: var(--forest-green); display: block; font-size: 12px; margin-bottom: 6px;">⚠️ РУКОВОДСТВО ТАКСАТОРУ ПО ИНСТРУМЕНТАМ БУССОЛИ:</span>
@@ -1441,7 +1442,10 @@
     // =====================================================================
     //  ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
     // =====================================================================
-    const M_PER_DEG = 111139; // метров в градусе широты (единая константа для всех проекций)
+    const M_PER_DEG = 111139; // запасное значение (сфера)
+    // Точные метры на градус по эллипсоиду WGS-84 (для широты lat, градусы)
+    function mpdLat(lat) { const p = lat * Math.PI / 180; return 111132.92 - 559.82 * Math.cos(2 * p) + 1.175 * Math.cos(4 * p); }
+    function mpdLng(lat) { const p = lat * Math.PI / 180; return 111412.84 * Math.cos(p) - 93.5 * Math.cos(3 * p); }
 
     function safeGet(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
     function safeSet(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
@@ -1666,8 +1670,8 @@
     // --- ПРОЕКЦИЯ ГЕОГРАФИЧЕСКИХ КООРДИНАТ В ЛОКАЛЬНЫЕ МЕТРЫ ---
     function latLngToLocal(origin, lat, lng) {
         return {
-            x: (lng - origin.lng) * M_PER_DEG * Math.cos(origin.lat * Math.PI / 180),
-            y: (lat - origin.lat) * M_PER_DEG
+            x: (lng - origin.lng) * mpdLng(origin.lat),
+            y: (lat - origin.lat) * mpdLat(origin.lat)
         };
     }
 
@@ -4240,6 +4244,7 @@
             if (fitPts.length === 0) fitPts = points;
         }
 
+        if (window.BgStake) { const ex = BgStake.framePts(); if (ex.length) fitPts = fitPts.concat(ex); }
         let minX = Math.min(...fitPts.map(p => p.x));
         let maxX = Math.max(...fitPts.map(p => p.x));
         let minY = Math.min(...fitPts.map(p => p.y));
@@ -4274,6 +4279,9 @@
         for(let i = 0; i < height; i += 40) {
             ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke();
         }
+
+        // Проектный контур (вынос в натуру)
+        if (window.BgStake) BgStake.draw(ctx, toPixel, scale, isDark);
 
         // Отрисовка внешних слоев KML/KMZ/GeoJSON
         if (uploadedGisPolygons && uploadedGisPolygons.length > 0 && gisOrigin) {
@@ -4608,8 +4616,8 @@
             let angleRad = (m.azimuth * Math.PI) / 180;
             let dX = m.distance * Math.sin(angleRad); 
             let dY = m.distance * Math.cos(angleRad); 
-            lat += dY / M_PER_DEG;
-            lng += dX / (M_PER_DEG * Math.cos(lat * Math.PI / 180));
+            lat += dY / mpdLat(lat);
+            lng += dX / mpdLng(lat);
             polygonCoords.push(`${lng.toFixed(6)},${lat.toFixed(6)},0`);
 
             let dirCard = getCardinalDirection(m.azimuth);
@@ -4804,7 +4812,7 @@ const BgScan = (function () {
     }
     function idbDo(mode_, fn) { return idb().then(d => new Promise((res, rej) => { const t = d.transaction('img', mode_), rq = fn(t.objectStore('img')); t.oncomplete = () => res(rq && rq.result); t.onerror = () => rej(t.error); })); }
     function cur() { return sheets.find(s => s.id === active) || null; }
-    function mpp(sh) { const mmpx = sh.a4 ? 297 / Math.max(sh.w, sh.h) : 25.4 / (sh.dpi > 0 ? sh.dpi : 300); return mmpx * sh.scaleN / 1000 * (1 + (sh.corr || 0) / 100); }
+    function mpp(sh) { if (sh.mppFix > 0) return sh.mppFix; const mmpx = sh.a4 ? 297 / Math.max(sh.w, sh.h) : 25.4 / (sh.dpi > 0 ? sh.dpi : 300); return mmpx * sh.scaleN / 1000 * (1 + (sh.corr || 0) / 100); }
     function ensureImg(sh) {
         if (!sh || cache[sh.id]) return;
         cache[sh.id] = 'load';
@@ -4845,7 +4853,9 @@ const BgScan = (function () {
         ensureImg(sh); const im = cache[sh.id]; if (!im || im === 'load') return false;
         const k = mpp(sh) * ppm; if (!(k > 0)) return false;
         let aLoc = { x: 0, y: 0 }, au = sh.w / 2, av = sh.h / 2;
-        if (sh.anchor && o) { aLoc = latLngToLocal(o, sh.anchor.lat, sh.anchor.lng); au = sh.anchor.u; av = sh.anchor.v; }
+        const la = (window.BgStake && BgStake.scanAnchor) ? BgStake.scanAnchor(sh) : null;
+        if (la) { aLoc = { x: la.x, y: la.y }; au = la.u; av = la.v; }
+        else if (sh.anchor && o) { aLoc = latLngToLocal(o, sh.anchor.lat, sh.anchor.lng); au = sh.anchor.u; av = sh.anchor.v; }
         const ap = map(aLoc.x, aLoc.y), r = (sh.rot || 0) * Math.PI / 180;
         ctx.save(); ctx.globalAlpha = alpha === undefined ? (sh.op || 0.8) : alpha;
         ctx.translate(ap.x, ap.y); ctx.rotate(r); ctx.scale(k, k); ctx.translate(-au, -av);
@@ -4861,7 +4871,7 @@ const BgScan = (function () {
         const w = ctx.canvas.clientWidth;
         ctx.save(); ctx.font = 'bold 11px Inter, sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = '#B45309';
         if (!ok) ctx.fillText('Загрузка скана…', 10, 34);
-        else if (!sh.anchor) ctx.fillText('Скан не привязан — нажмите «📍 Я здесь»', 10, 34);
+        else if (!sh.anchor && !(window.BgStake && BgStake.scanAnchor(sh))) ctx.fillText('Скан не привязан — нажмите «📍 Я здесь»', 10, 34);
         else if (mode === 'bind') ctx.fillText('Коснитесь на скане места, где вы стоите', 10, 34);
         ctx.restore();
     }
@@ -4910,6 +4920,13 @@ const BgScan = (function () {
         sh.op = Math.max(0.1, Math.min(1, (parseInt($('sc-op').value, 10) || 80) / 100));
         save(); refreshSelect(); info(); redraw();
     }
+    function pxToScan(px, py, key) {
+        const T = lastT[key]; if (!T || !cur()) return null;
+        const dx = px - T.ax, dy = py - T.ay, c = Math.cos(-T.r), s = Math.sin(-T.r);
+        return { u: T.au + (dx * c - dy * s) / T.k, v: T.av + (dx * s + dy * c) / T.k };
+    }
+    function setMppFix(v) { const sh = cur(); if (!sh) return; sh.mppFix = v > 0 ? v : 0; if (!sh.mppFix) delete sh.mppFix; save(); try { info(); } catch (e) {} redraw(); }
+    function setRot(v) { const sh = cur(); if (!sh) return; sh.rot = v; save(); redraw(); }
     function rotBy(d) { const sh = cur(); if (!sh) return; sh.rot = Math.round(Math.max(-180, Math.min(180, (sh.rot || 0) + d)) * 100) / 100; $('sc-rot').value = sh.rot; save(); redraw(); }
     function rebindClear() { const sh = cur(); if (!sh) return; sh.anchor = null; save(); info(); redraw(); }
     function remove() {
@@ -4921,7 +4938,7 @@ const BgScan = (function () {
         ['sc-name', 'sc-scale', 'sc-dpi', 'sc-a4', 'sc-corr', 'sc-rot', 'sc-op'].forEach(id => { const el = $(id); if (el) el.addEventListener('change', apply); });
         if (cur()) ensureImg(cur());
     }
-    return { init, select, addFile, toggleBind, openSettings, rotBy, rebindClear, remove, draw, paint, origin, minSpan, active: cur, mpp, isBind: () => mode === 'bind' };
+    return { pxToScan, setMppFix, setRot, init, select, addFile, toggleBind, openSettings, rotBy, rebindClear, remove, draw, paint, origin, minSpan, active: cur, mpp, isBind: () => mode === 'bind' };
 })();
 
 /* ===== Бланк А4: абрис / схема отвода (PDF, PNG) ===== */
@@ -4966,7 +4983,7 @@ const BgSheet = (function () {
     function pointLL(trav, i, o) {
         const m = measurementsLog[i]; if (m && hasCoords(m)) return { lat: m.lat, lng: m.lng };
         if (!o) return null; const p = trav.points[i];
-        return { lat: o.lat + p.y / M_PER_DEG, lng: o.lng + p.x / (M_PER_DEG * Math.cos(o.lat * Math.PI / 180)) };
+        return { lat: o.lat + p.y / mpdLat(o.lat), lng: o.lng + p.x / mpdLng(o.lat) };
     }
     function render() {
         const trav = computeTraverse(), pts = trav.points, hasLine = measurementsLog.length > 0;
@@ -5004,7 +5021,7 @@ const BgSheet = (function () {
         g.save(); g.beginPath(); g.rect(mm(fx), mm(fy), mm(fw), mm(fh)); g.clip();
         // скан
         let scanNote = '';
-        if (opts.scan && BgScan.active()) { if (o || BgScan.origin()) { const done = BgScan.paint(g, map, ppm, o || BgScan.origin(), 0.7); if (!done) scanNote = 'скан не загружен'; } else scanNote = 'нет координат для привязки скана'; }
+        if (opts.scan && BgScan.active()) { if (o || BgScan.origin() || (window.BgStake && BgStake.scanAnchor(BgScan.active()))) { const done = BgScan.paint(g, map, ppm, o || BgScan.origin(), 0.7); if (!done) scanNote = 'скан не загружен'; } else scanNote = 'нет координат для привязки скана'; }
         // контур
         const col = '#1F5A2B';
         if (hasLine) {
@@ -5099,5 +5116,414 @@ const BgSheet = (function () {
 window.BgScan = BgScan; window.BgSheet = BgSheet;
 try { BgScan.init(); BgSheet.init(); } catch (e) { console.error(e); }
 </script>
+<!-- ===== ВЫНОС В НАТУРУ: HUD, панель, импорт списка, лупа ===== -->
+<style>
+#stake-hud{display:none;position:fixed;left:8px;right:8px;bottom:8px;z-index:10000001;max-width:560px;margin:0 auto;background:var(--card-bg);border:2px solid var(--forest-green);border-radius:14px;padding:8px 10px;box-shadow:0 8px 24px rgba(0,0,0,.35);font-family:Inter,sans-serif}
+#stake-hud .sh-top{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:700;color:var(--text-graphite)}
+#stake-hud .sh-big{font-size:26px;font-weight:900;text-align:center;padding:4px 0;border-radius:10px;margin:4px 0;background:rgba(120,120,120,.12);color:var(--text-graphite)}
+#stake-hud .sh-big.ok{background:#16A34A;color:#fff}
+#stake-hud .sh-big.near{background:#F59E0B;color:#111}
+#stake-hud .sh-sub{display:flex;justify-content:space-between;font-size:12px;color:var(--text-graphite);opacity:.85}
+#stake-hud .sh-btns{display:flex;gap:6px;margin-top:6px}
+#stake-hud .sh-btns button{flex:1;padding:9px 4px;border-radius:9px;border:1px solid var(--border-color);background:var(--bg-paper,#fff);color:var(--text-graphite);font-weight:800;font-size:13px;cursor:pointer}
+#stake-hud .sh-btns button.main{background:var(--forest-green);color:#fff;border-color:var(--forest-green)}
+#stake-loupe{display:none;position:fixed;z-index:10000003;width:120px;height:120px;border-radius:50%;border:3px solid #F59E0B;box-shadow:0 4px 16px rgba(0,0,0,.5);pointer-events:none;background:#fff}
+#stake-pickbar{display:none;position:fixed;left:8px;right:8px;top:70px;z-index:10000002;background:#F59E0B;color:#111;font-weight:800;font-size:13px;padding:8px 12px;border-radius:10px;text-align:center}
+.stk-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.stk-tbl th,.stk-tbl td{border-bottom:1px solid var(--border-color);padding:3px 2px;text-align:center}
+.stk-tbl input{width:100%;min-width:0;padding:4px;border:1px solid var(--border-color);border-radius:6px;background:transparent;color:var(--text-graphite);font-size:12px;text-align:center}
+.stk-tbl tr.cur{background:rgba(245,158,11,.18)}
+.stk-sec{margin-top:12px;padding-top:10px;border-top:1px dashed var(--border-color)}
+.stk-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
+.stk-row .btn-action{width:auto;padding:7px 10px;font-size:12px}
+</style>
+
+<div id="stake-hud">
+  <div class="sh-top"><span id="stk-h-title">—</span><span id="stk-h-line">—</span></div>
+  <div class="sh-big" id="stk-h-big">—</div>
+  <div class="sh-sub"><span id="stk-h-cur">сейчас —</span><span id="stk-h-tgt">цель —</span></div>
+  <div class="sh-btns">
+    <button onclick="BgStake.step(-1)">◀</button>
+    <button class="main" onclick="BgStake.record()">✓ Записать</button>
+    <button onclick="BgStake.step(1)">▶</button>
+    <button onclick="BgStake.undo()" title="Отменить последнюю линию журнала">↶</button>
+    <button onclick="BgStake.openPanel()">⚙</button>
+    <button onclick="BgStake.hud(false)">✕</button>
+  </div>
+</div>
+<div id="stake-pickbar"></div>
+<canvas id="stake-loupe" width="240" height="240"></canvas>
+
+<div id="stake-popup" class="popup-overlay" style="z-index:10000002" onclick="closePopupOuter('stake-popup', event)">
+  <div class="popup-window" style="max-width:640px">
+    <button class="popup-close" onclick="closePopup('stake-popup')">&times;</button>
+    <h3>🎯 Вынос в натуру</h3>
+    <div class="stk-row">
+      <select id="stk-sel" class="select-traverse" style="padding:7px;flex:1;min-width:160px" onchange="BgStake.select(this.value)"></select>
+      <button class="btn-action btn-reset-zero" onclick="BgStake.del()">🗑</button>
+    </div>
+    <div class="stk-row">
+      <button class="btn-action btn-set-zero" onclick="document.getElementById('stk-file').click()">📂 Загрузить файл</button>
+      <button class="btn-action btn-reset-zero" onclick="BgStake.openText()">📋 Вставить список</button>
+      <button class="btn-action btn-reset-zero" onclick="BgStake.newManual()">＋ Вручную</button>
+      <input type="file" id="stk-file" accept=".json,.abris,application/json,text/plain" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" tabindex="-1" aria-hidden="true">
+    </div>
+    <div style="font-size:11.5px;opacity:.75">Файл: архив делянок из Абриса ПРО/ПРО+ или одиночный проект .abris (в нём может быть сразу весь квартал).</div>
+    <div id="stk-body"></div>
+  </div>
+</div>
+
+<div id="stake-text-popup" class="popup-overlay" style="z-index:10000003" onclick="closePopupOuter('stake-text-popup', event)">
+  <div class="popup-window" style="max-width:640px">
+    <button class="popup-close" onclick="closePopup('stake-text-popup')">&times;</button>
+    <h3>📋 Вставить список линий</h3>
+    <div style="font-size:12px;line-height:1.5;margin-bottom:6px">Формат строгий: <b>тип; азимут или румб; длина, м</b>. Тип — «Привязка» (от кв. столба до Т.1) или «Граница». Каждая делянка начинается со строки <b>#</b> и названия. Разделитель — точка с запятой или Tab.</div>
+    <pre style="font-size:11.5px;background:rgba(120,120,120,.12);padding:8px;border-radius:8px;white-space:pre-wrap"># Кв. 42 Дел. 1
+Привязка; СВ 45°30'; 120
+Граница; ЮВ 12°00'; 250
+Граница; 168.5; 180
+Граница; СЗ 12; 250</pre>
+    <textarea id="stk-text" rows="8" style="width:100%;font-family:monospace;font-size:12px;padding:8px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-graphite)" oninput="BgStake.previewText()"></textarea>
+    <div class="stk-row">
+      <label style="font-size:12px">Азимуты:
+        <select id="stk-kind" onchange="BgStake.previewText()" class="select-traverse" style="padding:5px">
+          <option value="mag">по буссоли (магнитные)</option><option value="true">истинные</option>
+        </select></label>
+      <label style="font-size:12px">склонение, °: <input type="number" id="stk-decl" step="0.1" value="0" style="width:70px;padding:5px"></label>
+      <label style="font-size:12px"><input type="checkbox" id="stk-closed" checked> замыкать площадь</label>
+    </div>
+    <div id="stk-preview" style="font-size:12px;margin:6px 0"></div>
+    <button class="btn-action btn-set-zero" style="width:100%" onclick="BgStake.addText()">Добавить в проекты</button>
+  </div>
+</div>
+
+<script>
+/* ===== ВЫНОС В НАТУРУ: проекты (квартал/делянки), навигация по проектному азимуту, калибровка скана ===== */
+const BgStake = (function () {
+    const KEY = 'bg_hns_stake_v1';
+    let db = { projects: [], active: '', li: 0, tol: 1.5, hud: false };
+    try { Object.assign(db, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+    if (!Array.isArray(db.projects)) db.projects = [];
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const norm = a => { a = a % 360; return a < 0 ? a + 360 : a; };
+    let pick = null, loupeOn = false, inTol = false, timer = null, parsedText = null;
+    function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {} }
+    function cur() { return db.projects.find(p => p.id === db.active) || null; }
+    function uid() { return 'k' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+    function redraw() { try { drawPolygon(); } catch (e) {} }
+    function offNow() { try { return getCurrentOffsetDecimal(); } catch (e) { return 0; } }
+
+    /* ---- геометрия ---- */
+    // азимут линии в «показаниях прибора» — именно такой же попадёт в журнал, если пройти идеально
+    function rt(p, az) {
+        const gps = (typeof currentSystemMode !== 'undefined') && currentSystemMode === 'gps_heading';
+        const d = parseFloat(p.decl) || 0;
+        if (gps) return norm(p.kind === 'true' ? az : az + d);
+        return norm(az + offNow() - (p.kind === 'true' ? d : 0));
+    }
+    function planPts(p) {
+        const P = [{ x: 0, y: 0 }];
+        p.lines.forEach(l => { const r = rt(p, l.az) * Math.PI / 180; const q = P[P.length - 1]; P.push({ x: q.x + l.d * Math.sin(r), y: q.y + l.d * Math.cos(r) }); });
+        return P;
+    }
+    function startIdx(p) { return Math.max(0, Math.min(p.lines.length, p.start || 0)); }
+    function framePtsOf(p) { const P = planPts(p), s = P[startIdx(p)]; return P.map(q => ({ x: q.x - s.x, y: q.y - s.y })); }
+    function refCount(p) { let n = 0; while (n < p.lines.length && p.lines[n].t === 'ref') n++; return n; }
+    function planArea(p) {
+        const P = planPts(p), s = refCount(p), V = P.slice(s);
+        if (!p.closed || V.length < 3) return { area: 0, gap: Math.hypot(V[V.length - 1].x - V[0].x, V[V.length - 1].y - V[0].y) };
+        let a = 0; for (let i = 0; i < V.length; i++) { const j = (i + 1) % V.length; a += V[i].x * V[j].y - V[j].x * V[i].y; }
+        return { area: Math.abs(a) / 2, gap: Math.hypot(V[V.length - 1].x - V[0].x, V[V.length - 1].y - V[0].y) };
+    }
+    function framePts() { const p = cur(); if (!p || !db.hud) return []; return framePtsOf(p); }
+    function scanAnchor(sh) {
+        const p = cur(); if (!p || !p.scan || !sh || p.scan.id !== sh.id) return null;
+        const F = framePtsOf(p), i = Math.max(0, Math.min(F.length - 1, p.scan.i || 0));
+        return { x: F[i].x, y: F[i].y, u: p.scan.u, v: p.scan.v };
+    }
+
+    /* ---- отрисовка проектного контура на чертеже ---- */
+    function draw(ctx, toPixel, scale, isDark) {
+        const p = cur(); if (!p || !db.hud || !p.lines.length) return;
+        const F = framePtsOf(p).map(toPixel), s = refCount(p), n = p.lines.length;
+        ctx.save(); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+        for (let i = 0; i < n; i++) {
+            const a = F[i], b = F[i + 1], ref = i < s, here = i === db.li;
+            ctx.setLineDash(ref ? [2, 5] : [8, 5]);
+            ctx.strokeStyle = here ? '#F59E0B' : (ref ? '#C0392B' : '#2563EB'); ctx.lineWidth = here ? 4 : 2.2;
+            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        }
+        if (p.closed && n - s >= 2) { ctx.setLineDash([2, 6]); ctx.strokeStyle = '#2563EB'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(F[n].x, F[n].y); ctx.lineTo(F[s].x, F[s].y); ctx.stroke(); }
+        ctx.setLineDash([]); ctx.font = 'bold 10px Inter, sans-serif'; ctx.textAlign = 'center';
+        const skipLast = p.closed && n - s >= 2 && Math.hypot(F[n].x - F[s].x, F[n].y - F[s].y) < 14;
+        F.forEach((q, i) => {
+            if (skipLast && i === n) return;
+            ctx.beginPath(); ctx.rect(q.x - 3.5, q.y - 3.5, 7, 7); ctx.fillStyle = i === 0 ? '#C0392B' : '#fff'; ctx.fill(); ctx.strokeStyle = '#2563EB'; ctx.lineWidth = 1.5; ctx.stroke();
+            ctx.lineWidth = 3; ctx.strokeStyle = isDark ? '#111' : '#fff'; ctx.strokeText('Т.' + i, q.x, q.y - 8); ctx.fillStyle = isDark ? '#BFDBFE' : '#1D4ED8'; ctx.fillText('Т.' + i, q.x, q.y - 8);
+        });
+        ctx.restore();
+    }
+
+    /* ---- проекты: загрузка ---- */
+    function mkProject(o) {
+        return Object.assign({ id: uid(), name: 'Делянка', pack: '', kind: 'mag', decl: 0, lines: [], closed: true, start: 0, p0: null, scan: null }, o);
+    }
+    function collectStates(o, out, depth) {
+        if (!o || typeof o !== 'object' || depth > 4) return;
+        if (Array.isArray(o)) { o.forEach(x => collectStates(x, out, depth + 1)); return; }
+        if (Array.isArray(o.lines) && o.lines.length && o.lines.every(l => l && isFinite(parseFloat(l.az)) && isFinite(parseFloat(l.d)))) { out.push(o); return; }
+        ['state', 'items', 'objs', 'objects', 'projects'].forEach(k => { if (o[k]) collectStates(o[k], out, depth + 1); });
+    }
+    function importJson(txt) {
+        let o; try { o = JSON.parse(txt); } catch (e) { showToast('Файл не распознан: это не JSON'); return 0; }
+        const sts = []; collectStates(o, sts, 0);
+        if (!sts.length) { showToast('В файле не найдено ни одной делянки с линиями (азимут + длина).'); return 0; }
+        const pack = uid(); let first = null;
+        sts.forEach((st, k) => {
+            const s = Math.max(0, parseInt(st.s, 10) || 0), nm = st.name || (st.stamp && st.stamp.kv) || ('Делянка ' + (db.projects.length + 1));
+            const full = (st.stamp && st.stamp.kv && nm.indexOf(st.stamp.kv) < 0) ? nm + ' · ' + st.stamp.kv : nm;
+            const p = mkProject({ name: full, pack, kind: 'mag', decl: parseFloat(st.decl) || 0, closed: st.mode !== 'open',
+                lines: st.lines.map((l, i) => ({ az: norm(parseFloat(l.az)), d: parseFloat(l.d), t: i < s ? 'ref' : 'bound' })),
+                p0: (st.p0 && isFinite(st.p0.lat) && isFinite(st.p0.lng)) ? { lat: st.p0.lat, lng: st.p0.lng } : null });
+            db.projects.push(p); if (!first) first = p;
+        });
+        db.active = first.id; db.li = 0; save(); render(); redraw();
+        showToast('Загружено делянок: ' + sts.length);
+        return sts.length;
+    }
+
+    /* ---- список из текста (строгий формат) ---- */
+    function parseAngle(s) {
+        s = String(s).trim().replace(/,/g, '.').replace(/\s+/g, ' ').toUpperCase();
+        const m = s.match(/^(СВ|СЗ|ЮВ|ЮЗ|С|Ю|В|З)\s*(.*)$/);
+        let rest = m ? m[2] : s;
+        let val = null;
+        if (rest === '') val = 0;
+        else {
+            const r = rest.match(/^(\d+(?:\.\d+)?)\s*°?\s*(?:(\d+(?:\.\d+)?)\s*['′]?)?\s*(?:(\d+(?:\.\d+)?)\s*["″]?)?$/);
+            if (!r) return null;
+            val = parseFloat(r[1]) + (r[2] ? parseFloat(r[2]) / 60 : 0) + (r[3] ? parseFloat(r[3]) / 3600 : 0);
+        }
+        if (!m) return (val >= 0 && val <= 360) ? norm(val) : null;
+        if (m[2] === '') return { 'С': 0, 'В': 90, 'Ю': 180, 'З': 270 }[m[1]] !== undefined ? { 'С': 0, 'В': 90, 'Ю': 180, 'З': 270 }[m[1]] : null;
+        if (val < 0 || val > 90) return null;
+        const R = { 'СВ': val, 'ЮВ': 180 - val, 'ЮЗ': 180 + val, 'СЗ': 360 - val }[m[1]];
+        return R === undefined ? null : norm(R);
+    }
+    function parseList(text) {
+        const out = [], errs = []; let curP = null;
+        String(text).split(/\r?\n/).forEach((raw, ln) => {
+            const line = raw.trim(); if (!line || line.startsWith('//')) return;
+            if (line[0] === '#') { curP = { name: line.replace(/^#+\s*/, '') || ('Делянка ' + (out.length + 1)), lines: [] }; out.push(curP); return; }
+            if (!curP) { curP = { name: 'Делянка 1', lines: [] }; out.push(curP); }
+            let c = line.split(/[;\t]/).map(x => x.trim());
+            let t = 'bound';
+            if (c.length >= 3) { const k = c[0].toLowerCase(); if (/^(прив|п$)/.test(k)) t = 'ref'; else if (/^(гр|г$)/.test(k)) t = 'bound'; else { errs.push('Строка ' + (ln + 1) + ': неизвестный тип «' + c[0] + '» (нужно «Привязка» или «Граница»)'); return; } c = c.slice(1); }
+            if (c.length !== 2) { errs.push('Строка ' + (ln + 1) + ': нужно 3 колонки (тип; азимут/румб; длина)'); return; }
+            const az = parseAngle(c[0]), d = parseFloat(c[1].replace(',', '.'));
+            if (az === null || isNaN(az)) { errs.push('Строка ' + (ln + 1) + ': не понят азимут/румб «' + c[0] + '»'); return; }
+            if (!(d > 0)) { errs.push('Строка ' + (ln + 1) + ': длина «' + c[1] + '» должна быть больше 0'); return; }
+            curP.lines.push({ az: Math.round(az * 100) / 100, d, t });
+        });
+        return { projects: out.filter(p => p.lines.length), errs };
+    }
+    function previewText() {
+        const r = parseList($('stk-text').value); parsedText = r;
+        const h = r.projects.map(p => '<div>✔ <b>' + esc(p.name) + '</b>: линий ' + p.lines.length + ' (привязка ' + p.lines.filter(l => l.t === 'ref').length + ')</div>').join('');
+        $('stk-preview').innerHTML = h + (r.errs.length ? '<div style="color:#DC2626;margin-top:4px">' + r.errs.map(esc).join('<br>') + '</div>' : '');
+    }
+    function addText() {
+        previewText(); const r = parsedText;
+        if (r.errs.length) { showToast('Исправьте строки с ошибками — они выделены красным.'); return; }
+        if (!r.projects.length) { showToast('Нет ни одной делянки'); return; }
+        const pack = uid(), kind = $('stk-kind').value, decl = parseFloat($('stk-decl').value) || 0, closed = $('stk-closed').checked;
+        let first = null;
+        r.projects.forEach(p => { const pr = mkProject({ name: p.name, pack, kind, decl, closed, lines: p.lines }); db.projects.push(pr); if (!first) first = pr; });
+        db.active = first.id; db.li = 0; save(); closePopup('stake-text-popup'); render(); redraw(); showToast('Добавлено делянок: ' + r.projects.length);
+    }
+    function newManual() {
+        const nm = prompt('Название делянки', 'Кв. , дел. '); if (nm === null) return;
+        const p = mkProject({ name: nm.trim() || 'Делянка', lines: [{ az: 0, d: 100, t: 'bound' }] });
+        db.projects.push(p); db.active = p.id; db.li = 0; save(); render(); redraw();
+    }
+
+    /* ---- панель ---- */
+    function render() {
+        const sel = $('stk-sel'); if (!sel) return;
+        sel.innerHTML = db.projects.length ? db.projects.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('') : '<option value="">— проектов нет: загрузите файл или вставьте список —</option>';
+        sel.value = db.active;
+        const p = cur(), b = $('stk-body'); if (!p) { b.innerHTML = ''; return; }
+        const pa = planArea(p), s = refCount(p);
+        const sh = (window.BgScan && BgScan.active()) ? BgScan.active() : null;
+        const rows = p.lines.map((l, i) => `<tr class="${i === db.li ? 'cur' : ''}">
+            <td onclick="BgStake.go(${i})" style="cursor:pointer">${i === db.li ? '▶' : ''}Т.${i}→${i + 1}</td>
+            <td><select onchange="BgStake.edit(${i},'t',this.value)" style="font-size:11px;padding:3px;max-width:86px"><option value="ref" ${l.t === 'ref' ? 'selected' : ''}>привязка</option><option value="bound" ${l.t !== 'ref' ? 'selected' : ''}>граница</option></select></td>
+            <td><input type="number" step="0.1" value="${l.az}" onchange="BgStake.edit(${i},'az',this.value)"></td>
+            <td><input type="number" step="0.1" value="${l.d}" onchange="BgStake.edit(${i},'d',this.value)"></td>
+            <td><button class="btn-action btn-reset-zero" style="padding:3px 7px;width:auto" onclick="BgStake.rem(${i})">✕</button></td></tr>`).join('');
+        const startOpts = p.lines.concat([{}]).map((_, i) => `<option value="${i}" ${i === startIdx(p) ? 'selected' : ''}>Т.${i}</option>`).join('');
+        b.innerHTML = `
+        <div class="stk-sec"><div class="stk-row">
+          <label style="font-size:12px">Азимуты проекта:
+            <select onchange="BgStake.setp('kind',this.value)" class="select-traverse" style="padding:5px"><option value="mag" ${p.kind !== 'true' ? 'selected' : ''}>по буссоли (магнитные)</option><option value="true" ${p.kind === 'true' ? 'selected' : ''}>истинные</option></select></label>
+          <label style="font-size:12px">склонение, °: <input type="number" step="0.1" value="${p.decl || 0}" style="width:70px;padding:5px" onchange="BgStake.setp('decl',this.value)"></label>
+          <label style="font-size:12px">мой ход начинается с: <select onchange="BgStake.setp('start',this.value)" class="select-traverse" style="padding:5px">${startOpts}</select></label>
+          <label style="font-size:12px"><input type="checkbox" ${p.closed ? 'checked' : ''} onchange="BgStake.setp('closed',this.checked)"> замыкать площадь</label>
+        </div>
+        <div style="font-size:12px;margin-top:4px">${p.closed ? 'Площадь по проекту: <b>' + (pa.area / 10000).toFixed(4) + ' га</b> · невязка проекта ' + pa.gap.toFixed(1) + ' м' : 'Контур не замкнут (площадь не считается)'}${s ? ' · привязка: ' + s + ' лин.' : ''}</div></div>
+        <div class="stk-sec"><table class="stk-tbl"><thead><tr><th>Линия</th><th>Тип</th><th>Азимут °</th><th>Длина м</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+        <div class="stk-row"><button class="btn-action btn-set-zero" onclick="BgStake.addLine()">＋ Линия</button>
+        <button class="btn-action btn-reset-zero" onclick="BgStake.remLast()">↶ Убрать последнюю</button>
+        <button class="btn-action btn-reset-zero" onclick="BgStake.fit()">⤢ Показать весь контур</button></div></div>
+        <div class="stk-sec"><b style="font-size:13px">🗺 Скан и калибровка</b>
+        <div style="font-size:12px;opacity:.8;margin:3px 0">${sh ? 'Скан: ' + esc(sh.name) + ' · масштаб ' + (BgScan.mpp(sh)).toFixed(3) + ' м/пикс' + (sh.mppFix ? ' (откалиброван)' : '') + (p.scan && p.scan.id === sh.id ? ' · точка Т.' + (p.scan.i || 0) + ' посажена на скан' : ' · точка на скане не указана') : 'Сначала загрузите скан («＋ Скан листа») и выберите его в списке «Подложка».'}</div>
+        <div class="stk-row"><button class="btn-action btn-reset-zero" onclick="BgStake.startPick('scale')">📏 Масштаб по 2 точкам</button>
+        <button class="btn-action btn-reset-zero" onclick="BgStake.startPick('post')">📍 Кв. столб (Т.0) на скане</button>
+        <button class="btn-action btn-reset-zero" onclick="BgStake.startPick('two')">🎯 По 2 точкам проекта (масштаб + поворот)</button>
+        <button class="btn-action btn-reset-zero" onclick="BgStake.resetCal()">↺ Сбросить</button></div></div>
+        <div class="stk-sec"><div class="stk-row">
+          <label style="font-size:12px">Допуск, °: <input type="number" step="0.1" min="0.1" value="${db.tol}" style="width:64px;padding:5px" onchange="BgStake.setTol(this.value)"></label>
+          <button class="btn-action btn-set-zero" onclick="BgStake.hud(true);closePopup('stake-popup')">▶ Начать вынос</button></div>
+          <div style="font-size:11.5px;opacity:.75">Цель считается в показаниях вашего прибора: азимут проекта + поправка текущего режима. Подсказка «Влево/Вправо» показывает, куда довернуть.</div></div>`;
+    }
+    function select(id) { db.active = id; db.li = 0; save(); render(); redraw(); }
+    function del() { const p = cur(); if (!p || !confirm('Удалить проект «' + p.name + '»?')) return; db.projects = db.projects.filter(x => x !== p); db.active = db.projects[0] ? db.projects[0].id : ''; db.li = 0; save(); render(); redraw(); }
+    function edit(i, k, v) { const p = cur(); if (!p || !p.lines[i]) return; if (k === 't') p.lines[i].t = v; else { const n = parseFloat(String(v).replace(',', '.')); if (!isFinite(n) || (k === 'd' && n <= 0)) { render(); return; } p.lines[i][k] = k === 'az' ? norm(n) : n; } normRef(p); save(); render(); redraw(); }
+    function normRef(p) { /* привязка — только ведущие строки */ let seen = false; p.lines.forEach(l => { if (l.t !== 'ref') seen = true; else if (seen) l.t = 'bound'; }); }
+    function rem(i) { const p = cur(); if (!p) return; p.lines.splice(i, 1); db.li = Math.max(0, Math.min(db.li, p.lines.length - 1)); save(); render(); redraw(); }
+    function remLast() { const p = cur(); if (!p || !p.lines.length) return; rem(p.lines.length - 1); }
+    function addLine() { const p = cur(); if (!p) return; p.lines.push({ az: 0, d: 100, t: 'bound' }); save(); render(); redraw(); }
+    function setp(k, v) { const p = cur(); if (!p) return; if (k === 'closed') p.closed = !!v; else if (k === 'start') p.start = parseInt(v, 10) || 0; else if (k === 'decl') p.decl = parseFloat(String(v).replace(',', '.')) || 0; else p[k] = v; save(); render(); redraw(); }
+    function setTol(v) { db.tol = Math.max(0.1, parseFloat(v) || 1.5); save(); }
+    function go(i) { const p = cur(); if (!p) return; db.li = Math.max(0, Math.min(p.lines.length - 1, i)); save(); render(); redraw(); hudUpdate(); }
+    function fit() { try { canvasZoomMultiplier = 1; panOffsetX = 0; panOffsetY = 0; } catch (e) {} if (!db.hud) { db.hud = true; save(); } redraw(); }
+    function openPanel() { render(); openPopup('stake-popup'); }
+    function openText() { $('stk-text').value = ''; $('stk-preview').innerHTML = ''; openPopup('stake-text-popup'); }
+
+    /* ---- подсказка выноса (HUD) ---- */
+    function live() {
+        if (typeof currentSystemMode !== 'undefined' && currentSystemMode === 'gps_heading') return calculatedGpsAzimuth;
+        if (typeof azimuthRingBuffer !== 'undefined' && azimuthRingBuffer.length) return getSmoothedBufferAzimuth();
+        return currentAzimuth;
+    }
+    function hud(on) {
+        db.hud = !!on; save();
+        const h = $('stake-hud'); if (h) h.style.display = on && cur() ? 'block' : 'none';
+        clearInterval(timer); if (on && cur()) { timer = setInterval(hudUpdate, 150); hudUpdate(); }
+        redraw();
+    }
+    function hudUpdate() {
+        const p = cur(), h = $('stake-hud'); if (!p || !h || h.style.display === 'none') return;
+        const l = p.lines[db.li]; if (!l) { $('stk-h-big').innerText = 'Нет линий'; return; }
+        const tgt = rt(p, l.az), R = live();
+        $('stk-h-title').innerText = p.name.length > 28 ? p.name.slice(0, 27) + '…' : p.name;
+        $('stk-h-line').innerText = (l.t === 'ref' ? 'привязка ' : 'граница ') + 'Т.' + db.li + '→Т.' + (db.li + 1) + ' · ' + l.d + ' м';
+        $('stk-h-tgt').innerText = 'цель ' + tgt.toFixed(1) + '°';
+        const big = $('stk-h-big');
+        if (R === null || R === undefined || isNaN(R)) { big.className = 'sh-big'; big.innerText = '—'; $('stk-h-cur').innerText = 'нет азимута'; return; }
+        const d = ((tgt - R + 540) % 360) - 180, ad = Math.abs(d);
+        $('stk-h-cur').innerText = 'сейчас ' + norm(R).toFixed(1) + '°';
+        if (ad <= db.tol) { big.className = 'sh-big ok'; big.innerText = '✔ по створу'; if (!inTol) { inTol = true; if (navigator.vibrate) navigator.vibrate(60); } }
+        else { inTol = false; big.className = 'sh-big' + (ad <= db.tol * 3 ? ' near' : ''); big.innerText = d > 0 ? 'Вправо ' + ad.toFixed(1) + '° ►' : '◄ Влево ' + ad.toFixed(1) + '°'; }
+    }
+    function step(k) { const p = cur(); if (!p) return; db.li = Math.max(0, Math.min(p.lines.length - 1, db.li + k)); save(); redraw(); hudUpdate(); }
+    function record() {
+        const p = cur(); if (!p) return; const l = p.lines[db.li]; if (!l) return;
+        const before = measurementsLog.length;
+        captureMeasurement();
+        if (measurementsLog.length > before) {
+            const m = measurementsLog[measurementsLog.length - 1];
+            if (!(m.distance > 0)) { m.distance = l.d; renderLogTable(); saveToLocalStorage(); drawPolygon(); showToast('Длина принята по проекту (' + l.d + ' м) — поправьте в журнале, если мерили иначе.'); }
+            if (db.li < p.lines.length - 1) { db.li++; save(); }
+            redraw(); hudUpdate();
+        } else showToast('Замер не записан: удерживайте телефон ровно (индикатор уровня), затем повторите.');
+    }
+    function undo() {
+        if (!measurementsLog.length) { showToast('Журнал пуст'); return; }
+        measurementsLog.pop(); measurementsLog.forEach((m, i) => { m.id = i + 1; });
+        try { recalculateDistancesByMethod(); } catch (e) {}
+        renderLogTable(); saveToLocalStorage(); drawPolygon(); updateFsMapUI();
+        db.li = Math.max(0, db.li - 1); save(); hudUpdate(); showToast('Последняя линия журнала отменена');
+    }
+
+    /* ---- калибровка скана: выбор точек на чертеже с лупой ---- */
+    function bar(msg) { const b = $('stake-pickbar'); if (!b) return; b.style.display = msg ? 'block' : 'none'; if (msg) b.innerHTML = msg + ' <button onclick="BgStake.cancelPick()" style="margin-left:8px;padding:3px 8px;border-radius:6px;border:1px solid #111;background:#fff;font-weight:800">Отмена</button>'; }
+    function startPick(kind) {
+        const p = cur(), sh = window.BgScan && BgScan.active();
+        if (!p) { showToast('Сначала выберите проект'); return; }
+        if (!sh) { showToast('Сначала загрузите скан и выберите его в списке «Подложка».'); return; }
+        if (kind === 'post' || kind === 'two') { if (!p.scan || p.scan.id !== sh.id) { /* позиция по умолчанию — центр листа */ } }
+        pick = { kind, pts: [], sheet: sh.id };
+        db.hud = true; save(); closePopup('stake-popup'); redraw();
+        const msgs = { scale: 'Коснитесь и ведите палец к 1-й точке скана (например, столб). Отпустите — точка поставлена.', post: 'Коснитесь перекрестия просек (кв. столба Т.0) на скане. Лупа поможет навести точно.', two: 'Коснитесь на скане 1-й известной точки проекта.' };
+        bar(msgs[kind]); setPickStyle(true);
+    }
+    function cancelPick() { pick = null; bar(''); setPickStyle(false); showLoupe(false); render(); openPopup('stake-popup'); }
+    function setPickStyle(on) { ['polygon-canvas', 'fs-polygon-canvas'].forEach(id => { const c = $(id); if (c) c.style.touchAction = on ? 'none' : ''; }); }
+    function showLoupe(on, cv, e) {
+        const L = $('stake-loupe'); if (!L) return; if (!on) { L.style.display = 'none'; return; }
+        const r = cv.getBoundingClientRect(), dpr = cv.width / cv.clientWidth, x = (e.clientX - r.left) * dpr, y = (e.clientY - r.top) * dpr, S = 30 * dpr;
+        const g = L.getContext('2d'); g.clearRect(0, 0, 240, 240); g.save(); g.beginPath(); g.arc(120, 120, 120, 0, 7); g.clip(); g.fillStyle = '#fff'; g.fillRect(0, 0, 240, 240);
+        try { g.drawImage(cv, x - S / 2, y - S / 2, S, S, 0, 0, 240, 240); } catch (er) {}
+        g.restore(); g.strokeStyle = '#DC2626'; g.lineWidth = 2; g.beginPath(); g.moveTo(120, 90); g.lineTo(120, 150); g.moveTo(90, 120); g.lineTo(150, 120); g.stroke();
+        L.style.display = 'block'; L.style.left = Math.max(4, Math.min(window.innerWidth - 124, e.clientX - 60)) + 'px'; L.style.top = Math.max(4, e.clientY - 170) + 'px';
+    }
+    function onPick(cv, e) {
+        const r = cv.getBoundingClientRect(), s = BgScan.pxToScan(e.clientX - r.left, e.clientY - r.top, cv.id);
+        if (!s) { showToast('Скан не отрисован — нельзя взять точку.'); return; }
+        const p = cur(), sh = BgScan.active();
+        pick.pts.push(s);
+        if (pick.kind === 'post') {
+            p.scan = { id: sh.id, u: s.u, v: s.v, i: 0 };
+            const same = db.projects.filter(q => q !== p && q.pack && q.pack === p.pack);
+            if (same.length && confirm('Применить этот кв. столб ко всем делянкам этого пакета (' + same.length + ' шт.)?')) same.forEach(q => { q.scan = { id: sh.id, u: s.u, v: s.v, i: 0 }; });
+            finishPick('Кв. столб Т.0 посажен на скан.');
+        } else if (pick.kind === 'scale') {
+            if (pick.pts.length === 1) { bar('Теперь коснитесь 2-й точки скана.'); return; }
+            const a = pick.pts[0], b = pick.pts[1], px = Math.hypot(b.u - a.u, b.v - a.v);
+            const D = parseFloat(String(prompt('Реальное расстояние между этими двумя точками, метров (например 500):', '500') || '').replace(',', '.'));
+            if (!(D > 0) || !(px > 1)) { finishPick('Масштаб не изменён.'); return; }
+            BgScan.setMppFix(D / px); finishPick('Масштаб скана: ' + (D / px).toFixed(3) + ' м/пикс.');
+        } else if (pick.kind === 'two') {
+            const i = parseInt(prompt('Какая это точка проекта? Введите номер Т (например 0 или 3):', pick.pts.length === 1 ? '0' : '3') || '', 10);
+            if (!(i >= 0 && i <= p.lines.length)) { finishPick('Отменено: нет такой точки.'); return; }
+            pick.idx = pick.idx || []; pick.idx.push(i);
+            if (pick.pts.length === 1) { bar('Теперь коснитесь 2-й известной точки (другой номер Т).'); return; }
+            const F = framePtsOf(p), a = pick.pts[0], b = pick.pts[1], ia = pick.idx[0], ib = pick.idx[1];
+            if (ia === ib) { finishPick('Нужны две разные точки.'); return; }
+            const dx = F[ib].x - F[ia].x, dy = F[ib].y - F[ia].y, du = b.u - a.u, dv = b.v - a.v, px = Math.hypot(du, dv), m = Math.hypot(dx, dy);
+            if (px < 2 || m < 1) { finishPick('Точки слишком близко — калибровка невозможна.'); return; }
+            let rot = (Math.atan2(-dy, dx) - Math.atan2(dv, du)) * 180 / Math.PI; rot = ((rot + 540) % 360) - 180;
+            BgScan.setMppFix(m / px); BgScan.setRot(Math.round(rot * 100) / 100);
+            p.scan = { id: sh.id, u: a.u, v: a.v, i: ia };
+            finishPick('Скан откалиброван: масштаб ' + (m / px).toFixed(3) + ' м/пикс, поворот ' + rot.toFixed(1) + '°.');
+        }
+    }
+    function finishPick(msg) { pick = null; bar(''); setPickStyle(false); showLoupe(false); save(); render(); redraw(); showToast(msg); openPopup('stake-popup'); }
+    function resetCal() { const p = cur(); if (window.BgScan) BgScan.setMppFix(0); if (p) p.scan = null; save(); render(); redraw(); showToast('Калибровка и посадка на скан сброшены.'); }
+    function initPick() {
+        ['polygon-canvas', 'fs-polygon-canvas'].forEach(id => {
+            const cv = $(id); if (!cv) return;
+            ['mousedown', 'touchstart'].forEach(ev => { if (cv.parentElement) cv.parentElement.addEventListener(ev, e => { if (pick && e.target === cv) e.stopPropagation(); }, true); });
+            cv.addEventListener('pointerdown', e => { if (!pick) return; loupeOn = true; try { cv.setPointerCapture(e.pointerId); } catch (x) {} showLoupe(true, cv, e); e.preventDefault(); });
+            cv.addEventListener('pointermove', e => { if (pick && loupeOn) { showLoupe(true, cv, e); e.preventDefault(); } });
+            cv.addEventListener('pointerup', e => { if (!pick || !loupeOn) return; loupeOn = false; showLoupe(false); onPick(cv, e); });
+            cv.addEventListener('pointercancel', () => { loupeOn = false; showLoupe(false); });
+        });
+    }
+
+    function init() {
+        const f = $('stk-file');
+        if (f) f.addEventListener('change', function () { const inp = this, file = inp.files && inp.files[0]; if (!file) return; file.text().then(t => { importJson(t); try { inp.value = ''; } catch (e) {} }).catch(() => showToast('Не удалось прочитать файл')); });
+        initPick(); render();
+        if (db.hud && cur()) hud(true);
+    }
+    return { init, framePts, draw, scanAnchor, openPanel, openText, previewText, addText, newManual, select, del, edit, rem, remLast, addLine, setp, setTol, go, fit, hud, step, record, undo, startPick, cancelPick, resetCal, importJson, parseList, parseAngle, _db: () => db, _rt: rt, _planPts: planPts };
+})();
+window.BgStake = BgStake;
+try { BgStake.init(); } catch (e) { console.error(e); }
+</script>
+
 </body>
 </html>
