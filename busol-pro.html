@@ -1109,7 +1109,7 @@
         <div class="popup-window">
             <button class="popup-close" onclick="closePopup('pack-popup')">&times;</button>
             <h3>📦 Пакет делянок в Абрис ПРО</h3>
-            <div style="font-size:13px;color:#64748B;margin-bottom:8px">Отметьте делянки. Всё уйдёт одним файлом: координаты, ходы, паспорт и склонение. В Абрисе ПРО откройте «Архив → Импорт» — появятся все делянки сразу.</div>
+            <div style="font-size:13px;color:#64748B;margin-bottom:8px">Отметьте делянки. Всё уйдёт одним файлом: координаты, ходы, паспорт и склонение. На компьютере в Абрисе ПРО+ просто перетащите файл в окно (или «Архив → Загрузить архив»): делянки появятся сразу. Файл можно отправить себе на почту, в MAX, Telegram или VK.</div>
             <div style="display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap;align-items:center">
                 <button class="btn-action btn-reset-zero" style="width:auto;padding:6px 12px" onclick="bgPackAll(true)">Выбрать все</button>
                 <button class="btn-action btn-reset-zero" style="width:auto;padding:6px 12px" onclick="bgPackAll(false)">Снять все</button>
@@ -1183,7 +1183,7 @@
                     <button class="btn-action btn-reset-zero" style="padding: 8px 15px; border: 1px solid var(--forest-green); color: var(--forest-green); width: auto;" onclick="exportArchiveToCSV()">📊 Экспорт CSV (Excel)</button>
                     <button class="btn-action btn-reset-zero" style="padding: 8px 15px; border: 1px solid var(--warning-alert); color: var(--warning-alert); width: auto;" onclick="exportToKML()">🗺️ Экспорт KML (ГИС)</button>
                     <button class="btn-action btn-reset-zero" style="padding: 8px 15px; border: 1px solid var(--forest-green); color: var(--forest-green); width: auto;" onclick="sendToAbris()">📐 В Абрис (копировать)</button>
-                    <button class="btn-action btn-reset-zero" style="padding: 8px 15px; border: 1px solid var(--forest-green); color: var(--forest-green); width: auto;" onclick="openArchivePack()">📦 Пакет делянок в Абрис (файл)</button>
+                    <button class="btn-action btn-reset-zero" style="padding: 8px 15px; border: 1px solid var(--forest-green); color: var(--forest-green); width: auto;" onclick="openArchivePack()">📦 Отправить на компьютер (файл)</button>
                     <a class="btn-action btn-reset-zero" href="bg-abris.html" target="_blank" rel="noopener" style="padding: 8px 15px; border: 1px solid var(--forest-green); color: var(--forest-green); width: auto; text-decoration: none; display: inline-flex; align-items: center;">↗ Открыть Абрис</a>
                 </div>
             </div>
@@ -4577,7 +4577,7 @@
         try { localStorage.setItem('bg_hns_to_abris', text); } catch (e) {}
         let copied = false;
         const done = () => showToast(copied
-            ? "📐 Данные скопированы. В Абрисе: «Из БГ-ХНС» → «Вставить из буфера»."
+            ? "📐 Данные скопированы. Отправьте их себе текстом; в Абрисе ПРО+ нажмите Ctrl+V."
             : "📐 Данные подготовлены. Откройте Абрис — он предложит загрузить их.");
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text).then(() => { copied = true; done(); }, () => done());
@@ -4787,12 +4787,12 @@ function bgPackDownload() {
     const r = bgPackFile(); if (!r) return;
     const a = document.createElement('a'); a.href = URL.createObjectURL(r.file); a.download = r.file.name; document.body.appendChild(a); a.click();
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-    showToast('Файл скачан: делянок ' + r.pack.items.length + '. В Абрисе: Архив → Импорт.');
+    showToast('Файл скачан: делянок ' + r.pack.items.length + '. Отправьте его себе (почта, мессенджер) и перетащите в окно Абриса ПРО+.');
 }
 async function bgPackShare() {
     const r = bgPackFile(); if (!r) return;
     try {
-        if (navigator.canShare && navigator.canShare({ files: [r.file] })) { await navigator.share({ files: [r.file], title: 'Делянки из БГ-ХНС PRO', text: 'Делянок: ' + r.pack.items.length + '. В Абрисе ПРО: Архив → Импорт.' }); return; }
+        if (navigator.canShare && navigator.canShare({ files: [r.file] })) { await navigator.share({ files: [r.file], title: 'Делянки из БГ-ХНС PRO', text: 'Делянок: ' + r.pack.items.length + '. На компьютере перетащите файл в окно Абриса ПРО+.' }); return; }
     } catch (e) { if (e && e.name === 'AbortError') return; }
     bgPackDownload();
 }
@@ -5282,7 +5282,7 @@ const BgStake = (function () {
         }
         return L;
     }
-    function okLines(a) { return Array.isArray(a) && a.length && a.every(l => l && isFinite(parseFloat(l.az)) && isFinite(parseFloat(l.d)) && parseFloat(l.d) > 0); }
+    function okLines(a) { return Array.isArray(a) && a.length && a.every(l => l && isFinite(parseFloat(l.az)) && isFinite(parseFloat(l.d)) && parseFloat(l.d) >= 0) && a.some(l => parseFloat(l.d) > 0); }
     // Любой файл Абриса: .abris (одна или несколько делянок в objs), архив abris-archive
     function collectObjs(o, out, depth) {
         if (!o || typeof o !== 'object' || depth > 4) return;
@@ -5307,7 +5307,8 @@ const BgStake = (function () {
         if (ob.p0 && isFinite(ob.p0.lat) && isFinite(ob.p0.lng)) p0 = { lat: ob.p0.lat, lng: ob.p0.lng };
         let nm = ob.name || r.top || ('Делянка ' + (db.projects.length + 1));
         if (r.top && ob.name && r.many && nm.indexOf(r.top) < 0) nm = r.top + ' · ' + nm;
-        if (r.stamp && r.stamp.kv && nm.indexOf(r.stamp.kv) < 0) nm += ' · ' + r.stamp.kv;
+        const nz = x => String(x).toLowerCase().replace(/[\s.,;:]/g, '');
+        if (r.stamp && r.stamp.kv && nz(nm).indexOf(nz(r.stamp.kv)) < 0) nm += ' · ' + r.stamp.kv;
         return mkProject({ name: nm, pack, kind, decl, closed, lines, p0 });
     }
     // GPX / KML с навигатора: точки по порядку файла -> ход
@@ -5445,7 +5446,7 @@ const BgStake = (function () {
     }
     function select(id) { db.active = id; db.li = 0; save(); render(); redraw(); }
     function del() { const p = cur(); if (!p || !confirm('Удалить проект «' + p.name + '»?')) return; db.projects = db.projects.filter(x => x !== p); db.active = db.projects[0] ? db.projects[0].id : ''; db.li = 0; save(); render(); redraw(); }
-    function edit(i, k, v) { const p = cur(); if (!p || !p.lines[i]) return; if (k === 't') p.lines[i].t = v; else { const n = parseFloat(String(v).replace(',', '.')); if (!isFinite(n) || (k === 'd' && n <= 0)) { render(); return; } p.lines[i][k] = k === 'az' ? norm(n) : n; } normRef(p); save(); render(); redraw(); }
+    function edit(i, k, v) { const p = cur(); if (!p || !p.lines[i]) return; if (k === 't') p.lines[i].t = v; else { const n = parseFloat(String(v).replace(',', '.')); if (!isFinite(n) || (k === 'd' && n < 0)) { render(); return; } p.lines[i][k] = k === 'az' ? norm(n) : n; } normRef(p); save(); render(); redraw(); }
     function normRef(p) { /* привязка — только ведущие строки */ let seen = false; p.lines.forEach(l => { if (l.t !== 'ref') seen = true; else if (seen) l.t = 'bound'; }); }
     function rem(i) { const p = cur(); if (!p) return; p.lines.splice(i, 1); db.li = Math.max(0, Math.min(db.li, p.lines.length - 1)); save(); render(); redraw(); }
     function remLast() { const p = cur(); if (!p || !p.lines.length) return; rem(p.lines.length - 1); }
@@ -5474,7 +5475,7 @@ const BgStake = (function () {
         const l = p.lines[db.li]; if (!l) { $('stk-h-big').innerText = 'Нет линий'; return; }
         const tgt = rt(p, l.az), R = live();
         $('stk-h-title').innerText = p.name.length > 28 ? p.name.slice(0, 27) + '…' : p.name;
-        $('stk-h-line').innerText = (l.t === 'ref' ? 'привязка ' : 'граница ') + 'Т.' + db.li + '→Т.' + (db.li + 1) + ' · ' + l.d + ' м';
+        $('stk-h-line').innerText = (l.t === 'ref' ? 'привязка ' : 'граница ') + 'Т.' + db.li + '→Т.' + (db.li + 1) + ' · ' + (l.d > 0 ? l.d + ' м' : 'без длины');
         $('stk-h-tgt').innerText = 'цель ' + tgt.toFixed(1) + '°';
         const big = $('stk-h-big');
         if (R === null || R === undefined || isNaN(R)) { big.className = 'sh-big'; big.innerText = '—'; $('stk-h-cur').innerText = 'нет азимута'; return; }
