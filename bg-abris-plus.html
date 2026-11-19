@@ -532,7 +532,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
 <!-- загрузка данных -->
 <div class="overlay" id="m-imp"><div class="modal">
     <h3>Загрузка данных</h3>
-    <div class="note" style="margin-bottom:8px">Вставьте данные из БГ-ХНС (кнопка «В Абрис»), список координат (по строке на точку: широта долгота) или выберите файл: CSV из БГ-ХНС, GPX, KML, GeoJSON, .abris.</div>
+    <div class="note" style="margin-bottom:8px">Проще всего: <b>перетащите файл в окно Абриса</b> или нажмите <b>Ctrl+V</b> (текст/файл из буфера) — Абрис сам определит тип. Подходит: архив и проект Абриса, журнал и CSV из БГ-ХНС, GPX, KML, GeoJSON, список координат (по строке на точку: широта долгота, градусы или г м с).</div>
     <textarea id="imp-text" placeholder="61.480000 50.501600&#10;61.481200 50.503100&#10;…"></textarea>
     <div class="row" style="margin:8px 0"><button class="btn" id="imp-paste">📋 Вставить из буфера</button><button class="btn" id="imp-file">📁 Выбрать файл</button></div>
     <div class="row"><button class="btn primary" id="imp-go">Загрузить</button><button class="btn" id="imp-cancel">Отмена</button></div>
@@ -2517,6 +2517,7 @@ function importText(text, fname) {
                     return loadResult(r, 'Из БГ-ХНС загружено линий: ' + r.lines.length + (hasPt(r) ? '' : '. Координат нет — совместите скан вручную.'));
                 }
             }
+            if (!Array.isArray(obj) && obj.format === 'abris-archive' && Array.isArray(obj.items)) return importArchive(obj);
             if (obj.type) { var c0 = llContours(t, fname); if (c0.length) return fromContour(c0); }
             return toast('Формат данных не распознан');
         }
@@ -2546,6 +2547,34 @@ $('f-any').addEventListener('change', function () {
     var f = this.files && this.files[0], inp = this; if (!f) return;
     var fr = new FileReader(); fr.onload = function () { $('m-imp').classList.remove('on'); importText(String(fr.result), f.name); inp.value = ''; }; fr.readAsText(f);
 });
+/* ---------- окно приёма: перетащить файл или Ctrl+V ---------- */
+(function () {
+    var hint = document.createElement('div'); hint.id = 'drop-hint';
+    hint.style.cssText = 'display:none;position:fixed;inset:0;z-index:4000;background:rgba(45,90,39,.82);color:#fff;align-items:center;justify-content:center;text-align:center;font:700 22px/1.4 Inter,sans-serif;padding:24px;pointer-events:none';
+    hint.innerHTML = '<div>📥 Отпустите файл здесь<div style="font-size:14px;font-weight:500;margin-top:8px;opacity:.9">Абрис сам поймёт: архив, проект .abris, GPX/KML, журнал БГ-ХНС, список координат</div></div>';
+    document.body.appendChild(hint);
+    var depth = 0;
+    function hasFiles(e) { return e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') >= 0; }
+    function show(on) { hint.style.display = on ? 'flex' : 'none'; }
+    function takeFile(f) { var fr = new FileReader(); fr.onload = function () { $('m-imp').classList.remove('on'); importText(String(fr.result), f.name); }; fr.onerror = function () { toast('Не удалось прочитать файл'); }; fr.readAsText(f); }
+    document.addEventListener('dragenter', function (e) { if (hasFiles(e)) { depth++; show(true); } });
+    document.addEventListener('dragover', function (e) { if (hasFiles(e)) e.preventDefault(); });
+    document.addEventListener('dragleave', function (e) { if (hasFiles(e)) { depth = Math.max(0, depth - 1); if (!depth) show(false); } });
+    document.addEventListener('drop', function (e) {
+        if (!hasFiles(e)) return; e.preventDefault(); depth = 0; show(false);
+        var fl = Array.prototype.slice.call(e.dataTransfer.files || []); if (!fl.length) return;
+        if (/^image\//.test(fl[0].type)) return toast('Скан листа загружается кнопкой «Скан» слева.');
+        if (fl.length > 1) toast('Файлов: ' + fl.length + '. Загружаю первый — «' + fl[0].name + '».', 4500);
+        takeFile(fl[0]);
+    });
+    document.addEventListener('paste', function (e) {
+        var t = e.target, tag = t && t.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (t && t.isContentEditable)) return;
+        var cd = e.clipboardData; if (!cd) return;
+        if (cd.files && cd.files.length && !/^image\//.test(cd.files[0].type)) { e.preventDefault(); return takeFile(cd.files[0]); }
+        var s = cd.getData('text'); if (s && s.trim().length > 6) { e.preventDefault(); importText(s, ''); }
+    });
+})();
+
 // передача из БГ-ХНС через общее хранилище (если оба файла на одном сайте)
 function checkHandoff() {
     try {
@@ -2694,15 +2723,26 @@ $('arch-export').onclick = function () {
     }).catch(function () { toast('Не удалось выгрузить архив'); });
 };
 $('arch-import').onclick = function () { $('arch-file').click(); };
+function archImportObj(o) {   // архив Абриса (abris-archive): кладёт делянки в архив, возвращает список
+    var items = o.items.filter(function (it) { return it && it.id && it.state; });
+    return Promise.all(items.map(function (it) {
+        var sd = it.scanData; delete it.scanData;
+        return idbDo('items', 'readwrite', function (st) { return st.put(it); }).then(function () { return sd ? fetch(sd).then(function (r) { return r.blob(); }).then(function (b) { return idbDo('iscan', 'readwrite', function (st) { return st.put(b, it.id); }); }) : 0; });
+    })).then(function () { return items; });
+}
+function importArchive(o) {   // из окна приёма: одна делянка — сразу открыть, несколько — показать архив
+    archImportObj(o).then(function (items) {
+        if (!items.length) return toast('В архиве нет делянок');
+        if (items.length === 1) return archOpen(items[0].id);
+        toast('Загружено делянок: ' + items.length + '. Выберите нужную в архиве.'); $('m-arch').classList.add('on'); archRender();
+    }).catch(function () { toast('Не удалось загрузить архив: хранилище браузера недоступно'); });
+}
 $('arch-file').addEventListener('change', function () {
     var f = this.files && this.files[0], inp = this; if (!f) return;
     var fr = new FileReader(); fr.onload = function () {
         try {
             var o = JSON.parse(String(fr.result)); if (o.format !== 'abris-archive' || !Array.isArray(o.items)) return toast('Это не файл архива Абриса');
-            Promise.all(o.items.map(function (it) {
-                var sd = it.scanData; delete it.scanData;
-                return idbDo('items', 'readwrite', function (st) { return st.put(it); }).then(function () { return sd ? fetch(sd).then(function (r) { return r.blob(); }).then(function (b) { return idbDo('iscan', 'readwrite', function (st) { return st.put(b, it.id); }); }) : 0; });
-            })).then(function () { toast('Загружено делянок: ' + o.items.length); archRender(); });
+            archImportObj(o).then(function (items) { toast('Загружено делянок: ' + items.length); archRender(); });
         } catch (e) { toast('Не удалось прочитать файл архива'); }
         inp.value = '';
     }; fr.readAsText(f);
