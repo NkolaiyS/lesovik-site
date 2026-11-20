@@ -72,9 +72,9 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; box-shadow: 0 4px 14px rgba(0,0,0,.16); gap: 8px; align-items: center; flex-wrap: wrap; }
     #calbar.on { display: flex; }
     #calbar input[type=number] { width: 110px; }
-    #scanbar, #plotbar, #drawbar, #markbar, #linkbar { position: absolute; left: 50%; transform: translateX(-50%); bottom: 12px; z-index: 30; display: none; background: var(--card);
+    #scanbar, #plotbar, #drawbar, #markbar, #linkbar, #lblbar { position: absolute; left: 50%; transform: translateX(-50%); bottom: 12px; z-index: 30; display: none; background: var(--card);
         border: 1px solid var(--border); border-radius: 12px; padding: 6px 8px; box-shadow: 0 4px 14px rgba(0,0,0,.16); gap: 5px; align-items: center; flex-wrap: wrap; justify-content: center; max-width: calc(100% - 20px); }
-    #scanbar.on, #plotbar.on, #drawbar.on, #markbar.on, #linkbar.on { display: flex; }
+    #scanbar.on, #plotbar.on, #drawbar.on, #markbar.on, #linkbar.on, #lblbar.on { display: flex; }
     .lkm.on { background: var(--forest); color: #fff; border-color: var(--forest); } [data-theme="dark"] .lkm.on { color: #0F1A14; }
     .gapb.on { background: #B5651D; color: #fff; border-color: #B5651D; }
     tr.gap td { opacity: .6; }
@@ -104,7 +104,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         #dock.hidden { display: none; }
         .dock-head { cursor: pointer; }
         .status span:last-child { display: none; }
-        #scanbar, #plotbar, #drawbar, #markbar, #linkbar { bottom: 70px; }
+        #scanbar, #plotbar, #drawbar, #markbar, #linkbar, #lblbar { bottom: 70px; }
     }
     .tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 10px; }
     .tab { flex: 1; padding: 8px 2px; background: none; border: none; border-bottom: 3px solid transparent; margin-bottom: -2px; font-weight: 700; font-size: .82em; text-transform: uppercase; color: var(--muted); cursor: pointer; }
@@ -169,6 +169,8 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     .arch-item .t b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .arch-item .t span { font-size: .8em; color: var(--muted); }
     #prn-img { width: 100%; max-height: 62vh; object-fit: contain; border: 1px solid var(--border); background: #fff; display: block; margin: 8px 0; }
+    #loupe { position: fixed; z-index: 100001; width: 132px; height: 132px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 2px #1D2A20, 0 6px 18px rgba(0,0,0,.4); display: none; pointer-events: none; overflow: hidden; background: #E9EDE8; }
+    #loupe.on { display: block; } #loupe canvas { width: 100%; height: 100%; display: block; }
     #lens { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 100000; background: rgba(15,24,19,.96); color: #fff;
         border: 2px solid #8FBC8F; border-radius: 16px; padding: 16px 20px; width: min(92vw, 560px); display: none; text-align: center; pointer-events: none; }
     #lens.on { display: block; }
@@ -219,7 +221,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     @media (min-width: 769px) { #dock { max-height: calc(100vh - var(--header-h) - 44px - var(--nav-h)); } }
     @media (max-width: 768px) {
         #dock { bottom: calc(26px + var(--nav-h)); }
-        #scanbar, #plotbar, #drawbar, #markbar, #linkbar { bottom: calc(70px + var(--nav-h)); }
+        #scanbar, #plotbar, #drawbar, #markbar, #linkbar, #lblbar { bottom: calc(70px + var(--nav-h)); }
         #view.scanmode .zoom { display: none; }
     }
 </style>
@@ -290,6 +292,11 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         <button class="btn" id="db-newobj">＋ Объект</button>
         <button class="btn" id="db-undo">↶ Убрать последнюю</button>
         <button class="btn primary" id="db-done">Готово</button>
+    </div>
+    <div id="lblbar">
+        <span style="font-size:.88em">Двигайте номера, длины и площадь пальцем. Нажмите «Готово», когда расставите.</span>
+        <button class="btn" id="lb-reset" title="Вернуть подписи на места">↺ На места</button>
+        <button class="btn primary" id="lb-done">Готово</button>
     </div>
     <div id="markbar">
         <span style="font-size:.88em" id="mb-info">Коснитесь места — встанет знак. Знак можно перетащить.</span>
@@ -498,6 +505,8 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
             </div>
             <div class="box">
                 <h4>Вид чертежа (экран и лист)</h4>
+                <label class="f" style="margin:0 0 6px"><span>Размер точек: <b id="v-pszv">65</b>% (100% — как раньше)</span><input type="range" id="v-psz" min="30" max="100" step="5" value="65"></label>
+                <button class="btn" id="v-lmove" type="button" style="margin:0 0 6px">✋ Двигать подписи (номера, длины, площадь)</button>
                 <label class="chk"><input type="checkbox" id="v-lonly"> только линии (без номеров, названий, кружков и площади)</label>
                 <label class="chk"><input type="checkbox" id="v-noscale"> не показывать масштаб (линейку и строку «Масштаб»)</label>
                 <label class="f" style="margin:6px 0 0"><span>Сгладить переходы между точками (только на рисунке)</span><select id="v-smooth"><option value="0">нет</option><option value="1">слабо</option><option value="2">средне</option><option value="3">сильно</option></select></label>
@@ -591,7 +600,8 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         <label class="f" style="margin:0"><span>Длины</span><select id="prn-lunit"><option value="m">в метрах</option><option value="km">в километрах</option></select></label>
     </div>
     <div class="row" style="margin-top:6px">
-        <label class="f" style="margin:0"><span>Что выводить</span><select id="prn-mode"><option value="full">Полный абрис (чертёж, ходы, координаты)</option><option value="scheme">Схема расположения (без данных)</option></select></label>
+        <label class="f" style="margin:0"><span>Что выводить</span><select id="prn-mode"><option value="full">Полный абрис (чертёж, ходы, координаты)</option><option value="len">Протяжённость + координаты (без азимутов)</option><option value="lenaz">Протяжённость + координаты + азимуты</option><option value="scheme">Схема расположения (без данных)</option></select></label>
+        <label class="chk" style="margin:0;flex:0 0 auto" id="prn-az-w"><input type="checkbox" id="prn-az" checked> таблица азимутов</label>
         <label class="chk" style="margin:0;flex:0 0 auto" id="prn-sarea-w"><input type="checkbox" id="prn-sarea" checked> площадь в шапке</label>
     </div>
     <div class="row" style="margin-top:6px">
@@ -616,6 +626,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
 
 <input type="file" id="f-any" accept=".abris,.json,.geojson,.csv,.gpx,.kml,.txt,text/*,application/json" style="display:none">
 <div id="lens"></div>
+<div id="loupe"><canvas id="loupe-c" width="264" height="264"></canvas></div>
 <div id="toast"></div>
 <div id="print-sheet"><img id="ps-img" alt="Лист А4"></div>
 
@@ -699,7 +710,7 @@ function newState() {
     return {
         id: null, name: '', kind: 'coords', lines: [], cp: [], p0: { lat: null, lng: null }, s: 1, mode: 'return', c: null, tol: null, ks: 0, kc: null, psheet: 'full', adec: 4, showGap: true, objs: [], act: 0, org: { x: 0, y: 0 }, gref: null, wid: 0, marks: [], links: [], legend: { on: true, extra: '' }, dateMode: 'today', dateVal: '', typ: '', lunit: 'm', frame: false, strip: false, lonly: false, noScale: false, smooth: 0,
         stamp: { region: '', les: '', uch: '', kv: '', author: '', title: '', vyd: '' },
-        pscale: 10000, dpi: 96, viewMode: 'az', labels: 2, decl: 0,
+        pscale: 10000, dpi: 96, viewMode: 'az', labels: 2, decl: 0, psz: 65,
         scan: { on: false, name: '', w: 0, h: 0, fix: 1, a: { re: 1, im: 0 }, c: { re: 0, im: 0 }, op: 0.75 }
     };
 }
@@ -899,8 +910,8 @@ function worldOfLL(lat, lng) {
 }
 function areaGa(R) { var d = [1, 2, 4].indexOf(S.adec) >= 0 ? S.adec : 4; return (R.area / 10000).toFixed(d); }
 /* ---------- несколько объектов (полосы, делянки) на одном абрисе ---------- */
-var OBJF = ['name', 'kind', 'lines', 'cp', 'p0', 's', 'mode', 'c', 'ks', 'kc', 'tol', 'viewMode', 'org', 'wid', 'typ', 'lk'];
-var OBJDEF = { name: '', kind: 'traverse', lines: [], cp: [], p0: { lat: null, lng: null }, s: 0, mode: 'auto', c: null, ks: 0, kc: null, tol: null, viewMode: 'az', org: { x: 0, y: 0 }, wid: 0, typ: '', lk: false };
+var OBJF = ['name', 'kind', 'lines', 'cp', 'p0', 's', 'mode', 'c', 'ks', 'kc', 'tol', 'viewMode', 'org', 'wid', 'typ', 'lk', 'lo'];
+var OBJDEF = { name: '', kind: 'traverse', lines: [], cp: [], p0: { lat: null, lng: null }, s: 0, mode: 'auto', c: null, ks: 0, kc: null, tol: null, viewMode: 'az', org: { x: 0, y: 0 }, wid: 0, typ: '', lk: false, lo: {} };
 var PAL = ['#2F6B3A', '#B5651D', '#1F5FA8', '#8A2BA6', '#C0463F', '#0F8B8D', '#6B6B00', '#5A3E85'];
 function snapObj() { var o = {}; OBJF.forEach(function (k) { o[k] = JSON.parse(JSON.stringify(S[k] === undefined ? OBJDEF[k] : S[k])); }); return o; }
 function loadObj(o) { OBJF.forEach(function (k) { S[k] = JSON.parse(JSON.stringify(o[k] === undefined ? OBJDEF[k] : o[k])); }); }
@@ -1061,6 +1072,7 @@ function fsScale() { return (parseFloat(getComputedStyle(document.documentElemen
 /* ---------- отрисовка (экран и печать) ---------- */
 function drawScene(g, W, H, v, u, forPrint, opts) {
     opts = opts || {};
+    if (!forPrint) ui.lblHits = [];
     var R = compute(), multi = !!(S.objs && S.objs.length > 1);
     var X = function (x) { return W / 2 + v.k * (x - v.cx); }, Y = function (y) { return H / 2 - v.k * (y - v.cy); };
     g.fillStyle = forPrint ? '#fff' : '#E9EDE8'; g.fillRect(0, 0, W, H);
@@ -1076,6 +1088,14 @@ function drawScene(g, W, H, v, u, forPrint, opts) {
     function halo(txt, x, y, col, size, bold, align) {
         g.font = font(size, bold); g.textAlign = align || 'start'; g.lineJoin = 'round';
         g.strokeStyle = 'rgba(255,255,255,.92)'; g.lineWidth = lw(3.4); g.strokeText(txt, x, y); g.fillStyle = col; g.fillText(txt, x, y); g.textAlign = 'start';
+    }
+    function lab(idx, key, txt, x, y, col, size, bold, align) {   // подпись, которую можно сдвинуть вручную
+        var o = S.lo && S.lo[key]; if (o) { x += o.x * u; y += o.y * u; }
+        halo(txt, x, y, col, size, bold, align);
+        if (!forPrint && idx === S.act) {
+            g.font = font(size, bold); var w = g.measureText(txt).width, x0 = align === 'center' ? x - w / 2 : x;
+            ui.lblHits.push({ k: key, x: x0 - lw(4), y: y - lw(size) * 0.95, w: w + lw(8), h: lw(size) * 1.3 });
+        }
     }
     function layer(R, ox, oy, idx) {
         var X = function (x) { return W / 2 + v.k * (x + ox - v.cx); }, Y = function (y) { return H / 2 - v.k * (y + oy - v.cy); };
@@ -1125,20 +1145,25 @@ function drawScene(g, W, H, v, u, forPrint, opts) {
             for (i = 0; i < R.n; i++) {
                 var l = S.lines[i], mx = (X(P[i].x) + X(P[i + 1].x)) / 2, my = (Y(P[i].y) + Y(P[i + 1].y)) / 2;
                 if (Math.hypot(X(P[i].x) - X(P[i + 1].x), Y(P[i].y) - Y(P[i + 1].y)) < lw(46)) continue;
-                halo(rumbStr(l.az) + ' · ' + f1(l.d) + ' м', mx, my - lw(5), '#14301A', 11, true, 'center');
+                lab(idx, 'l' + i, (opts.noAz ? '' : rumbStr(l.az) + ' · ') + f1(l.d) + ' м', mx, my - lw(5), '#14301A', 11, true, 'center');
             }
         }
         var gapEnd = (R.gap !== null && R.gap >= 0.005) ? R.n : -1;
         for (i = 0; !S.lonly && !S.lk && i < P.length; i++) {   // точки: кружок и номер
             var px = X(P[i].x), py = Y(P[i].y), inPoly = R.idx.indexOf(i) >= 0, isT0 = ((R.kind === 'traverse' || R.s > 0) && i === 0);
-            g.beginPath(); g.arc(px, py, lw(isT0 ? 5.5 : 3.8), 0, 6.2832);
+            var pf = Math.max(0.3, Math.min(1.2, (S.psz || 65) / 100));
+            g.beginPath(); g.arc(px, py, lw((isT0 ? 5.5 : 3.8) * pf), 0, 6.2832);
             g.fillStyle = isT0 ? '#C0463F' : (i === gapEnd ? '#fff' : (inPoly ? '#fff' : '#F0B4B0')); g.fill();
-            g.lineWidth = lw(1.8); g.strokeStyle = isT0 ? '#7A2A26' : (i === gapEnd ? '#C0463F' : (inPoly ? strokeCol : '#C0463F')); g.stroke();
-            if (labelsMode) halo(pl(i), px + lw(7), py - lw(6), isT0 ? '#7A2A26' : '#1D2A20', 11.5, true);
+            g.lineWidth = lw(1.8 * (0.55 + 0.45 * pf)); g.strokeStyle = isT0 ? '#7A2A26' : (i === gapEnd ? '#C0463F' : (inPoly ? strokeCol : '#C0463F')); g.stroke();
+            if (labelsMode) {
+                var lo = S.lo && S.lo['p' + i];
+                if (lo && Math.hypot(lo.x, lo.y) > 14) { g.beginPath(); g.moveTo(px, py); g.lineTo(px + lw(4 + 3 * pf + lo.x), py + lw(-4 - 2 * pf + lo.y - 3)); g.strokeStyle = 'rgba(30,45,35,.55)'; g.lineWidth = lw(0.9); g.stroke(); }
+                lab(idx, 'p' + i, pl(i), px + lw(4 + 3 * pf), py - lw(4 + 2 * pf), isT0 ? '#7A2A26' : '#1D2A20', 11.5, true);
+            }
         }
         if (R.poly && (labelsMode === 1 || labelsMode === 3 || S.lk) && !opts.scheme && !S.lonly) {   // площадь в центре — только если выбрано
             var cx = 0, cy = 0; R.poly.forEach(function (p) { cx += p.x; cy += p.y; }); cx = X(cx / R.poly.length); cy = Y(cy / R.poly.length);
-            halo((R.area / 10000).toFixed(4) + ' га', cx, cy + lw(5), strokeCol, 15, true, 'center');
+            lab(idx, 'a', (R.area / 10000).toFixed(4) + ' га', cx, cy + lw(5), strokeCol, 15, true, 'center');
         }
         if (multi && !S.lonly && !S.lk) {   // имя объекта рядом с ним
             var nx = 0, ny = 0; R.pts.forEach(function (p) { nx += p.x; ny += p.y; }); nx = X(nx / R.pts.length); ny = Y(ny / R.pts.length);
@@ -1268,6 +1293,39 @@ function snapTo(fix, q) {   // ровно по горизонтали/верти
     return q;
 }
 
+/* ---------- перекрестие с линзой (палец не закрывает точку) и перенос подписей ---------- */
+var holdT = 0, holdAim = false, lpReq = null, lpPending = false, lpType = 'touch';
+function loupeOn() { return aiming || holdAim || !!ui.dragH || (ui.dragPt !== null && ui.dragPt !== undefined && ui.dragPt >= 0) || (ui.dragMk !== null && ui.dragMk !== undefined && ui.dragMk >= 0); }
+function loupeHide() { lpReq = null; $('loupe').classList.remove('on'); }
+function loupePaint(p) {
+    var el = $('loupe');
+    if (!p || lpType === 'mouse' || Object.keys(ptrs).length !== 1 || !loupeOn()) { el.classList.remove('on'); return; }
+    var r = cv.getBoundingClientRect(), ratio = cv.width / r.width, c = $('loupe-c').getContext('2d'), SZ = 264, half = 22;
+    c.fillStyle = '#E9EDE8'; c.fillRect(0, 0, SZ, SZ);
+    try { c.drawImage(cv, (p.x - half) * ratio, (p.y - half) * ratio, half * 2 * ratio, half * 2 * ratio, 0, 0, SZ, SZ); } catch (e) { }
+    var m = SZ / 2, gap = 14;
+    [['#fff', 5], ['#D32F2F', 2.5]].forEach(function (st) {
+        c.strokeStyle = st[0]; c.lineWidth = st[1]; c.beginPath();
+        c.moveTo(m, 6); c.lineTo(m, m - gap); c.moveTo(m, m + gap); c.lineTo(m, SZ - 6); c.moveTo(6, m); c.lineTo(m - gap, m); c.moveTo(m + gap, m); c.lineTo(SZ - 6, m); c.stroke();
+    });
+    var L = r.left + p.x - 66, T = r.top + p.y - 66 - 100;
+    if (T < 4) { T = Math.max(4, r.top + p.y - 66); L = r.left + p.x + (p.x < r.width / 2 ? 70 : -202); }
+    el.style.left = Math.max(4, Math.min(innerWidth - 136, L)) + 'px'; el.style.top = Math.max(4, Math.min(innerHeight - 136, T)) + 'px'; el.classList.add('on');
+}
+function loupeReq(p) {   // после отрисовки кадра, чтобы линза показывала актуальную картинку
+    lpReq = p; if (lpPending) return; lpPending = true;
+    requestAnimationFrame(function () { requestAnimationFrame(function () { lpPending = false; if (lpReq) loupePaint(lpReq); else loupeHide(); }); });
+}
+function hitLabel(p) {
+    var h = ui.lblHits || [], i, pad = 6;
+    for (i = h.length - 1; i >= 0; i--) if (p.x >= h[i].x - pad && p.x <= h[i].x + h[i].w + pad && p.y >= h[i].y - pad && p.y <= h[i].y + h[i].h + pad) return h[i];
+    return null;
+}
+function startLblMove() {
+    cancelPick(); closeCalBar(true); setTool('pan'); ui.lblMove = true; $('lblbar').classList.add('on'); $('m-data') && $('m-data').classList.remove('on');
+    setHint(null); if (mobile()) hideDockMobile(); draw();
+}
+function endLblMove() { if (!ui.lblMove) return; ui.lblMove = false; ui.dragLbl = null; $('lblbar').classList.remove('on'); if (mobile()) showDock(); draw(); }
 /* ---------- жесты ---------- */
 var ptrs = {}, moved = false, downT = 0, lastD = 0, lastM = null, lastAng = 0, downPos = null, panBtn = false, aiming = false;
 function evPos(e) { var r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
@@ -1291,15 +1349,21 @@ cv.addEventListener('pointerdown', function (e) {
         moved = false; downT = Date.now(); downPos = p; aiming = false; ui.dragH = null;
         panBtn = e.pointerType === 'mouse' && (e.button === 1 || e.button === 2);
         if (!panBtn) {
-            if (ui.pick === 'draw') { var hp = hitPoint(p.x, p.y); if (hp >= 0) { ui.dragPt = hp; } else { aiming = true; ui.aim = p; draw(); } }
+            if (ui.lblMove) { var hlb = hitLabel(p); if (hlb) { var o0 = (S.lo && S.lo[hlb.k]) || { x: 0, y: 0 }; ui.dragLbl = { k: hlb.k, sx: p.x, sy: p.y, x0: o0.x, y0: o0.y }; } }
+            else if (ui.pick === 'draw') { var hp = hitPoint(p.x, p.y); if (hp >= 0) { ui.dragPt = hp; } else { aiming = true; ui.aim = p; draw(); } }
             else if (ui.pick === 'mark') { var hm = hitMark(p.x, p.y); if (hm >= 0) { ui.dragMk = hm; ui.selMk = hm; mbSync(); draw(); } else { aiming = true; ui.aim = p; draw(); } }
             else if (ui.pick === 'link') { var hl = hitMark(p.x, p.y); ui.lkDrag = hl; }
             else if (ui.pick) { aiming = true; ui.aim = p; draw(); }
             else if (ui.calA && ui.calB) { var h = hitHandle(p); if (h) ui.dragH = h; }
+            lpType = e.pointerType || 'touch';
+            if (!ui.pick && !ui.lblMove && !ui.dragH && ui.tool === 'pan' && lpType !== 'mouse') {   // удержание пальца: прицел с линзой, отпускание — координаты
+                clearTimeout(holdT); holdT = setTimeout(function () { if (Object.keys(ptrs).length === 1 && !moved && !ui.dragH) { holdAim = true; try { navigator.vibrate && navigator.vibrate(15); } catch (x) { } loupeReq(ptrs[Object.keys(ptrs)[0]]); } }, 320);
+            }
+            if (loupeOn()) loupeReq(p);
         }
     }
     if (ids.length === 2) {
-        aiming = false; ui.dragH = null; ui.dragPt = null; ui.aim = null; ui.lkDrag = -1; moved = true;
+        aiming = false; ui.dragH = null; ui.dragPt = null; ui.aim = null; ui.lkDrag = -1; moved = true; ui.dragLbl = null; clearTimeout(holdT); holdAim = false; loupeHide();
         var a = ptrs[ids[0]], b = ptrs[ids[1]]; lastD = Math.hypot(a.x - b.x, a.y - b.y); lastM = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; lastAng = Math.atan2(b.y - a.y, b.x - a.x);
     }
 });
@@ -1307,7 +1371,10 @@ cv.addEventListener('pointermove', function (e) {
     var p = evPos(e);
     if (!ptrs[e.pointerId]) { if (ui.pick === 'link') { if (e.pointerType === 'mouse') { ui.lkAim = p; draw(); } return; } if (ui.pick && e.pointerType === 'mouse') { ui.aim = p; draw(); } return; }
     var old = ptrs[e.pointerId], ids = Object.keys(ptrs);
+    if (ids.length === 1 && !holdAim && loupeOn()) loupeReq(p);
     if (ids.length === 1) {
+        if (ui.dragLbl) { ptrs[e.pointerId] = p; moved = true; var fs0 = fsScale(); S.lo = S.lo || {}; S.lo[ui.dragLbl.k] = { x: Math.round((ui.dragLbl.x0 + (p.x - ui.dragLbl.sx) / fs0) * 10) / 10, y: Math.round((ui.dragLbl.y0 + (p.y - ui.dragLbl.sy) / fs0) * 10) / 10 }; scheduleSave(); draw(); return; }
+        if (holdAim) { ptrs[e.pointerId] = p; moved = false; loupeReq(p); return; }
         if (ui.dragPt !== null && ui.dragPt !== undefined) { ptrs[e.pointerId] = p; moved = true; dragDrawPoint(ui.dragPt, s2w(p.x, p.y)); return; }
         if (ui.dragMk !== null && ui.dragMk !== undefined && ui.dragMk >= 0) { ptrs[e.pointerId] = p; moved = true; var wm = s2w(p.x, p.y), om = objOrg(S), mm = S.marks[ui.dragMk]; if (mm) { mm.x = wm.x + om.x; mm.y = wm.y + om.y; } scheduleSave(); draw(); return; }
         if (ui.lkDrag >= 0) { ptrs[e.pointerId] = p; if (!moved && Math.hypot(p.x - downPos.x, p.y - downPos.y) < 6) return; moved = true; ui.lkAim = p; draw(); return; }
@@ -1335,7 +1402,8 @@ cv.addEventListener('pointermove', function (e) {
 });
 function endPtr(e) {
     if (!ptrs[e.pointerId]) return;
-    var wasAim = aiming && Object.keys(ptrs).length === 1, p = ptrs[e.pointerId];
+    var wasAim = aiming && Object.keys(ptrs).length === 1, p = ptrs[e.pointerId], wasHold = holdAim && Object.keys(ptrs).length === 1;
+    clearTimeout(holdT); holdAim = false; loupeHide(); ui.dragLbl = null;
     delete ptrs[e.pointerId];
     if (wasAim) { aiming = false; if (e.type === 'pointerup') pickAt(p.x, p.y); else if (ui.pick !== 'cal2') ui.aim = null; draw(); }
     if (ui.dragH) { ui.dragH = null; }
@@ -1350,7 +1418,8 @@ function endPtr(e) {
             else if (!moved) lkClick(p);
         } else draw();
     }
-    if (left === 0) { aiming = false; if (e.type === 'pointerup' && !moved && !wasAim && !ui.pick && ui.tool === 'pan' && !panBtn && !ui.dragH) probeAt(p.x, p.y); }
+    if (wasHold && e.type === 'pointerup' && !ui.pick) probeAt(p.x, p.y);
+    if (left === 0) { aiming = false; if (e.type === 'pointerup' && !moved && !wasHold && !wasAim && !ui.pick && ui.tool === 'pan' && !panBtn && !ui.dragH) probeAt(p.x, p.y); }
 }
 cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', endPtr);
 cv.addEventListener('wheel', function (e) { e.preventDefault(); var p = evPos(e); zoomAt(p.x, p.y, e.deltaY < 0 ? 1.18 : 1 / 1.18); }, { passive: false });
@@ -1607,6 +1676,7 @@ function shiftPlot(dwx, dwy) {   // сдвиг контура относител
     S.scan.c = { re: S.scan.c.re - dwx, im: S.scan.c.im - dwy }; V.cx -= dwx; V.cy -= dwy; scheduleSave(); draw();
 }
 function setTool(t) {
+    if (ui.lblMove && t !== 'pan') endLblMove();
     if (t !== 'draw' && ui.pick === 'draw') { ui.pick = null; ui.aim = null; setHint(null); }
     if (t !== 'mark' && ui.pick === 'mark') { ui.pick = null; ui.aim = null; setHint(null); }
     if (t !== 'link' && ui.pick === 'link') { ui.pick = null; ui.aim = null; ui.lkAim = null; ui.lkDrag = -1; if (ui.lk) ui.lk.sel = -1; setHint(null); }
@@ -1998,7 +2068,7 @@ function syncObjFields() {
     $('f-lunit').value = S.lunit === 'km' ? 'km' : 'm'; $('prn-lunit').value = $('f-lunit').value; $('f-strip').checked = !!S.strip;
     $('wid-row').style.display = S.strip ? '' : 'none'; $('f-wid').value = S.wid > 0 ? S.wid : '';
     $('v-lonly').checked = $('prn-lonly').checked = !!S.lonly; $('v-noscale').checked = $('prn-noscale').checked = !!S.noScale; $('v-smooth').value = $('prn-smooth').value = String(S.smooth | 0);
-    $('db-close').checked = S.mode !== 'open'; $('prn-frame').checked = !!S.frame;
+    $('v-psz').value = S.psz || 65; $('v-pszv').textContent = S.psz || 65; $('db-close').checked = S.mode !== 'open'; $('prn-frame').checked = !!S.frame;
     $('o-del').style.opacity = S.objs.length > 1 ? '' : '.45';
     renderObjBar();
 }
@@ -2059,6 +2129,10 @@ document.querySelectorAll('[data-ss]').forEach(function (b) {
         S.scan.c = { re: S.scan.c.re + dx, im: S.scan.c.im + dy }; scheduleSave(); draw();
     };
 });
+$('v-lmove').onclick = startLblMove; $('lb-done').onclick = endLblMove;
+$('lb-reset').onclick = function () { S.lo = {}; scheduleSave(); afterChange(); toast('Подписи возвращены на места'); };
+$('v-psz').oninput = function () { S.psz = parseInt(this.value, 10) || 65; $('v-pszv').textContent = S.psz; draw(); if ($('m-prn').classList.contains('on')) refreshPreview(); };
+$('v-psz').onchange = function () { scheduleSave(); };
 function setView(k, v) { S[k] = v; syncObjFields(); afterChange(); if ($('m-prn').classList.contains('on')) refreshPreview(); }
 ['lonly', 'noscale'].forEach(function (n) { var key = n === 'lonly' ? 'lonly' : 'noScale'; ['v-', 'prn-'].forEach(function (p) { $(p + n).onchange = function () { setView(key, this.checked); }; }); });
 ['v-smooth', 'prn-smooth'].forEach(function (id) { $(id).onchange = function () { setView('smooth', parseInt(this.value, 10) || 0); }; });
@@ -2880,6 +2954,7 @@ function renderSheet(opts) {
     var PX = 8, c = document.createElement('canvas'); c.width = 210 * PX; c.height = 297 * PX; var q = c.getContext('2d');
     q.fillStyle = '#fff'; q.fillRect(0, 0, c.width, c.height);
     var scheme = opts.mode === 'scheme'; _lq = q;
+    var compact = opts.mode === 'len' || opts.mode === 'lenaz', az = opts.mode === 'len' ? false : opts.mode === 'lenaz' ? true : opts.az !== false;
     var R = compute(), LY = layersAll(), segs = [], ll = [], multiL = LY.length > 1;
     if (!scheme) LY.forEach(function (L) {
         L.segs.forEach(function (s0) { if (s0.gap) return; segs.push({ la: L.pre + plab(s0.a), lb: L.pre + plab(s0.b), az: s0.az, d: s0.d, tie: s0.tie }); });
@@ -2925,7 +3000,7 @@ function renderSheet(opts) {
         else if (R.len > 0) { right.push(['Длина:', fmtL(R.len)]); if (S.strip && S.wid > 0) right.push(['Пл. полосы:', stripGa(R.len, S.wid) + ' га']); }
     }
     if (!S.noScale) right.push(['Масштаб:', '@N']);
-    if (!scheme && !multiL && !R.empty && R.gap !== null && S.showGap !== false) right.push(['Невязка:', gapText(R).replace('Невязка ', '')]);
+    if (!scheme && !compact && !multiL && !R.empty && R.gap !== null && S.showGap !== false) right.push(['Невязка:', gapText(R).replace('Невязка ', '')]);
     var nrow = Math.max(left.length, right.length);
     var yEnd = rowsY + Math.max(nrow - 1, 0) * 4.6;
     var vl = String(S.stamp.vyd || '').split(/\n/).map(function (s) { return s.trim(); }).filter(Boolean).map(function (s) {
@@ -2954,7 +3029,7 @@ function renderSheet(opts) {
     var cxm = (bb.x0 + bb.x1) / 2 - (opts.dx || 0) * N / 1000, cym = (bb.y0 + bb.y1) / 2 + (opts.dy || 0) * N / 1000;
     function mkDraw(hh) {
         var cc = document.createElement('canvas'); cc.width = bw * PX; cc.height = Math.round(hh * PX);
-        drawScene(cc.getContext('2d'), cc.width, cc.height, { k: PX * 1000 / N, cx: cxm, cy: cym }, PX * 0.264, true, { scan: opts.scan, scheme: scheme });
+        drawScene(cc.getContext('2d'), cc.width, cc.height, { k: PX * 1000 / N, cx: cxm, cy: cym }, PX * 0.264, true, { scan: opts.scan, scheme: scheme, noAz: !az });
         return cc;
     }
     var bc = mkDraw(bh), legItems = (opts.legend !== false) ? legendItems() : [], legPos = null, band = 0;
@@ -2984,17 +3059,21 @@ function renderSheet(opts) {
     // ходы — справа от чертежа
     var tx = 144, tw = 54, n = segs.length;
     if (n) {
-        var rh = Math.min(5.4, (bh - 6) / (n + 1)), fs = Math.min(3.2, rh * 0.64), cols = [0, 19, 37, 54], ty = by, i;
+        var extra = compact ? 1 : 0, rh = Math.min(5.4, (bh - 6) / (n + 1 + extra)), fs = Math.min(3.2, rh * 0.64), cols = az ? [0, 19, 37, 54] : [0, 27, 54], ty = by, i, nc = cols.length - 1, nr = n + 1 + extra;
         q.fillStyle = '#EEE'; q.fillRect(tx * PX, ty * PX, tw * PX, rh * PX);
-        ['Ход', dcl() ? 'Азимут магн.' : 'Азимут', 'Длина, м'].forEach(function (h, k) { T(h, tx + (cols[k] + cols[k + 1]) / 2, ty + rh * 0.7, fs, true, 'center'); });
+        (az ? ['Ход', 'Азимут', 'Длина, м'] : ['Ход', 'Длина, м']).forEach(function (h, k) { T(h, tx + (cols[k] + cols[k + 1]) / 2, ty + rh * 0.7, fs, true, 'center'); });
+        var mid = function (j) { return tx + (cols[j] + cols[j + 1]) / 2; }, sum = 0;
         segs.forEach(function (sg, k) {
-            var y = ty + rh * (k + 1), mid = function (j) { return tx + (cols[j] + cols[j + 1]) / 2; };
-            T(sg.la + '–' + sg.lb + (sg.tie ? '*' : ''), mid(0), y + rh * 0.7, fs, false, 'center', 17);
-            T(f1(sg.az) + '°', mid(1), y + rh * 0.7, fs, false, 'center', 17); T(f2(sg.d), mid(2), y + rh * 0.7, fs, false, 'center', 15);
+            var y = ty + rh * (k + 1);
+            T(sg.la + '–' + sg.lb + (sg.tie ? '*' : ''), mid(0), y + rh * 0.7, fs, false, 'center', az ? 17 : 25);
+            if (az) T(f1(sg.az) + '°', mid(1), y + rh * 0.7, fs, false, 'center', 17);
+            T(f2(sg.d), mid(nc - 1), y + rh * 0.7, fs, false, 'center', az ? 15 : 25);
+            if (!sg.tie) sum += sg.d;
         });
-        for (i = 0; i <= n + 1; i++) ln(tx, ty + rh * i, tx + tw, ty + rh * i, 0.15);
-        [0, 19, 37, 54].forEach(function (x) { ln(tx + x, ty, tx + x, ty + rh * (n + 1), 0.15); });
-        if (segs.some(function (s) { return s.tie; })) T('* — привязка от столба', tx, ty + rh * (n + 1) + 3.4, 2.6, false);
+        if (compact) { var ys = ty + rh * (n + 1); q.fillStyle = '#EEE'; q.fillRect(tx * PX, ys * PX, tw * PX, rh * PX); T('Итого', mid(0), ys + rh * 0.7, fs, true, 'center', az ? 17 : 25); T(f2(sum), mid(nc - 1), ys + rh * 0.7, fs, true, 'center', az ? 15 : 25); }
+        for (i = 0; i <= nr; i++) ln(tx, ty + rh * i, tx + tw, ty + rh * i, 0.15);
+        cols.forEach(function (x) { ln(tx + x, ty, tx + x, ty + rh * nr, 0.15); });
+        if (segs.some(function (s) { return s.tie; })) T('* — привязка от столба', tx, ty + rh * nr + 3.4, 2.6, false);
     }
     // координаты — под чертежом
     if (has) {
@@ -3018,7 +3097,7 @@ function renderSheet(opts) {
     }
     ln(8, 276, 202, 276, 0.3);
     T('Съёмку и чертёж составил: ' + (S.stamp.author || ''), 12, 283, 3.4, false, 'left', 96);
-    if (dcl() && !scheme) T('Азимуты магнитные, склонение ' + declStr(dcl()) + (dcl() > 0 ? ' (В)' : ' (З)'), 118, 279.6, 2.8, false);
+    if (dcl() && !scheme && az) T('Азимуты магнитные, склонение ' + declStr(dcl()) + (dcl() > 0 ? ' (В)' : ' (З)'), 118, 279.6, 2.8, false);
     var dm = opts.dateMode || 'today', dtx = null;
     if (dm === 'today') dtx = new Date().toLocaleDateString('ru-RU');
     else if (dm === 'pick') { var mm = String(opts.dateVal || '').match(/^(\d{4})-(\d{2})-(\d{2})$/); dtx = mm ? mm[3] + '.' + mm[2] + '.' + mm[1] : '«__» ________ 20__ г.'; }
@@ -3031,8 +3110,8 @@ var lastSheet = null, printMode = 'full';
 var shDx = 0, shDy = 0;
 function anyContent() { return !compute().empty || layersAll().some(function (L) { return !L.R.empty; }) || (S.marks && S.marks.length > 0); }
 function refreshPreview() {
-    printMode = $('prn-mode').value; $('prn-sarea-w').style.display = printMode === 'scheme' ? '' : 'none';
-    var sc = parseInt($('prn-scale').value, 10) || 0, r = renderSheet({ scale: sc, scan: $('prn-scan').checked && !!(scanImg && S.scan.on), mode: printMode, sarea: $('prn-sarea').checked, frame: $('prn-frame').checked, dateMode: S.dateMode, dateVal: S.dateVal, legend: !!(S.legend && S.legend.on), dx: shDx, dy: shDy });
+    printMode = $('prn-mode').value; $('prn-sarea-w').style.display = printMode === 'scheme' ? '' : 'none'; $('prn-az-w').style.display = printMode === 'full' ? '' : 'none';
+    var sc = parseInt($('prn-scale').value, 10) || 0, r = renderSheet({ scale: sc, scan: $('prn-scan').checked && !!(scanImg && S.scan.on), mode: printMode, az: $('prn-az').checked, sarea: $('prn-sarea').checked, frame: $('prn-frame').checked, dateMode: S.dateMode, dateVal: S.dateVal, legend: !!(S.legend && S.legend.on), dx: shDx, dy: shDy });
     $('prn-shv').textContent = (shDx || shDy) ? ('сдвиг ' + shDx + '; ' + shDy + ' мм') : 'по центру';
     lastSheet = r; $('prn-img').src = r.canvas.toDataURL('image/png');
     $('prn-note').textContent = 'Чертёж в масштабе 1:' + r.N.toLocaleString('ru-RU') + (sc ? '' : ' (подобран автоматически)') + (r.fits ? '' : '. Не помещается на лист — выберите более мелкий масштаб.');
@@ -3048,7 +3127,7 @@ function openPrint() {
     $('m-prn').classList.add('on'); refreshPreview();
 }
 $('prn-frame').onchange = function () { S.frame = this.checked; scheduleSave(); refreshPreview(); };
-$('prn-scale').onchange = refreshPreview; $('prn-scan').onchange = refreshPreview; $('prn-mode').onchange = refreshPreview; $('prn-sarea').onchange = refreshPreview;
+$('prn-scale').onchange = refreshPreview; $('prn-scan').onchange = refreshPreview; $('prn-mode').onchange = refreshPreview; $('prn-sarea').onchange = refreshPreview; $('prn-az').onchange = refreshPreview;
 $('prn-date').onchange = function () {
     S.dateMode = this.value; $('prn-dateval-w').style.display = this.value === 'pick' ? '' : 'none';
     if (this.value === 'pick' && !S.dateVal) { var d = new Date(); S.dateVal = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); $('prn-dateval').value = S.dateVal; }
