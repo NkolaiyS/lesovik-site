@@ -1295,6 +1295,7 @@
                     </div>
 
                     <video id="video-preview" autoplay playsinline muted></video>
+                    <canvas id="bgw-guide"></canvas>
                 </div>
 
                 <!-- 1. КНОПКА ПЕРЕЗАГРУЗКИ КАМЕРЫ (НА ВСЮ ШИРИНУ) -->
@@ -1321,6 +1322,11 @@
                     
                     <button class="btn-action btn-set-zero" style="grid-column: span 2; background:#1E3A1A; border:1px solid #8FBC8F; color:#8FBC8F;" onclick="openPhotoModal()">📷 Фотофиксация с координатами</button>
 
+                    <button class="btn-action btn-set-zero" id="bgw-b-lock" style="grid-column: span 1; background:#14301A; border:1px solid #16A34A; color:#9BE7A8;" onclick="BgWalk.lock()">🎯 Створ: взять курс</button>
+                    <button class="btn-action btn-set-zero" id="bgw-b-walk" style="grid-column: span 1; background:#14301A; border:1px solid #16A34A; color:#9BE7A8;" onclick="BgWalk.walk()">🚶 Режим ходьбы</button>
+                    <button class="btn-action btn-set-zero" id="bgw-b-tick" style="grid-column: span 1; background:#3A2A0E; border:1px solid #D97706; color:#FBBF24;" onclick="BgWalk.tick()">📍 Засечка по ходу</button>
+                    <button class="btn-action btn-reset-zero" id="bgw-b-int" style="grid-column: span 1;" onclick="BgWalk.toggleInt()">🔢 Градусы: целые</button>
+                    <button class="btn-action btn-reset-zero" id="bgw-b-float" style="grid-column: span 2;" onclick="BgWalk.toggleFloat()">⬇ Нижняя кнопка + двойной тап: вкл</button>
                     <button id="btn-fullscreen-toggle" class="btn-fullscreen-toggle" onclick="openFullscreenCompass()">🔍 Увеличить компас (На весь экран)</button>
 
                     <button class="btn-instruction" onclick="openInstruction()">Инструкция для таксатора</button>
@@ -3789,19 +3795,19 @@
         const badge = document.getElementById('angle-turn-badge');
         
         if (currentSystemMode === 'magnetic') {
-            document.getElementById('live-azimuth').innerText = `${currentAzimuth.toFixed(1)}°`;
+            document.getElementById('live-azimuth').innerText = bgwAzText(currentAzimuth, 'a');
             if (baseAzimuth !== null) {
                 let turnAngle = (currentTraverseDirection === 'counter-clockwise')
                     ? (baseAzimuth - currentAzimuth)
                     : (currentAzimuth - baseAzimuth);
                 turnAngle = ((turnAngle % 360) + 360) % 360;
-                badge.innerText = `ПОВОРОТ: ${turnAngle.toFixed(1)}°`;
+                badge.innerText = `ПОВОРОТ: ${bgwNum(turnAngle)}°`;
                 badge.style.display = 'block';
             } else {
                 badge.style.display = 'none';
             }
         } else if (currentSystemMode === 'theodolite') {
-            document.getElementById('live-azimuth').innerText = `${currentAzimuth.toFixed(1)}°`;
+            document.getElementById('live-azimuth').innerText = bgwAzText(currentAzimuth, 'a');
             badge.style.display = 'none';
         }
 
@@ -3809,7 +3815,7 @@
         rotateDial(document.getElementById('fs-compass-svg'), 'fs-compass-svg', sensorAzimuth);
         rotateDial(document.getElementById('fs-mini-compass-svg'), 'fs-mini-compass-svg', sensorAzimuth);
 
-        let dmsText = `АЗИМУТ: ${decimalAngleToDMS(sensorAzimuth)}`;
+        let dmsText = bgwIntMode() ? `АЗИМУТ: ${bgwAzText(sensorAzimuth, 'd')}` : `АЗИМУТ: ${decimalAngleToDMS(sensorAzimuth)}`;
         let coordsText = coordsFullText();
         let altText = altitudeText();
 
@@ -3822,7 +3828,7 @@
         document.getElementById('fs-altitude').innerText = altText;
 
         const miniAzLabel = document.getElementById('fs-mini-azimuth');
-        if (miniAzLabel) miniAzLabel.innerText = `${sensorAzimuth.toFixed(1)}°`;
+        if (miniAzLabel) miniAzLabel.innerText = bgwAzText(sensorAzimuth, 'm');
 
         let currentSector = Math.floor((sensorAzimuth + 2) / 30);
         if (currentSector !== lastVibratedSector) {
@@ -3861,12 +3867,13 @@
             const isPitchOk = Math.abs(Math.abs(pitch) - 90) <= 12;
             const isRollOk = Math.abs(roll) <= 12;
             
+            btnCapture.disabled = false;   // запись всегда доступна; горизонт — только подсказка точности
             if (isPitchOk && isRollOk) {
+                bgwStablePush(sensorAzimuth);
                 isLevel = true;
                 document.getElementById('gyro-ring').classList.add('level-perfect');
                 btnCapture.classList.add('ready-to-fire');
                 btnCapture.innerText = "➕ Зафиксировать азимут в журнал";
-                btnCapture.disabled = false;
 
                 if (!wasLevelLastTick && navigator.vibrate) {
                     navigator.vibrate(18); // Виброподсказка при поимке уровня
@@ -3876,8 +3883,7 @@
                 isLevel = false;
                 document.getElementById('gyro-ring').classList.remove('level-perfect');
                 btnCapture.classList.remove('ready-to-fire');
-                btnCapture.innerText = "Поймайте уровень horizon";
-                btnCapture.disabled = true;
+                btnCapture.innerText = "➕ Записать (телефон наклонён)";
                 wasLevelLastTick = false;
             }
         } else if (currentSystemMode === 'theodolite') {
@@ -4004,13 +4010,20 @@
 
         if (isGpsMode) {
             if (!gpsPoint1 || !isLevel || calculatedGpsAzimuth === null) return;
-        } else if (!isLevel) {
+        } else if (!isLevel && currentSystemMode !== 'magnetic') {
             return;
         }
 
-        let valueToRecord = isGpsMode
-            ? round1(calculatedGpsAzimuth)             // истинный GPS-азимут
-            : round1(getSmoothedBufferAzimuth());      // усреднённый магнитный азимут
+        // Визир: запись разрешена всегда. Если телефон сейчас наклонён — берём среднее последних ровных замеров
+        let approxAz = false;
+        let valueToRecord;
+        if (isGpsMode) valueToRecord = round1(calculatedGpsAzimuth);                  // истинный GPS-азимут
+        else if (isLevel || currentSystemMode !== 'magnetic') valueToRecord = round1(getSmoothedBufferAzimuth());   // усреднённый магнитный азимут
+        else {
+            const stA = bgwStableAz();
+            if (stA !== null) valueToRecord = round1(stA);
+            else { valueToRecord = round1(getSmoothedBufferAzimuth()); approxAz = true; }
+        }
 
         let calculatedDist = 0; // 0 = «длина не задана» (подсвечивается красным), а не выдуманные 20 м
         let startPoint = null;
@@ -4041,6 +4054,7 @@
             altitude: startPoint ? startPoint.alt : null,
             accuracy: startPoint ? startPoint.acc : null
         };
+        if (approxAz) newMeasurement.approx = true;
 
         measurementsLog.push(newMeasurement);
         
@@ -4068,7 +4082,7 @@
         updateFsMapUI();
 
         if (navigator.vibrate) navigator.vibrate(40);
-        showToast(`➕ Точка Т${newMeasurement.id} зафиксирована!`);
+        showToast(approxAz ? `➕ Точка Т${newMeasurement.id} записана ориентировочно: телефон был наклонён (≈)` : `➕ Точка Т${newMeasurement.id} зафиксирована!`);
     }
 
     function changeLineAzimuth(id, value) {
@@ -4147,7 +4161,7 @@
 
             tbody.innerHTML += `
                 <tr>
-                    <td class="row-lens-cell" data-row-id="${m.id}"><b>№${m.id}</b><span class="mode-tag ${m.systemMode === 'theodolite' ? '' : (m.systemMode === 'gps_heading' ? 'gps' : 'visir')}">${m.systemMode === 'theodolite' ? '🧭 лимб' : (m.systemMode === 'gps_heading' ? '📡 GPS' : '👁 визир')}</span></td>
+                    <td class="row-lens-cell" data-row-id="${m.id}"><b>№${m.id}</b>${m.approx ? '<span title="Азимут ориентировочный: телефон был наклонён" style="color:#D97706;font-weight:700"> ≈</span>' : ''}${m.ticks && m.ticks.length ? '<span title="Засечки по ходу" style="font-size:10px;color:#B45309"> 📍' + m.ticks.length + '</span>' : ''}<span class="mode-tag ${m.systemMode === 'theodolite' ? '' : (m.systemMode === 'gps_heading' ? 'gps' : 'visir')}">${m.systemMode === 'theodolite' ? '🧭 лимб' : (m.systemMode === 'gps_heading' ? '📡 GPS' : '👁 визир')}</span></td>
                     <td>
                         <input type="number" class="input-dist" value="${m.azimuth}" step="0.1" style="color:var(--forest-green); font-weight:700;" onfocus="this.select()" oninput="changeLineAzimuth(${m.id}, this.value)">
                     </td>
@@ -4322,6 +4336,13 @@
                 ctx.moveTo(p1.x, p1.y);
                 ctx.lineTo(p2.x, p2.y);
                 ctx.stroke();
+                const tks = measurementsLog[i] && measurementsLog[i].ticks;
+                if (tks && tks.length && measurementsLog[i].distance > 0) {
+                    const L = Math.hypot(p2.x - p1.x, p2.y - p1.y) || 1, ux = (p2.x - p1.x) / L, uy = (p2.y - p1.y) / L;
+                    ctx.save(); ctx.strokeStyle = '#D97706'; ctx.lineWidth = 2;
+                    tks.forEach(t => { if (!(t.d > 0)) return; const f = Math.min(1, t.d / measurementsLog[i].distance), cx = p1.x + (p2.x - p1.x) * f, cy = p1.y + (p2.y - p1.y) * f; ctx.beginPath(); ctx.moveTo(cx - uy * 5, cy + ux * 5); ctx.lineTo(cx + uy * 5, cy - ux * 5); ctx.stroke(); });
+                    ctx.restore();
+                }
 
                 let midX = (p1.x + p2.x) / 2;
                 let midY = (p1.y + p2.y) / 2;
@@ -4732,7 +4753,11 @@ function bgAbrisItem(name, log, passport, sysMode, declOverride, ts) {
     const noGps = rows.every(m => m.systemMode !== 'gps_heading');
     let decl = declOverride !== undefined && declOverride !== null ? parseFloat(declOverride) : ((sysMode === 'theodolite') ? offsetTheodolite : offsetMagnetic);
     if (!noGps || !isFinite(decl)) decl = 0;
-    const lines = rows.map(m => ({ az: Math.round(bgNormAz(parseFloat(m.azimuth) - decl) * 100) / 100, d: parseFloat(m.distance) }));
+    const lines = rows.map(m => { const o = { az: Math.round(bgNormAz(parseFloat(m.azimuth) - decl) * 100) / 100, d: parseFloat(m.distance) };
+        const tk = (m.ticks || []).map(t => t && t.d).filter(x => isFinite(x) && x > 0);
+        if (tk.length) o.tk = tk;
+        return o;
+    });
     let p0 = { lat: null, lng: null };
     for (const m of rows) { if (hasCoords(m) && (m.lat !== 0 || m.lng !== 0)) { p0 = { lat: m.lat, lng: m.lng }; break; } }
     let s = 1; if (lines.length <= s + 2) s = Math.max(0, Math.min(s, lines.length - 3));
@@ -5464,6 +5489,10 @@ const BgStake = (function () {
         if (typeof azimuthRingBuffer !== 'undefined' && azimuthRingBuffer.length) return getSmoothedBufferAzimuth();
         return currentAzimuth;
     }
+    function target() {
+        const p = cur(); if (!db.hud || !p) return null; const l = p.lines[db.li]; if (!l) return null;
+        return { az: rt(p, l.az), tol: db.tol || 2 };
+    }
     function hud(on) {
         db.hud = !!on; save();
         const h = $('stake-hud'); if (h) h.style.display = on && cur() ? 'block' : 'none';
@@ -5576,10 +5605,185 @@ const BgStake = (function () {
         initPick(); render();
         if (db.hud && cur()) hud(true);
     }
-    return { init, framePts, draw, scanAnchor, openPanel, openText, previewText, addText, newManual, select, del, edit, rem, remLast, addLine, setp, setTol, go, fit, hud, step, record, undo, startPick, cancelPick, resetCal, importJson, importText, importXml, parseList, parseAngle, _db: () => db, _rt: rt, _planPts: planPts };
+    return { target, init, framePts, draw, scanAnchor, openPanel, openText, previewText, addText, newManual, select, del, edit, rem, remLast, addLine, setp, setTol, go, fit, hud, step, record, undo, startPick, cancelPick, resetCal, importJson, importText, importXml, parseList, parseAngle, _db: () => db, _rt: rt, _planPts: planPts };
 })();
 window.BgStake = BgStake;
 try { BgStake.init(); } catch (e) { console.error(e); }
+</script>
+
+<style>
+#toast-message { z-index: 100000 !important; }
+#bgw-guide { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 12; pointer-events: none; display: none; }
+#bgw-walk { position: fixed; inset: 0; z-index: 99990; background: #0B0F0C; color: #fff; display: none; flex-direction: column; user-select: none; -webkit-user-select: none; touch-action: manipulation; font-family: inherit; }
+#bgw-walk .w-top { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; gap: 10px; }
+#bgw-walk .w-tgt { font-size: clamp(22px, 7vw, 34px); font-weight: 800; color: #9BE7A8; }
+#bgw-walk .w-cur { font-size: clamp(14px, 4.4vw, 20px); opacity: .85; }
+#bgw-walk .w-x { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.3); border-radius: 10px; padding: 9px 12px; font-size: 14px; }
+#bgw-walk .w-mid { flex: 1; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: clamp(60px, 24vw, 150px); letter-spacing: -2px; text-align: center; padding: 0 8px; }
+#bgw-walk .w-mid.ok { color: #22C55E; } #bgw-walk .w-mid.near { color: #F59E0B; } #bgw-walk .w-mid.far { color: #EF4444; }
+#bgw-walk .w-info { text-align: center; font-size: clamp(15px, 4.6vw, 20px); padding: 4px 12px 10px; opacity: .9; }
+#bgw-walk .w-btns { display: flex; flex-direction: column; gap: 10px; padding: 0 12px calc(14px + env(safe-area-inset-bottom)); }
+#bgw-walk .w-b { border: 0; border-radius: 16px; font-weight: 800; font-size: clamp(20px, 6vw, 28px); min-height: 19vh; color: #fff; }
+#bgw-walk .w-b.t { background: #B45309; } #bgw-walk .w-b.g { background: #15803D; }
+#bgw-float { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9000; display: none; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); background: linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,0)); pointer-events: none; }
+#bgw-float button { pointer-events: auto; width: 100%; min-height: 58px; border: 0; border-radius: 14px; font-weight: 800; font-size: 18px; color: #fff; background: #15803D; box-shadow: 0 4px 14px rgba(0,0,0,.4); }
+</style>
+<div id="bgw-walk">
+  <div class="w-top"><div><div class="w-tgt" id="bgw-w-tgt">Курс —</div><div class="w-cur" id="bgw-w-cur">сейчас —</div></div><button class="w-x" onclick="BgWalk.walkExit(false)">✕ Выйти</button></div>
+  <div class="w-mid" id="bgw-w-mid">—</div>
+  <div class="w-info" id="bgw-w-info">—</div>
+  <div class="w-btns"><button class="w-b t" onclick="BgWalk.tick()">📍 ЗАСЕЧКА</button><button class="w-b g" onclick="BgWalk.walkExit(true)">✓ ПРИШЁЛ</button></div>
+</div>
+<div id="bgw-float"><button onclick="captureMeasurement()">➕ ЗАПИСАТЬ ТОЧКУ</button></div>
+<script>
+/* ===== Створ, режим ходьбы, засечки, целые градусы (БГ-ХНС ПРО) ===== */
+var bgwSt = [];
+function bgwStablePush(az) { var t = Date.now(); bgwSt.push({ t: t, az: az }); while (bgwSt.length && t - bgwSt[0].t > 8000) bgwSt.shift(); }
+function bgwStableAz() {
+    var t = Date.now(), a = bgwSt.filter(function (e) { return t - e.t <= 6000; }).slice(-20); if (!a.length) return null;
+    var s = 0, c = 0; a.forEach(function (e) { var r = e.az * Math.PI / 180; s += Math.sin(r); c += Math.cos(r); });
+    return (Math.atan2(s, c) * 180 / Math.PI + 360) % 360;
+}
+function bgwIntMode() { try { return localStorage.getItem('bgw_int') !== '0'; } catch (e) { return true; } }
+var bgwShown = {};
+function bgwAzText(az, key) {
+    if (!bgwIntMode()) return az.toFixed(1) + '°';
+    var cur = bgwShown[key];
+    if (cur === undefined || Math.abs(((az - cur + 540) % 360) - 180) >= 0.85) bgwShown[key] = cur = Math.round(az) % 360;
+    return cur + '°';
+}
+function bgwNum(x) { return bgwIntMode() ? String(Math.round(x)) : x.toFixed(1); }
+var BgWalk = (function () {
+    var $ = function (i) { return document.getElementById(i); };
+    var tgt = null, devS = 0, timer = 0, inTol = false, walking = false, wake = null, lastTap = 0;
+    var floatOn = (function () { try { return localStorage.getItem('bgw_float') !== '0'; } catch (e) { return true; } })();
+    function liveAz() {
+        if (typeof currentSystemMode !== 'undefined' && currentSystemMode === 'gps_heading') return calculatedGpsAzimuth;
+        return (azimuthRingBuffer && azimuthRingBuffer.length) ? getSmoothedBufferAzimuth() : currentAzimuth;
+    }
+    function target() {
+        if (tgt !== null) return { az: tgt, tol: 2 };
+        try { var s = window.BgStake && BgStake.target && BgStake.target(); if (s) return s; } catch (e) { }
+        return null;
+    }
+    function dev() {
+        var t = target(), R = liveAz(); if (!t || R === null || R === undefined || isNaN(R)) return null;
+        var d = ((t.az - R + 540) % 360) - 180;
+        devS = (Math.abs(d - devS) > 60) ? d : devS + 0.35 * (d - devS);
+        return { d: devS, t: t };
+    }
+    function klass(ad, tol) { return ad <= tol ? 'ok' : (ad <= tol * 3 ? 'near' : 'far'); }
+    function drawGuide() {
+        var cv = $('bgw-guide'); if (!cv) return;
+        var t = target();
+        if (!t || walking) { cv.style.display = 'none'; return; }
+        var wr = cv.parentElement; if (!wr || wr.offsetParent === null) return;
+        cv.style.display = 'block';
+        var dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+        if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+        var g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+        var D = dev(); if (!D) return;
+        var tol = t.tol, ad = Math.abs(D.d), k = klass(ad, tol), col = k === 'ok' ? '#22C55E' : (k === 'near' ? '#F59E0B' : '#EF4444');
+        var ppd = W / 55, x0 = W / 2 + D.d * ppd, yv = H * 0.30;
+        function poly(m, fill, stroke, lw, dash) {
+            var wb = tol * ppd * 3.2 * m, wt = tol * ppd * 0.5 * m;
+            g.beginPath(); g.moveTo(x0 - wb, H); g.lineTo(x0 - wt, yv); g.lineTo(x0 + wt, yv); g.lineTo(x0 + wb, H);
+            if (fill) { g.fillStyle = fill; g.fill(); }
+            g.setLineDash(dash || []); g.lineWidth = lw; g.strokeStyle = stroke;
+            g.beginPath(); g.moveTo(x0 - wb, H); g.lineTo(x0 - wt, yv); g.moveTo(x0 + wb, H); g.lineTo(x0 + wt, yv); g.stroke(); g.setLineDash([]);
+        }
+        poly(3, null, 'rgba(239,68,68,.75)', 2, [8, 8]);
+        poly(1, col === '#22C55E' ? 'rgba(34,197,94,.18)' : 'rgba(245,158,11,.14)', '#FB923C', 3);
+        g.lineWidth = 4; g.strokeStyle = col; g.setLineDash([16, 10]); g.beginPath(); g.moveTo(x0, H); g.lineTo(x0, yv); g.stroke(); g.setLineDash([]);
+        for (var i = 1; i <= 5; i++) {   // «шпалы» в перспективе
+            var f = Math.pow(i / 6, 1.7), y = yv + (H - yv) * f, hw = tol * ppd * (0.5 + 2.7 * f);
+            g.lineWidth = 2; g.strokeStyle = 'rgba(251,146,60,.85)'; g.beginPath(); g.moveTo(x0 - hw, y); g.lineTo(x0 + hw, y); g.stroke();
+        }
+        g.fillStyle = col; g.beginPath(); g.moveTo(x0, yv - 14); g.lineTo(x0 - 9, yv + 4); g.lineTo(x0 + 9, yv + 4); g.closePath(); g.fill();
+        var txt = ad <= tol ? '✔ в створе' : (D.d > 0 ? 'вправо ' + Math.round(ad) + '° ►' : '◄ влево ' + Math.round(ad) + '°');
+        g.font = '800 24px sans-serif'; g.textAlign = 'center'; g.lineWidth = 5; g.strokeStyle = 'rgba(0,0,0,.7)'; g.strokeText(txt, W / 2, H - 16); g.fillStyle = col; g.fillText(txt, W / 2, H - 16);
+        g.font = '700 15px sans-serif'; var tl = 'курс ' + Math.round(t.az) + '°'; g.strokeText(tl, W / 2, 22); g.fillStyle = '#fff'; g.fillText(tl, W / 2, 22);
+        if (ad <= tol) { if (!inTol) { inTol = true; if (navigator.vibrate) navigator.vibrate(50); } } else inTol = false;
+    }
+    function walkTick() {
+        var m = $('bgw-w-mid'); if (!m) return;
+        var D = dev(), R = liveAz();
+        $('bgw-w-tgt').innerText = 'Курс ' + (target() ? Math.round(target().az) + '°' : '—');
+        $('bgw-w-cur').innerText = 'сейчас ' + (R === null || R === undefined || isNaN(R) ? '—' : bgwAzText(R, 'w'));
+        if (!D) { m.className = 'w-mid'; m.innerText = '—'; }
+        else {
+            var ad = Math.abs(D.d), k = klass(ad, D.t.tol); m.className = 'w-mid ' + k;
+            m.innerText = ad <= D.t.tol ? '✔' : (D.d > 0 ? Math.round(ad) + '° ►' : '◄ ' + Math.round(ad) + '°');
+            if (ad <= D.t.tol) { if (!inTol) { inTol = true; if (navigator.vibrate) navigator.vibrate(40); } } else inTol = false;
+        }
+        var last = measurementsLog.length ? measurementsLog[measurementsLog.length - 1] : null, parts = [];
+        if (last) { if (last.steps) parts.push('шагов ' + last.steps); if (last.distance > 0) parts.push('≈ ' + last.distance + ' м'); if (last.ticks && last.ticks.length) parts.push('засечек ' + last.ticks.length); }
+        $('bgw-w-info').innerText = parts.length ? parts.join(' · ') : 'двойное касание по экрану — засечка';
+    }
+    function loop() { if (walking) walkTick(); else drawGuide(); }
+    function ensureLoop() { if (!timer) timer = setInterval(loop, 70); }
+    function lock() {
+        if (tgt !== null) { tgt = null; $('bgw-b-lock').innerText = '🎯 Створ: взять курс'; var c = $('bgw-guide'); if (c) c.style.display = 'none'; showToast('Створ снят'); return; }
+        var R = liveAz(); if (R === null || R === undefined || isNaN(R)) { showToast('Нет азимута: дождитесь датчика'); return; }
+        tgt = Math.round(R * 10) / 10; devS = 0; $('bgw-b-lock').innerText = '🎯 Створ ' + Math.round(tgt) + '° · снять';
+        ensureLoop(); if (navigator.vibrate) navigator.vibrate(30);
+        showToast('Курс ' + Math.round(tgt) + '° взят. Держите зелёную линию по центру.');
+    }
+    async function walk() {
+        if (!target()) lock(); if (!target()) return;
+        walking = true; var w = $('bgw-walk'); w.style.display = 'flex'; ensureLoop();
+        try { var v = $('video-preview'); if (v && v.srcObject) { v.srcObject.getTracks().forEach(function (t) { t.stop(); }); v.srcObject = null; } } catch (e) { }
+        try { if (navigator.wakeLock) wake = await navigator.wakeLock.request('screen'); } catch (e) { }
+        walkTick();
+    }
+    function walkExit(arrived) {
+        walking = false; $('bgw-walk').style.display = 'none';
+        try { if (wake) { wake.release(); wake = null; } } catch (e) { }
+        try { startCamera(true); } catch (e) { }
+        if (arrived) { showToast('Пришли. Наведите визир на следующую веху: курс можно взять заново.'); }
+    }
+    function tick() {
+        var last = measurementsLog.length ? measurementsLog[measurementsLog.length - 1] : null;
+        if (!last) { showToast('Сначала запишите точку-старт, затем ставьте засечки по ходу'); return; }
+        var d = null;
+        if (globalDistanceMethod === 'steps') d = (last.steps || 0) * stepLength;
+        else if (typeof gpsFixed !== 'undefined' && gpsFixed && last.lat !== null && last.lat !== undefined && isFinite(last.lat)) d = calculateDistance(last.lat, last.lng, currentLat, currentLng);
+        d = (d !== null && isFinite(d) && d > 0) ? Math.round(d * 10) / 10 : 0;
+        (last.ticks = last.ticks || []).push({ d: d, t: Date.now(), lat: (typeof gpsFixed !== 'undefined' && gpsFixed) ? currentLat : null, lng: (typeof gpsFixed !== 'undefined' && gpsFixed) ? currentLng : null });
+        if (navigator.vibrate) navigator.vibrate(25);
+        saveToLocalStorage(); renderLogTable(); drawPolygon();
+        showToast('📍 Засечка №' + last.ticks.length + (d > 0 ? ' на ' + d + ' м от точки Т' + last.id : ' (расстояние неизвестно: включите шаги или GPS)'));
+        if (walking) walkTick();
+    }
+    function toggleInt() { var on = !bgwIntMode(); try { localStorage.setItem('bgw_int', on ? '1' : '0'); } catch (e) { } bgwShown = {}; syncBtns(); showToast(on ? 'Градусы: целые (без «дрожащих» десятых)' : 'Градусы: с десятыми'); }
+    function toggleFloat() { floatOn = !floatOn; try { localStorage.setItem('bgw_float', floatOn ? '1' : '0'); } catch (e) { } syncBtns(); floatUpdate(); showToast(floatOn ? 'Нижняя кнопка записи и двойной тап включены' : 'Нижняя кнопка записи выключена'); }
+    function syncBtns() {
+        var b = $('bgw-b-int'); if (b) b.innerText = bgwIntMode() ? '🔢 Градусы: целые' : '🔢 Градусы: с десятыми';
+        var f = $('bgw-b-float'); if (f) f.innerText = floatOn ? '⬇ Нижняя кнопка + двойной тап: вкл' : '⬇ Нижняя кнопка + двойной тап: выкл';
+    }
+    var wrapVisible = false;
+    function floatUpdate() {
+        var f = $('bgw-float'); if (!f) return;
+        var show = floatOn && wrapVisible && !walking && (typeof currentSystemMode === 'undefined' || currentSystemMode === 'magnetic');
+        f.style.display = show ? 'block' : 'none';
+        document.body.style.paddingBottom = show ? '84px' : '';
+    }
+    function init() {
+        syncBtns();
+        var wr = document.querySelector('.camera-viewport-wrapper');
+        if (wr && window.IntersectionObserver) { new IntersectionObserver(function (e) { wrapVisible = e[0].isIntersecting; floatUpdate(); }, { threshold: 0.35 }).observe(wr); }
+        setInterval(floatUpdate, 1500);
+        if (wr) wr.addEventListener('touchend', function (e) {
+            if (!floatOn || e.changedTouches.length !== 1 || e.target.closest('button')) return;
+            var n = Date.now(); if (n - lastTap < 350) { lastTap = 0; if (typeof captureMeasurement === 'function') { captureMeasurement(); } } else lastTap = n;
+        }, { passive: true });
+        var w = $('bgw-walk'), lt = 0;
+        w.addEventListener('touchend', function (e) { if (e.target.closest('button')) return; var n = Date.now(); if (n - lt < 350) { lt = 0; tick(); } else lt = n; }, { passive: true });
+        ensureLoop();
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    return { lock: lock, walk: walk, walkExit: walkExit, tick: tick, toggleInt: toggleInt, toggleFloat: toggleFloat, target: target };
+})();
 </script>
 
 </body>
