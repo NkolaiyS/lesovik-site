@@ -192,6 +192,12 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
     #lesovik-project-btn-trigger { background: var(--bento) !important; color: var(--forest) !important; border: 1px solid var(--border) !important; border-radius: 8px !important; padding: 6px 10px !important; font-size: .84em !important; white-space: nowrap; margin-right: 0 !important; }
     #toolbar { position: absolute; left: 8px; top: 8px; z-index: 25; width: var(--tb-w); max-height: calc(100% - 16px); overflow-y: auto; display: flex; flex-direction: column; gap: 5px; scrollbar-width: none; touch-action: pan-y; }
     #toolbar::-webkit-scrollbar { display: none; }
+    .tool.lk { position: relative; opacity: .7; }
+    .tool.lk b { position: absolute; top: 2px; right: 2px; font-size: 8.5px; line-height: 1; background: #E67E22; color: #fff; border-radius: 6px; padding: 2px 3px; font-weight: 700; }
+    #pdemo { position: absolute; left: calc(var(--tb-w) + 18px); right: 10px; bottom: 74px; display: none; background: rgba(255,255,255,.97); color: #222B25; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.25); padding: 8px 10px; font-size: .92em; z-index: 6; flex-wrap: wrap; gap: 6px; align-items: center; }
+    #pdemo.on { display: flex; } #pdemo.lock { border-color: #E67E22; background: #FFF6EC; }
+    #m-lock .modal ul { margin: 0 0 10px; padding-left: 18px; font-size: .92em; line-height: 1.5; }
+    #m-lock .lk-note { font-size: .85em; color: var(--muted); margin: 0 0 10px; }
     .tool { flex: 0 0 auto; width: 100%; padding: 6px 2px 5px; border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,.95); color: var(--text); font-size: calc(var(--fs) * .68); font-weight: 600; line-height: 1.15; text-align: center; cursor: pointer; user-select: none; -webkit-user-select: none; }
     .tool i { display: block; font-style: normal; font-size: calc(var(--fs) * 1.3); line-height: 1.25; margin-bottom: 1px; }
     .tool.active { background: var(--forest); color: #fff; border-color: var(--forest); }
@@ -246,8 +252,11 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         <button class="tool" id="t-fit" title="Показать всё"><i>🎯</i>Всё</button>
         <button class="tool" id="t-panel" title="Панель данных"><i>📋</i>Данные</button>
         <button class="tool" id="t-lens" title="Линза: удерживайте"><i>🔍</i>Линза</button>
+        <button class="tool lk" id="t-mark" title="Знаки: аншлаг, шлагбаум, мост, водоём… (в Абрис ПРО+)"><i>📌</i>Знаки<b>ПРО+</b></button>
+        <button class="tool lk" id="t-link" title="Соединить точки в контуры и линии (в Абрис ПРО+)"><i>🔗</i>Соединить<b>ПРО+</b></button>
     </nav>
     <div id="hint"></div>
+    <div id="pdemo"></div>
     <div id="calbar">
         <span id="cb-text" style="font-size:.9em">—</span>
         <label style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:.9em">по линейке: <input type="number" id="cal-real" step="0.1" min="0.1" inputmode="decimal"> м</label>
@@ -565,6 +574,13 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
 <div id="toast"></div>
 <div id="print-sheet"><img id="ps-img" alt="Лист А4"></div>
 
+<div class="overlay" id="m-lock"><div class="modal">
+    <h3 id="lk-h">✨ Абрис ПРО+</h3>
+    <p id="lk-p" style="margin:0 0 8px"></p>
+    <ul id="lk-ul"></ul>
+    <p class="lk-note">Это функция платной версии <b>Абрис ПРО+</b>. Владельцам <b>БГ-ХНС ПРО</b> она открыта бесплатно. Обычный «Абрис ПРО» остаётся бесплатным.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="lk-plus">Тарифы и подробности</button><button class="btn" id="lk-close">Закрыть</button></div>
+</div></div>
 <script src="lesovik-core.js"></script>
 <script>
 (function () {
@@ -2360,6 +2376,49 @@ function init() {
     var seen = false; try { seen = localStorage.getItem(KEY + '_help') === '1'; } catch (e) { }
     if (!seen && !hasData()) setTimeout(openHelp, 700);
 }
+
+/* ---------- ✨ витрина Абрис ПРО+: закрытые кнопки и пробные координаты ---------- */
+var LOCKS = {
+    mark: { h: '📌 Знаки на чертеже', p: 'Ставьте на схему аншлаги, шлагбаумы, столбы, мосты, водоёмы и беседки — как на настоящем плане. Можно делать схему вообще без делянки.', li: ['7 видов знаков, подписи и условные обозначения в легенде листа', 'Знаки попадают на печатный лист А4', 'Тап по любому месту — координаты и «поставить знак» здесь же'] },
+    link: { h: '🔗 Соединить точки из навигатора', p: 'Точки из Garmin или телефона (GPX, KML) часто идут не по порядку. Вместо жёсткого порядка вы сами соединяете их касанием.', li: ['Замкнутая область сама становится делянкой с площадью', 'Незамкнутая цепочка — линия с длиной', 'Можно собрать несколько контуров из одного файла'] },
+    probe: { h: '🛰 Координаты любой точки — касанием', p: 'Коснитесь чертежа в любом месте — получите широту и долготу. Привязка скана по одному столбу (или по 2–8 точкам с показом ошибки в метрах) — и вы снимаете координаты прямо с планшета.', li: ['Координаты любой точки, копирование одним нажатием', 'Рисуете на скане — координаты считаются сами', 'Лупа под пальцем на смартфоне: палец не закрывает точку', 'Ещё: перетаскивание подписей, 5 компоновок листа А4, размер точек, без рекламы'] }
+};
+function showLock(k) {
+    var L = LOCKS[k]; if (!L) return; goal('lock_' + k);
+    $('lk-h').textContent = L.h; $('lk-p').textContent = L.p; $('lk-ul').innerHTML = L.li.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('');
+    $('m-lock').classList.add('on');
+}
+$('t-mark').onclick = function () { showLock('mark'); };
+$('t-link').onclick = function () { showLock('link'); };
+$('lk-close').onclick = function () { $('m-lock').classList.remove('on'); };
+$('lk-plus').onclick = function () { $('m-lock').classList.remove('on'); goal('lock_to_plus'); var b = $('b-plus'); if (b) b.click(); };
+$('m-lock').addEventListener('click', function (e) { if (e.target.id === 'm-lock') e.target.classList.remove('on'); });
+var PD_MAX = 3;   // сколько раз можно «почувствовать» координаты любой точки
+function pdCount() { try { return parseInt(localStorage.getItem('abris_probe_demo') || '0', 10) || 0; } catch (e) { return 0; } }
+function pdBar(html, lock, auto) { var b = $('pdemo'); b.innerHTML = html; b.classList.add('on'); b.classList.toggle('lock', !!lock); clearTimeout(pdBar.t); if (auto) pdBar.t = setTimeout(function () { b.classList.remove('on'); }, auto); var x = $('pd-x'); if (x) x.onclick = function () { b.classList.remove('on'); }; var m = $('pd-more'); if (m) m.onclick = function () { b.classList.remove('on'); showLock('probe'); }; }
+function pdAt(sx, sy) {
+    var o = originLL();
+    if (!o) { toast('Чтобы увидеть координаты, внесите координаты начальной точки Т.0 (вкладка «Данные»)'); return; }
+    var n = pdCount();
+    if (n >= PD_MAX) { goal('probe_demo_locked'); pdBar('<span>🔒 <b>Координаты любой точки</b> — это функция Абрис ПРО+</span> <button class="btn primary" id="pd-more">Подробнее</button> <button class="btn" id="pd-x" aria-label="Закрыть">✕</button>', true, 0); return; }
+    var h = hitPoint(sx, sy), R = compute(), w = h >= 0 ? { x: R.pts[h].x, y: R.pts[h].y } : s2w(sx, sy), k = mpd(o.lat);
+    var ll = { lat: o.lat + w.y / k.lat, lng: o.lng + w.x / k.lng };
+    try { localStorage.setItem('abris_probe_demo', String(n + 1)); } catch (e) { }
+    goal('probe_demo_use');
+    pdBar('<span>' + (h >= 0 ? 'Точка ' + h + ': ' : 'Место: ') + '<b>' + ll.lat.toFixed(6) + ', ' + ll.lng.toFixed(6) + '</b></span> <span style="opacity:.65;font-size:.85em">пробуем: ' + (n + 1) + ' из ' + PD_MAX + ' · полностью — в ПРО+</span> <button class="btn" id="pd-x" aria-label="Закрыть">✕</button>', false, 9000);
+}
+(function () {
+    var down = {}, tap = null;
+    cv.addEventListener('pointerdown', function (e) { down[e.pointerId] = 1; var p = evPos(e); tap = Object.keys(down).length === 1 ? { id: e.pointerId, x: p.x, y: p.y, t: Date.now() } : null; });
+    function up(e) {
+        var t = tap; delete down[e.pointerId]; tap = null;
+        if (e.type !== 'pointerup' || !t || t.id !== e.pointerId || Object.keys(down).length) return;
+        var p = evPos(e); if (Date.now() - t.t > 450 || Math.hypot(p.x - t.x, p.y - t.y) > 8) return;
+        if (ui.tool !== 'pan' || ui.pick || ui.dragPt !== null && ui.dragPt !== undefined || $('m-lock').classList.contains('on')) return;
+        pdAt(p.x, p.y);
+    }
+    cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+})();
 window.__abris = {
     get S() { return S; }, setS: function (x) { S = x; }, compute: compute, segments: segments, importText: importText, parseCoordList: parseCoordList, parseCoord: parseCoord,
     llPoints: llPoints, azToRumb: azToRumb, rumbToAz: rumbToAz, scanScale: scanScale, scanRotSigned: scanRotSigned, newState: newState, fromRows: fromRows,
