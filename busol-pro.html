@@ -1322,8 +1322,10 @@
                     
                     <button class="btn-action btn-set-zero" style="grid-column: span 2; background:#1E3A1A; border:1px solid #8FBC8F; color:#8FBC8F;" onclick="openPhotoModal()">📷 Фотофиксация с координатами</button>
 
+                    <button class="btn-action btn-reset-zero" id="bgw-b-mode" style="grid-column: span 2;" onclick="BgWalk.toggleMode()">🎛 Режим</button>
                     <button class="btn-action btn-set-zero" id="bgw-b-lock" style="grid-column: span 1; background:#14301A; border:1px solid #16A34A; color:#9BE7A8;" onclick="BgWalk.lock()">🎯 Створ: взять курс</button>
-                    <button class="btn-action btn-set-zero" id="bgw-b-walk" style="grid-column: span 1; background:#14301A; border:1px solid #16A34A; color:#9BE7A8;" onclick="BgWalk.walk()">🚶 Режим ходьбы</button>
+                    <button class="btn-action btn-set-zero" id="bgw-b-plan" style="grid-column: span 1; background:#2A1B4D; border:1px solid #7C3AED; color:#C4B5FD;" onclick="BgWalk.planAdd()">📐 Наметить сторону</button>
+                    <button class="btn-action btn-reset-zero" id="bgw-b-planundo" style="grid-column: span 1;" onclick="BgWalk.planUndo()">↩ Убрать намётку</button>
                     <button class="btn-action btn-set-zero" id="bgw-b-tick" style="grid-column: span 1; background:#3A2A0E; border:1px solid #D97706; color:#FBBF24;" onclick="BgWalk.tick()">📍 Засечка по ходу</button>
                     <button class="btn-action btn-reset-zero" id="bgw-b-int" style="grid-column: span 1;" onclick="BgWalk.toggleInt()">🔢 Градусы: целые</button>
                     <button class="btn-action btn-reset-zero" id="bgw-b-float" style="grid-column: span 2;" onclick="BgWalk.toggleFloat()">⬇ Нижняя кнопка + двойной тап: вкл</button>
@@ -1384,6 +1386,7 @@
 
                     <canvas id="polygon-canvas" width="400" height="400"></canvas>
                     <div id="area-display" class="area-badge">Площадь: 0.0000 га</div>
+                    <div id="bgw-info"></div>
                 </div>
                 
                 <div id="scan-bar" style="margin-top:12px;padding:10px;border:1px solid var(--border-color);border-radius:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
@@ -1399,7 +1402,7 @@
                 <div style="margin-top: 15px; background: rgba(45, 90, 39, 0.04); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
                     <span style="font-weight: 700; color: var(--forest-green); display: block; font-size: 12px; margin-bottom: 6px;">⚠️ РУКОВОДСТВО ТАКСАТОРУ ПО ИНСТРУМЕНТАМ БУССОЛИ:</span>
                     <ul style="font-size: 11px; line-height: 1.5; padding-left: 14px; margin: 0; opacity: 0.9; color: var(--text-graphite);">
-                        <li style="margin-bottom: 4px;"><b>1. 👁️ Магнитный (Вертикально):</b> Держите смартфон вертикально. Допуск горизонта расширен до ±12° — зелёное кольцо ловится быстро и легко.</li>
+                        <li style="margin-bottom: 4px;"><b>1. 👁️ Магнитный (Вертикально):</b> Держите смартфон вертикально. Допуск горизонта расширен до ±12° — зелёное кольцо ловится быстро и легко. <b>Честно о точности:</b> азимут зависит от крена влево-вправо — чем ровнее держите, тем он точнее (на 300 м ошибка в 3° это около 16 м в сторону). Если телефон был наклонён, запись всё равно сохранится, но с пометкой ≈. Простой режим: наведите на веху и нажмите «ТОЧКА» — курс на следующую сторону берётся сам.</li>
                         <li style="margin-bottom: 4px;"><b>2. 📷 Фотофиксация со спутником:</b> Кнопка «📷 Инспекторское фото» открывает камеру со створом хода, азимутом и координатами прямо на кадре.</li>
                         <li style="margin-bottom: 4px;"><b>3. 🧭 Буссоль (Лимб):</b> Положите смартфон горизонтально на ладонь. При нажатии «Зафиксировать» точка автоматически записывается в текущих координатах GPS!</li>
                         <li style="margin-bottom: 4px;"><b>4. 📡 GPS-Курс (По 2 точкам):</b> Непрерывный цепной ход (Т1 ➔ Т2 ➔ Т3). Старт Т1 берётся строго там, где вы нажали кнопку, а Т2 сразу становится стартом для Т3.</li>
@@ -2573,8 +2576,8 @@
             navigator.geolocation.watchPosition(
                 (position) => {
                     gpsFixed = true;
-                    currentLat = position.coords.latitude;
-                    currentLng = position.coords.longitude;
+                    const bgwP = bgwGps(position.coords.latitude, position.coords.longitude, Math.round(position.coords.accuracy) || 0, position.timestamp || Date.now());
+                    if (bgwP) { currentLat = bgwP.lat; currentLng = bgwP.lng; }
                     currentAltitude = (position.coords.altitude !== null && position.coords.altitude !== undefined)
                         ? Math.round(position.coords.altitude) : null;
                     currentAccuracy = Math.round(position.coords.accuracy) || 0;
@@ -3873,7 +3876,7 @@
                 isLevel = true;
                 document.getElementById('gyro-ring').classList.add('level-perfect');
                 btnCapture.classList.add('ready-to-fire');
-                btnCapture.innerText = "➕ Зафиксировать азимут в журнал";
+                btnCapture.innerText = bgwCapText(true);
 
                 if (!wasLevelLastTick && navigator.vibrate) {
                     navigator.vibrate(18); // Виброподсказка при поимке уровня
@@ -3883,7 +3886,7 @@
                 isLevel = false;
                 document.getElementById('gyro-ring').classList.remove('level-perfect');
                 btnCapture.classList.remove('ready-to-fire');
-                btnCapture.innerText = "➕ Записать (телефон наклонён)";
+                btnCapture.innerText = bgwCapText(false);
                 wasLevelLastTick = false;
             }
         } else if (currentSystemMode === 'theodolite') {
@@ -4082,6 +4085,7 @@
         updateFsMapUI();
 
         if (navigator.vibrate) navigator.vibrate(40);
+        if (window.BgWalk && BgWalk.afterCapture) BgWalk.afterCapture(newMeasurement.azimuth);
         showToast(approxAz ? `➕ Точка Т${newMeasurement.id} записана ориентировочно: телефон был наклонён (≈)` : `➕ Точка Т${newMeasurement.id} зафиксирована!`);
     }
 
@@ -4259,6 +4263,7 @@
         }
 
         if (window.BgStake) { const ex = BgStake.framePts(); if (ex.length) fitPts = fitPts.concat(ex); }
+        if (window.BgWalk) { const pp = BgWalk.planPts(); if (pp.length) fitPts = fitPts.concat(pp); }
         let minX = Math.min(...fitPts.map(p => p.x));
         let maxX = Math.max(...fitPts.map(p => p.x));
         let minY = Math.min(...fitPts.map(p => p.y));
@@ -4368,6 +4373,8 @@
             });
         }
 
+        if (window.BgWalk) BgWalk.drawPlan(ctx, toPixel);
+
         // Маркер текущей позиции таксатора
         const markOrigin = traverseOrigin || (window.BgScan && BgScan.origin());
         if (gpsFixed && markOrigin) {
@@ -4375,6 +4382,7 @@
             let userPixel = toPixel(userLocal);
 
             if (userPixel.x >= 0 && userPixel.x <= width && userPixel.y >= 0 && userPixel.y <= height) {
+                if (currentAccuracy > 0) { ctx.save(); ctx.beginPath(); ctx.arc(userPixel.x, userPixel.y, Math.min(Math.max(currentAccuracy * scale, 6), 140), 0, 6.2832); ctx.fillStyle = 'rgba(0,255,102,0.12)'; ctx.fill(); ctx.strokeStyle = 'rgba(0,160,70,0.55)'; ctx.lineWidth = 1; ctx.stroke(); ctx.restore(); }
                 ctx.save();
                 ctx.translate(userPixel.x, userPixel.y);
                 ctx.rotate((currentAzimuth * Math.PI) / 180);
@@ -5169,7 +5177,7 @@ try { BgScan.init(); BgSheet.init(); } catch (e) { console.error(e); }
   <div class="sh-sub"><span id="stk-h-cur">сейчас —</span><span id="stk-h-tgt">цель —</span></div>
   <div class="sh-btns">
     <button onclick="BgStake.step(-1)">◀</button>
-    <button class="main" onclick="BgStake.record()">✓ Записать</button>
+    <button class="main" onclick="BgStake.record()">✓ Я у точки</button>
     <button onclick="BgStake.step(1)">▶</button>
     <button onclick="BgStake.undo()" title="Отменить последнюю линию журнала">↶</button>
     <button onclick="BgStake.openPanel()">⚙</button>
@@ -5517,6 +5525,10 @@ const BgStake = (function () {
     function record() {
         const p = cur(); if (!p) return; const l = p.lines[db.li]; if (!l) return;
         const before = measurementsLog.length;
+        if (db.li > 0 && before > 0) {   // защита от записи «стоя на месте»
+            const prev = p.lines[db.li - 1], lastM = measurementsLog[before - 1], walked = lastM && lastM.distance > 0 ? lastM.distance : 0;
+            if (prev && prev.d > 0 && walked < 0.3 * prev.d && !confirm('Прошли только ' + Math.round(walked) + ' м из ' + Math.round(prev.d) + ' м по проекту. Записать точку всё равно?')) return;
+        }
         captureMeasurement();
         if (measurementsLog.length > before) {
             const m = measurementsLog[measurementsLog.length - 1];
@@ -5614,29 +5626,15 @@ try { BgStake.init(); } catch (e) { console.error(e); }
 <style>
 #toast-message { z-index: 100000 !important; }
 #bgw-guide { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 12; pointer-events: none; display: none; }
-#bgw-walk { position: fixed; inset: 0; z-index: 99990; background: #0B0F0C; color: #fff; display: none; flex-direction: column; user-select: none; -webkit-user-select: none; touch-action: manipulation; font-family: inherit; }
-#bgw-walk .w-top { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; gap: 10px; }
-#bgw-walk .w-tgt { font-size: clamp(22px, 7vw, 34px); font-weight: 800; color: #9BE7A8; }
-#bgw-walk .w-cur { font-size: clamp(14px, 4.4vw, 20px); opacity: .85; }
-#bgw-walk .w-x { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.3); border-radius: 10px; padding: 9px 12px; font-size: 14px; }
-#bgw-walk .w-mid { flex: 1; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: clamp(60px, 24vw, 150px); letter-spacing: -2px; text-align: center; padding: 0 8px; }
-#bgw-walk .w-mid.ok { color: #22C55E; } #bgw-walk .w-mid.near { color: #F59E0B; } #bgw-walk .w-mid.far { color: #EF4444; }
-#bgw-walk .w-info { text-align: center; font-size: clamp(15px, 4.6vw, 20px); padding: 4px 12px 10px; opacity: .9; }
-#bgw-walk .w-btns { display: flex; flex-direction: column; gap: 10px; padding: 0 12px calc(14px + env(safe-area-inset-bottom)); }
-#bgw-walk .w-b { border: 0; border-radius: 16px; font-weight: 800; font-size: clamp(20px, 6vw, 28px); min-height: 19vh; color: #fff; }
-#bgw-walk .w-b.t { background: #B45309; } #bgw-walk .w-b.g { background: #15803D; }
 #bgw-float { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9000; display: none; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); background: linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,0)); pointer-events: none; }
 #bgw-float button { pointer-events: auto; width: 100%; min-height: 58px; border: 0; border-radius: 14px; font-weight: 800; font-size: 18px; color: #fff; background: #15803D; box-shadow: 0 4px 14px rgba(0,0,0,.4); }
+#bgw-info { font-size: 12.5px; font-weight: 600; text-align: center; padding: 5px 8px; margin-top: 4px; border-radius: 8px; background: rgba(124,58,237,.10); color: #6D28D9; display: none; }
+body.bgw-simple #bgw-b-lock, body.bgw-simple #bgw-b-tick, body.bgw-simple #bgw-b-int, body.bgw-simple #bgw-b-float,
+body.bgw-simple #bgw-b-plan, body.bgw-simple #bgw-b-planundo, body.bgw-simple #bgw-info { display: none !important; }
 </style>
-<div id="bgw-walk">
-  <div class="w-top"><div><div class="w-tgt" id="bgw-w-tgt">Курс —</div><div class="w-cur" id="bgw-w-cur">сейчас —</div></div><button class="w-x" onclick="BgWalk.walkExit(false)">✕ Выйти</button></div>
-  <div class="w-mid" id="bgw-w-mid">—</div>
-  <div class="w-info" id="bgw-w-info">—</div>
-  <div class="w-btns"><button class="w-b t" onclick="BgWalk.tick()">📍 ЗАСЕЧКА</button><button class="w-b g" onclick="BgWalk.walkExit(true)">✓ ПРИШЁЛ</button></div>
-</div>
 <div id="bgw-float"><button onclick="captureMeasurement()">➕ ЗАПИСАТЬ ТОЧКУ</button></div>
 <script>
-/* ===== Створ, режим ходьбы, засечки, целые градусы (БГ-ХНС ПРО) ===== */
+/* ===== Простой/Полный режим, створ, намётка, засечки, целые градусы, сглаживание GPS (БГ-ХНС ПРО) ===== */
 var bgwSt = [];
 function bgwStablePush(az) { var t = Date.now(); bgwSt.push({ t: t, az: az }); while (bgwSt.length && t - bgwSt[0].t > 8000) bgwSt.shift(); }
 function bgwStableAz() {
@@ -5645,6 +5643,7 @@ function bgwStableAz() {
     return (Math.atan2(s, c) * 180 / Math.PI + 360) % 360;
 }
 function bgwIntMode() { try { return localStorage.getItem('bgw_int') !== '0'; } catch (e) { return true; } }
+function bgwSimple() { try { return localStorage.getItem('bgw_mode') !== 'full'; } catch (e) { return true; } }
 var bgwShown = {};
 function bgwAzText(az, key) {
     if (!bgwIntMode()) return az.toFixed(1) + '°';
@@ -5653,19 +5652,34 @@ function bgwAzText(az, key) {
     return cur + '°';
 }
 function bgwNum(x) { return bgwIntMode() ? String(Math.round(x)) : x.toFixed(1); }
+function bgwCapText(level) {
+    if (bgwSimple()) return level ? '➕ ТОЧКА' : '➕ ТОЧКА (телефон наклонён, ≈)';
+    return level ? '➕ Зафиксировать азимут в журнал' : '➕ Записать (телефон наклонён)';
+}
+/* Сглаживание GPS: плохие фиксы отбрасываются, прыжки быстрее ходьбы игнорируются, остальное усредняется с весом по точности */
+var bgwGpsS = null, bgwGpsRej = 0;
+function bgwGps(lat, lng, acc, ts) {
+    if (!bgwGpsS) { bgwGpsS = { lat: lat, lng: lng, t: ts }; return { lat: lat, lng: lng }; }
+    var d = calculateDistance(bgwGpsS.lat, bgwGpsS.lng, lat, lng), dt = Math.max(0.3, (ts - bgwGpsS.t) / 1000);
+    var bad = (acc > 25) || (d / dt > 4 && d > 6);
+    if (bad && bgwGpsRej < 5) { bgwGpsRej++; return null; }
+    if (bgwGpsRej >= 5 || d > 60) { bgwGpsS = { lat: lat, lng: lng, t: ts }; bgwGpsRej = 0; return { lat: lat, lng: lng }; }
+    bgwGpsRej = 0;
+    var w = Math.min(0.6, Math.max(0.12, 5 / Math.max(acc, 1)));
+    bgwGpsS = { lat: bgwGpsS.lat + w * (lat - bgwGpsS.lat), lng: bgwGpsS.lng + w * (lng - bgwGpsS.lng), t: ts };
+    return { lat: bgwGpsS.lat, lng: bgwGpsS.lng };
+}
 var BgWalk = (function () {
     var $ = function (i) { return document.getElementById(i); };
-    var tgt = null, devS = 0, timer = 0, inTol = false, walking = false, wake = null, lastTap = 0;
+    var tgt = null, devS = 0, timer = 0, inTol = false, lastTap = 0, plan = null, n10 = 0;
+    try { plan = JSON.parse(localStorage.getItem('bgw_plan') || 'null'); } catch (e) { plan = null; }
     var floatOn = (function () { try { return localStorage.getItem('bgw_float') !== '0'; } catch (e) { return true; } })();
     function liveAz() {
         if (typeof currentSystemMode !== 'undefined' && currentSystemMode === 'gps_heading') return calculatedGpsAzimuth;
         return (azimuthRingBuffer && azimuthRingBuffer.length) ? getSmoothedBufferAzimuth() : currentAzimuth;
     }
-    function target() {
-        if (tgt !== null) return { az: tgt, tol: 2 };
-        try { var s = window.BgStake && BgStake.target && BgStake.target(); if (s) return s; } catch (e) { }
-        return null;
-    }
+    function stakeT() { try { return window.BgStake && BgStake.target && BgStake.target(); } catch (e) { return null; } }
+    function target() { if (tgt !== null) return { az: tgt, tol: 2 }; return stakeT(); }
     function dev() {
         var t = target(), R = liveAz(); if (!t || R === null || R === undefined || isNaN(R)) return null;
         var d = ((t.az - R + 540) % 360) - 180;
@@ -5676,7 +5690,7 @@ var BgWalk = (function () {
     function drawGuide() {
         var cv = $('bgw-guide'); if (!cv) return;
         var t = target();
-        if (!t || walking) { cv.style.display = 'none'; return; }
+        if (!t) { cv.style.display = 'none'; return; }
         var wr = cv.parentElement; if (!wr || wr.offsetParent === null) return;
         cv.style.display = 'block';
         var dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
@@ -5695,7 +5709,7 @@ var BgWalk = (function () {
         poly(3, null, 'rgba(239,68,68,.75)', 2, [8, 8]);
         poly(1, col === '#22C55E' ? 'rgba(34,197,94,.18)' : 'rgba(245,158,11,.14)', '#FB923C', 3);
         g.lineWidth = 4; g.strokeStyle = col; g.setLineDash([16, 10]); g.beginPath(); g.moveTo(x0, H); g.lineTo(x0, yv); g.stroke(); g.setLineDash([]);
-        for (var i = 1; i <= 5; i++) {   // «шпалы» в перспективе
+        for (var i = 1; i <= 5; i++) {
             var f = Math.pow(i / 6, 1.7), y = yv + (H - yv) * f, hw = tol * ppd * (0.5 + 2.7 * f);
             g.lineWidth = 2; g.strokeStyle = 'rgba(251,146,60,.85)'; g.beginPath(); g.moveTo(x0 - hw, y); g.lineTo(x0 + hw, y); g.stroke();
         }
@@ -5705,23 +5719,6 @@ var BgWalk = (function () {
         g.font = '700 15px sans-serif'; var tl = 'курс ' + Math.round(t.az) + '°'; g.strokeText(tl, W / 2, 22); g.fillStyle = '#fff'; g.fillText(tl, W / 2, 22);
         if (ad <= tol) { if (!inTol) { inTol = true; if (navigator.vibrate) navigator.vibrate(50); } } else inTol = false;
     }
-    function walkTick() {
-        var m = $('bgw-w-mid'); if (!m) return;
-        var D = dev(), R = liveAz();
-        $('bgw-w-tgt').innerText = 'Курс ' + (target() ? Math.round(target().az) + '°' : '—');
-        $('bgw-w-cur').innerText = 'сейчас ' + (R === null || R === undefined || isNaN(R) ? '—' : bgwAzText(R, 'w'));
-        if (!D) { m.className = 'w-mid'; m.innerText = '—'; }
-        else {
-            var ad = Math.abs(D.d), k = klass(ad, D.t.tol); m.className = 'w-mid ' + k;
-            m.innerText = ad <= D.t.tol ? '✔' : (D.d > 0 ? Math.round(ad) + '° ►' : '◄ ' + Math.round(ad) + '°');
-            if (ad <= D.t.tol) { if (!inTol) { inTol = true; if (navigator.vibrate) navigator.vibrate(40); } } else inTol = false;
-        }
-        var last = measurementsLog.length ? measurementsLog[measurementsLog.length - 1] : null, parts = [];
-        if (last) { if (last.steps) parts.push('шагов ' + last.steps); if (last.distance > 0) parts.push('≈ ' + last.distance + ' м'); if (last.ticks && last.ticks.length) parts.push('засечек ' + last.ticks.length); }
-        $('bgw-w-info').innerText = parts.length ? parts.join(' · ') : 'двойное касание по экрану — засечка';
-    }
-    function loop() { if (walking) walkTick(); else drawGuide(); }
-    function ensureLoop() { if (!timer) timer = setInterval(loop, 70); }
     function lock() {
         if (tgt !== null) { tgt = null; $('bgw-b-lock').innerText = '🎯 Створ: взять курс'; var c = $('bgw-guide'); if (c) c.style.display = 'none'; showToast('Створ снят'); return; }
         var R = liveAz(); if (R === null || R === undefined || isNaN(R)) { showToast('Нет азимута: дождитесь датчика'); return; }
@@ -5729,18 +5726,10 @@ var BgWalk = (function () {
         ensureLoop(); if (navigator.vibrate) navigator.vibrate(30);
         showToast('Курс ' + Math.round(tgt) + '° взят. Держите зелёную линию по центру.');
     }
-    async function walk() {
-        if (!target()) lock(); if (!target()) return;
-        walking = true; var w = $('bgw-walk'); w.style.display = 'flex'; ensureLoop();
-        try { var v = $('video-preview'); if (v && v.srcObject) { v.srcObject.getTracks().forEach(function (t) { t.stop(); }); v.srcObject = null; } } catch (e) { }
-        try { if (navigator.wakeLock) wake = await navigator.wakeLock.request('screen'); } catch (e) { }
-        walkTick();
-    }
-    function walkExit(arrived) {
-        walking = false; $('bgw-walk').style.display = 'none';
-        try { if (wake) { wake.release(); wake = null; } } catch (e) { }
-        try { startCamera(true); } catch (e) { }
-        if (arrived) { showToast('Пришли. Наведите визир на следующую веху: курс можно взять заново.'); }
+    function afterCapture(az) {   // простой режим: записанный азимут сразу становится курсом на следующую сторону
+        if (!bgwSimple()) return;
+        if (stakeT()) return;
+        tgt = Math.round(az * 10) / 10; devS = 0; ensureLoop();
     }
     function tick() {
         var last = measurementsLog.length ? measurementsLog[measurementsLog.length - 1] : null;
@@ -5753,10 +5742,62 @@ var BgWalk = (function () {
         if (navigator.vibrate) navigator.vibrate(25);
         saveToLocalStorage(); renderLogTable(); drawPolygon();
         showToast('📍 Засечка №' + last.ticks.length + (d > 0 ? ' на ' + d + ' м от точки Т' + last.id : ' (расстояние неизвестно: включите шаги или GPS)'));
-        if (walking) walkTick();
+    }
+    /* ---- намётка: пунктирные стороны вперёд, в журнал не пишутся ---- */
+    function planSave() { try { if (plan && plan.legs.length) localStorage.setItem('bgw_plan', JSON.stringify(plan)); else localStorage.removeItem('bgw_plan'); } catch (e) { } }
+    function planEnds() {
+        if (!plan || !plan.legs.length) return [];
+        var x = plan.ax, y = plan.ay, out = [];
+        plan.legs.forEach(function (l) { var r = l.az * Math.PI / 180; x += l.d * Math.sin(r); y += l.d * Math.cos(r); out.push({ x: x, y: y }); });
+        return out;
+    }
+    function planAdd() {
+        var R = liveAz(); if (R === null || R === undefined || isNaN(R)) { showToast('Нет азимута: дождитесь датчика'); return; }
+        var def = plan && plan.legs.length ? plan.legs[plan.legs.length - 1].d : (measurementsLog.length ? (measurementsLog[measurementsLog.length - 1].distance || 100) : 100);
+        var v = prompt('Наметить сторону по курсу ' + Math.round(R) + '°. Длина, м:', String(Math.round(def)));
+        if (v === null) return; var d = parseFloat(String(v).replace(',', '.')); if (!(d > 0) || d > 20000) { showToast('Нужна длина в метрах, например 300'); return; }
+        if (!plan || !plan.legs.length) { var tr = computeTraverse(), p = tr.points[tr.points.length - 1]; plan = { ax: p.x, ay: p.y, legs: [] }; }
+        plan.legs.push({ az: Math.round(R * 10) / 10, d: Math.round(d * 10) / 10 }); planSave(); drawPolygon(); info();
+        showToast('📐 Намётка: сторона ' + plan.legs.length + ' · ' + Math.round(R) + '° · ' + Math.round(d) + ' м (в журнал не пишется)');
+    }
+    function planUndo() { if (!plan || !plan.legs.length) { showToast('Намётки нет'); return; } plan.legs.pop(); if (!plan.legs.length) plan = null; planSave(); drawPolygon(); info(); showToast('Последняя сторона намётки убрана'); }
+    function planPts() { if (!plan || !plan.legs.length) return []; return [{ x: plan.ax, y: plan.ay }].concat(planEnds()); }
+    function drawPlan(ctx, toPixel) {
+        if (!plan || !plan.legs.length) return;
+        var pts = planPts(), p0 = toPixel(pts[0]), i;
+        ctx.save(); ctx.setLineDash([9, 6]); ctx.lineWidth = 2.5; ctx.strokeStyle = '#7C3AED'; ctx.beginPath(); ctx.moveTo(p0.x, p0.y);
+        for (i = 1; i < pts.length; i++) { var q = toPixel(pts[i]); ctx.lineTo(q.x, q.y); } ctx.stroke();
+        var e = toPixel(pts[pts.length - 1]), o = toPixel({ x: 0, y: 0 });
+        ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(124,58,237,.55)'; ctx.setLineDash([3, 6]); ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(o.x, o.y); ctx.stroke(); ctx.setLineDash([]);
+        ctx.font = '700 11px sans-serif'; ctx.textAlign = 'left';
+        for (i = 1; i < pts.length; i++) { var c = toPixel(pts[i]); ctx.fillStyle = '#7C3AED'; ctx.beginPath(); ctx.arc(c.x, c.y, 4, 0, 6.2832); ctx.fill(); ctx.fillText('н' + i, c.x + 6, c.y - 6); }
+        ctx.restore();
+    }
+    function closureFrom() {
+        var tr = computeTraverse(), ends = planEnds(), from = ends.length ? ends[ends.length - 1] : tr.points[tr.points.length - 1];
+        if (!ends.length && measurementsLog.length < 1) return null;
+        var dx = -from.x, dy = -from.y, d = Math.hypot(dx, dy), az = (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360;
+        return { d: d, az: az, plan: ends.length > 0 };
+    }
+    function info() {
+        var el = $('bgw-info'); if (!el) return;
+        if (bgwSimple()) { el.style.display = 'none'; return; }
+        var c = closureFrom(); if (!c) { el.style.display = 'none'; return; }
+        el.style.display = 'block';
+        el.innerText = (c.plan ? '📐 После намётки (' + plan.legs.length + ' ст.): ' : '🎯 Замкнуть отсюда: ') + (c.d < 1 ? 'уже в начале хода' : 'до начала ' + Math.round(c.d) + ' м · азимут ' + Math.round(c.az) + '°');
     }
     function toggleInt() { var on = !bgwIntMode(); try { localStorage.setItem('bgw_int', on ? '1' : '0'); } catch (e) { } bgwShown = {}; syncBtns(); showToast(on ? 'Градусы: целые (без «дрожащих» десятых)' : 'Градусы: с десятыми'); }
     function toggleFloat() { floatOn = !floatOn; try { localStorage.setItem('bgw_float', floatOn ? '1' : '0'); } catch (e) { } syncBtns(); floatUpdate(); showToast(floatOn ? 'Нижняя кнопка записи и двойной тап включены' : 'Нижняя кнопка записи выключена'); }
+    function toggleMode() {
+        var s = !bgwSimple(); try { localStorage.setItem('bgw_mode', s ? 'simple' : 'full'); } catch (e) { }
+        applyMode(); showToast(s ? 'Простой режим: прицелились — «ТОЧКА» — пошли' : 'Полный режим: створ, засечки, намётка, градусы');
+    }
+    function applyMode() {
+        var s = bgwSimple(); document.body.classList.toggle('bgw-simple', s);
+        var b = $('bgw-b-mode'); if (b) b.innerText = s ? '🎛 Режим: ПРОСТОЙ · включить Полный' : '🎛 Режим: ПОЛНЫЙ · включить Простой';
+        var c = $('btn-capture'); if (c && !c.disabled) { var lvl = !/наклон/.test(c.innerText); c.innerText = bgwCapText(lvl); }
+        info();
+    }
     function syncBtns() {
         var b = $('bgw-b-int'); if (b) b.innerText = bgwIntMode() ? '🔢 Градусы: целые' : '🔢 Градусы: с десятыми';
         var f = $('bgw-b-float'); if (f) f.innerText = floatOn ? '⬇ Нижняя кнопка + двойной тап: вкл' : '⬇ Нижняя кнопка + двойной тап: выкл';
@@ -5764,12 +5805,14 @@ var BgWalk = (function () {
     var wrapVisible = false;
     function floatUpdate() {
         var f = $('bgw-float'); if (!f) return;
-        var show = floatOn && wrapVisible && !walking && (typeof currentSystemMode === 'undefined' || currentSystemMode === 'magnetic');
+        var show = floatOn && wrapVisible && (typeof currentSystemMode === 'undefined' || currentSystemMode === 'magnetic');
         f.style.display = show ? 'block' : 'none';
         document.body.style.paddingBottom = show ? '84px' : '';
     }
+    function loop() { drawGuide(); if (++n10 % 10 === 0) info(); }
+    function ensureLoop() { if (!timer) timer = setInterval(loop, 70); }
     function init() {
-        syncBtns();
+        syncBtns(); applyMode();
         var wr = document.querySelector('.camera-viewport-wrapper');
         if (wr && window.IntersectionObserver) { new IntersectionObserver(function (e) { wrapVisible = e[0].isIntersecting; floatUpdate(); }, { threshold: 0.35 }).observe(wr); }
         setInterval(floatUpdate, 1500);
@@ -5777,12 +5820,10 @@ var BgWalk = (function () {
             if (!floatOn || e.changedTouches.length !== 1 || e.target.closest('button')) return;
             var n = Date.now(); if (n - lastTap < 350) { lastTap = 0; if (typeof captureMeasurement === 'function') { captureMeasurement(); } } else lastTap = n;
         }, { passive: true });
-        var w = $('bgw-walk'), lt = 0;
-        w.addEventListener('touchend', function (e) { if (e.target.closest('button')) return; var n = Date.now(); if (n - lt < 350) { lt = 0; tick(); } else lt = n; }, { passive: true });
         ensureLoop();
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-    return { lock: lock, walk: walk, walkExit: walkExit, tick: tick, toggleInt: toggleInt, toggleFloat: toggleFloat, target: target };
+    return { lock: lock, tick: tick, toggleInt: toggleInt, toggleFloat: toggleFloat, toggleMode: toggleMode, target: target, afterCapture: afterCapture, planAdd: planAdd, planUndo: planUndo, planPts: planPts, drawPlan: drawPlan };
 })();
 </script>
 
