@@ -189,7 +189,7 @@
                 <span style="font-size:46px; margin-bottom:12px;">📡</span>
                 <h2 style="font-family:'Merriweather',serif; color:#8FBC8F; margin-bottom:8px; font-size:20px;">Требуется подключение к сети</h2>
                 <div style="display:inline-block; background:rgba(230,126,34,0.15); border:1px solid #E67E22; color:#F59E0B; padding:3px 12px; border-radius:20px; font-size:11px; font-weight:bold; margin-bottom:12px; text-transform:uppercase;">
-                    Тестовый доступ: 7 дней бесплатно*
+                    Тестовый доступ: 1000 руб на 3 недели*
                 </div>
                 <p style="max-width:460px; font-size:12.5px; opacity:0.85; line-height:1.5; margin-bottom:18px;">
                     Бесплатные онлайн-сервисы работают исключительно при активном интернет-соединении.<br><br>
@@ -245,7 +245,7 @@
                         
                         <!-- БЕЙДЖ С УСЛОВИЯМИ -->
                         <div style="display:inline-flex; align-items:center; background:rgba(230,126,34,0.15); border:1px solid #E67E22; color:#F59E0B; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:bold; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.3px;">
-                            Пробный период: 7 дней бесплатно*
+                            Пробный период: 1000 руб. на 3 недели*
                         </div>
                         
                         <p style="font-size:12px; opacity:0.88; line-height:1.45; margin:0 0 10px 0; text-align:center;">
@@ -272,7 +272,7 @@
                         <!-- БЛОК УСЛОВИЙ И КОНТАКТОВ -->
                         <div style="background:rgba(255,255,255,0.03); padding:12px 14px; border-radius:10px; border:1px solid rgba(143,188,143,0.2); text-align:left; width:100%; box-sizing:border-box; font-size:11px; line-height:1.5;">
                             <div style="background:rgba(230,126,34,0.1); border-left:3px solid #E67E22; padding:6px 10px; border-radius:4px; margin-bottom:10px; font-size:11px; color:#FCD34D;">
-                                * 7 дней бесплатного теста предоставляются <b>при определенных условиях</b>. Подробности уточняйте в чате MAX или по электронной почте.
+                                * 3 недели пробного тестового периода <b> всего за 1 000 руб</b>. Подробности уточняйте в чате MAX или по электронной почте.
                             </div>
 
                             <span style="display:block; font-size:10px; opacity:0.65; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; font-weight:bold;">Контакты для активации лицензии:</span>
