@@ -42,6 +42,7 @@
         "HNS-PZAG-7E5HY7": new Date(2027, 11, 31),   // Саня Мельников до 31 дек 27 года
         "HNS-71JK-ADR57Q": new Date(2026, 10, 30),   // Алексей Гуров до 30 ноя 26 года
         "HNS-GTIZ-6FPRHO": new Date(2026, 11, 1),   // Хладогор чей то сын до 01 дек 26 года
+        "HNS-HFKH-KE9FLU": new Date(2026, 10, 25), //  Яндекс Николай
     };
 
     function generateWebDeviceId() {
