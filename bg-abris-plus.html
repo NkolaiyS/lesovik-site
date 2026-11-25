@@ -282,7 +282,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         <span style="font-size:.88em">Тяните делянку по скану или сдвигайте стрелками:</span>
         <button class="btn" data-pb="l">◀</button><button class="btn" data-pb="u">▲</button><button class="btn" data-pb="d">▼</button><button class="btn" data-pb="r">▶</button>
         <select id="pb-step" style="width:auto"><option value="0.5">0,5 м</option><option value="1" selected>1 м</option><option value="5">5 м</option><option value="20">20 м</option></select>
-        <button class="btn primary" id="pb-done">Готово</button>
+        <button class="btn" id="pb-reset" title="Вернуть выбранную делянку на место по её координатам">↺ На место</button> <button class="btn primary" id="pb-done">Готово</button>
     </div>
     <div id="drawbar">
         <span style="font-size:.88em" id="db-info">Коснитесь скана — встанет точка. Точку можно перетащить.</span>
@@ -919,8 +919,9 @@ function worldOfLL(lat, lng) {
 }
 function areaGa(R) { var d = [1, 2, 4].indexOf(S.adec) >= 0 ? S.adec : 4; return (R.area / 10000).toFixed(d); }
 /* ---------- несколько объектов (полосы, делянки) на одном абрисе ---------- */
-var OBJF = ['name', 'kind', 'lines', 'cp', 'p0', 's', 'mode', 'c', 'ks', 'kc', 'tol', 'viewMode', 'org', 'wid', 'typ', 'lk', 'lo'];
-var OBJDEF = { name: '', kind: 'traverse', lines: [], cp: [], p0: { lat: null, lng: null }, s: 0, mode: 'auto', c: null, ks: 0, kc: null, tol: null, viewMode: 'az', org: { x: 0, y: 0 }, wid: 0, typ: '', lk: false, lo: {} };
+var OBJF = ['name', 'kind', 'lines', 'cp', 'p0', 's', 'mode', 'c', 'ks', 'kc', 'tol', 'viewMode', 'org', 'wid', 'typ', 'lk', 'lo', 'vo'];
+function voOf(o) { var v = o && o.vo; return (v && isFinite(v.x) && isFinite(v.y)) ? v : { x: 0, y: 0 }; }   // сдвиг изображения делянки по скану (м), координаты не меняет
+var OBJDEF = { name: '', kind: 'traverse', lines: [], cp: [], p0: { lat: null, lng: null }, s: 0, mode: 'auto', c: null, ks: 0, kc: null, tol: null, viewMode: 'az', org: { x: 0, y: 0 }, wid: 0, typ: '', lk: false, lo: {}, vo: { x: 0, y: 0 } };
 var PAL = ['#2F6B3A', '#B5651D', '#1F5FA8', '#8A2BA6', '#C0463F', '#0F8B8D', '#6B6B00', '#5A3E85'];
 function snapObj() { var o = {}; OBJF.forEach(function (k) { o[k] = JSON.parse(JSON.stringify(S[k] === undefined ? OBJDEF[k] : S[k])); }); return o; }
 function loadObj(o) { OBJF.forEach(function (k) { S[k] = JSON.parse(JSON.stringify(o[k] === undefined ? OBJDEF[k] : o[k])); }); }
@@ -1040,8 +1041,8 @@ function resize() {
 }
 function ptsBounds(R) {
     var xs = [], ys = [];
-    if (!R.empty || !(S.objs && S.objs.length > 1)) R.pts.forEach(function (p) { xs.push(p.x); ys.push(p.y); });
-    otherObjs().forEach(function (it) { withObj(it.o, function () { var Ro = compute(); if (!Ro.empty) Ro.pts.forEach(function (p) { xs.push(p.x + it.dx); ys.push(p.y + it.dy); }); }); });
+    if (!R.empty || !(S.objs && S.objs.length > 1)) R.pts.forEach(function (p) { xs.push(p.x + voOf(S).x); ys.push(p.y + voOf(S).y); });
+    otherObjs().forEach(function (it) { withObj(it.o, function () { var Ro = compute(); if (!Ro.empty) Ro.pts.forEach(function (p) { xs.push(p.x + it.dx + voOf(it.o).x); ys.push(p.y + it.dy + voOf(it.o).y); }); }); });
     (S.marks || []).forEach(function (m) { var l = markLoc(m); xs.push(l.x); ys.push(l.y); });
     if (!xs.length) { xs = [0]; ys = [0]; }
     var b = { x0: Math.min.apply(null, xs), x1: Math.max.apply(null, xs), y0: Math.min.apply(null, ys), y1: Math.max.apply(null, ys) };
@@ -1189,8 +1190,8 @@ function drawScene(g, W, H, v, u, forPrint, opts) {
         }
     }
     var anyData = !R.empty;
-    otherObjs().forEach(function (it) { withObj(it.o, function () { var Ro = compute(); if (!Ro.empty) { anyData = true; layer(Ro, it.dx, it.dy, it.idx); } }); });
-    if (!R.empty) layer(R, 0, 0, S.act);
+    otherObjs().forEach(function (it) { withObj(it.o, function () { var Ro = compute(); if (!Ro.empty) { anyData = true; layer(Ro, it.dx + voOf(it.o).x, it.dy + voOf(it.o).y, it.idx); } }); });
+    if (!R.empty) layer(R, voOf(S).x, voOf(S).y, S.act);
     var oaM = objOrg(S), mks = S.marks || [];
     mks.forEach(function (m, mi) {
         var mx = X(m.x - oaM.x), my = Y(m.y - oaM.y), sel = (!forPrint && ui.selMk === mi && ui.tool === 'mark');
@@ -1375,6 +1376,7 @@ cv.addEventListener('pointerdown', function (e) {
             else if (ui.pick === 'link') { var hl = hitMark(p.x, p.y); ui.lkDrag = hl; }
             else if (ui.pick) { aiming = true; ui.aim = p; draw(); }
             else if (ui.calA && ui.calB) { var h = hitHandle(p); if (h) ui.dragH = h; }
+            if (ui.tool === 'plot' && !ui.pick && !ui.lblMove && S.objs && S.objs.length > 1) { var oi = objAtScreen(p); if (oi >= 0 && oi !== S.act) { switchObj(oi); toast('Двигаем: ' + objLabel(S.act), 1800); } }
             lpType = e.pointerType || 'touch';
             if (!ui.pick && !ui.lblMove && !ui.dragH && ui.tool === 'pan' && lpType !== 'mouse') {   // удержание пальца: прицел с линзой, отпускание — координаты
                 clearTimeout(holdT); holdT = setTimeout(function () { if (Object.keys(ptrs).length === 1 && !moved && !ui.dragH) { holdAim = true; try { navigator.vibrate && navigator.vibrate(15); } catch (x) { } loupeReq(ptrs[Object.keys(ptrs)[0]]); } }, 320);
@@ -1704,7 +1706,30 @@ $('b-tie').onclick = function () { startPick('tie'); }; $('t-tie').onclick = $('
 $('b-pick-s').onclick = function () { startPick('start'); }; $('b-pick-c').onclick = function () { startPick('close'); };
 
 /* ---------- инструменты ---------- */
+function multiCoords() { return S.kind === 'coords' && !!(S.objs && S.objs.length > 1); }
+function objAtScreen(p) {   // какая делянка под пальцем: внутри контура или ближе всех к линии (до ~22 px)
+    var best = -1, bd = 22 * (typeof fsScale === 'function' ? fsScale() : 1), inside = false;
+    var items = [{ i: S.act, R: compute(), dx: 0, dy: 0, vo: voOf(S) }];
+    otherObjs().forEach(function (it) { withObj(it.o, function () { items.push({ i: it.idx, R: compute(), dx: it.dx, dy: it.dy, vo: voOf(it.o) }); }); });
+    items.forEach(function (it) {
+        if (!it.R || it.R.empty || !it.R.pts.length) return;
+        var q = it.R.pts.map(function (w) { return w2s(w.x + it.dx + it.vo.x, w.y + it.dy + it.vo.y); }), n = q.length, k, ins = false, md = 1e9;
+        var j; for (k = 0, j = n - 1; k < n; j = k++) {
+            var a = q[k], b = q[j]; if (((a.y > p.y) !== (b.y > p.y)) && (p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x)) ins = !ins;
+            var vx = b.x - a.x, vy = b.y - a.y, L2 = vx * vx + vy * vy, t = L2 ? Math.max(0, Math.min(1, ((p.x - a.x) * vx + (p.y - a.y) * vy) / L2)) : 0;
+            md = Math.min(md, Math.hypot(p.x - a.x - t * vx, p.y - a.y - t * vy));
+        }
+        if (n === 1) md = Math.hypot(p.x - q[0].x, p.y - q[0].y);
+        if (ins && !inside) { inside = true; best = it.i; bd = 0; }
+        else if (ins && inside) { if (md < bd + 1e9) best = it.i; }   // вложенные контуры: берём последний (верхний)
+        else if (!inside && md < bd) { bd = md; best = it.i; }
+    });
+    return best;
+}
 function shiftPlot(dwx, dwy) {   // сдвиг контура относительно скана: скан и вид уходят в обратную сторону
+    if (multiCoords()) {   // несколько делянок по координатам на одном скане: двигаем только эту, скан и остальные стоят
+        var v0 = voOf(S); S.vo = { x: v0.x + dwx, y: v0.y + dwy }; scheduleSave(); draw(); return;
+    }
     S.org = { x: ((S.org && S.org.x) || 0) + dwx, y: ((S.org && S.org.y) || 0) + dwy };
     S.scan.c = { re: S.scan.c.re - dwx, im: S.scan.c.im - dwy }; V.cx -= dwx; V.cy -= dwy; scheduleSave(); draw();
 }
@@ -1724,11 +1749,12 @@ function toggleTool(t) {
     if (!scanImg || !S.scan.on) return toast('Сначала загрузите скан');
     if (compute().empty && t === 'plot') return toast('Сначала введите точки делянки');
     cancelPick(); closeCalBar(true); setTool(t); if (mobile()) hideDockMobile();
-    toast(t === 'plot' ? 'Тяните делянку пальцем или мышью — скан остаётся на месте' : 'Тяните скан; двумя пальцами — поворот');
+    toast(t === 'plot' ? (S.objs && S.objs.length > 1 ? 'Тяните нужную делянку пальцем или мышью — двигается только она, скан и остальные стоят' : 'Тяните делянку пальцем или мышью — скан остаётся на месте') : 'Тяните скан; двумя пальцами — поворот');
 }
 $('t-scan').onclick = function () { toggleTool('scan'); }; $('b-scanmove').onclick = $('t-scan').onclick;
 $('t-plot').onclick = function () { toggleTool('plot'); }; $('b-plotmove').onclick = $('t-plot').onclick;
 $('sb-done').onclick = function () { setTool('pan'); }; $('pb-done').onclick = function () { setTool('pan'); };
+$('pb-reset').onclick = function () { var v0 = voOf(S); if (!v0.x && !v0.y) { toast('У этой делянки нет сдвига'); return; } S.vo = { x: 0, y: 0 }; scheduleSave(); draw(); toast('Делянка возвращена на место по координатам'); };
 document.querySelectorAll('[data-pb]').forEach(function (b) {
     b.onclick = function () {
         var st = parseFloat($('pb-step').value) || 1, k = b.getAttribute('data-pb');
