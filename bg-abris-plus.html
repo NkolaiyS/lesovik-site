@@ -509,6 +509,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
                 <label class="chk" style="margin:0 0 6px"><input type="checkbox" id="v-tk" checked> показывать засечки по ходу</label>
                 <button class="btn" id="v-lmove" type="button" style="margin:0 0 6px">✋ Двигать подписи (номера, длины, площадь)</button>
                 <label class="chk"><input type="checkbox" id="v-lonly"> только линии (без номеров, названий, кружков и площади)</label>
+                <label class="chk"><input type="checkbox" id="v-nonames"> не показывать названия объектов</label>
                 <label class="chk"><input type="checkbox" id="v-noscale"> не показывать масштаб (линейку и строку «Масштаб»)</label>
                 <label class="f" style="margin:6px 0 0"><span>Сгладить переходы между точками (только на рисунке)</span><select id="v-smooth"><option value="0">нет</option><option value="1">слабо</option><option value="2">средне</option><option value="3">сильно</option></select></label>
             </div>
@@ -596,6 +597,7 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
         <label class="chk" style="margin:0;flex:0 0 auto"><input type="checkbox" id="prn-scan" checked> со сканом</label>
         <label class="chk" style="margin:0;flex:0 0 auto"><input type="checkbox" id="prn-frame"> рамка листа</label>
         <label class="chk" style="margin:0;flex:0 0 auto"><input type="checkbox" id="prn-lonly"> только линии</label>
+        <label class="chk" style="margin:0;flex:0 0 auto"><input type="checkbox" id="prn-nonames"> без названий объектов</label>
         <label class="chk" style="margin:0;flex:0 0 auto"><input type="checkbox" id="prn-noscale"> без масштаба</label>
         <label class="f" style="margin:0"><span>Сглаживание</span><select id="prn-smooth"><option value="0">нет</option><option value="1">слабо</option><option value="2">средне</option><option value="3">сильно</option></select></label>
         <label class="f" style="margin:0"><span>Длины</span><select id="prn-lunit"><option value="m">в метрах</option><option value="km">в километрах</option></select></label>
@@ -709,7 +711,7 @@ var cv = $('cv'), g = cv.getContext('2d');
 /* ---------- состояние ---------- */
 function newState() {
     return {
-        id: null, name: '', kind: 'coords', lines: [], cp: [], p0: { lat: null, lng: null }, s: 1, mode: 'return', c: null, tol: null, ks: 0, kc: null, psheet: 'full', adec: 4, showGap: true, objs: [], act: 0, org: { x: 0, y: 0 }, gref: null, wid: 0, marks: [], links: [], legend: { on: true, extra: '' }, dateMode: 'today', dateVal: '', typ: '', lunit: 'm', frame: false, strip: false, lonly: false, noScale: false, smooth: 0,
+        id: null, name: '', kind: 'coords', lines: [], cp: [], p0: { lat: null, lng: null }, s: 1, mode: 'return', c: null, tol: null, ks: 0, kc: null, psheet: 'full', adec: 4, showGap: true, objs: [], act: 0, org: { x: 0, y: 0 }, gref: null, wid: 0, marks: [], links: [], legend: { on: true, extra: '' }, dateMode: 'today', dateVal: '', typ: '', lunit: 'm', frame: false, strip: false, lonly: false, noScale: false, noNames: false, smooth: 0,
         stamp: { region: '', les: '', uch: '', kv: '', author: '', title: '', vyd: '' },
         pscale: 10000, dpi: 96, viewMode: 'az', labels: 2, decl: 0, psz: 65, tkHide: false,
         scan: { on: false, name: '', w: 0, h: 0, fix: 1, a: { re: 1, im: 0 }, c: { re: 0, im: 0 }, op: 0.75 }
@@ -902,7 +904,12 @@ function geoOrigin() {   // координаты начала контура (Т
     if (S.objs && S.objs.length > 1 && S.act >= 0 && S.objs[S.act] && S.objs[S.act].org) { wx = (S.org ? S.org.x : 0) - S.objs[S.act].org.x; wy = (S.org ? S.org.y : 0) - S.objs[S.act].org.y; }
     var q = w2pix(wx, wy); return geoLL({ re: q.u, im: -q.v });
 }
-function originLL() { return originReal() || geoOrigin(); }
+function grefOrigin() {   // координаты начала объекта по общей сетке (по другим объектам абриса)
+    if (!S.gref) return null;
+    var og = objOrg(S), v = voOf(S), k = mpd(S.gref.lat);
+    return { lat: S.gref.lat + (og.y + v.y - S.gref.oy) / k.lat, lng: S.gref.lng + (og.x + v.x - S.gref.ox) / k.lng };
+}
+function originLL() { return originReal() || geoOrigin() || grefOrigin(); }
 function llOfWorld(w) {   // координаты точки чертежа (в системе активного объекта)
     var o = originReal();
     if (o) { var k = mpd(o.lat); return { lat: o.lat + w.y / k.lat, lng: o.lng + w.x / k.lng }; }
@@ -1184,7 +1191,7 @@ function drawScene(g, W, H, v, u, forPrint, opts) {
             var cx = 0, cy = 0; R.poly.forEach(function (p) { cx += p.x; cy += p.y; }); cx = X(cx / R.poly.length); cy = Y(cy / R.poly.length);
             lab(idx, 'a', (R.area / 10000).toFixed(4) + ' га', cx, cy + lw(5), strokeCol, 15, true, 'center');
         }
-        if (multi && !S.lonly && !S.lk) {   // имя объекта рядом с ним
+        if (multi && !S.lonly && !S.lk && !S.noNames) {   // имя объекта рядом с ним
             var nx = 0, ny = 0; R.pts.forEach(function (p) { nx += p.x; ny += p.y; }); nx = X(nx / R.pts.length); ny = Y(ny / R.pts.length);
             halo(S.name || ('Объект ' + (idx + 1)), nx, ny - lw(11), strokeCol, 12, true, 'center');
         }
@@ -1827,18 +1834,40 @@ function linesFromLL(pts) {
     }
     return out;
 }
+function distLL(a, b) { var k = mpd((a.lat + b.lat) / 2); return Math.hypot((a.lng - b.lng) * k.lng, (a.lat - b.lat) * k.lat); }
+function linesToCp() {   // азимуты → координаты; возвращает сообщение или ''
+    if (!S.lines.length) return '';
+    var ll = llPoints(), cur = S.cp.filter(okp);
+    if (!ll) { return cur.length ? 'Координаты точек не обновлены: нет привязки (введите Т.0 в «Профи» или привяжите скан)' : 'Для координат введите точки (или координаты столба Т.0 в «Профи»)'; }
+    if (cur.length === ll.length && ll.every(function (p, i) { return distLL(p, cur[i]) < 0.1; })) return '';   // уже совпадает
+    var R = compute();
+    S.cp = ll.map(function (p, i) { var q = { lat: +p.lat.toFixed(7), lng: +p.lng.toFixed(7) }; if (i > 0 && S.lines[i - 1] && S.lines[i - 1].g) q.g = true; return q; });
+    S.ks = R.s; S.kc = (S.mode === 'return' && R.c > R.s) ? R.c : null;
+    return 'Линии пересчитаны в координаты точек';
+}
+function cpToLines() {   // координаты → азимуты; возвращает сообщение или ''
+    var pts = S.cp.filter(okp); if (!pts.length) return '';
+    S.p0 = { lat: pts[0].lat, lng: pts[0].lng };
+    if (pts.length < 2) return '';
+    var gen = linesFromLL(pts), k = mpd(pts[0].lat), x = 0, y = 0, same = S.lines.length === gen.length;
+    if (same) S.lines.forEach(function (l, i) {
+        var r = ((l.az || 0) + dcl()) * Math.PI / 180; x += (l.d || 0) * Math.sin(r); y += (l.d || 0) * Math.cos(r);
+        if (Math.hypot((pts[i + 1].lng - pts[0].lng) * k.lng - x, (pts[i + 1].lat - pts[0].lat) * k.lat - y) > 0.1) same = false;
+    });
+    if (same) return '';   // линии уже совпадают с точками — ничего не теряем (засечки и т.п.)
+    gen.forEach(function (l, i) { if (pts[i + 1].g) l.g = true; });
+    var rc0 = compute(); S.lines = gen; S.s = rc0.c; S.c = null; S.mode = 'auto'; ui.undoLines = null;
+    return 'Точки пересчитаны в линии (азимут и длина)';
+}
 function setMethod(m) {
-    var toCoords = (m === 'coords');
-    if (toCoords && S.kind !== 'coords') {
-        if (!S.cp.some(okp)) {
-            var ll = llPoints();
-            if (ll) { var R = compute(); S.cp = ll.map(function (p) { return { lat: +p.lat.toFixed(7), lng: +p.lng.toFixed(7) }; }); S.ks = R.s; S.kc = (S.mode === 'return' && R.c > R.s) ? R.c : null; toast('Линии пересчитаны в координаты точек'); }
-            else toast('Для координат введите точки (или координаты столба Т.0 в «Профи»)');
-        }
-    }
-    if (!toCoords && S.kind === 'coords') {
-        var pts = S.cp.filter(okp);
-        if (!S.lines.length && pts.length > 1) { S.lines = linesFromLL(pts); S.p0 = { lat: pts[0].lat, lng: pts[0].lng }; var rc0 = compute(); S.s = rc0.c; S.c = null; S.mode = 'auto'; ui.undoLines = null; toast('Точки пересчитаны в линии (азимут и длина)'); }
+    var toCoords = (m === 'coords'), wasCoords = (S.kind === 'coords');
+    if (toCoords !== wasCoords) {
+        var og0 = objOrg(S), v0 = voOf(S), D = { x: og0.x + v0.x, y: og0.y + v0.y }, msg = toCoords ? linesToCp() : cpToLines();
+        S.kind = toCoords ? 'coords' : 'traverse';
+        S.org = { x: D.x, y: D.y }; S.vo = { x: 0, y: 0 };
+        if (toCoords) { ensureGref(); var og1 = objOrg(S), dv = { x: D.x - og1.x, y: D.y - og1.y }; if (Math.hypot(dv.x, dv.y) > 1e-6) S.vo = dv; }
+        var og1b = objOrg(S); if (S.scan && S.scan.c) frameShift(og0, og1b); else { V.cx += og0.x - og1b.x; V.cy += og0.y - og1b.y; }   // скан и вид остаются на месте относительно контура и соседних объектов
+        if (msg) toast(msg);
     }
     S.kind = toCoords ? 'coords' : 'traverse'; if (!toCoords) S.viewMode = m;
     syncFields(); renderTable(); renderCoords(); afterChange();
@@ -1942,6 +1971,29 @@ $('tbody').addEventListener('click', function (e) {
     var b = e.target.closest('[data-del]'); if (!b) return;
     askDel(+b.getAttribute('data-del'));
 });
+/* ---------- таблицы: выделение при входе в ячейку и переход стрелками ---------- */
+(function () {
+    function cells(tb) { var out = []; tb.querySelectorAll('tr[data-i]').forEach(function (tr) { var row = []; tr.querySelectorAll('input[data-f],select[data-f]').forEach(function (el) { if (el.offsetParent !== null) row.push(el); }); out.push(row); }); return out; }
+    function go(el) { if (!el) return; el.focus(); if (el.select) { try { el.select(); } catch (e) { } } }
+    [$('tb-c'), $('tbody')].forEach(function (tb) {
+        tb.addEventListener('input', function (e) { if (e.target.dataset) delete e.target.dataset.nv; });
+        tb.addEventListener('focusin', function (e) { var t = e.target; if (t.tagName === 'INPUT') t.dataset.nv = '1'; if (t.tagName === 'INPUT' && (t.type === 'text' || t.type === 'number')) setTimeout(function () { if (document.activeElement === t) { try { t.select(); } catch (er) { } } }, 0); });
+        tb.addEventListener('keydown', function (e) {
+            var t = e.target; if (t.tagName !== 'INPUT' || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+            var k = e.key; if (k !== 'ArrowUp' && k !== 'ArrowDown' && k !== 'ArrowLeft' && k !== 'ArrowRight' && k !== 'Enter') return;
+            var grid = cells(tb), r = -1, c = -1; grid.forEach(function (row, i) { var j = row.indexOf(t); if (j >= 0) { r = i; c = j; } });
+            if (r < 0) return;
+            var tr = r, tc = c;
+            if (k === 'ArrowUp') tr = r - 1;
+            else if (k === 'ArrowDown' || k === 'Enter') tr = r + 1;
+            else if (k === 'ArrowLeft') { if (t.selectionStart === null ? t.dataset.nv !== '1' : t.selectionStart !== 0) return; if (c > 0) tc = c - 1; else if (r > 0) { tr = r - 1; tc = grid[tr].length - 1; } else return; }
+            else if (k === 'ArrowRight') { if (t.selectionEnd === null ? t.dataset.nv !== '1' : t.selectionEnd !== t.value.length) return; if (c < grid[r].length - 1) tc = c + 1; else if (r < grid.length - 1) { tr = r + 1; tc = 0; } else return; }
+            if (tr < 0 || tr >= grid.length) { if (k === 'Enter') e.preventDefault(); return; }
+            tc = Math.min(tc, grid[tr].length - 1); if (tc < 0) return;
+            e.preventDefault(); go(grid[tr][tc]);
+        });
+    });
+})();
 $('b-add').onclick = function () {
     var last = S.lines[S.lines.length - 1]; S.lines.push({ az: last ? last.az : 0, d: 0 }); renderTable(); afterChange();
     var inp = $('tbody').querySelector('tr:last-child [data-f="d"]'); if (inp) { inp.focus(); inp.select && inp.select(); }
@@ -2127,7 +2179,7 @@ $('obj-chips').addEventListener('click', function (e) { var b = e.target.closest
 function syncObjFields() {
     $('f-lunit').value = S.lunit === 'km' ? 'km' : 'm'; $('prn-lunit').value = $('f-lunit').value; $('f-strip').checked = !!S.strip;
     $('wid-row').style.display = S.strip ? '' : 'none'; $('f-wid').value = S.wid > 0 ? S.wid : '';
-    $('v-lonly').checked = $('prn-lonly').checked = !!S.lonly; $('v-noscale').checked = $('prn-noscale').checked = !!S.noScale; $('v-smooth').value = $('prn-smooth').value = String(S.smooth | 0);
+    $('v-lonly').checked = $('prn-lonly').checked = !!S.lonly; $('v-noscale').checked = $('prn-noscale').checked = !!S.noScale; $('v-nonames').checked = $('prn-nonames').checked = !!S.noNames; $('v-smooth').value = $('prn-smooth').value = String(S.smooth | 0);
     $('v-tk').checked = !S.tkHide; $('v-psz').value = S.psz || 65; $('v-pszv').textContent = S.psz || 65; $('db-close').checked = S.mode !== 'open'; $('prn-frame').checked = !!S.frame;
     $('o-del').style.opacity = S.objs.length > 1 ? '' : '.45';
     renderObjBar();
@@ -2195,7 +2247,7 @@ $('v-psz').oninput = function () { S.psz = parseInt(this.value, 10) || 65; $('v-
 $('v-psz').onchange = function () { scheduleSave(); };
 $('v-tk').onchange = function () { S.tkHide = !this.checked; scheduleSave(); draw(); if ($('m-prn').classList.contains('on')) refreshPreview(); };
 function setView(k, v) { S[k] = v; syncObjFields(); afterChange(); if ($('m-prn').classList.contains('on')) refreshPreview(); }
-['lonly', 'noscale'].forEach(function (n) { var key = n === 'lonly' ? 'lonly' : 'noScale'; ['v-', 'prn-'].forEach(function (p) { $(p + n).onchange = function () { setView(key, this.checked); }; }); });
+['lonly', 'noscale', 'nonames'].forEach(function (n) { var key = n === 'lonly' ? 'lonly' : (n === 'nonames' ? 'noNames' : 'noScale'); ['v-', 'prn-'].forEach(function (p) { $(p + n).onchange = function () { setView(key, this.checked); }; }); });
 ['v-smooth', 'prn-smooth'].forEach(function (id) { $(id).onchange = function () { setView('smooth', parseInt(this.value, 10) || 0); }; });
 
 /* ---------- пропуск участка, безопасное удаление, история ---------- */
