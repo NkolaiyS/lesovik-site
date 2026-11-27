@@ -506,6 +506,8 @@ ym(109130409, 'init', {clickmap: true, trackLinks: true, accurateTrackBounce: tr
             <div class="box">
                 <h4>Вид чертежа (экран и лист)</h4>
                 <label class="f" style="margin:0 0 6px"><span>Размер точек: <b id="v-pszv">65</b>% (100% — как раньше)</span><input type="range" id="v-psz" min="30" max="100" step="5" value="65"></label>
+                <label class="f" style="margin:0 0 6px"><span>Толщина контура: <b id="v-cwv">100</b>% (100% — как раньше)</span><input type="range" id="v-cw" min="50" max="400" step="10" value="100"></label>
+                <label class="f" style="margin:0 0 6px"><span>Затенение внутри контура: <b id="v-fav">7</b>% (чтобы делянку было видно при печати)</span><input type="range" id="v-fa" min="0" max="40" step="1" value="7"></label>
                 <label class="chk" style="margin:0 0 6px"><input type="checkbox" id="v-tk" checked> показывать засечки по ходу</label>
                 <button class="btn" id="v-lmove" type="button" style="margin:0 0 6px">✋ Двигать подписи (номера, длины, площадь)</button>
                 <label class="chk"><input type="checkbox" id="v-lonly"> только линии (без номеров, названий, кружков и площади)</label>
@@ -713,7 +715,7 @@ function newState() {
     return {
         id: null, name: '', kind: 'coords', lines: [], cp: [], p0: { lat: null, lng: null }, s: 1, mode: 'return', c: null, tol: null, ks: 0, kc: null, psheet: 'full', adec: 4, showGap: true, objs: [], act: 0, org: { x: 0, y: 0 }, gref: null, wid: 0, marks: [], links: [], legend: { on: true, extra: '' }, dateMode: 'today', dateVal: '', typ: '', lunit: 'm', frame: false, strip: false, lonly: false, noScale: false, noNames: false, smooth: 0,
         stamp: { region: '', les: '', uch: '', kv: '', author: '', title: '', vyd: '' },
-        pscale: 10000, dpi: 96, viewMode: 'az', labels: 2, decl: 0, psz: 65, tkHide: false,
+        pscale: 10000, dpi: 96, viewMode: 'az', labels: 2, decl: 0, psz: 65, cw: 100, fa: 7, tkHide: false,
         scan: { on: false, name: '', w: 0, h: 0, fix: 1, a: { re: 1, im: 0 }, c: { re: 0, im: 0 }, op: 0.75 }
     };
 }
@@ -1087,6 +1089,7 @@ function curFsPx() { return parseFloat(getComputedStyle(document.documentElement
 function fsScale() { return (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fs')) || 15) / 15; }
 
 /* ---------- отрисовка (экран и печать) ---------- */
+function hexA(c, a) { var m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(c); return m ? 'rgba(' + parseInt(m[1], 16) + ',' + parseInt(m[2], 16) + ',' + parseInt(m[3], 16) + ',' + a + ')' : c; }
 function drawScene(g, W, H, v, u, forPrint, opts) {
     opts = opts || {};
     if (!forPrint) ui.lblHits = [];
@@ -1148,9 +1151,10 @@ function drawScene(g, W, H, v, u, forPrint, opts) {
         }
         if (R.poly) {
             g.beginPath(); trace(R.poly, true);
-            g.fillStyle = st.cls === 'bad' ? 'rgba(192,70,63,.06)' : 'rgba(47,107,58,.07)'; g.fill();
-            g.lineJoin = 'round'; g.lineWidth = lw(4.2); g.strokeStyle = 'rgba(255,255,255,.85)'; g.stroke();
-            g.lineWidth = lw(2); g.strokeStyle = strokeCol; g.stroke();
+            var cwk = (S.cw || 100) / 100, fak = (S.fa == null ? 7 : S.fa) / 100;
+            g.fillStyle = fak > 0 ? (S.lk || multi ? hexA(strokeCol, fak) : (st.cls === 'bad' ? 'rgba(192,70,63,' + fak + ')' : 'rgba(47,107,58,' + fak + ')')) : 'rgba(0,0,0,0)'; g.fill();
+            g.lineJoin = 'round'; g.lineWidth = lw(2 * cwk + 2.2); g.strokeStyle = 'rgba(255,255,255,.85)'; g.stroke();
+            g.lineWidth = lw(2 * cwk); g.strokeStyle = strokeCol; g.stroke();
         } else if (R.kind === 'coords' && R.m > 1 && R.s === 0 && R.c === 0) {
             g.lineWidth = lw(2); g.strokeStyle = strokeCol; g.beginPath(); traceRuns(0, P.length - 1); g.stroke();
         }
@@ -1888,7 +1892,7 @@ function renderCoords() {
     if (!S.cp.length) { tb.innerHTML = '<tr><td colspan="4" style="padding:14px;color:var(--muted)">Нет точек. Нажмите «➕ Точка», «✏️ Рисовать точки», вставьте список координат или загрузите данные.</td></tr>'; return; }
     var nm = okNums(), s = compute().s, main = [], tie = [];
     S.cp.forEach(function (p, i) { var n = nm[i]; ((n !== undefined && n < s) ? tie : main).push(coordRow(p, i, n, n !== undefined && n < s)); });
-    tb.innerHTML = main.join('') + (tie.length ? '<tr class="sep"><td colspan="4" style="padding:6px 8px;background:var(--bento);font-size:.82em;color:var(--muted)">Привязка от столба (до начала делянки)</td></tr>' + tie.join('') : '');
+    tb.innerHTML = (tie.length ? '<tr class="sep"><td colspan="4" style="padding:6px 8px;background:var(--bento);font-size:.82em;color:var(--muted)">Привязка от столба (до начала делянки)</td></tr>' + tie.join('') + (main.length ? '<tr class="sep"><td colspan="4" style="padding:6px 8px;background:var(--bento);font-size:.82em;color:var(--muted)">Делянка</td></tr>' : '') : '') + main.join('');
 }
 function refreshCoordLabels() {
     var nm = okNums(); $('tb-c').querySelectorAll('tr[data-i]').forEach(function (tr) { var i = +tr.getAttribute('data-i'), n = nm[i]; tr.querySelector('.lbl b').textContent = 'Т.' + (n !== undefined ? n : '—'); });
@@ -1908,8 +1912,14 @@ $('tb-c').addEventListener('click', function (e) {
     S.cp.splice(+b.getAttribute('data-del'), 1); renderCoords(); afterChange();
 });
 $('tb-c').addEventListener('keydown', function (e) {
-    if (e.key !== 'Enter' || e.target.getAttribute('data-f') !== 'lng') return;
-    e.preventDefault(); e.target.dispatchEvent(new Event('change', { bubbles: true })); addCoordRow();
+    var fld = e.target.getAttribute('data-f');
+    if (e.key !== 'Enter' || (fld !== 'lng' && fld !== 'lat')) return;
+    e.preventDefault(); e.target.dispatchEvent(new Event('change', { bubbles: true }));
+    var tr0 = e.target.closest('tr[data-i]'); if (!tr0) return;
+    if (fld === 'lat') { var nx = tr0.querySelector('[data-f="lng"]'); if (nx) { nx.focus(); nx.select && nx.select(); } return; }
+    var i0 = +tr0.getAttribute('data-i'), rows = $('tb-c').querySelectorAll('tr[data-i]'), found = null;
+    for (var k = 0; k < rows.length && !found; k++) { var ii = +rows[k].getAttribute('data-i'); if (ii <= i0 && rows[k] !== tr0) continue; if (rows[k] === tr0) continue; var la = rows[k].querySelector('[data-f="lat"]'), lo = rows[k].querySelector('[data-f="lng"]'); if (la && !la.value.trim()) found = la; else if (lo && !lo.value.trim()) found = lo; }
+    if (found) { found.focus(); found.select && found.select(); } else addCoordRow();
 });
 $('tb-c').addEventListener('paste', function (e) {
     var t = (e.clipboardData || window.clipboardData).getData('text'), tr = e.target.closest('tr[data-i]');
@@ -2180,7 +2190,7 @@ function syncObjFields() {
     $('f-lunit').value = S.lunit === 'km' ? 'km' : 'm'; $('prn-lunit').value = $('f-lunit').value; $('f-strip').checked = !!S.strip;
     $('wid-row').style.display = S.strip ? '' : 'none'; $('f-wid').value = S.wid > 0 ? S.wid : '';
     $('v-lonly').checked = $('prn-lonly').checked = !!S.lonly; $('v-noscale').checked = $('prn-noscale').checked = !!S.noScale; $('v-nonames').checked = $('prn-nonames').checked = !!S.noNames; $('v-smooth').value = $('prn-smooth').value = String(S.smooth | 0);
-    $('v-tk').checked = !S.tkHide; $('v-psz').value = S.psz || 65; $('v-pszv').textContent = S.psz || 65; $('db-close').checked = S.mode !== 'open'; $('prn-frame').checked = !!S.frame;
+    $('v-tk').checked = !S.tkHide; $('v-psz').value = S.psz || 65; $('v-pszv').textContent = S.psz || 65; $('v-cw').value = S.cw || 100; $('v-cwv').textContent = S.cw || 100; var _fa = S.fa == null ? 7 : S.fa; $('v-fa').value = _fa; $('v-fav').textContent = _fa; $('db-close').checked = S.mode !== 'open'; $('prn-frame').checked = !!S.frame;
     $('o-del').style.opacity = S.objs.length > 1 ? '' : '.45';
     renderObjBar();
 }
@@ -2245,6 +2255,10 @@ $('v-lmove').onclick = startLblMove; $('lb-done').onclick = endLblMove;
 $('lb-reset').onclick = function () { S.lo = {}; scheduleSave(); afterChange(); toast('Подписи возвращены на места'); };
 $('v-psz').oninput = function () { S.psz = parseInt(this.value, 10) || 65; $('v-pszv').textContent = S.psz; draw(); if ($('m-prn').classList.contains('on')) refreshPreview(); };
 $('v-psz').onchange = function () { scheduleSave(); };
+$('v-cw').oninput = function () { S.cw = parseInt(this.value, 10) || 100; $('v-cwv').textContent = S.cw; draw(); if ($('m-prn').classList.contains('on')) refreshPreview(); };
+$('v-cw').onchange = function () { scheduleSave(); };
+$('v-fa').oninput = function () { S.fa = parseInt(this.value, 10); $('v-fav').textContent = S.fa; draw(); if ($('m-prn').classList.contains('on')) refreshPreview(); };
+$('v-fa').onchange = function () { scheduleSave(); };
 $('v-tk').onchange = function () { S.tkHide = !this.checked; scheduleSave(); draw(); if ($('m-prn').classList.contains('on')) refreshPreview(); };
 function setView(k, v) { S[k] = v; syncObjFields(); afterChange(); if ($('m-prn').classList.contains('on')) refreshPreview(); }
 ['lonly', 'noscale', 'nonames'].forEach(function (n) { var key = n === 'lonly' ? 'lonly' : (n === 'nonames' ? 'noNames' : 'noScale'); ['v-', 'prn-'].forEach(function (p) { $(p + n).onchange = function () { setView(key, this.checked); }; }); });
@@ -3072,22 +3086,33 @@ function renderSheet(opts) {
     var compact = opts.mode === 'len' || opts.mode === 'lenaz', one = opts.mode === 'one', az = opts.mode === 'len' ? false : opts.mode === 'lenaz' ? true : opts.az !== false;
     var R = compute(), LY = layersAll(), segs = [], ll = [], multiL = LY.length > 1;
     if (!scheme) LY.forEach(function (L) {
-        L.segs.forEach(function (s0) { if (s0.gap) return; segs.push({ a: s0.a, L: L, la: L.pre + plab(s0.a), lb: L.pre + plab(s0.bc !== undefined ? s0.bc : s0.b), az: s0.az, d: s0.d, tie: s0.tie }); });
-        if (L.ll) L.ll.forEach(function (p0, i0) { ll.push({ lab: L.pre + plab(i0), lat: p0.lat, lng: p0.lng }); });
+        L.segs.forEach(function (s0) { if (s0.gap) return; segs.push({ a: s0.a, L: L, la: plab(s0.a), lb: plab(s0.bc !== undefined ? s0.bc : s0.b), az: s0.az, d: s0.d, tie: s0.tie }); });
+        if (L.ll) L.ll.forEach(function (p0, i0) { ll.push({ lab: plab(i0), lat: p0.lat, lng: p0.lng, L: L }); });
     });
     if (!scheme) (S.marks || []).forEach(function (m, i) { var l = markLL(m); if (l) ll.push({ lab: markLab(i), lat: l.lat, lng: l.lng }); });
     var oneRows = [];
     if (one) {
         LY.forEach(function (L) {
             var mine = segs.filter(function (z) { return z.L === L; });
-            if (L.ll) L.ll.forEach(function (p0, i0) { var sg = mine.filter(function (z) { return z.a === i0; })[0]; oneRows.push({ lab: L.pre + plab(i0), lat: p0.lat, lng: p0.lng, az: sg ? sg.az : null, d: sg ? sg.d : null }); });
-            else mine.forEach(function (sg) { oneRows.push({ lab: sg.la + '–' + sg.lb + (sg.tie ? '*' : ''), az: sg.az, d: sg.d }); });
+            if (L.ll) L.ll.forEach(function (p0, i0) { var sg = mine.filter(function (z) { return z.a === i0; })[0]; oneRows.push({ lab: plab(i0), lat: p0.lat, lng: p0.lng, az: sg ? sg.az : null, d: sg ? sg.d : null, L: L }); });
+            else mine.forEach(function (sg) { oneRows.push({ lab: sg.la + '–' + sg.lb + (sg.tie ? '*' : ''), az: sg.az, d: sg.d, L: L }); });
         });
         (S.marks || []).forEach(function (m, i) { var l = markLL(m); if (l) oneRows.push({ lab: markLab(i), lat: l.lat, lng: l.lng, az: null, d: null }); });
     }
     var oneLL = oneRows.some(function (r) { return r.lat !== undefined; });
     var has = one ? oneRows.length > 0 : ll.length > 0;
     var hasObj = LY.some(function (L) { return !L.R.empty; });
+    function hdText(L) {   // заголовок объекта в таблицах при нескольких объектах
+        var nm = String(L.name || '').trim(), dflt = 'объект ' + (L.idx + 1);
+        return 'Объект ' + (L.idx + 1) + ': ' + L.typ + ((!nm || nm.toLowerCase() === dflt || nm.toLowerCase() === String(L.typ).toLowerCase()) ? '' : ' «' + nm + '»');
+    }
+    function groupRows(rows) {
+        if (!multiL) return rows;
+        var out = [], last = null;
+        rows.forEach(function (r) { var key = r.L || 'marks'; if (key !== last) { out.push({ head: true, text: r.L ? hdText(r.L) : 'Знаки' }); last = key; } out.push(r); });
+        return out;
+    }
+    var segsG = groupRows(segs), llG = groupRows(ll), oneG = groupRows(oneRows);
     function T(txt, x, y, size, bold, align, maxW) {
         q.font = (bold ? 'bold ' : '') + Math.round(size * PX) + 'px sans-serif'; q.textAlign = align || 'left'; q.fillStyle = '#000';
         if (maxW) { var w = q.measureText(txt).width / PX; if (w > maxW) q.font = (bold ? 'bold ' : '') + Math.max(6, Math.round(size * PX * maxW / w)) + 'px sans-serif'; }
@@ -3140,7 +3165,7 @@ function renderSheet(opts) {
     if (multiL) {
         var showV = !scheme || opts.sarea !== false;
         var ob = LY.filter(function (L) { return !L.R.empty; }).map(function (L) { return L.pre.replace('-', '') + ' — ' + L.typ + (String(L.name).toLowerCase() === String(L.typ).toLowerCase() ? '' : ' «' + L.name + '»') + (showV ? ' (' + objSumm(L) + ')' : ''); });
-        var ot = wrapT('Объекты (номер точки: объект-точка): ' + ob.join('; ') + '.', 184, 3.3, false);
+        var ot = wrapT('Объекты (подпись точки на чертеже: объект-точка): ' + ob.join('; ') + '.', 184, 3.3, false);
         ot.forEach(function (t, k) { T(t, 12, yEnd + 5 + k * 4.2, 3.3, false); }); yEnd += 5 + (ot.length - 1) * 4.2;
     }
     var sepY = yEnd + 4.7; ln(12, sepY, 198, sepY, 0.3);
@@ -3183,22 +3208,23 @@ function renderSheet(opts) {
         else legendDraw(legItems, bx + legPos.x, by + legPos.y, lg, true);
     }
     // ходы — справа от чертежа
-    var tx = 144, tw = 54, n = segs.length;
+    var tx = 144, tw = 54, n = segs.length, nS = segsG.length;
     if (n && !one) {
-        var extra = compact ? 1 : 0, rh = Math.min(5.4, (bh - 6) / (n + 1 + extra)), fs = Math.min(3.2, rh * 0.64), cols = az ? [0, 19, 37, 54] : [0, 27, 54], ty = by, i, nc = cols.length - 1, nr = n + 1 + extra;
+        var extra = compact ? 1 : 0, rh = Math.min(5.4, (bh - 6) / (nS + 1 + extra)), fs = Math.min(3.2, rh * 0.64), cols = az ? [0, 19, 37, 54] : [0, 27, 54], ty = by, i, nc = cols.length - 1, nr = nS + 1 + extra;
         q.fillStyle = '#EEE'; q.fillRect(tx * PX, ty * PX, tw * PX, rh * PX);
         (az ? ['Ход', 'Азимут', 'Длина, м'] : ['Ход', 'Длина, м']).forEach(function (h, k) { T(h, tx + (cols[k] + cols[k + 1]) / 2, ty + rh * 0.7, fs, true, 'center'); });
         var mid = function (j) { return tx + (cols[j] + cols[j + 1]) / 2; }, sum = 0;
-        segs.forEach(function (sg, k) {
+        segsG.forEach(function (sg, k) {
             var y = ty + rh * (k + 1);
+            if (sg.head) { q.fillStyle = '#EEE'; q.fillRect(tx * PX, y * PX, tw * PX, rh * PX); T(sg.text, tx + 1.5, y + rh * 0.7, fs, true, 'left', tw - 3); return; }
             T(sg.la + '–' + sg.lb + (sg.tie ? '*' : ''), mid(0), y + rh * 0.7, fs, false, 'center', az ? 17 : 25);
             if (az) T(f1(sg.az) + '°', mid(1), y + rh * 0.7, fs, false, 'center', 17);
             T(f2(sg.d), mid(nc - 1), y + rh * 0.7, fs, false, 'center', az ? 15 : 25);
             if (!sg.tie) sum += sg.d;
         });
-        if (compact) { var ys = ty + rh * (n + 1); q.fillStyle = '#EEE'; q.fillRect(tx * PX, ys * PX, tw * PX, rh * PX); T('Итого', mid(0), ys + rh * 0.7, fs, true, 'center', az ? 17 : 25); T(f2(sum), mid(nc - 1), ys + rh * 0.7, fs, true, 'center', az ? 15 : 25); }
+        if (compact) { var ys = ty + rh * (nS + 1); q.fillStyle = '#EEE'; q.fillRect(tx * PX, ys * PX, tw * PX, rh * PX); T('Итого', mid(0), ys + rh * 0.7, fs, true, 'center', az ? 17 : 25); T(f2(sum), mid(nc - 1), ys + rh * 0.7, fs, true, 'center', az ? 15 : 25); }
         for (i = 0; i <= nr; i++) ln(tx, ty + rh * i, tx + tw, ty + rh * i, 0.15);
-        cols.forEach(function (x) { ln(tx + x, ty, tx + x, ty + rh * nr, 0.15); });
+        for (i = 0; i < nr; i++) { var hd = i > 0 && i <= nS && segsG[i - 1].head; (hd ? [0, tw] : cols).forEach(function (x) { ln(tx + x, ty + rh * i, tx + x, ty + rh * (i + 1), 0.15); }); }
         var ny = ty + rh * nr + 3.4;
         if (segs.some(function (s) { return s.tie; })) { T('* — привязка от столба', tx, ny, 2.6, false); ny += 4; }
         if (az && dcl()) wrapT('Азимуты магнитные, склонение ' + declStr(dcl()) + (dcl() > 0 ? ' (В)' : ' (З)'), tw, 2.8, false).forEach(function (t, k) { T(t, tx, ny + k * 3.4, 2.8, false); });
@@ -3206,7 +3232,7 @@ function renderSheet(opts) {
     // координаты — под чертежом
     if (has && !one) {
         var y0 = by + bh + 4; T('Координаты точек (WGS-84, градусы)', 12, y0 + 3, 3.4, true);
-        var ty2 = y0 + 5, avail = 273 - ty2, m = ll.length, g2 = 1, rows;
+        var ty2 = y0 + 5, avail = 273 - ty2, m = llG.length, g2 = 1, rows;
         for (g2 = 1; g2 <= 3; g2++) { rows = Math.ceil(m / g2); if (avail / (rows + 1) >= 4.2) break; }
         if (g2 > 3) g2 = 3; rows = Math.ceil(m / g2);
         var rh2 = Math.min(5.2, avail / (rows + 1)), fs2 = Math.min(3.2, rh2 * 0.66), gw = 186 / g2, k2, r2;
@@ -3216,16 +3242,17 @@ function renderSheet(opts) {
             q.fillStyle = '#EEE'; q.fillRect(gx * PX, ty2 * PX, (gw - 1.5) * PX, rh2 * PX);
             T('№', gx + w1 / 2, ty2 + rh2 * 0.7, fs2, true, 'center'); T('Широта', gx + w1 + w2 / 2, ty2 + rh2 * 0.7, fs2, true, 'center'); T('Долгота', gx + w1 + w2 * 1.5, ty2 + rh2 * 0.7, fs2, true, 'center');
             for (r2 = 0; r2 < cnt; r2++) {
-                var idx = k2 * rows + r2, yy = ty2 + rh2 * (r2 + 1), p = ll[idx];
+                var idx = k2 * rows + r2, yy = ty2 + rh2 * (r2 + 1), p = llG[idx];
+                if (p.head) { q.fillStyle = '#EEE'; q.fillRect(gx * PX, yy * PX, (gw - 1.5) * PX, rh2 * PX); T(p.text, gx + 1.5, yy + rh2 * 0.7, fs2, true, 'left', gw - 4); continue; }
                 T(p.lab, gx + w1 / 2, yy + rh2 * 0.7, fs2, false, 'center'); T(p.lat.toFixed(6), gx + w1 + w2 / 2, yy + rh2 * 0.7, fs2, false, 'center'); T(p.lng.toFixed(6), gx + w1 + w2 * 1.5, yy + rh2 * 0.7, fs2, false, 'center');
             }
             for (r2 = 0; r2 <= cnt + 1; r2++) ln(gx, ty2 + rh2 * r2, gx + gw - 1.5, ty2 + rh2 * r2, 0.15);
-            [0, w1, w1 + w2, gw - 1.5].forEach(function (x) { ln(gx + x, ty2, gx + x, ty2 + rh2 * (cnt + 1), 0.15); });
+            for (r2 = 0; r2 <= cnt; r2++) { var hd2 = r2 > 0 && llG[k2 * rows + r2 - 1].head; (hd2 ? [0, gw - 1.5] : [0, w1, w1 + w2, gw - 1.5]).forEach(function (x) { ln(gx + x, ty2 + rh2 * r2, gx + x, ty2 + rh2 * (r2 + 1), 0.15); }); }
         }
     }
     if (one && oneRows.length) {
         var yo = by + bh + 4; T(oneLL ? 'Координаты точек (WGS-84, градусы)' + (az ? ', азимуты и длины ходов' : ' и длины ходов') : 'Ходы', 12, yo + 3, 3.4, true);
-        var to = yo + 5, avo = 273 - to, mo = oneRows.length, go, rwo;
+        var to = yo + 5, avo = 273 - to, mo = oneG.length, go, rwo;
         for (go = 1; go <= 3; go++) { rwo = Math.ceil(mo / go); if (avo / (rwo + 1) >= 4.2) break; }
         if (go > 3) go = 3; rwo = Math.ceil(mo / go);
         var cdef = [];
@@ -3240,9 +3267,9 @@ function renderSheet(opts) {
             var xs = [0], acc = 0; cdef.forEach(function (c) { acc += c.f / fsum * wt; xs.push(acc); });
             q.fillStyle = '#EEE'; q.fillRect(gx0 * PX, to * PX, wt * PX, rho * PX);
             cdef.forEach(function (c, ci) { T(c.h, gx0 + (xs[ci] + xs[ci + 1]) / 2, to + rho * 0.7, fso, true, 'center', xs[ci + 1] - xs[ci] - 1); });
-            for (ro = 0; ro < cnt0; ro++) { var rr = oneRows[ko * rwo + ro], yy0 = to + rho * (ro + 1); cdef.forEach(function (c, ci) { T(c.g(rr), gx0 + (xs[ci] + xs[ci + 1]) / 2, yy0 + rho * 0.7, fso, false, 'center', xs[ci + 1] - xs[ci] - 1); }); }
+            for (ro = 0; ro < cnt0; ro++) { var rr = oneG[ko * rwo + ro], yy0 = to + rho * (ro + 1); if (rr.head) { q.fillStyle = '#EEE'; q.fillRect(gx0 * PX, yy0 * PX, wt * PX, rho * PX); T(rr.text, gx0 + 1.5, yy0 + rho * 0.7, fso, true, 'left', wt - 3); continue; } cdef.forEach(function (c, ci) { T(c.g(rr), gx0 + (xs[ci] + xs[ci + 1]) / 2, yy0 + rho * 0.7, fso, false, 'center', xs[ci + 1] - xs[ci] - 1); }); }
             for (ro = 0; ro <= cnt0 + 1; ro++) ln(gx0, to + rho * ro, gx0 + wt, to + rho * ro, 0.15);
-            xs.forEach(function (x) { ln(gx0 + x, to, gx0 + x, to + rho * (cnt0 + 1), 0.15); });
+            for (ro = 0; ro <= cnt0; ro++) { var hd3 = ro > 0 && oneG[ko * rwo + ro - 1].head; (hd3 ? [0, wt] : xs).forEach(function (x) { ln(gx0 + x, to + rho * ro, gx0 + x, to + rho * (ro + 1), 0.15); }); }
         }
     }
     ln(8, 276, 202, 276, 0.3);
