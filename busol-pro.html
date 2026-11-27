@@ -5960,12 +5960,14 @@ var BgWalk = (function () {
 </script>
 
 <style>
-#bgm-modal { position: fixed; inset: 0; z-index: 99990; display: none; flex-direction: column; background: var(--bg-paper); color: var(--text-graphite); font-family: inherit; }
+#toast-message { z-index: 100002 !important; }
+#bgm-modal { position: fixed; inset: 0; z-index: 100001; display: none; flex-direction: column; background: var(--bg-paper); color: var(--text-graphite); font-family: inherit; }
 #bgm-modal .bgm-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--footer-bg, #2C3531); color: #F9FBF9; font-weight: 700; }
+#bgm-modal .bgm-bar .bgm-bb { display: flex; gap: 6px; align-items: center; }
 #bgm-modal .bgm-bar button { border: 1px solid #8FBC8F; background: transparent; color: #F9FBF9; border-radius: 10px; padding: 6px 12px; font-weight: 700; }
 #bgm-modal .bgm-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-#bgm-canvas { width: 100%; height: 34vh; flex: 0 0 auto; display: block; border-bottom: 1px solid var(--border-color); touch-action: none; }
-#bgm-modal .bgm-side { flex: 1; min-height: 0; overflow: auto; padding: 8px 12px calc(10px + env(safe-area-inset-bottom)); }
+#bgm-canvas { width: 100%; height: 28vh; flex: 0 0 auto; display: block; border-bottom: 1px solid var(--border-color); touch-action: none; }
+#bgm-modal .bgm-side { flex: 1; min-height: 0; overflow: auto; padding: 8px 12px calc(16px + env(safe-area-inset-bottom)); }
 #bgm-modal .bgm-st { font-size: 12.5px; margin-bottom: 6px; }
 #bgm-modal .bgm-st button, #bgm-modal .bgm-btns button { border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-graphite); border-radius: 10px; padding: 6px 10px; font-size: 12.5px; font-weight: 600; margin: 2px 2px 2px 0; }
 #bgm-modal .bgm-row { display: flex; gap: 6px; align-items: flex-end; margin: 6px 0; }
@@ -5984,15 +5986,15 @@ var BgWalk = (function () {
 }
 </style>
 <div id="bgm-modal">
-  <div class="bgm-bar"><span>✍️ Ввод вручную: азимут и длина</span><button type="button" onclick="BgManual.close()">✕ Готово</button></div>
+  <div class="bgm-bar"><span>✍️ Ввод вручную</span><span class="bgm-bb"><button type="button" id="bgm-tg" onclick="BgManual.toggleMap()">🗺 Скрыть чертёж</button><button type="button" onclick="BgManual.close()">✕ Готово</button></span></div>
   <div class="bgm-body">
     <canvas id="bgm-canvas"></canvas>
     <div class="bgm-side">
       <div class="bgm-st">Старт: <b id="bgm-start">—</b><br>
         <button type="button" onclick="BgManual.startGps()">📍 Взять с GPS</button><button type="button" onclick="BgManual.startTyped()">⌨ Ввести координаты</button><button type="button" onclick="BgManual.startNone()">Без координат</button></div>
       <div class="bgm-row">
-        <label>Азимут, °<input id="bgm-az" type="text" inputmode="decimal" autocomplete="off" placeholder="напр. 137,5"></label>
-        <label>Длина, м<input id="bgm-d" type="text" inputmode="decimal" autocomplete="off" placeholder="напр. 120"></label>
+        <label>Азимут, °<input id="bgm-az" type="text" inputmode="decimal" autocomplete="off" placeholder="137,5"></label>
+        <label>Длина, м<input id="bgm-d" type="text" inputmode="decimal" autocomplete="off" placeholder="120"></label>
         <button id="bgm-add" type="button" onclick="BgManual.add()">＋ Линия</button>
       </div>
       <div id="bgm-sum">Введите первую линию</div>
@@ -6060,8 +6062,11 @@ var BgWalk = (function () {
     }
     window.BgManual = {
         recalc: recalc,
+        toggleMap: function () { var c = $('bgm-canvas'), hide = c.style.display !== 'none'; c.style.display = hide ? 'none' : 'block'; $('bgm-tg').textContent = hide ? '🗺 Показать чертёж' : '🗺 Скрыть чертёж'; try { localStorage.setItem('bgm_hidemap', hide ? '1' : '0'); } catch (e) { } if (!hide) render(); },
         open: function () {
-            $('bgm-modal').style.display = 'flex'; render();
+            $('bgm-modal').style.display = 'flex';
+            var hm = false; try { hm = localStorage.getItem('bgm_hidemap') === '1'; } catch (e) { }
+            $('bgm-canvas').style.display = hm ? 'none' : 'block'; $('bgm-tg').textContent = hm ? '🗺 Показать чертёж' : '🗺 Скрыть чертёж'; render();
             setTimeout(function () { render(); var e = $('bgm-az'); if (e) e.focus(); }, 60);
         },
         close: function () { $('bgm-modal').style.display = 'none'; drawPolygon(); },
