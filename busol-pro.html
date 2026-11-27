@@ -874,6 +874,7 @@
             <div class="fs-crosshair-line-h"></div>
 
             <svg id="fs-compass-svg" viewBox="0 0 300 300"></svg>
+            <canvas id="bgw-fs-arrow"></canvas>
 
             <button type="button" id="lens-btn-fs" class="lens-btn lens-btn-fs" aria-label="Линза: удерживайте, чтобы увидеть данные крупно" oncontextmenu="return false">🔍 Линза</button>
 
@@ -882,6 +883,7 @@
             </div>
         </div>
 
+        <div id="bgw-fs-course" style="display:none;text-align:center;font-weight:800;font-size:17px;padding:4px 10px;"></div>
         <div class="fs-bottom-controls-container">
             <div id="fs-dms-azimuth" class="limb-az" style="font-size: clamp(22px, 7vw, 30px);">АЗИМУТ: 0° 00' 00"</div>
             <div id="fs-rumb" class="limb-rumb" style="font-size: clamp(15px, 4.6vw, 20px);">Румб — · Обр. —</div>
@@ -1175,10 +1177,11 @@
                     </select>
                     
                     <label class="btn-action" style="background:#2D5A27; color:#FFF; padding:8px 15px; cursor:pointer; display:inline-flex; align-items:center; width:auto;">
-                        📂 Слой ФГИС (KML/KMZ/GeoJSON)
-                        <input type="file" id="kml-file-input" accept=".kml,.kmz,.geojson,.json" style="display:none;" onchange="handleGISLayerUpload(event)">
+                        📂 Слой / карта (KML, KMZ, GPX, GeoJSON)
+                        <input type="file" id="kml-file-input" accept=".kml,.kmz,.geojson,.json,.gpx" style="display:none;" onchange="handleGISLayerUpload(event)">
                     </label>
 
+                    <button class="btn-action btn-reset-zero" style="padding: 8px 15px; border: 1px solid var(--warning-alert); color: var(--warning-alert); width: auto;" onclick="clearGisLayers()">✖ Убрать слои и карту</button>
                     <button class="btn-action" style="padding: 8px 15px; background-color: var(--danger); color: #FFF; width: auto;" onclick="deleteSelectedFromArchive()">🗑️ Удалить из архива</button>
                     <button class="btn-action btn-reset-zero" style="padding: 8px 15px; border: 1px solid var(--forest-green); color: var(--forest-green); width: auto;" onclick="exportArchiveToCSV()">📊 Экспорт CSV (Excel)</button>
                     <button class="btn-action btn-reset-zero" style="padding: 8px 15px; border: 1px solid var(--warning-alert); color: var(--warning-alert); width: auto;" onclick="exportToKML()">🗺️ Экспорт KML (ГИС)</button>
@@ -1322,6 +1325,7 @@
                     
                     <button class="btn-action btn-set-zero" style="grid-column: span 2; background:#1E3A1A; border:1px solid #8FBC8F; color:#8FBC8F;" onclick="openPhotoModal()">📷 Фотофиксация с координатами</button>
 
+                    <button class="btn-action btn-set-zero" id="bgm-b-open" style="grid-column: span 2; background:#0F2A3A; border:1px solid #38BDF8; color:#7DD3FC;" onclick="BgManual.open()">✍️ Ввести азимут и длину вручную</button>
                     <button class="btn-action btn-reset-zero" id="bgw-b-mode" style="grid-column: span 2;" onclick="BgWalk.toggleMode()">🎛 Режим</button>
                     <button class="btn-action btn-set-zero" id="bgw-b-lock" style="grid-column: span 1; background:#14301A; border:1px solid #16A34A; color:#9BE7A8;" onclick="BgWalk.lock()">🎯 Створ: взять курс</button>
                     <button class="btn-action btn-set-zero" id="bgw-b-plan" style="grid-column: span 1; background:#2A1B4D; border:1px solid #7C3AED; color:#C4B5FD;" onclick="BgWalk.planAdd()">📐 Наметить сторону</button>
@@ -1359,7 +1363,7 @@
                             </tr>
                         </thead>
                         <tbody id="log-tbody">
-                            <tr><td colspan="5" style="color:gray; text-align:center; padding:20px 10px;">Журнал пуст. Наведите визир и зафиксируйте точку.</td></tr>
+                            <tr><td colspan="5" style="color:gray; text-align:center; padding:20px 10px;">Журнал пуст. Наведите визир и зафиксируйте точку или введите линии вручную.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1439,7 +1443,7 @@
             <div class="footer-column">
                 <h4>Контакты и лицензирование</h4>
                 <div style="font-weight: 600; margin-bottom: 4px;">ИП Худяков Николай Сергеевич</div>
-                <div style="font-size: 11px; opacity: 0.7; margin-bottom: 8px;">ИНН: 111801576622 • Пробный тестовый доступ: 1000 руб на 21 день</div>
+                <div style="font-size: 11px; opacity: 0.7; margin-bottom: 8px;">ИНН: 111801576622 • Бесплатный тестовый доступ: 7 дней</div>
                 <a href="mailto:folgoal@gmail.com" style="color:#8FBC8F; font-weight:bold; text-decoration:none; display:block; margin-bottom:10px;">✉️ folgoal@gmail.com</a>
             </div>
         </div>
@@ -1607,6 +1611,7 @@
     let gpsPoint1 = null; 
     let calculatedGpsAzimuth = null;
     let uploadedGisPolygons = [];
+    let uploadedOverlays = [];   // растровая подложка из KMZ (GroundOverlay): {img, nw, ne, sw, cLat, cLng}
 
     let canvasZoomMultiplier = 1.0; 
     let panOffsetX = 0;
@@ -2216,6 +2221,7 @@
     function recalculateDistancesByMethod() {
         const n = measurementsLog.length;
         measurementsLog.forEach((m, idx) => {
+            if (m.manual) return;   // введено вручную: длину не трогаем
             m.mode = globalDistanceMethod;
             if (globalDistanceMethod === 'gps') {
                 if (m.systemMode === 'gps_heading') return;
@@ -2366,7 +2372,7 @@
                     const kmlFile = Object.keys(zipData.files).find(name => name.toLowerCase().endsWith('.kml'));
                     if (kmlFile) {
                         const kmlText = await zipData.files[kmlFile].async('string');
-                        parseKMLText(kmlText);
+                        await parseKMLText(kmlText, zipData);
                     } else {
                         showToast("❌ Внутри KMZ не найден файл KML!");
                     }
@@ -2379,6 +2385,12 @@
                 const reader = new FileReader();
                 reader.onload = function(e) { parseGeoJSONText(e.target.result); };
                 reader.readAsText(file);
+            } else if (fileName.endsWith('.gpx')) {
+                const reader = new FileReader();
+                reader.onload = function(e) { parseGPXText(e.target.result); };
+                reader.readAsText(file);
+            } else {
+                showToast("❌ Неизвестный формат. Нужен KML, KMZ, GPX или GeoJSON");
             }
         } catch (err) {
             console.error(err);
@@ -2388,11 +2400,62 @@
         input.value = '';
     }
 
-    function parseKMLText(xmlText) {
+    function clearGisLayers() {
+        uploadedGisPolygons = []; uploadedOverlays = [];
+        showToast("Слои и карта убраны"); drawPolygon();
+    }
+
+    // Растровая карта из KMZ (Garmin Custom Maps, Google Earth GroundOverlay)
+    function bgFindZipFile(zip, href) {
+        const names = Object.keys(zip.files);
+        let want = String(href || '').replace(/\\/g, '/').split('?')[0];
+        try { want = decodeURIComponent(want); } catch (e) { }
+        let f = names.find(n => n === want) || names.find(n => n.toLowerCase() === want.toLowerCase());
+        if (!f) { const base = want.split('/').pop().toLowerCase(); f = names.find(n => n.split('/').pop().toLowerCase() === base); }
+        return f ? zip.files[f] : null;
+    }
+    function bgLoadImage(blob) {
+        return new Promise(resolve => {
+            const url = URL.createObjectURL(blob), img = new Image();
+            img.onload = () => resolve(img); img.onerror = () => resolve(null); img.src = url;
+        });
+    }
+    async function parseKmlOverlays(xmlDoc, zip) {
+        const list = xmlDoc.getElementsByTagName('GroundOverlay'), out = [];
+        const tv = (el, tag) => { const n = el.getElementsByTagName(tag)[0]; return n ? parseFloat(n.textContent) : NaN; };
+        for (let i = 0; i < list.length && out.length < 80; i++) {
+            const go = list[i], hrefN = go.getElementsByTagName('href')[0];
+            if (!hrefN || !zip) continue;
+            const zf = bgFindZipFile(zip, hrefN.textContent.trim()); if (!zf) continue;
+            const img = await bgLoadImage(await zf.async('blob')); if (!img) continue;
+            let nw, ne, sw;
+            const quad = go.getElementsByTagName('gx:coordinates')[0];
+            if (quad) {
+                const c = quad.textContent.trim().split(/\s+/).map(t => t.split(',').map(parseFloat));
+                if (c.length < 4 || c.some(p => isNaN(p[0]) || isNaN(p[1]))) continue;
+                nw = { lat: c[3][1], lng: c[3][0] }; ne = { lat: c[2][1], lng: c[2][0] }; sw = { lat: c[0][1], lng: c[0][0] };
+            } else {
+                const n = tv(go, 'north'), so = tv(go, 'south'), e = tv(go, 'east'), w = tv(go, 'west'), rot = tv(go, 'rotation') || 0;
+                if ([n, so, e, w].some(isNaN)) continue;
+                const cLat = (n + so) / 2, cLng = (e + w) / 2, ky = mpdLat(cLat), kx = mpdLng(cLat), r = rot * Math.PI / 180;
+                const pt = (dx, dy) => { const rx = dx * Math.cos(r) - dy * Math.sin(r), ry = dx * Math.sin(r) + dy * Math.cos(r); return { lat: cLat + ry / ky, lng: cLng + rx / kx }; };
+                const hw = (e - w) * kx / 2, hh = (n - so) * ky / 2;
+                nw = pt(-hw, hh); ne = pt(hw, hh); sw = pt(-hw, -hh);
+            }
+            out.push({ img: img, nw: nw, ne: ne, sw: sw, cLat: (nw.lat + sw.lat) / 2, cLng: (nw.lng + ne.lng) / 2 });
+        }
+        return out;
+    }
+
+    async function parseKMLText(xmlText, zip) {
         try {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(xmlText, "text/xml");
             const coordNodes = xmlDoc.getElementsByTagName("coordinates");
+            let nOver = 0, nObj = 0;
+
+            const overlays = await parseKmlOverlays(xmlDoc, zip);
+            if (overlays.length) { uploadedOverlays = overlays; nOver = overlays.length; }
 
             if (coordNodes.length > 0) {
                 uploadedGisPolygons = [];
@@ -2402,16 +2465,46 @@
                         const parts = str.split(',');
                         return { lng: parseFloat(parts[0]), lat: parseFloat(parts[1]) };
                     }).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
-                    
+
                     if (poly.length > 0) uploadedGisPolygons.push(poly);
                 }
-                showToast(`✔️ Загружено объектов ФГИС ЛК: ${uploadedGisPolygons.length}`);
+                nObj = uploadedGisPolygons.length;
+            }
+            if (nObj || nOver) {
+                showToast((nOver ? `🗺️ Карта-подложка: ${nOver} лист(ов). ` : '') + (nObj ? `✔️ Загружено объектов слоя: ${nObj}` : ''));
                 drawPolygon();
             } else {
-                showToast("❌ В KML не найдены координаты полигонов!");
+                showToast("❌ В KML/KMZ не найдены ни координаты, ни растровая карта (GroundOverlay)!");
             }
         } catch (err) {
             showToast("❌ Ошибка парсинга KML!");
+        }
+    }
+
+    function parseGPXText(xmlText) {
+        try {
+            const doc = new DOMParser().parseFromString(xmlText, "text/xml");
+            const ll = el => ({ lat: parseFloat(el.getAttribute('lat')), lng: parseFloat(el.getAttribute('lon')) });
+            const okp = p => !isNaN(p.lat) && !isNaN(p.lng);
+            const polys = [];
+            Array.from(doc.getElementsByTagName('trkseg')).forEach(seg => {
+                const p = Array.from(seg.getElementsByTagName('trkpt')).map(ll).filter(okp); if (p.length > 1) polys.push(p);
+            });
+            Array.from(doc.getElementsByTagName('rte')).forEach(r => {
+                const p = Array.from(r.getElementsByTagName('rtept')).map(ll).filter(okp); if (p.length > 1) polys.push(p);
+            });
+            Array.from(doc.getElementsByTagName('wpt')).forEach(w => {
+                const p = ll(w); if (!okp(p)) return;
+                const nm = w.getElementsByTagName('name')[0]; if (nm) p.name = nm.textContent.trim().slice(0, 24);
+                polys.push([p]);
+            });
+            if (!polys.length) { showToast("❌ В GPX не найдены треки, маршруты или точки!"); return; }
+            uploadedGisPolygons = polys;
+            const nTr = polys.filter(p => p.length > 1).length, nWp = polys.length - nTr;
+            showToast(`✔️ GPX: треков/маршрутов ${nTr}, точек ${nWp}`);
+            drawPolygon();
+        } catch (err) {
+            showToast("❌ Ошибка чтения GPX!");
         }
     }
 
@@ -4095,6 +4188,7 @@
             let parsedVal = parseFloat(value);
             if (!isNaN(parsedVal)) {
                 measurementsLog[idx].azimuth = (parsedVal % 360 + 360) % 360;
+                if (window.BgManual) BgManual.recalc();
                 saveToLocalStorage();
                 drawPolygon();
             }
@@ -4107,6 +4201,7 @@
             measurementsLog[idx].distance = parseFloat(value) || 0;
             const el = document.getElementById(`dist-${id}`);
             if (el) el.style.borderColor = measurementsLog[idx].distance > 0 ? '' : 'var(--danger)';
+            if (window.BgManual) BgManual.recalc();
             saveToLocalStorage();
             drawPolygon();
         }
@@ -4118,6 +4213,7 @@
             if (idx !== -1) {
                 measurementsLog.splice(idx, 1);
                 measurementsLog.forEach((m, index) => { m.id = index + 1; });
+                if (window.BgManual) BgManual.recalc();
                 recalculateDistancesByMethod();
                 renderLogTable();
                 saveToLocalStorage();
@@ -4130,7 +4226,7 @@
     function renderLogTable() {
         const tbody = document.getElementById('log-tbody');
         if (measurementsLog.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" style="color:gray; text-align:center; padding:20px 10px;">Журнал пуст. Наведите визир и зафиксируйте точку.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" style="color:gray; text-align:center; padding:20px 10px;">Журнал пуст. Наведите визир и зафиксируйте точку или введите линии вручную.</td></tr>`;
             return;
         }
 
@@ -4145,7 +4241,7 @@
                 let altVal = (m.altitude !== null && m.altitude !== undefined) ? `${m.altitude} м` : 'н/д';
                 coordsHTML = `<b>DMS:</b> ${dmsLat} ${dmsLng}<br><b>DD:</b> ${ddCoords} (${altVal})`;
             } else {
-                coordsHTML = `<span style="color:var(--danger); font-weight:bold;">нет GPS-координат</span>`;
+                coordsHTML = m.manual ? `<span style="opacity:.7">введено вручную (без координат)</span>` : `<span style="color:var(--danger); font-weight:bold;">нет GPS-координат</span>`;
             }
 
             const missingDist = !(m.distance > 0);
@@ -4153,8 +4249,8 @@
 
             let distDisplayHTML = '';
             if (globalDistanceMethod === 'gps') {
-                const isVector = (m.systemMode === 'gps_heading');
-                const tag = isVector ? '📡 вектор' : (idx === lastIdx ? '📡 замыкание на Т1' : '📡 до след. точки');
+                const isVector = (m.systemMode === 'gps_heading') || !!m.manual;
+                const tag = m.manual ? '✍️ вручную' : isVector ? '📡 вектор' : (idx === lastIdx ? '📡 замыкание на Т1' : '📡 до след. точки');
                 const ro = isVector ? '' : ' readonly';
                 distDisplayHTML = `<input type="number" id="dist-${m.id}" class="input-dist" value="${m.distance}" step="0.5"${ro}${redBorder} onfocus="this.select()" oninput="changeLineDistance(${m.id}, this.value)"><small style="font-size:9.5px; color:var(--success); font-weight:bold;">${tag}</small>`;
             } else if (globalDistanceMethod === 'steps') {
@@ -4253,12 +4349,13 @@
 
         // Начало локальной системы координат (совпадает с первой точкой хода)
         const traverseOrigin = getTraverseOrigin();
-        const gisOrigin = traverseOrigin || (uploadedGisPolygons.length > 0 ? uploadedGisPolygons[0][0] : null);
+        const gisOrigin = traverseOrigin || (uploadedGisPolygons.length > 0 ? uploadedGisPolygons[0][0] : null) || (uploadedOverlays.length > 0 ? { lat: uploadedOverlays[0].cLat, lng: uploadedOverlays[0].cLng } : null);
 
         let fitPts = points;
-        if (measurementsLog.length === 0 && uploadedGisPolygons.length > 0 && gisOrigin) {
+        if (measurementsLog.length === 0 && (uploadedGisPolygons.length > 0 || uploadedOverlays.length > 0) && gisOrigin) {
             fitPts = [];
             uploadedGisPolygons.forEach(poly => poly.forEach(kPt => fitPts.push(latLngToLocal(gisOrigin, kPt.lat, kPt.lng))));
+            uploadedOverlays.forEach(o => [o.nw, o.ne, o.sw, { lat: o.sw.lat + (o.ne.lat - o.nw.lat), lng: o.sw.lng + (o.ne.lng - o.nw.lng) }].forEach(c => fitPts.push(latLngToLocal(gisOrigin, c.lat, c.lng))));
             if (fitPts.length === 0) fitPts = points;
         }
 
@@ -4284,6 +4381,21 @@
                 x: width / 2 + (pt.x - centerCenterX) * scale + panOffsetX,
                 y: height / 2 - (pt.y - centerCenterY) * scale + panOffsetY
             };
+        }
+
+        // Подложка: растровая карта из KMZ (под сканом, сеткой и чертежом)
+        if (uploadedOverlays.length > 0 && gisOrigin) {
+            ctx.save();
+            ctx.globalAlpha = 0.85;
+            uploadedOverlays.forEach(o => {
+                const iw = o.img.naturalWidth, ih = o.img.naturalHeight; if (!iw || !ih) return;
+                const a = toPixel(latLngToLocal(gisOrigin, o.nw.lat, o.nw.lng)), b = toPixel(latLngToLocal(gisOrigin, o.ne.lat, o.ne.lng)), c = toPixel(latLngToLocal(gisOrigin, o.sw.lat, o.sw.lng));
+                ctx.save();
+                ctx.transform((b.x - a.x) / iw, (b.y - a.y) / iw, (c.x - a.x) / ih, (c.y - a.y) / ih, a.x, a.y);
+                ctx.drawImage(o.img, 0, 0);
+                ctx.restore();
+            });
+            ctx.restore();
         }
 
         // Подложка: скан листа планшета (под сеткой и чертежом)
@@ -4315,6 +4427,11 @@
                     ctx.beginPath();
                     ctx.arc(px.x, px.y, 3.5, 0, 2 * Math.PI);
                     ctx.fill();
+                    if (polygon[0].name) {
+                        ctx.save(); ctx.setLineDash([]); ctx.font = '600 11px Inter, sans-serif'; ctx.textAlign = 'left';
+                        ctx.lineWidth = 3; ctx.strokeStyle = isDark ? 'rgba(0,0,0,.75)' : 'rgba(255,255,255,.9)'; ctx.strokeText(polygon[0].name, px.x + 6, px.y - 5);
+                        ctx.fillStyle = isDark ? '#FFD08A' : '#B45309'; ctx.fillText(polygon[0].name, px.x + 6, px.y - 5); ctx.restore();
+                    }
                     return;
                 }
                 ctx.beginPath();
@@ -5625,6 +5742,7 @@ try { BgStake.init(); } catch (e) { console.error(e); }
 
 <style>
 #toast-message { z-index: 100000 !important; }
+#bgw-fs-arrow { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 6; }
 #bgw-guide { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 12; pointer-events: none; display: none; }
 #bgw-float { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9000; display: none; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); background: linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,0)); pointer-events: none; }
 #bgw-float button { pointer-events: auto; width: 100%; min-height: 58px; border: 0; border-radius: 14px; font-weight: 800; font-size: 18px; color: #fff; background: #15803D; box-shadow: 0 4px 14px rgba(0,0,0,.4); }
@@ -5809,7 +5927,21 @@ var BgWalk = (function () {
         f.style.display = show ? 'block' : 'none';
         document.body.style.paddingBottom = show ? '84px' : '';
     }
-    function loop() { drawGuide(); if (++n10 % 10 === 0) info(); }
+    function drawFsArrow() {
+        var m = $('fullscreen-compass-modal'), cv = $('bgw-fs-arrow'); if (!cv || !m || m.style.display !== 'flex') return;
+        var t = target(), dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight; if (!W || !H) return;
+        if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+        var g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+        var ce0 = $('bgw-fs-course'); if (!t) { if (ce0) ce0.style.display = 'none'; return; } var D = dev(); if (!D) { if (ce0) ce0.style.display = 'none'; return; }
+        var tol = t.tol, ad = Math.abs(D.d), ok = ad <= tol, col = ok ? '#22C55E' : '#FB923C', R = Math.min(W, H) / 2, cx = W / 2, cy = H / 2, th = D.d * Math.PI / 180, ux = Math.sin(th), uy = -Math.cos(th);
+        var r0 = R * 0.2, r1 = R * 0.80;
+        g.lineCap = 'round'; g.lineWidth = 9; g.strokeStyle = 'rgba(0,0,0,.45)'; g.setLineDash([]); g.beginPath(); g.moveTo(cx + ux * r0, cy + uy * r0); g.lineTo(cx + ux * r1, cy + uy * r1); g.stroke();
+        g.lineWidth = 5; g.strokeStyle = col; g.setLineDash([14, 11]); g.beginPath(); g.moveTo(cx + ux * r0, cy + uy * r0); g.lineTo(cx + ux * r1, cy + uy * r1); g.stroke(); g.setLineDash([]);
+        var hx = cx + ux * (r1 + R * 0.12), hy = cy + uy * (r1 + R * 0.12), px = -uy, py = ux, hw = R * 0.07, hl = R * 0.14;
+        g.fillStyle = col; g.strokeStyle = 'rgba(0,0,0,.55)'; g.lineWidth = 3; g.lineJoin = 'round'; g.beginPath(); g.moveTo(hx, hy); g.lineTo(hx - ux * hl + px * hw, hy - uy * hl + py * hw); g.lineTo(hx - ux * hl - px * hw, hy - uy * hl - py * hw); g.closePath(); g.stroke(); g.fill();
+        var ce = $('bgw-fs-course'); if (ce) { ce.style.display = 'block'; ce.style.color = col; ce.textContent = ok ? '✔ идём по курсу ' + Math.round(t.az) + '°' : 'Идти по курсу ' + Math.round(t.az) + '°: ' + (D.d > 0 ? 'вправо ' : 'влево ') + Math.round(ad) + '°'; }
+    }
+    function loop() { drawGuide(); drawFsArrow(); if (++n10 % 10 === 0) info(); }
     function ensureLoop() { if (!timer) timer = setInterval(loop, 70); }
     function init() {
         syncBtns(); applyMode();
@@ -5824,6 +5956,154 @@ var BgWalk = (function () {
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
     return { lock: lock, tick: tick, toggleInt: toggleInt, toggleFloat: toggleFloat, toggleMode: toggleMode, target: target, afterCapture: afterCapture, planAdd: planAdd, planUndo: planUndo, planPts: planPts, drawPlan: drawPlan };
+})();
+</script>
+
+<style>
+#bgm-modal { position: fixed; inset: 0; z-index: 99990; display: none; flex-direction: column; background: var(--bg-paper); color: var(--text-graphite); font-family: inherit; }
+#bgm-modal .bgm-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--footer-bg, #2C3531); color: #F9FBF9; font-weight: 700; }
+#bgm-modal .bgm-bar button { border: 1px solid #8FBC8F; background: transparent; color: #F9FBF9; border-radius: 10px; padding: 6px 12px; font-weight: 700; }
+#bgm-modal .bgm-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+#bgm-canvas { width: 100%; height: 34vh; flex: 0 0 auto; display: block; border-bottom: 1px solid var(--border-color); touch-action: none; }
+#bgm-modal .bgm-side { flex: 1; min-height: 0; overflow: auto; padding: 8px 12px calc(10px + env(safe-area-inset-bottom)); }
+#bgm-modal .bgm-st { font-size: 12.5px; margin-bottom: 6px; }
+#bgm-modal .bgm-st button, #bgm-modal .bgm-btns button { border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-graphite); border-radius: 10px; padding: 6px 10px; font-size: 12.5px; font-weight: 600; margin: 2px 2px 2px 0; }
+#bgm-modal .bgm-row { display: flex; gap: 6px; align-items: flex-end; margin: 6px 0; }
+#bgm-modal .bgm-row label { flex: 1; font-size: 11px; font-weight: 700; opacity: .8; }
+#bgm-modal .bgm-row input { width: 100%; box-sizing: border-box; font-size: 20px; font-weight: 700; padding: 8px 8px; border-radius: 10px; border: 2px solid var(--border-color); background: var(--card-bg); color: var(--text-graphite); text-align: center; }
+#bgm-modal .bgm-row input.bad { border-color: var(--danger); }
+#bgm-modal #bgm-add { flex: 0 0 auto; height: 46px; padding: 0 14px; border: 0; border-radius: 10px; background: var(--forest-green); color: #fff; font-weight: 800; font-size: 15px; }
+[data-theme="dark"] #bgm-modal #bgm-add { background: #2D5A27; }
+#bgm-modal #bgm-sum { font-size: 13px; font-weight: 700; padding: 6px 8px; border-radius: 8px; background: rgba(45,90,39,.10); margin: 4px 0; }
+#bgm-modal table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+#bgm-modal th, #bgm-modal td { border-bottom: 1px solid var(--border-color); padding: 3px 4px; text-align: center; }
+#bgm-modal td input { width: 78px; font-size: 14px; padding: 4px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-graphite); text-align: center; }
+@media (orientation: landscape) and (max-height: 520px) {
+  #bgm-modal .bgm-body { flex-direction: row; }
+  #bgm-canvas { width: 46%; height: auto; border-bottom: 0; border-right: 1px solid var(--border-color); }
+}
+</style>
+<div id="bgm-modal">
+  <div class="bgm-bar"><span>✍️ Ввод вручную: азимут и длина</span><button type="button" onclick="BgManual.close()">✕ Готово</button></div>
+  <div class="bgm-body">
+    <canvas id="bgm-canvas"></canvas>
+    <div class="bgm-side">
+      <div class="bgm-st">Старт: <b id="bgm-start">—</b><br>
+        <button type="button" onclick="BgManual.startGps()">📍 Взять с GPS</button><button type="button" onclick="BgManual.startTyped()">⌨ Ввести координаты</button><button type="button" onclick="BgManual.startNone()">Без координат</button></div>
+      <div class="bgm-row">
+        <label>Азимут, °<input id="bgm-az" type="text" inputmode="decimal" autocomplete="off" placeholder="напр. 137,5"></label>
+        <label>Длина, м<input id="bgm-d" type="text" inputmode="decimal" autocomplete="off" placeholder="напр. 120"></label>
+        <button id="bgm-add" type="button" onclick="BgManual.add()">＋ Линия</button>
+      </div>
+      <div id="bgm-sum">Введите первую линию</div>
+      <div class="bgm-btns"><button type="button" onclick="BgManual.undo()">↩ Удалить последнюю</button><button type="button" onclick="BgManual.close_()">⭕ Замкнуть на начало</button></div>
+      <table><thead><tr><th>№</th><th>Азимут</th><th>Длина</th><th></th></tr></thead><tbody id="bgm-list"></tbody></table>
+    </div>
+  </div>
+</div>
+<script>
+/* ===== Ручной ввод линий (азимут + длина): чертёж и площадь обновляются сразу, строки попадают в обычный журнал ===== */
+(function () {
+    'use strict';
+    var $ = function (id) { return document.getElementById(id); }, startPt = null;
+    function num(s) { return parseFloat(String(s).replace(',', '.')); }
+    function parseAz(s) {
+        s = String(s || '').trim(); if (!s) return NaN;
+        var m = s.match(/^(\d+(?:[.,]\d+)?)\s*[°\s]\s*(\d+(?:[.,]\d+)?)\s*['’′]?\s*$/);
+        var v = m ? num(m[1]) + num(m[2]) / 60 : num(s);
+        if (!isFinite(v) || v < 0 || v > 360) return NaN;
+        return v % 360;
+    }
+    function recalc() {
+        var L = measurementsLog, i, p, m, r;
+        for (i = 1; i < L.length; i++) {
+            m = L[i]; if (!m.manual) continue; p = L[i - 1];
+            if (hasCoords(p) && p.distance > 0) { r = p.azimuth * Math.PI / 180; m.lat = +(p.lat + p.distance * Math.cos(r) / mpdLat(p.lat)).toFixed(7); m.lng = +(p.lng + p.distance * Math.sin(r) / mpdLng(p.lat)).toFixed(7); }
+            else { m.lat = null; m.lng = null; }
+            m.altitude = null; m.accuracy = null;
+        }
+    }
+    function startTxt() {
+        var L = measurementsLog;
+        if (L.length && hasCoords(L[0])) return L[0].lat.toFixed(6) + ', ' + L[0].lng.toFixed(6) + (L[0].manual ? '' : ' (из журнала)');
+        if (!L.length && startPt) return startPt.lat.toFixed(6) + ', ' + startPt.lng.toFixed(6);
+        return 'без координат (только чертёж и площадь)';
+    }
+    function setStart(p) {
+        var L = measurementsLog;
+        if (L.length) {
+            if (!L[0].manual) { showToast('Первая линия записана буссолью: её старт менять нельзя'); return; }
+            L[0].lat = p ? p.lat : null; L[0].lng = p ? p.lng : null; L[0].altitude = p && p.alt !== undefined ? p.alt : null; L[0].accuracy = p && p.acc !== undefined ? p.acc : null;
+            recalc(); persist();
+        } else startPt = p;
+        render();
+    }
+    function persist() { renderLogTable(); saveToLocalStorage(); drawPolygon(); if (typeof updateFsMapUI === 'function') updateFsMapUI(); }
+    function render() {
+        $('bgm-start').textContent = startTxt();
+        var t = computeTraverse(), n = measurementsLog.length, s;
+        if (!n) s = 'Введите первую линию: азимут и длину';
+        else {
+            s = 'Линий: ' + n + ' · периметр ' + t.perimeter.toFixed(1) + ' м';
+            if (n >= 2) { s += ' · площадь ' + (t.area / 10000).toFixed(4) + ' га'; var f = t.points[0], l = t.points[t.points.length - 1], dx = f.x - l.x, dy = f.y - l.y, dd = Math.hypot(dx, dy); if (dd > 0.05) s += '\nдо начала: ' + dd.toFixed(1) + ' м, азимут ' + (function (v) { v = v.toFixed(1); return v === '360.0' ? '0.0' : v; })(((Math.atan2(dx, dy) * 180 / Math.PI) + 360) % 360) + '°'; else s += ' · замкнут'; }
+        }
+        $('bgm-sum').style.whiteSpace = 'pre-line'; $('bgm-sum').textContent = s;
+        var h = '';
+        measurementsLog.forEach(function (m) { h += '<tr><td>' + m.id + (m.manual ? '' : ' 🧭') + '</td><td><input type="text" inputmode="decimal" value="' + m.azimuth + '" onchange="BgManual.edit(' + m.id + ',\'az\',this)"></td><td><input type="text" inputmode="decimal" value="' + m.distance + '" onchange="BgManual.edit(' + m.id + ',\'d\',this)"></td><td><button type="button" style="border:0;background:none;font-size:16px" onclick="BgManual.del(' + m.id + ')">❌</button></td></tr>'; });
+        $('bgm-list').innerHTML = h || '<tr><td colspan="4" style="opacity:.6;padding:10px">Пока нет линий</td></tr>';
+        try { renderTraverseOnCanvas($('bgm-canvas'), t); } catch (e) { }
+    }
+    function addLine(az, d) {
+        var L = measurementsLog, m = { id: L.length + 1, azimuth: Math.round(az * 100) / 100, distance: Math.round(d * 100) / 100, mode: globalDistanceMethod, steps: 0, systemMode: 'magnetic', manual: true, lat: null, lng: null, altitude: null, accuracy: null };
+        if (!L.length && startPt) { m.lat = startPt.lat; m.lng = startPt.lng; if (startPt.alt !== undefined) m.altitude = startPt.alt; if (startPt.acc !== undefined) m.accuracy = startPt.acc; }
+        L.push(m); recalc(); persist(); render();
+    }
+    window.BgManual = {
+        recalc: recalc,
+        open: function () {
+            $('bgm-modal').style.display = 'flex'; render();
+            setTimeout(function () { render(); var e = $('bgm-az'); if (e) e.focus(); }, 60);
+        },
+        close: function () { $('bgm-modal').style.display = 'none'; drawPolygon(); },
+        startGps: function () {
+            if (typeof gpsFixed === 'undefined' || !gpsFixed) { showToast('GPS ещё не поймал положение — подождите или введите координаты'); return; }
+            setStart({ lat: currentLat, lng: currentLng, alt: currentAltitude, acc: currentAccuracy });
+        },
+        startTyped: function () {
+            var s = prompt('Координаты старта: широта, долгота\n(например 61.4812, 50.5123)', ''); if (s === null) return;
+            var a = (s.match(/-?\d+(?:[.,]\d+)?/g) || []).map(num);
+            if (a.length < 2 || Math.abs(a[0]) > 90 || Math.abs(a[1]) > 180) { showToast('Не разобрал координаты. Пример: 61.4812, 50.5123'); return; }
+            setStart({ lat: a[0], lng: a[1] });
+        },
+        startNone: function () { setStart(null); },
+        add: function () {
+            var a = $('bgm-az'), d = $('bgm-d'), az = parseAz(a.value), ln = num(d.value);
+            a.classList.toggle('bad', isNaN(az)); d.classList.toggle('bad', !(ln > 0));
+            if (isNaN(az)) { showToast('Азимут: число от 0 до 360 (можно 137,5 или 137°30′)'); a.focus(); return; }
+            if (!(ln > 0)) { showToast('Длина: число больше нуля, в метрах'); d.focus(); return; }
+            addLine(az, ln); a.value = ''; d.value = ''; a.focus();
+        },
+        undo: function () { if (!measurementsLog.length) return; measurementsLog.pop(); recalc(); persist(); render(); },
+        close_: function () {
+            if (measurementsLog.length < 2) { showToast('Для замыкания нужно хотя бы две линии'); return; }
+            var t = computeTraverse(), f = t.points[0], l = t.points[t.points.length - 1], dx = f.x - l.x, dy = f.y - l.y, dd = Math.hypot(dx, dy);
+            if (dd < 0.05) { showToast('Контур уже замкнут'); return; }
+            addLine((Math.round((((Math.atan2(dx, dy) * 180 / Math.PI) + 360) % 360) * 10) / 10) % 360, Math.round(dd * 10) / 10);
+        },
+        del: function (id) { var i = measurementsLog.findIndex(function (m) { return m.id === id; }); if (i < 0) return; measurementsLog.splice(i, 1); measurementsLog.forEach(function (m, k) { m.id = k + 1; }); recalc(); persist(); render(); },
+        edit: function (id, f, el) {
+            var m = measurementsLog.find(function (x) { return x.id === id; }); if (!m) return;
+            if (f === 'az') { var a = parseAz(el.value); if (isNaN(a)) { showToast('Азимут: число от 0 до 360'); el.value = m.azimuth; return; } changeLineAzimuth(id, a); }
+            else { var d = num(el.value); if (!(d >= 0)) { showToast('Длина: число, в метрах'); el.value = m.distance; return; } changeLineDistance(id, d); }
+            recalc(); persist(); render();
+        }
+    };
+    document.addEventListener('keydown', function (e) {
+        if ($('bgm-modal').style.display !== 'flex') return;
+        if (e.key === 'Enter') { if (e.target.id === 'bgm-az') { e.preventDefault(); $('bgm-d').focus(); $('bgm-d').select(); } else if (e.target.id === 'bgm-d') { e.preventDefault(); BgManual.add(); } }
+        else if (e.key === 'Escape') BgManual.close();
+    });
+    window.addEventListener('resize', function () { if ($('bgm-modal').style.display === 'flex') render(); });
 })();
 </script>
 
