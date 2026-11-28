@@ -5970,6 +5970,9 @@ var BgWalk = (function () {
 #bgm-modal .bgm-side { flex: 1; min-height: 0; overflow: auto; padding: 8px 12px calc(16px + env(safe-area-inset-bottom)); }
 #bgm-modal .bgm-st { font-size: 12.5px; margin-bottom: 6px; }
 #bgm-modal .bgm-st button, #bgm-modal .bgm-btns button { border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-graphite); border-radius: 10px; padding: 6px 10px; font-size: 12.5px; font-weight: 600; margin: 2px 2px 2px 0; }
+#bgm-modal .bgm-mode { font-size: 12.5px; margin: 6px 0 2px; display: flex; gap: 12px; flex-wrap: wrap; }
+#bgm-modal .bgm-st input[type=text], #bgm-modal #bgm-ll { border: 1px solid var(--border-color); border-radius: 10px; padding: 7px 9px; font-size: 14px; background: var(--card-bg); color: var(--text-graphite); }
+#bgm-modal input.bad { border-color: #C0463F; }
 #bgm-modal .bgm-row { display: flex; gap: 6px; align-items: flex-end; margin: 6px 0; }
 #bgm-modal .bgm-row label { flex: 1; font-size: 11px; font-weight: 700; opacity: .8; }
 #bgm-modal .bgm-row input { width: 100%; box-sizing: border-box; font-size: 20px; font-weight: 700; padding: 8px 8px; border-radius: 10px; border: 2px solid var(--border-color); background: var(--card-bg); color: var(--text-graphite); text-align: center; }
@@ -5991,8 +5994,14 @@ var BgWalk = (function () {
     <canvas id="bgm-canvas"></canvas>
     <div class="bgm-side">
       <div class="bgm-st">Старт: <b id="bgm-start">—</b><br>
-        <button type="button" onclick="BgManual.startGps()">📍 Взять с GPS</button><button type="button" onclick="BgManual.startTyped()">⌨ Ввести координаты</button><button type="button" onclick="BgManual.startNone()">Без координат</button></div>
-      <div class="bgm-row">
+        <div style="display:flex;gap:4px;margin:4px 0"><input id="bgm-st-in" type="text" autocomplete="off" placeholder="61.4812, 50.5123" style="flex:1;min-width:0"><button type="button" onclick="BgManual.startTyped()">✔ Старт</button></div>
+        <button type="button" onclick="BgManual.startGps()">📍 Взять с GPS</button><span id="bgm-gis-w" style="display:none"> <select id="bgm-gis" onchange="BgManual.startGis(this.value)" style="max-width:200px"></select></span><button type="button" onclick="BgManual.startNone()">Без координат</button></div>
+      <div class="bgm-mode"><label><input type="radio" name="bgm-m" value="az" checked onchange="BgManual.mode(this.value)"> азимут + длина</label> <label><input type="radio" name="bgm-m" value="ll" onchange="BgManual.mode(this.value)"> по координатам точек</label></div>
+      <div class="bgm-row" id="bgm-row-ll" style="display:none">
+        <label style="flex:1">Координаты точки (из навигатора)<input id="bgm-ll" type="text" autocomplete="off" placeholder="61.4812, 50.5123" style="width:100%"></label>
+        <button id="bgm-addll" type="button" onclick="BgManual.addLL()">＋ Точка</button>
+      </div>
+      <div class="bgm-row" id="bgm-row-az">
         <label>Азимут, °<input id="bgm-az" type="text" inputmode="decimal" autocomplete="off" placeholder="137,5"></label>
         <label>Длина, м<input id="bgm-d" type="text" inputmode="decimal" autocomplete="off" placeholder="120"></label>
         <button id="bgm-add" type="button" onclick="BgManual.add()">＋ Линия</button>
@@ -6024,6 +6033,22 @@ var BgWalk = (function () {
             else { m.lat = null; m.lng = null; }
             m.altitude = null; m.accuracy = null;
         }
+    }
+    function parseLL(str) {
+        str = String(str || '').trim(); if (!str) return null;
+        var nums = (str.match(/\d+(?:[.,]\d+)?/g) || []).map(num), dms = /[°′'″"]|[NSEWСЮВЗ]/i.test(str), a, b;
+        if (nums.length === 2) { a = nums[0]; b = nums[1]; }
+        else if (dms && nums.length === 4) { a = nums[0] + nums[1] / 60; b = nums[2] + nums[3] / 60; }
+        else if (dms && nums.length === 6) { a = nums[0] + nums[1] / 60 + nums[2] / 3600; b = nums[3] + nums[4] / 60 + nums[5] / 3600; }
+        else return null;
+        if (/[S]|Ю/i.test(str.split(/[EВ]/i)[0] || '')) a = -a;
+        if (Math.abs(a) > 90 || Math.abs(b) > 180) return null;
+        return { lat: a, lng: b };
+    }
+    function endPt() {
+        var L = measurementsLog; if (!L.length) return startPt && { lat: startPt.lat, lng: startPt.lng };
+        var m = L[L.length - 1]; if (!hasCoords(m)) return null; var r = m.azimuth * Math.PI / 180;
+        return { lat: m.lat + m.distance * Math.cos(r) / mpdLat(m.lat), lng: m.lng + m.distance * Math.sin(r) / mpdLng(m.lat) };
     }
     function startTxt() {
         var L = measurementsLog;
@@ -6060,13 +6085,19 @@ var BgWalk = (function () {
         if (!L.length && startPt) { m.lat = startPt.lat; m.lng = startPt.lng; if (startPt.alt !== undefined) m.altitude = startPt.alt; if (startPt.acc !== undefined) m.accuracy = startPt.acc; }
         L.push(m); recalc(); persist(); render();
     }
+    function gisOpts() {
+        var o = [], i;
+        try { (uploadedGisPolygons || []).forEach(function (poly, k) { if (o.length < 40 && poly && poly[0]) o.push({ lat: poly[0].lat, lng: poly[0].lng, t: 'Из файла: объект ' + (k + 1) + ', точка 1' }); }); (uploadedOverlays || []).forEach(function (ov, k) { if (o.length < 40 && ov && isFinite(ov.cLat)) o.push({ lat: ov.cLat, lng: ov.cLng, t: 'Центр карты ' + (k + 1) }); }); } catch (e) { }
+        return o;
+    }
+    function fillGis() { var o = gisOpts(), w = $('bgm-gis-w'); if (!w) return; w.style.display = o.length ? '' : 'none'; $('bgm-gis').innerHTML = '<option value="">📂 старт из файла…</option>' + o.map(function (x, i) { return '<option value="' + i + '">' + x.t + '</option>'; }).join(''); }
     window.BgManual = {
         recalc: recalc,
         toggleMap: function () { var c = $('bgm-canvas'), hide = c.style.display !== 'none'; c.style.display = hide ? 'none' : 'block'; $('bgm-tg').textContent = hide ? '🗺 Показать чертёж' : '🗺 Скрыть чертёж'; try { localStorage.setItem('bgm_hidemap', hide ? '1' : '0'); } catch (e) { } if (!hide) render(); },
         open: function () {
             $('bgm-modal').style.display = 'flex';
             var hm = false; try { hm = localStorage.getItem('bgm_hidemap') === '1'; } catch (e) { }
-            $('bgm-canvas').style.display = hm ? 'none' : 'block'; $('bgm-tg').textContent = hm ? '🗺 Показать чертёж' : '🗺 Скрыть чертёж'; render();
+            $('bgm-canvas').style.display = hm ? 'none' : 'block'; $('bgm-tg').textContent = hm ? '🗺 Показать чертёж' : '🗺 Скрыть чертёж'; fillGis(); render();
             setTimeout(function () { render(); var e = $('bgm-az'); if (e) e.focus(); }, 60);
         },
         close: function () { $('bgm-modal').style.display = 'none'; drawPolygon(); },
@@ -6075,10 +6106,25 @@ var BgWalk = (function () {
             setStart({ lat: currentLat, lng: currentLng, alt: currentAltitude, acc: currentAccuracy });
         },
         startTyped: function () {
-            var s = prompt('Координаты старта: широта, долгота\n(например 61.4812, 50.5123)', ''); if (s === null) return;
-            var a = (s.match(/-?\d+(?:[.,]\d+)?/g) || []).map(num);
-            if (a.length < 2 || Math.abs(a[0]) > 90 || Math.abs(a[1]) > 180) { showToast('Не разобрал координаты. Пример: 61.4812, 50.5123'); return; }
-            setStart({ lat: a[0], lng: a[1] });
+            var el = $('bgm-st-in'), p = parseLL(el.value);
+            if (!p) { el.classList.add('bad'); showToast('Не разобрал координаты. Пример: 61.4812, 50.5123 (широта, долгота)'); return; }
+            el.classList.remove('bad'); setStart(p); el.value = '';
+        },
+        startGis: function (v) {
+            if (v === '') return; var o = gisOpts()[+v]; $('bgm-gis').value = ''; if (!o) return;
+            setStart({ lat: o.lat, lng: o.lng });
+        },
+        mode: function (m) { $('bgm-row-az').style.display = m === 'az' ? '' : 'none'; $('bgm-row-ll').style.display = m === 'll' ? '' : 'none'; var e = $(m === 'az' ? 'bgm-az' : 'bgm-ll'); if (e) e.focus(); },
+        addLL: function () {
+            var el = $('bgm-ll'), p = parseLL(el.value);
+            if (!p) { el.classList.add('bad'); showToast('Не разобрал координаты. Пример: 61.4812, 50.5123'); el.focus(); return; }
+            el.classList.remove('bad');
+            var L = measurementsLog;
+            if (!L.length && !startPt) { setStart(p); el.value = ''; showToast('Это первая точка — стартовая. Введите следующую.'); el.focus(); return; }
+            var e0 = endPt(); if (!e0) { showToast('У старта нет координат. Задайте старт или вводите азимут и длину'); return; }
+            var dx = (p.lng - e0.lng) * mpdLng(e0.lat), dy = (p.lat - e0.lat) * mpdLat(e0.lat), d = Math.hypot(dx, dy);
+            if (d < 0.05) { showToast('Эта точка совпадает с предыдущей'); return; }
+            addLine(((Math.atan2(dx, dy) * 180 / Math.PI) + 360) % 360, d); el.value = ''; el.focus();
         },
         startNone: function () { setStart(null); },
         add: function () {
@@ -6105,7 +6151,7 @@ var BgWalk = (function () {
     };
     document.addEventListener('keydown', function (e) {
         if ($('bgm-modal').style.display !== 'flex') return;
-        if (e.key === 'Enter') { if (e.target.id === 'bgm-az') { e.preventDefault(); $('bgm-d').focus(); $('bgm-d').select(); } else if (e.target.id === 'bgm-d') { e.preventDefault(); BgManual.add(); } }
+        if (e.key === 'Enter') { if (e.target.id === 'bgm-az') { e.preventDefault(); $('bgm-d').focus(); $('bgm-d').select(); } else if (e.target.id === 'bgm-d') { e.preventDefault(); BgManual.add(); } else if (e.target.id === 'bgm-ll') { e.preventDefault(); BgManual.addLL(); } else if (e.target.id === 'bgm-st-in') { e.preventDefault(); BgManual.startTyped(); } }
         else if (e.key === 'Escape') BgManual.close();
     });
     window.addEventListener('resize', function () { if ($('bgm-modal').style.display === 'flex') render(); });
