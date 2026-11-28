@@ -5971,7 +5971,7 @@ var BgWalk = (function () {
 #bgm-modal .bgm-st { font-size: 12.5px; margin-bottom: 6px; }
 #bgm-modal .bgm-st button, #bgm-modal .bgm-btns button { border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-graphite); border-radius: 10px; padding: 6px 10px; font-size: 12.5px; font-weight: 600; margin: 2px 2px 2px 0; }
 #bgm-modal .bgm-mode { font-size: 12.5px; margin: 6px 0 2px; display: flex; gap: 12px; flex-wrap: wrap; }
-#bgm-modal .bgm-st input[type=text], #bgm-modal #bgm-ll { border: 1px solid var(--border-color); border-radius: 10px; padding: 7px 9px; font-size: 14px; background: var(--card-bg); color: var(--text-graphite); }
+#bgm-modal .bgm-st input[type=text], #bgm-modal #bgm-ll, #bgm-modal #bgm-maz, #bgm-modal #bgm-decl { border: 1px solid var(--border-color); border-radius: 10px; padding: 7px 9px; font-size: 14px; background: var(--card-bg); color: var(--text-graphite); }
 #bgm-modal input.bad { border-color: #C0463F; }
 #bgm-modal .bgm-row { display: flex; gap: 6px; align-items: flex-end; margin: 6px 0; }
 #bgm-modal .bgm-row label { flex: 1; font-size: 11px; font-weight: 700; opacity: .8; }
@@ -6001,6 +6001,11 @@ var BgWalk = (function () {
         <label style="flex:1">Координаты точки (из навигатора)<input id="bgm-ll" type="text" autocomplete="off" placeholder="61.4812, 50.5123" style="width:100%"></label>
         <button id="bgm-addll" type="button" onclick="BgManual.addLL()">＋ Точка</button>
       </div>
+      <div class="bgm-row" id="bgm-row-ll2" style="display:none">
+        <label>Магн. азимут замера, ° (по желанию)<input id="bgm-maz" style="font-size:14px;padding:7px 9px" type="text" inputmode="decimal" autocomplete="off" placeholder="если пусто — из координат"></label>
+        <label style="flex:0 0 38%">Склонение, ° (вост. +)<input id="bgm-decl" style="font-size:14px;padding:7px 9px" type="text" inputmode="decimal" autocomplete="off" placeholder="17,4" onchange="BgManual.setDecl(this.value)"></label>
+      </div>
+      <div id="bgm-hint" style="display:none;font-size:11.5px;opacity:.8;margin:2px 0 4px">Азимут из координат — истинный. Магнитный = истинный − склонение. Если вписан замер буссолью, в журнал идёт он (точнее и не зависит от склонения), а склонение служит для проверки: в таблице видно расхождение Δ.</div>
       <div class="bgm-row" id="bgm-row-az">
         <label>Азимут, °<input id="bgm-az" type="text" inputmode="decimal" autocomplete="off" placeholder="137,5"></label>
         <label>Длина, м<input id="bgm-d" type="text" inputmode="decimal" autocomplete="off" placeholder="120"></label>
@@ -6008,7 +6013,7 @@ var BgWalk = (function () {
       </div>
       <div id="bgm-sum">Введите первую линию</div>
       <div class="bgm-btns"><button type="button" onclick="BgManual.undo()">↩ Удалить последнюю</button><button type="button" onclick="BgManual.close_()">⭕ Замкнуть на начало</button></div>
-      <table><thead><tr><th>№</th><th>Азимут</th><th>Длина</th><th></th></tr></thead><tbody id="bgm-list"></tbody></table>
+      <table><thead><tr><th>№</th><th>Азимут</th><th>Длина</th><th>Δ</th><th></th></tr></thead><tbody id="bgm-list"></tbody></table>
     </div>
   </div>
 </div>
@@ -6029,7 +6034,8 @@ var BgWalk = (function () {
         var L = measurementsLog, i, p, m, r;
         for (i = 1; i < L.length; i++) {
             m = L[i]; if (!m.manual) continue; p = L[i - 1];
-            if (hasCoords(p) && p.distance > 0) { r = p.azimuth * Math.PI / 180; m.lat = +(p.lat + p.distance * Math.cos(r) / mpdLat(p.lat)).toFixed(7); m.lng = +(p.lng + p.distance * Math.sin(r) / mpdLng(p.lat)).toFixed(7); }
+            if (hasCoords(p) && isFinite(p.eLat) && isFinite(p.eLng)) { m.lat = p.eLat; m.lng = p.eLng; }
+            else if (hasCoords(p) && p.distance > 0) { r = (p.azTrue !== undefined && p.azTrue !== null ? p.azTrue : p.azimuth) * Math.PI / 180; m.lat = +(p.lat + p.distance * Math.cos(r) / mpdLat(p.lat)).toFixed(7); m.lng = +(p.lng + p.distance * Math.sin(r) / mpdLng(p.lat)).toFixed(7); }
             else { m.lat = null; m.lng = null; }
             m.altitude = null; m.accuracy = null;
         }
@@ -6045,9 +6051,25 @@ var BgWalk = (function () {
         if (Math.abs(a) > 90 || Math.abs(b) > 180) return null;
         return { lat: a, lng: b };
     }
+    var decl = null;
+    try { var _d = localStorage.getItem('bgm_decl'); if (_d !== null && _d !== '' && isFinite(+_d)) decl = +_d; } catch (e) { }
+    function parseDecl(str) {
+        str = String(str || '').trim(); if (!str) return null;
+        var neg = /^[-−–]/.test(str) || /[WЗ]/i.test(str), m = str.match(/(\d+(?:[.,]\d+)?)\s*[°\s]\s*(\d+(?:[.,]\d+)?)\s*['’′]?\s*$/), v = m ? num(m[1]) + num(m[2]) / 60 : num(str.replace(/[^\d.,]/g, ''));
+        if (!isFinite(v) || v > 60) return NaN; return neg ? -v : v;
+    }
+    function norm360(v) { v = v % 360; return v < 0 ? v + 360 : v; }
+    function dAng(a, b) { var d = norm360(a - b); return d > 180 ? d - 360 : d; }
+    function deltaTxt(m) {
+        if (m.azTrue === undefined || m.azTrue === null) return '';
+        if (m.azSrc === 'meas' && decl !== null) { var d = dAng(m.azimuth, norm360(m.azTrue - decl)); return '<span style="color:' + (Math.abs(d) > 1.5 ? '#C0463F' : '#2F6B3A') + '">' + (d > 0 ? '+' : '') + d.toFixed(1) + '°</span>'; }
+        return m.azSrc === 'meas' ? 'замер' : (decl !== null ? 'из коорд.' : 'истинный');
+    }
     function endPt() {
         var L = measurementsLog; if (!L.length) return startPt && { lat: startPt.lat, lng: startPt.lng };
-        var m = L[L.length - 1]; if (!hasCoords(m)) return null; var r = m.azimuth * Math.PI / 180;
+        var m = L[L.length - 1]; if (!hasCoords(m)) return null;
+        if (isFinite(m.eLat) && isFinite(m.eLng)) return { lat: m.eLat, lng: m.eLng };
+        var r = (m.azTrue !== undefined && m.azTrue !== null ? m.azTrue : m.azimuth) * Math.PI / 180;
         return { lat: m.lat + m.distance * Math.cos(r) / mpdLat(m.lat), lng: m.lng + m.distance * Math.sin(r) / mpdLng(m.lat) };
     }
     function startTxt() {
@@ -6074,15 +6096,17 @@ var BgWalk = (function () {
             s = 'Линий: ' + n + ' · периметр ' + t.perimeter.toFixed(1) + ' м';
             if (n >= 2) { s += ' · площадь ' + (t.area / 10000).toFixed(4) + ' га'; var f = t.points[0], l = t.points[t.points.length - 1], dx = f.x - l.x, dy = f.y - l.y, dd = Math.hypot(dx, dy); if (dd > 0.05) s += '\nдо начала: ' + dd.toFixed(1) + ' м, азимут ' + (function (v) { v = v.toFixed(1); return v === '360.0' ? '0.0' : v; })(((Math.atan2(dx, dy) * 180 / Math.PI) + 360) % 360) + '°'; else s += ' · замкнут'; }
         }
+        (function () { var ds = [], mx = 0; measurementsLog.forEach(function (m) { if (m.azSrc === 'meas' && m.azTrue !== undefined && m.azTrue !== null) { var d = dAng(m.azTrue, m.azimuth); ds.push(d); } }); if (ds.length) { var av = ds.reduce(function (a, b) { return a + b; }, 0) / ds.length; s += '\nпо вашим замерам склонение ≈ ' + av.toFixed(1) + '° (замеров: ' + ds.length + ')'; } })();
         $('bgm-sum').style.whiteSpace = 'pre-line'; $('bgm-sum').textContent = s;
         var h = '';
-        measurementsLog.forEach(function (m) { h += '<tr><td>' + m.id + (m.manual ? '' : ' 🧭') + '</td><td><input type="text" inputmode="decimal" value="' + m.azimuth + '" onchange="BgManual.edit(' + m.id + ',\'az\',this)"></td><td><input type="text" inputmode="decimal" value="' + m.distance + '" onchange="BgManual.edit(' + m.id + ',\'d\',this)"></td><td><button type="button" style="border:0;background:none;font-size:16px" onclick="BgManual.del(' + m.id + ')">❌</button></td></tr>'; });
-        $('bgm-list').innerHTML = h || '<tr><td colspan="4" style="opacity:.6;padding:10px">Пока нет линий</td></tr>';
+        measurementsLog.forEach(function (m) { h += '<tr><td>' + m.id + (m.manual ? '' : ' 🧭') + '</td><td><input type="text" inputmode="decimal" value="' + m.azimuth + '" onchange="BgManual.edit(' + m.id + ',\'az\',this)"></td><td><input type="text" inputmode="decimal" value="' + m.distance + '" onchange="BgManual.edit(' + m.id + ',\'d\',this)"></td><td style="font-size:11px;white-space:nowrap">' + deltaTxt(m) + '</td><td><button type="button" style="border:0;background:none;font-size:16px" onclick="BgManual.del(' + m.id + ')">❌</button></td></tr>'; });
+        $('bgm-list').innerHTML = h || '<tr><td colspan="5" style="opacity:.6;padding:10px">Пока нет линий</td></tr>';
         try { renderTraverseOnCanvas($('bgm-canvas'), t); } catch (e) { }
     }
-    function addLine(az, d) {
+    function addLine(az, d, extra) {
         var L = measurementsLog, m = { id: L.length + 1, azimuth: Math.round(az * 100) / 100, distance: Math.round(d * 100) / 100, mode: globalDistanceMethod, steps: 0, systemMode: 'magnetic', manual: true, lat: null, lng: null, altitude: null, accuracy: null };
         if (!L.length && startPt) { m.lat = startPt.lat; m.lng = startPt.lng; if (startPt.alt !== undefined) m.altitude = startPt.alt; if (startPt.acc !== undefined) m.accuracy = startPt.acc; }
+        if (extra) for (var k in extra) m[k] = extra[k];
         L.push(m); recalc(); persist(); render();
     }
     function gisOpts() {
@@ -6114,7 +6138,7 @@ var BgWalk = (function () {
             if (v === '') return; var o = gisOpts()[+v]; $('bgm-gis').value = ''; if (!o) return;
             setStart({ lat: o.lat, lng: o.lng });
         },
-        mode: function (m) { $('bgm-row-az').style.display = m === 'az' ? '' : 'none'; $('bgm-row-ll').style.display = m === 'll' ? '' : 'none'; var e = $(m === 'az' ? 'bgm-az' : 'bgm-ll'); if (e) e.focus(); },
+        mode: function (m) { $('bgm-row-az').style.display = m === 'az' ? '' : 'none'; $('bgm-row-ll').style.display = m === 'll' ? '' : 'none'; $('bgm-row-ll2').style.display = m === 'll' ? '' : 'none'; $('bgm-hint').style.display = m === 'll' ? '' : 'none'; if (m === 'll') $('bgm-decl').value = decl === null ? '' : String(decl).replace('.', ','); var e = $(m === 'az' ? 'bgm-az' : 'bgm-ll'); if (e) e.focus(); },
         addLL: function () {
             var el = $('bgm-ll'), p = parseLL(el.value);
             if (!p) { el.classList.add('bad'); showToast('Не разобрал координаты. Пример: 61.4812, 50.5123'); el.focus(); return; }
@@ -6124,7 +6148,19 @@ var BgWalk = (function () {
             var e0 = endPt(); if (!e0) { showToast('У старта нет координат. Задайте старт или вводите азимут и длину'); return; }
             var dx = (p.lng - e0.lng) * mpdLng(e0.lat), dy = (p.lat - e0.lat) * mpdLat(e0.lat), d = Math.hypot(dx, dy);
             if (d < 0.05) { showToast('Эта точка совпадает с предыдущей'); return; }
-            addLine(((Math.atan2(dx, dy) * 180 / Math.PI) + 360) % 360, d); el.value = ''; el.focus();
+            var tr = ((Math.atan2(dx, dy) * 180 / Math.PI) + 360) % 360, mz = $('bgm-maz'), mv = mz.value.trim() ? parseAz(mz.value) : null;
+            if (mv !== null && isNaN(mv)) { mz.classList.add('bad'); showToast('Магнитный азимут: число от 0 до 360'); mz.focus(); return; }
+            mz.classList.remove('bad');
+            var az, src; if (mv !== null) { az = mv; src = 'meas'; } else if (decl !== null) { az = norm360(tr - decl); src = 'calc'; } else { az = tr; src = 'true'; }
+            addLine(az, d, { azTrue: Math.round(tr * 100) / 100, azSrc: src, eLat: p.lat, eLng: p.lng });
+            el.value = ''; mz.value = ''; el.focus();
+        },
+        setDecl: function (v) {
+            var el = $('bgm-decl'), x = parseDecl(v);
+            if (x !== null && isNaN(x)) { el.classList.add('bad'); showToast('Склонение: число в градусах, например 17,4 или 17°24′'); return; }
+            el.classList.remove('bad'); decl = x; try { localStorage.setItem('bgm_decl', x === null ? '' : String(x)); } catch (e) { }
+            measurementsLog.forEach(function (m) { if (m.azTrue !== undefined && m.azTrue !== null && m.azSrc !== 'meas') { m.azimuth = Math.round((decl !== null ? norm360(m.azTrue - decl) : m.azTrue) * 100) / 100; m.azSrc = decl !== null ? 'calc' : 'true'; } });
+            recalc(); persist(); render();
         },
         startNone: function () { setStart(null); },
         add: function () {
@@ -6144,14 +6180,14 @@ var BgWalk = (function () {
         del: function (id) { var i = measurementsLog.findIndex(function (m) { return m.id === id; }); if (i < 0) return; measurementsLog.splice(i, 1); measurementsLog.forEach(function (m, k) { m.id = k + 1; }); recalc(); persist(); render(); },
         edit: function (id, f, el) {
             var m = measurementsLog.find(function (x) { return x.id === id; }); if (!m) return;
-            if (f === 'az') { var a = parseAz(el.value); if (isNaN(a)) { showToast('Азимут: число от 0 до 360'); el.value = m.azimuth; return; } changeLineAzimuth(id, a); }
+            if (f === 'az') { var a = parseAz(el.value); if (isNaN(a)) { showToast('Азимут: число от 0 до 360'); el.value = m.azimuth; return; } changeLineAzimuth(id, a); if (m.azTrue !== undefined && m.azTrue !== null) m.azSrc = 'meas'; }
             else { var d = num(el.value); if (!(d >= 0)) { showToast('Длина: число, в метрах'); el.value = m.distance; return; } changeLineDistance(id, d); }
             recalc(); persist(); render();
         }
     };
     document.addEventListener('keydown', function (e) {
         if ($('bgm-modal').style.display !== 'flex') return;
-        if (e.key === 'Enter') { if (e.target.id === 'bgm-az') { e.preventDefault(); $('bgm-d').focus(); $('bgm-d').select(); } else if (e.target.id === 'bgm-d') { e.preventDefault(); BgManual.add(); } else if (e.target.id === 'bgm-ll') { e.preventDefault(); BgManual.addLL(); } else if (e.target.id === 'bgm-st-in') { e.preventDefault(); BgManual.startTyped(); } }
+        if (e.key === 'Enter') { if (e.target.id === 'bgm-maz') { e.preventDefault(); BgManual.addLL(); } else if (e.target.id === 'bgm-az') { e.preventDefault(); $('bgm-d').focus(); $('bgm-d').select(); } else if (e.target.id === 'bgm-d') { e.preventDefault(); BgManual.add(); } else if (e.target.id === 'bgm-ll') { e.preventDefault(); BgManual.addLL(); } else if (e.target.id === 'bgm-st-in') { e.preventDefault(); BgManual.startTyped(); } }
         else if (e.key === 'Escape') BgManual.close();
     });
     window.addEventListener('resize', function () { if ($('bgm-modal').style.display === 'flex') render(); });
